@@ -1,2 +1,2 @@
-import './style.css'
+import './public/PolygonPaletteStyles.css'
 import 'scalajs:main.js'
