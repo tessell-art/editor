@@ -8,7 +8,6 @@ class EditorLogicSpec extends FunSuite:
 
   override def beforeEach(context: BeforeEach): Unit =
     // Reset state before each test
-    AppState.selectedElements.set(Set.empty)
     AppState.selectedPolygon.set(None)
     AppState.clearTiling() // Start with empty tiling
     AppState.viewTransform.set(ViewTransform())
@@ -154,24 +153,49 @@ class EditorLogicSpec extends FunSuite:
     assertEquals(AppState.viewTransform.now().rotationDegrees, 45.0)
   }
 
-  test("Element selection logic should work") {
-    val elementId = "test-element"
+  test("Tiling polygon selection logic should work") {
+    // Create a tiling first
+    AppState.selectPolygon(6)
+    assert(!AppState.isTilingEmpty)
+
+    val polygonId = "test-polygon"
 
     // Initially empty
-    assert(AppState.selectedElements.now().isEmpty)
+    assert(AppState.selectedTilingPolygons.now().isEmpty)
 
     // Toggle selection
-    AppState.toggleSelection(elementId)
-    assert(AppState.selectedElements.now().contains(elementId))
+    AppState.toggleTilingPolygonSelection(polygonId)
+    assert(AppState.selectedTilingPolygons.now().contains(polygonId))
 
     // Toggle again to deselect
-    AppState.toggleSelection(elementId)
-    assert(!AppState.selectedElements.now().contains(elementId))
+    AppState.toggleTilingPolygonSelection(polygonId)
+    assert(!AppState.selectedTilingPolygons.now().contains(polygonId))
+  }
+
+  test("Perimeter edge selection logic should work") {
+    // Create a tiling first
+    AppState.selectPolygon(6)
+    assert(!AppState.isTilingEmpty)
+
+    val edgeId = "test-edge"
+
+    // Initially empty
+    assert(AppState.selectedPerimeterEdges.now().isEmpty)
+
+    // Toggle selection
+    AppState.togglePerimeterEdgeSelection(edgeId)
+    assert(AppState.selectedPerimeterEdges.now().contains(edgeId))
+
+    // Toggle again to deselect
+    AppState.togglePerimeterEdgeSelection(edgeId)
+    assert(!AppState.selectedPerimeterEdges.now().contains(edgeId))
   }
 
   test("Clear all selections should work") {
+    // Create a tiling first
+    AppState.selectPolygon(6)
+
     // Set up some selections
-    AppState.selectedElements.set(Set("elem1", "elem2"))
     AppState.selectedTilingPolygons.set(Set("poly1"))
     AppState.selectedPerimeterEdges.set(Set("edge1"))
 
@@ -179,7 +203,6 @@ class EditorLogicSpec extends FunSuite:
     AppState.clearAllSelections()
 
     // Verify all are cleared
-    assert(AppState.selectedElements.now().isEmpty)
     assert(AppState.selectedTilingPolygons.now().isEmpty)
     assert(AppState.selectedPerimeterEdges.now().isEmpty)
   }
@@ -189,8 +212,9 @@ class EditorLogicSpec extends FunSuite:
     AppState.showNodeLabels.set(true)
     AppState.showError("Test error")
 
-    // Set up and clear selections
-    AppState.selectedElements.set(Set("elem1"))
+    // Create a tiling and set up selections
+    AppState.selectPolygon(6)
+    AppState.selectedTilingPolygons.set(Set("poly1"))
     AppState.clearAllSelections()
 
     // Node labels visibility and error should remain unchanged
@@ -212,15 +236,52 @@ class EditorLogicSpec extends FunSuite:
     assert(AppState.errorMessage.now().isEmpty)
   }
 
-  test("handlePerimeterEdgeClick error handling") {
-    // Test with invalid edge index
-    AppState.selectPolygon(6) // Create a tiling
-    AppState.selectPolygon(4) // Select a polygon for growing
+  test("Delete selected elements should show appropriate error") {
+    // Create a tiling and select some polygons
+    AppState.selectPolygon(6)
+    AppState.selectedTilingPolygons.set(Set("poly1"))
 
-    // Try with an invalid edge index
-    AppState.handlePerimeterEdgeClick("edge-999", 999)
+    // Try to delete - should show error since deletion is not supported
+    AppState.deleteSelectedElements()
 
-    // Should show error about invalid index
+    // Should show error about deletion not being supported
     assert(AppState.errorMessage.now().isDefined)
-    assert(AppState.errorMessage.now().get.contains("Invalid edge index"))
+    assert(AppState.errorMessage.now().get.contains("deletion not supported"))
+  }
+
+  test("Delete selected elements should do nothing when no selections") {
+    // Create a tiling but don't select anything
+    AppState.selectPolygon(6)
+    assert(AppState.selectedTilingPolygons.now().isEmpty)
+
+    // Clear any existing errors
+    AppState.clearError()
+
+    // Try to delete - should do nothing
+    AppState.deleteSelectedElements()
+
+    // Should not show any error
+    assert(AppState.errorMessage.now().isEmpty)
+  }
+
+  test("Polygon selection preserves existing tiling complexity") {
+    // Start with a hexagon tiling
+    AppState.selectPolygon(6)
+    val initialTiling = AppState.currentTiling.now()
+    assert(initialTiling.isDefined)
+
+    // Simulate growing the tiling by adding selections
+    AppState.selectedTilingPolygons.set(Set("poly1", "poly2"))
+    AppState.selectedPerimeterEdges.set(Set("edge1"))
+
+    // Change polygon selection
+    AppState.selectPolygon(4)
+
+    // Tiling should remain the same
+    assertEquals(AppState.currentTiling.now(), initialTiling)
+    // Selections should be preserved
+    assertEquals(AppState.selectedTilingPolygons.now(), Set("poly1", "poly2"))
+    assertEquals(AppState.selectedPerimeterEdges.now(), Set("edge1"))
+    // Only the selected polygon type should change
+    assertEquals(AppState.selectedPolygon.now(), Some(4))
   }

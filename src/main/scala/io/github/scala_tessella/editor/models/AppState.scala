@@ -13,11 +13,8 @@ object AppState:
   val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
   val selectedPolygon: Var[Option[Int]] = Var[Option[Int]](None)
 
-  // Canvas state - start with empty canvas and sample data
-  val canvasPolygons: Var[List[CanvasPolygon]] = Var(TilingGenerator.generateSamplePolygons())
-  val canvasTexts: Var[List[CanvasText]] = Var(TilingGenerator.generateSampleTexts())
+  // Canvas state - simplified to only include view transform
   val viewTransform: Var[ViewTransform] = Var(ViewTransform())
-  val selectedElements: Var[Set[String]] = Var(Set.empty)
 
   // Tessellation state - start with empty tiling
   val currentTiling: Var[Option[Tiling]] = Var(None)
@@ -65,6 +62,7 @@ object AppState:
       TilingGenerator.createTilingFromPolygon(sides) match {
         case Some(tiling) =>
           currentTiling.set(Some(tiling))
+          clearAllSelections() // Clear selections when new tiling is created
         case None =>
           showError(s"Failed to create tiling from $sides-sided polygon")
       }
@@ -78,6 +76,25 @@ object AppState:
     currentTiling.set(None)
     selectedTilingPolygons.set(Set.empty)
     selectedPerimeterEdges.set(Set.empty)
+
+  // Clear all selections
+  def clearAllSelections(): Unit =
+    selectedTilingPolygons.set(Set.empty)
+    selectedPerimeterEdges.set(Set.empty)
+
+  // Toggle tiling polygon selection
+  def toggleTilingPolygonSelection(polygonId: String): Unit =
+    selectedTilingPolygons.update { selected =>
+      if (selected.contains(polygonId)) selected - polygonId
+      else selected + polygonId
+    }
+
+  // Toggle perimeter edge selection
+  def togglePerimeterEdgeSelection(edgeId: String): Unit =
+    selectedPerimeterEdges.update { selected =>
+      if (selected.contains(edgeId)) selected - edgeId
+      else selected + edgeId
+    }
 
   // Handle perimeter edge click with polygon growth
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
@@ -118,32 +135,10 @@ object AppState:
         togglePerimeterEdgeSelection(edgeId)
     }
 
-  // Selection management
-  def toggleSelection(elementId: String): Unit =
-    selectedElements.update(current =>
-      if (current.contains(elementId)) current - elementId
-      else current + elementId
-    )
-
-  def toggleTilingPolygonSelection(id: String): Unit =
-    selectedTilingPolygons.update(current =>
-      if (current.contains(id)) current - id
-      else current + id
-    )
-
-  def togglePerimeterEdgeSelection(id: String): Unit =
-    selectedPerimeterEdges.update(current =>
-      if (current.contains(id)) current - id
-      else current + id
-    )
-
-  def clearAllSelections(): Unit =
-    selectedElements.set(Set.empty)
-    selectedTilingPolygons.set(Set.empty)
-    selectedPerimeterEdges.set(Set.empty)
-
+  // Delete selected elements (only applies to tiling polygons now)
   def deleteSelectedElements(): Unit =
-    val selected = selectedElements.now()
-    canvasPolygons.update(_.filterNot(p => selected.contains(p.id)))
-    canvasTexts.update(_.filterNot(t => selected.contains(t.id)))
-    selectedElements.set(Set.empty)
+    // For now, we don't support deleting parts of tessellations
+    // This could be enhanced later to support tiling modifications
+    if (selectedTilingPolygons.now().nonEmpty) {
+      showError("Tessellation polygon deletion not supported yet")
+    }

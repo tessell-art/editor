@@ -10,13 +10,13 @@ object EditorCanvasComponent:
       className := "canvas-container",
       h2("Canvas"),
       CanvasControlComponent.element,
-      ErrorMessage.element, // Add error message display
+      ErrorMessage.element,
       svg.svg(
         svg.className := "editor-canvas",
         svg.width := "800",
         svg.height := "600",
         svg.viewBox := "0 0 800 600",
-        svg.tabIndex := "0", // Make focusable for keyboard events
+        svg.tabIndex := "0",
 
         // Store reference to the canvas element
         onMountCallback(ctx => AppState.canvasElementRef.set(Some(ctx.thisNode.ref))),
@@ -56,18 +56,30 @@ object EditorCanvasComponent:
       // Render tessellation if available
       child.maybe <-- AppState.currentTiling.signal.map(_.map(TessellationRenderer.renderTiling)),
 
-      // Render individual polygons (if not showing tessellation)
-      children <-- Signal.combine(AppState.currentTiling.signal, AppState.canvasPolygons.signal).map {
-        case (tiling, polygons) =>
-          if (tiling.isEmpty) polygons.map(PolygonRenderer.renderCanvasPolygon) else List.empty
-      },
-
-      // Render texts
-      children <-- AppState.canvasTexts.signal.map(_.map(PolygonRenderer.renderCanvasText)),
-
-      // Render connection points for individual polygons
-      children <-- Signal.combine(AppState.currentTiling.signal, AppState.canvasPolygons.signal).map {
-        case (tiling, polygons) =>
-          if (tiling.isEmpty) polygons.flatMap(PolygonRenderer.renderPolygonPoints) else List.empty
+      // Show message when no tessellation is available
+      child.maybe <-- AppState.currentTiling.signal.map { tiling =>
+        if (tiling.isEmpty) Some(noTessellationMessage()) else None
       }
+    )
+
+  private def noTessellationMessage(): Element =
+    svg.g(
+      svg.text(
+        svg.x := "400",
+        svg.y := "280",
+        svg.fontSize := "18",
+        svg.fill := "#888",
+        svg.textAnchor := "middle",
+        svg.fontFamily := "Arial, sans-serif",
+        "No tessellation available"
+      ),
+      svg.text(
+        svg.x := "400",
+        svg.y := "310",
+        svg.fontSize := "14",
+        svg.fill := "#666",
+        svg.textAnchor := "middle",
+        svg.fontFamily := "Arial, sans-serif",
+        "Select a polygon from the palette to generate a tessellation"
+      )
     )

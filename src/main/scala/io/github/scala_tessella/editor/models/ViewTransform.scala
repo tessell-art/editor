@@ -2,37 +2,22 @@ package io.github.scala_tessella.editor.models
 
 case class Point(x: Double, y: Double)
 
-case class CanvasPolygon(
-  id: String, 
-  sides: Int, 
-  center: Point, 
-  radius: Double, 
-  rotation: Double = 0.0
-)
-
-case class CanvasText(
-  id: String, 
-  text: String, 
-  position: Point, 
-  fontSize: Double = 14.0
-)
-
 case class ViewTransform(
-  scale: Double = 1.0, 
-  rotationDegrees: Double = 0.0, 
-  panX: Double = 0.0, 
-  panY: Double = 0.0
-) {
+                          scale: Double = 1.0,
+                          rotationDegrees: Double = 0.0,
+                          panX: Double = 0.0,
+                          panY: Double = 0.0
+                        ) {
   // Helper method to get rotation in radians
   def rotationRadians: Double = math.toRadians(rotationDegrees)
-  
+
   // Helper method to normalize rotation to 0-359 degrees
   def normalizeRotation(degrees: Double): Double = {
     val normalized = degrees % 360
     if (normalized < 0) normalized + 360 else normalized
   }
-  
+
   // Method to update rotation and keep it normalized
-  def withRotation(newRotationDegrees: Double): ViewTransform = 
+  def withRotation(newRotationDegrees: Double): ViewTransform =
     this.copy(rotationDegrees = normalizeRotation(newRotationDegrees))
 }
