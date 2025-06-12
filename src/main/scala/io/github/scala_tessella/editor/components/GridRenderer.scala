@@ -1,29 +1,40 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.tessella.Tiling
-import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
-import io.github.scala_tessella.editor.models.{AppState, Point}
+import io.github.scala_tessella.editor.models.AppState
 
 object GridRenderer:
+  private val patternId = "grid-pattern"
+
+  // Defines an SVG pattern for the grid
+  def patternDef: Element =
+    svg.defs(
+      svg.pattern(
+        svg.idAttr := patternId,
+        svg.width := "50",
+        svg.height := "50",
+        svg.patternUnits := "userSpaceOnUse",
+        svg.path(
+          svg.d := "M 50 0 L 0 0 0 50",
+          svg.fill := "none",
+          svg.stroke := "#444",
+          // Adjust stroke width based on zoom to keep it visually constant
+          svg.strokeWidth <-- AppState.viewTransform.signal.map(t => (1.0 / t.scale).max(0.1).min(2.0).toString)
+        )
+      )
+    )
+
+  // Renders a large rectangle filled with the grid pattern
   def element: Element =
     svg.g(
-      svg.className := "grid-pattern",
+      svg.className := "grid-layer",
       svg.opacity := "0.3",
-      // Vertical lines
-      (0 to 800 by 50).map(x =>
-        svg.line(
-          svg.x1 := x.toString, svg.y1 := "0",
-          svg.x2 := x.toString, svg.y2 := "600",
-          svg.stroke := "#444", svg.strokeWidth := "1"
-        )
-      ),
-      // Horizontal lines
-      (0 to 600 by 50).map(y =>
-        svg.line(
-          svg.x1 := "0", svg.y1 := y.toString,
-          svg.x2 := "800", svg.y2 := y.toString,
-          svg.stroke := "#444", svg.strokeWidth := "1"
-        )
+      svg.rect(
+        // A very large rectangle to ensure it covers the viewport at all zoom/pan levels
+        svg.x := "-20000",
+        svg.y := "-20000",
+        svg.width := "40000",
+        svg.height := "40000",
+        svg.fill := s"url(#$patternId)"
       )
     )

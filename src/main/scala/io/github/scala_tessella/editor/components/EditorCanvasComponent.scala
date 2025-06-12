@@ -21,6 +21,9 @@ object EditorCanvasComponent:
         // Store reference to the canvas element
         onMountCallback(ctx => AppState.canvasElementRef.set(Some(ctx.thisNode.ref))),
 
+        // Add grid pattern definition here
+        GridRenderer.patternDef,
+
         // Background
         background(),
 
