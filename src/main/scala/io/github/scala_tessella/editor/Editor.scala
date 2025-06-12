@@ -1,3 +1,4 @@
+
 package io.github.scala_tessella.editor
 
 import com.raquo.laminar.api.L.{*, given}
@@ -198,7 +199,7 @@ object Main:
         svg.fill := "rgba(100, 108, 255, 0.3)",
         svg.stroke <-- isSelected.map(selected => if (selected) "#ff6b6b" else "#646cff"),
         svg.strokeWidth <-- isSelected.map(selected => if (selected) "3" else "2"),
-//        svg.cursor := "pointer",
+        svg.className := "clickable-polygon",
         onClick --> { _ => toggleSelection(polygon.id) }
       ),
       // Polygon center point
@@ -207,7 +208,7 @@ object Main:
         svg.cy := polygon.center.y.toString,
         svg.r := "3",
         svg.fill := "#ff6b6b",
-//        svg.cursor := "move"
+        svg.className := "polygon-center"
       )
     )
 
@@ -220,8 +221,8 @@ object Main:
       svg.fontSize := text.fontSize.toString,
       svg.fill <-- isSelected.map(selected => if (selected) "#ff6b6b" else "#ccc"),
       svg.fontWeight <-- isSelected.map(selected => if (selected) "bold" else "normal"),
-//      svg.cursor := "pointer",
       svg.textAnchor := "middle",
+      svg.className := "clickable-text",
       text.text,
       onClick --> { _ => toggleSelection(text.id) }
     )
@@ -237,7 +238,7 @@ object Main:
         svg.cy := y.toString,
         svg.r := "2",
         svg.fill := "#4ade80",
-//        svg.cursor := "crosshair",
+        svg.className := "polygon-point",
         onClick --> { _ => println(s"Clicked point $i of polygon ${polygon.id}") }
       )
     }.toList

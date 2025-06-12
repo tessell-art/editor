@@ -202,6 +202,23 @@ button:focus-visible {
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
 }
 
+/* SVG Element Cursor Styles */
+.clickable-polygon {
+  cursor: pointer;
+}
+
+.clickable-text {
+  cursor: pointer;
+}
+
+.polygon-center {
+  cursor: move;
+}
+
+.polygon-point {
+  cursor: crosshair;
+}
+
 /* Grid pattern styling */
 .grid-pattern line {
   pointer-events: none;
