@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor
 import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
 import io.github.scala_tessella.editor.models.AppState
-import io.github.scala_tessella.editor.components.{PolygonPalette, EditorCanvas}
+import io.github.scala_tessella.editor.components.{PolygonPaletteComponent, EditorCanvasComponent}
 
 @main
 def Editor(): Unit =
@@ -18,7 +18,7 @@ object EditorApp:
       h1("Polygon Shape Editor"),
       div(
         className := "editor-layout",
-        PolygonPalette.element,
-        EditorCanvas.element
+        PolygonPaletteComponent.element,
+        EditorCanvasComponent.element
       )
     )

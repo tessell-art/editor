@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.AppState
 import io.github.scala_tessella.editor.interactions.{KeyboardHandler, MouseHandler}
 
-object EditorCanvas:
+object EditorCanvasComponent:
   def element: Element =
     div(
       className := "canvas-container",

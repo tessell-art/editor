@@ -5,7 +5,7 @@ import io.github.scala_tessella.editor.models.AppState
 import io.github.scala_tessella.editor.utils.{PolygonUtils, TilingGenerator}
 import scala.math.{cos, Pi, sin}
 
-object PolygonPalette:
+object PolygonPaletteComponent:
   def element: Element =
     div(
       className := "polygon-palette",
