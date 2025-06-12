@@ -20,7 +20,17 @@ object PolygonPalette:
           p(s"Selected: ${sides}-sided polygon (${PolygonUtils.polygonName(sides)})")
         ))
       ),
+      tilingStatus(),
       tilingControls()
+    )
+
+  private def tilingStatus(): Element =
+    div(
+      className := "tiling-status",
+      child <-- AppState.currentTiling.signal.map {
+        case Some(_) => p("Tiling: Active", className := "status active")
+        case None => p("Tiling: Empty", className := "status empty")
+      }
     )
 
   private def tilingControls(): Element =
@@ -30,7 +40,10 @@ object PolygonPalette:
       button("Generate Hexagon Tiling", onClick --> { _ => TilingGenerator.generateHexagonTiling() }),
       button("Generate Triangle Tiling", onClick --> { _ => TilingGenerator.generateTriangleTiling() }),
       button("Generate Mixed Tiling", onClick --> { _ => TilingGenerator.generateMixedTiling() }),
-      button("Clear Tiling", onClick --> { _ => AppState.currentTiling.set(None) })
+      button(
+        "Clear Tiling",
+        onClick --> { _ => AppState.clearTiling() }
+      )
     )
 
   private def polygonButton(sides: Int): Element =
@@ -40,7 +53,7 @@ object PolygonPalette:
       ),
       tpe := "button",
       title := s"${sides}-sided polygon (${PolygonUtils.polygonName(sides)})",
-      onClick --> { _ => AppState.selectedPolygon.set(Some(sides)) },
+      onClick --> { _ => AppState.selectPolygon(sides) }, // Use new selectPolygon method
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)
     )
