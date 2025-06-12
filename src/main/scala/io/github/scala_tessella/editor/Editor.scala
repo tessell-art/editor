@@ -1,3 +1,4 @@
+
 package io.github.scala_tessella.editor
 
 import com.raquo.laminar.api.L.{*, given}
@@ -71,6 +72,9 @@ object Main:
   // Canvas interaction state
   val isDragging: Var[Boolean] = Var(false)
   val dragStart: Var[Option[Point]] = Var(None)
+
+  // Canvas element reference for coordinate calculations
+  val canvasElementRef: Var[Option[dom.Element]] = Var(None)
 
   def generateSampleTiling(): Option[Tiling] =
     try {
@@ -172,6 +176,9 @@ object Main:
         svg.viewBox := "0 0 800 600",
         svg.tabIndex := "0", // Make focusable for keyboard events
 
+        // Store reference to the canvas element
+        onMountCallback(ctx => canvasElementRef.set(Some(ctx.thisNode.ref))),
+
         // Background
         svg.rect(
           svg.x := "0", svg.y := "0",
@@ -229,7 +236,7 @@ object Main:
       svg.className := "tessellation",
       // Render all polygons in the tiling
       tilingPolygons,
-      // Render perimeter edges  
+      // Render perimeter edges
       perimeterEdges
     )
 
@@ -429,12 +436,37 @@ object Main:
     isDragging.set(false)
     dragStart.set(None)
 
+  def getCanvasRelativePosition(event: WheelEvent): Option[Point] =
+    canvasElementRef.now().map { canvasElement =>
+      val rect = canvasElement.getBoundingClientRect()
+      Point(
+        event.clientX - rect.left,
+        event.clientY - rect.top
+      )
+    }
+
   def handleWheel(event: WheelEvent): Unit =
     event.preventDefault()
-    val scaleFactor = if (event.deltaY < 0) 1.1 else 0.9
-    viewTransform.update(t => t.copy(
-      scale = max(0.1, min(5.0, t.scale * scaleFactor))
-    ))
+
+    getCanvasRelativePosition(event).foreach { mousePos =>
+      val currentTransform = viewTransform.now()
+      val scaleFactor = if (event.deltaY < 0) 1.1 else 0.9
+      val newScale = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
+
+      // Calculate the world position that the mouse is pointing to before zoom
+      val worldX = (mousePos.x - currentTransform.panX) / currentTransform.scale
+      val worldY = (mousePos.y - currentTransform.panY) / currentTransform.scale
+
+      // Calculate new pan to keep the world position under the mouse cursor
+      val newPanX = mousePos.x - worldX * newScale
+      val newPanY = mousePos.y - worldY * newScale
+
+      viewTransform.set(currentTransform.copy(
+        scale = newScale,
+        panX = newPanX,
+        panY = newPanY
+      ))
+    }
 
   def handleKeyDown(event: KeyboardEvent): Unit =
     event.key match
