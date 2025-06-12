@@ -1,4 +1,3 @@
-
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
@@ -51,6 +50,11 @@ object TessellationRenderer:
           val baseFontSize = 12
           val scaledSize = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
+        ),
+        // Counter-rotate the text to keep it readable
+        svg.transform <-- AppState.viewTransform.signal.map(transform =>
+          // Rotate around the text position to counter the canvas rotation
+          s"rotate(${-transform.rotationDegrees} $offsetX $offsetY)"
         ),
         svg.fill := "#ffeb3b", // Bright yellow for visibility
         svg.fontFamily := "monospace",
