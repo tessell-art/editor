@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
 import io.github.scala_tessella.tessella.RegularPolygon.{Polygon, *}
+import io.github.scala_tessella.tessella.creation.Reticulate
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
@@ -12,6 +13,7 @@ import org.scalajs.dom
 import org.scalajs.dom.{MouseEvent, WheelEvent, KeyboardEvent}
 
 import scala.math.{cos, Pi, sin, max, min}
+import scala.util.Random
 
 // import javascriptLogo from "/javascript.svg"
 @js.native @JSImport("/javascript.svg", JSImport.Default)
@@ -20,7 +22,20 @@ val javascriptLogo: String = js.native
 case class Point(x: Double, y: Double)
 case class CanvasPolygon(id: String, sides: Int, center: Point, radius: Double, rotation: Double = 0.0)
 case class CanvasText(id: String, text: String, position: Point, fontSize: Double = 14.0)
-case class ViewTransform(scale: Double = 1.0, rotation: Double = 0.0, panX: Double = 0.0, panY: Double = 0.0)
+case class ViewTransform(scale: Double = 1.0, rotationDegrees: Double = 0.0, panX: Double = 0.0, panY: Double = 0.0) {
+  // Helper method to get rotation in radians
+  def rotationRadians: Double = math.toRadians(rotationDegrees)
+
+  // Helper method to normalize rotation to 0-359 degrees
+  def normalizeRotation(degrees: Double): Double = {
+    val normalized = degrees % 360
+    if (normalized < 0) normalized + 360 else normalized
+  }
+
+  // Method to update rotation and keep it normalized
+  def withRotation(newRotationDegrees: Double): ViewTransform =
+    this.copy(rotationDegrees = normalizeRotation(newRotationDegrees))
+}
 
 @main
 def Editor(): Unit =
@@ -59,13 +74,17 @@ object Main:
 
   def generateSampleTiling(): Option[Tiling] =
     try {
+      // Create a simple tiling with hexagons and triangles
+      val hexagon = Polygon(6)
+      val triangle = Polygon(3)
+
       // Use Reticulate to create a sample tiling - adjust this based on actual API
-      Tiling.pattern_2x333333_33336_3366_666(6, 6).toOption
+      Tiling.pattern_2x33344_2x3446_3636(6, 6).toOption
     } catch {
       case _: Exception =>
         // Fallback to a simple single polygon tiling
         try {
-          Tiling.pattern_2x333333_33336_3366_666(6, 6).toOption
+          Tiling.pattern_2x33344_2x3446_3636(6, 6).toOption
         } catch {
           case _: Exception => None
         }
@@ -74,10 +93,10 @@ object Main:
   def generateSamplePolygons(): List[CanvasPolygon] =
     List(
       CanvasPolygon("poly1", 6, Point(200, 150), 40),
-      CanvasPolygon("poly2", 4, Point(350, 200), 35, Pi/4),
+      CanvasPolygon("poly2", 4, Point(350, 200), 35, math.toRadians(45)), // 45 degrees in radians
       CanvasPolygon("poly3", 8, Point(150, 300), 50),
       CanvasPolygon("poly4", 3, Point(400, 120), 30),
-      CanvasPolygon("poly5", 5, Point(300, 350), 45, Pi/6)
+      CanvasPolygon("poly5", 5, Point(300, 350), 45, math.toRadians(30)) // 30 degrees in radians
     )
 
   def generateSampleTexts(): List[CanvasText] =
@@ -115,6 +134,7 @@ object Main:
 
   def generateHexagonTiling(): Unit =
     try {
+      val hexagon = Polygon(6)
       val tiling = Tiling.pattern_666(3, 3).toOption.get
       currentTiling.set(Some(tiling))
     } catch {
@@ -123,7 +143,8 @@ object Main:
 
   def generateTriangleTiling(): Unit =
     try {
-      val tiling = Tiling.pattern_333333(4, 4).toOption.get
+      val triangle = Polygon(3)
+      val tiling = Tiling.pattern_333333(3, 3).toOption.get
       currentTiling.set(Some(tiling))
     } catch {
       case _: Exception => println("Failed to generate triangle tiling")
@@ -131,7 +152,9 @@ object Main:
 
   def generateMixedTiling(): Unit =
     try {
-      val tiling = Tiling.pattern_2x33344_2x3446_3636(6, 6).toOption.get
+      val hexagon = Polygon(6)
+      val triangle = Polygon(3)
+      val tiling = Tiling.pattern_3464(3).toOption.get
       currentTiling.set(Some(tiling))
     } catch {
       case _: Exception => println("Failed to generate mixed tiling")
@@ -161,7 +184,7 @@ object Main:
         // Main content group with transforms
         svg.g(
           svg.transform <-- viewTransform.signal.map(transform =>
-            s"translate(${transform.panX}, ${transform.panY}) scale(${transform.scale}) rotate(${math.toDegrees(transform.rotation)} 400 300)"
+            s"translate(${transform.panX}, ${transform.panY}) scale(${transform.scale}) rotate(${transform.rotationDegrees} 400 300)"
           ),
 
           // Grid pattern
@@ -283,15 +306,15 @@ object Main:
         viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))
       }),
       button("Rotate Left", onClick --> { _ =>
-        viewTransform.update(t => t.copy(rotation = t.rotation - Pi/6))
+        viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))
       }),
       button("Rotate Right", onClick --> { _ =>
-        viewTransform.update(t => t.copy(rotation = t.rotation + Pi/6))
+        viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
       }),
       div(
         className := "transform-info",
         child.text <-- viewTransform.signal.map(t =>
-          f"Scale: ${t.scale}%.2f | Rotation: ${math.toDegrees(t.rotation)}%.0f° | Pan: (${t.panX}%.0f, ${t.panY}%.0f)"
+          f"Scale: ${t.scale}%.2f | Rotation: ${t.rotationDegrees}%.0f° | Pan: (${t.panX}%.0f, ${t.panY}%.0f)"
         )
       )
     )
@@ -415,8 +438,8 @@ object Main:
 
   def handleKeyDown(event: KeyboardEvent): Unit =
     event.key match
-      case "r" | "R" => viewTransform.update(t => t.copy(rotation = t.rotation + Pi/12))
-      case "e" | "E" => viewTransform.update(t => t.copy(rotation = t.rotation - Pi/12))
+      case "r" | "R" => viewTransform.update(t => t.withRotation(t.rotationDegrees + 15))
+      case "e" | "E" => viewTransform.update(t => t.withRotation(t.rotationDegrees - 15))
       case "+" | "=" => viewTransform.update(t => t.copy(scale = min(t.scale * 1.1, 5.0)))
       case "-" | "_" => viewTransform.update(t => t.copy(scale = max(t.scale / 1.1, 0.1)))
       case "Escape" =>
