@@ -13,12 +13,12 @@ object MouseHandler:
     onWheel --> handleWheel
   )
 
-  private def handleMouseDown(event: MouseEvent): Unit =
+  def handleMouseDown(event: MouseEvent): Unit =
     event.preventDefault()
     AppState.isDragging.set(true)
     AppState.dragStart.set(Some(Point(event.clientX, event.clientY)))
 
-  private def handleMouseMove(event: MouseEvent): Unit =
+  def handleMouseMove(event: MouseEvent): Unit =
     if (AppState.isDragging.now()) {
       AppState.dragStart.now().foreach { start =>
         val deltaX = event.clientX - start.x
@@ -31,7 +31,7 @@ object MouseHandler:
       }
     }
 
-  private def handleMouseUp(event: MouseEvent): Unit =
+  def handleMouseUp(event: MouseEvent): Unit =
     AppState.isDragging.set(false)
     AppState.dragStart.set(None)
 
@@ -44,7 +44,7 @@ object MouseHandler:
       )
     }
 
-  private def handleWheel(event: WheelEvent): Unit =
+  def handleWheel(event: WheelEvent): Unit =
     event.preventDefault()
     
     getCanvasRelativePosition(event).foreach { mousePos =>

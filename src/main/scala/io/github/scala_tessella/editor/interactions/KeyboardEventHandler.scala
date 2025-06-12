@@ -10,7 +10,7 @@ object KeyboardHandler:
     onKeyDown --> handleKeyDown
   )
 
-  private def handleKeyDown(event: KeyboardEvent): Unit =
+  def handleKeyDown(event: KeyboardEvent): Unit =
     event.key match
       case "r" | "R" => AppState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 15))
       case "e" | "E" => AppState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 15))

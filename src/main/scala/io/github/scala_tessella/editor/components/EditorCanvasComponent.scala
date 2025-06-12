@@ -5,8 +5,6 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.AppState
 import io.github.scala_tessella.editor.interactions.{KeyboardHandler, MouseHandler}
 
-import scala.language.postfixOps
-
 object EditorCanvas:
   def element: Element =
     div(
@@ -29,9 +27,11 @@ object EditorCanvas:
         // Main content group with transforms
         contentGroup(),
 
-        // Event handlers - spread the lists using *
-        MouseHandler.mouseEventHandlers *,
-        KeyboardHandler.keyboardEventHandlers *
+        onMouseDown --> MouseHandler.handleMouseDown,
+        onMouseMove --> MouseHandler.handleMouseMove,
+        onMouseUp --> MouseHandler.handleMouseUp,
+        onWheel --> MouseHandler.handleWheel,
+        onKeyDown --> KeyboardHandler.handleKeyDown
       )
     )
 
