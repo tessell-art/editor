@@ -1,4 +1,3 @@
-
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
@@ -11,6 +10,7 @@ object EditorCanvas:
       className := "canvas-container",
       h2("Canvas"),
       CanvasControlComponent.element,
+      ErrorMessage.element, // Add error message display
       svg.svg(
         svg.className := "editor-canvas",
         svg.width := "800",

@@ -12,7 +12,7 @@ object TessellationRenderer:
     }
 
     val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map {
-      case (edge, index) => renderPerimeterEdge(tiling, edge, s"perimeter-edge-$index")
+      case (edge, index) => renderPerimeterEdge(tiling, edge, index, s"perimeter-edge-$index")
     }.toList
 
     val nodeLabels = children <-- AppState.showNodeLabels.signal.map { showLabels =>
@@ -98,7 +98,7 @@ object TessellationRenderer:
       onClick --> { _ => AppState.toggleTilingPolygonSelection(id) }
     )
 
-  private def renderPerimeterEdge(tiling: Tiling, edge: Edge, id: String): Element =
+  private def renderPerimeterEdge(tiling: Tiling, edge: Edge, edgeIndex: Int, id: String): Element =
     val vertex1 = tiling.coords(edge.lesserNode)
     val vertex2 = tiling.coords(edge.greaterNode)
     val isSelected = AppState.selectedPerimeterEdges.signal.map(_.contains(id))
@@ -119,7 +119,7 @@ object TessellationRenderer:
       ),
       svg.strokeWidth <-- isSelected.map(selected => if (selected) "4" else "3"),
       svg.className := "perimeter-edge",
-      onClick --> { _ => AppState.togglePerimeterEdgeSelection(id) }
+      onClick --> { _ => AppState.handlePerimeterEdgeClick(id, edgeIndex) }
     )
 
 object GridRenderer:
