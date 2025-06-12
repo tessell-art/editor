@@ -1,3 +1,4 @@
+
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
@@ -118,6 +119,14 @@ object TessellationRenderer:
         if (selected) "#ff6b6b" else "#ff9500"
       ),
       svg.strokeWidth <-- isSelected.map(selected => if (selected) "4" else "3"),
+      svg.strokeLineCap := "round", // Rounded line caps for better appearance
       svg.className := "perimeter-edge",
+      // Enhanced visual feedback
+      onMouseEnter --> { _ =>
+        // Optional: Could trigger additional state changes here
+      },
+      onMouseLeave --> { _ =>
+        // Optional: Could trigger additional state changes here  
+      },
       onClick --> { _ => AppState.handlePerimeterEdgeClick(id, edgeIndex) }
     )

@@ -325,12 +325,24 @@ svg:hover .node-label {
 
 .perimeter-edge {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  stroke-linecap: round;
 }
 
 .perimeter-edge:hover {
-  stroke-width: 5px !important;
-  stroke-opacity: 0.8;
+  stroke-width: 6 !important;
+  stroke: #ff3d00 !important; /* Bright red-orange for hover */
+  filter: drop-shadow(0 0 8px rgba(255, 61, 0, 0.6));
+  animation: edge-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes edge-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 61, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 61, 0, 0.8));
+  }
 }
 
 /* Grid pattern styling */
