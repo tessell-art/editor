@@ -1,10 +1,9 @@
-
 package io.github.scala_tessella.editor
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
-import io.github.scala_tessella.tessella.Topology.Edge
-import io.github.scala_tessella.tessella.RegularPolygon.Polygon
+import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
+import io.github.scala_tessella.tessella.RegularPolygon.{Polygon, *}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
@@ -13,7 +12,6 @@ import org.scalajs.dom
 import org.scalajs.dom.{MouseEvent, WheelEvent, KeyboardEvent}
 
 import scala.math.{cos, Pi, sin, max, min}
-import scala.util.Random
 
 // import javascriptLogo from "/javascript.svg"
 @js.native @JSImport("/javascript.svg", JSImport.Default)
@@ -50,9 +48,28 @@ object Main:
   val viewTransform: Var[ViewTransform] = Var(ViewTransform())
   val selectedElements: Var[Set[String]] = Var(Set.empty)
 
+  // Tessellation state
+  val currentTiling: Var[Option[Tiling]] = Var(generateSampleTiling())
+  val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
+  val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
+
   // Canvas interaction state
   val isDragging: Var[Boolean] = Var(false)
   val dragStart: Var[Option[Point]] = Var(None)
+
+  def generateSampleTiling(): Option[Tiling] =
+    try {
+      // Use Reticulate to create a sample tiling - adjust this based on actual API
+      Tiling.pattern_2x333333_33336_3366_666(6, 6).toOption
+    } catch {
+      case _: Exception =>
+        // Fallback to a simple single polygon tiling
+        try {
+          Tiling.pattern_2x333333_33336_3366_666(6, 6).toOption
+        } catch {
+          case _: Exception => None
+        }
+    }
 
   def generateSamplePolygons(): List[CanvasPolygon] =
     List(
@@ -85,8 +102,40 @@ object Main:
         child.maybe <-- selectedPolygon.signal.map(_.map(sides =>
           p(s"Selected: ${sides}-sided polygon (${polygonName(sides)})")
         ))
+      ),
+      div(
+        className := "tiling-controls",
+        h3("Tessellation"),
+        button("Generate Hexagon Tiling", onClick --> { _ => generateHexagonTiling() }),
+        button("Generate Triangle Tiling", onClick --> { _ => generateTriangleTiling() }),
+        button("Generate Mixed Tiling", onClick --> { _ => generateMixedTiling() }),
+        button("Clear Tiling", onClick --> { _ => currentTiling.set(None) })
       )
     )
+
+  def generateHexagonTiling(): Unit =
+    try {
+      val tiling = Tiling.pattern_666(3, 3).toOption.get
+      currentTiling.set(Some(tiling))
+    } catch {
+      case _: Exception => println("Failed to generate hexagon tiling")
+    }
+
+  def generateTriangleTiling(): Unit =
+    try {
+      val tiling = Tiling.pattern_333333(4, 4).toOption.get
+      currentTiling.set(Some(tiling))
+    } catch {
+      case _: Exception => println("Failed to generate triangle tiling")
+    }
+
+  def generateMixedTiling(): Unit =
+    try {
+      val tiling = Tiling.pattern_2x33344_2x3446_3636(6, 6).toOption.get
+      currentTiling.set(Some(tiling))
+    } catch {
+      case _: Exception => println("Failed to generate mixed tiling")
+    }
 
   def editorCanvas(): Element =
     div(
@@ -118,14 +167,21 @@ object Main:
           // Grid pattern
           gridPattern(),
 
-          // Render polygons
-          children <-- canvasPolygons.signal.map(_.map(renderCanvasPolygon)),
+          // Render tessellation if available
+          child.maybe <-- currentTiling.signal.map(_.map(renderTiling)),
+
+          // Render individual polygons (if not showing tessellation)
+          children <-- Signal.combine(currentTiling.signal, canvasPolygons.signal).map { case (tiling, polygons) =>
+            if (tiling.isEmpty) polygons.map(renderCanvasPolygon) else List.empty
+          },
 
           // Render texts
           children <-- canvasTexts.signal.map(_.map(renderCanvasText)),
 
-          // Render connection points
-          children <-- canvasPolygons.signal.map(_.flatMap(renderPolygonPoints))
+          // Render connection points for individual polygons
+          children <-- Signal.combine(currentTiling.signal, canvasPolygons.signal).map { case (tiling, polygons) =>
+            if (tiling.isEmpty) polygons.flatMap(renderPolygonPoints) else List.empty
+          }
         ),
 
         // Mouse event handlers
@@ -135,6 +191,85 @@ object Main:
         onWheel --> handleWheel,
         onKeyDown --> handleKeyDown
       )
+    )
+
+  def renderTiling(tiling: Tiling): Element =
+    val tilingPolygons = tiling.orientedPolygons.map(_.toPolygonPathNodes).zipWithIndex.map { case (nodes, index) =>
+      renderTilingPolygon(tiling, nodes, s"tiling-poly-$index")
+    }
+
+    val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map { case (edge, index) =>
+      renderPerimeterEdge(tiling, edge, s"perimeter-edge-$index")
+    }.toList
+
+    svg.g(
+      svg.className := "tessellation",
+      // Render all polygons in the tiling
+      tilingPolygons,
+      // Render perimeter edges  
+      perimeterEdges
+    )
+
+  def renderTilingPolygon(tiling: Tiling, nodes: Vector[TilingNode], id: String): Element =
+    val center = Point(0, 0)
+    val isSelected = selectedTilingPolygons.signal.map(_.contains(id))
+
+    // Convert tessella coordinates to canvas coordinates
+    val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300) // Scale and offset
+
+    val points = nodes.map(tiling.coords).map { vertex =>
+      val x = canvasCenter.x + vertex.x * 50
+      val y = canvasCenter.y + vertex.y * 50
+      s"$x,$y"
+    }.mkString(" ")
+
+    svg.polygon(
+      svg.points := points,
+      svg.fill <-- isSelected.map(selected =>
+        if (selected) "rgba(255, 107, 107, 0.4)" else "rgba(100, 108, 255, 0.2)"
+      ),
+      svg.stroke <-- isSelected.map(selected =>
+        if (selected) "#ff6b6b" else "#646cff"
+      ),
+      svg.strokeWidth <-- isSelected.map(selected => if (selected) "3" else "1.5"),
+      svg.className := "tiling-polygon",
+      onClick --> { _ => toggleTilingPolygonSelection(id) }
+    )
+
+  def renderPerimeterEdge(tiling: Tiling, edge: Edge, id: String): Element =
+    val vertex1 = tiling.coords(edge.lesserNode)
+    val vertex2 = tiling.coords(edge.greaterNode)
+    val isSelected = selectedPerimeterEdges.signal.map(_.contains(id))
+
+    // Convert tessella coordinates to canvas coordinates
+    val x1 = vertex1.x * 50 + 400
+    val y1 = vertex1.y * 50 + 300
+    val x2 = vertex2.x * 50 + 400
+    val y2 = vertex2.y * 50 + 300
+
+    svg.line(
+      svg.x1 := x1.toString,
+      svg.y1 := y1.toString,
+      svg.x2 := x2.toString,
+      svg.y2 := y2.toString,
+      svg.stroke <-- isSelected.map(selected =>
+        if (selected) "#ff6b6b" else "#ff9500"
+      ),
+      svg.strokeWidth <-- isSelected.map(selected => if (selected) "4" else "3"),
+      svg.className := "perimeter-edge",
+      onClick --> { _ => togglePerimeterEdgeSelection(id) }
+    )
+
+  def toggleTilingPolygonSelection(id: String): Unit =
+    selectedTilingPolygons.update(current =>
+      if (current.contains(id)) current - id
+      else current + id
+    )
+
+  def togglePerimeterEdgeSelection(id: String): Unit =
+    selectedPerimeterEdges.update(current =>
+      if (current.contains(id)) current - id
+      else current + id
     )
 
   def canvasControls(): Element =
@@ -284,7 +419,10 @@ object Main:
       case "e" | "E" => viewTransform.update(t => t.copy(rotation = t.rotation - Pi/12))
       case "+" | "=" => viewTransform.update(t => t.copy(scale = min(t.scale * 1.1, 5.0)))
       case "-" | "_" => viewTransform.update(t => t.copy(scale = max(t.scale / 1.1, 0.1)))
-      case "Escape" => selectedElements.set(Set.empty)
+      case "Escape" =>
+        selectedElements.set(Set.empty)
+        selectedTilingPolygons.set(Set.empty)
+        selectedPerimeterEdges.set(Set.empty)
       case "Delete" | "Backspace" => deleteSelectedElements()
       case _ => ()
 

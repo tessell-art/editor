@@ -1,3 +1,4 @@
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -40,6 +41,12 @@ h1 {
 h2 {
   font-size: 1.5em;
   margin: 1rem 0;
+}
+
+h3 {
+  font-size: 1.2em;
+  margin: 0.8rem 0;
+  color: #aaa;
 }
 
 #app {
@@ -148,6 +155,22 @@ button:focus-visible {
   font-weight: 500;
 }
 
+/* Tiling Controls */
+.tiling-controls {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #333;
+  border-radius: 8px;
+}
+
+.tiling-controls button {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
 /* Canvas Styles */
 .canvas-container {
   border: 2px solid #333;
@@ -219,6 +242,31 @@ button:focus-visible {
   cursor: crosshair;
 }
 
+/* Tessellation Styles */
+.tessellation {
+  pointer-events: all;
+}
+
+.tiling-polygon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tiling-polygon:hover {
+  fill-opacity: 0.6;
+  stroke-width: 2px !important;
+}
+
+.perimeter-edge {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.perimeter-edge:hover {
+  stroke-width: 5px !important;
+  stroke-opacity: 0.8;
+}
+
 /* Grid pattern styling */
 .grid-pattern line {
   pointer-events: none;
@@ -260,6 +308,11 @@ button:focus-visible {
   .editor-canvas {
     height: 400px;
   }
+
+  .tiling-controls button {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -272,6 +325,10 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+
+  h3 {
+    color: #666;
   }
 
   .polygon-palette, .canvas-container {
@@ -290,7 +347,7 @@ button:focus-visible {
     color: #000;
   }
 
-  .selected-info, .canvas-controls {
+  .selected-info, .canvas-controls, .tiling-controls {
     background-color: #f0f0f0;
   }
 
