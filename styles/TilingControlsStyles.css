@@ -1,0 +1,53 @@
+/* Tiling Controls */
+.tiling-controls {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #333;
+  border-radius: 8px;
+}
+
+.tiling-controls button {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.canvas-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.control-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.visualization-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.toggle-btn {
+  padding: 8px 16px;
+  border: 2px solid #646cff;
+  background: transparent;
+  color: #646cff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(100, 108, 255, 0.1);
+}
+
+.toggle-btn.active {
+  background: #646cff;
+  color: white;
+}

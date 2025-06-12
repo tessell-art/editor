@@ -1,0 +1,41 @@
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+
+  h3 {
+    color: #666;
+  }
+
+  .polygon-palette, .canvas-container {
+    background-color: #f9f9f9;
+    border-color: #ddd;
+  }
+
+  .polygon-btn {
+    background-color: #fff;
+    border-color: #ddd;
+    color: #333;
+  }
+
+  .polygon-btn:hover {
+    background-color: #f0f0f0;
+    color: #000;
+  }
+
+  .selected-info, .canvas-controls, .tiling-controls {
+    background-color: #f0f0f0;
+  }
+
+  .editor-canvas {
+    background-color: #fafafa;
+    border-color: #ccc;
+  }
+}
