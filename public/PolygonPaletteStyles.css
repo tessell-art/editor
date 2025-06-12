@@ -34,34 +34,18 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #f7df1eaa);
+h2 {
+  font-size: 1.5em;
+  margin: 1rem 0;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+#app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 button {
@@ -75,6 +59,7 @@ button {
   color: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
+  margin: 0.25rem;
 }
 button:hover {
   border-color: #646cff;
@@ -84,20 +69,27 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Editor Layout */
+.editor-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
 /* Polygon Palette Styles */
 .polygon-palette {
-  margin: 2rem 0;
   padding: 1.5rem;
   border: 2px solid #333;
   border-radius: 12px;
   background-color: #1a1a1a;
+  height: fit-content;
 }
 
 .palette-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 1rem;
-  max-width: 800px;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.75rem;
   margin: 0 auto 1rem auto;
 }
 
@@ -106,8 +98,8 @@ button:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.8rem;
-  min-height: 80px;
+  padding: 0.6rem;
+  min-height: 70px;
   background-color: #2a2a2a;
   border: 2px solid #444;
   border-radius: 8px;
@@ -138,7 +130,7 @@ button:focus-visible {
 
 .polygon-label {
   margin-top: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
@@ -156,6 +148,103 @@ button:focus-visible {
   font-weight: 500;
 }
 
+/* Canvas Styles */
+.canvas-container {
+  border: 2px solid #333;
+  border-radius: 12px;
+  background-color: #1a1a1a;
+  padding: 1.5rem;
+}
+
+.canvas-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #333;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.canvas-controls button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.transform-info {
+  flex: 1;
+  min-width: 300px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #aaa;
+  text-align: right;
+  margin-left: 1rem;
+}
+
+.editor-canvas {
+  width: 100%;
+  height: 600px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background-color: #0f0f0f;
+  cursor: grab;
+  outline: none;
+}
+
+.editor-canvas:active {
+  cursor: grabbing;
+}
+
+.editor-canvas:focus {
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
+}
+
+/* Grid pattern styling */
+.grid-pattern line {
+  pointer-events: none;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .polygon-palette {
+    order: 2;
+  }
+
+  .canvas-container {
+    order: 1;
+  }
+
+  .palette-grid {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .canvas-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transform-info {
+    text-align: center;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .editor-canvas {
+    height: 400px;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -167,24 +256,29 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-  
-  .polygon-palette {
+
+  .polygon-palette, .canvas-container {
     background-color: #f9f9f9;
     border-color: #ddd;
   }
-  
+
   .polygon-btn {
     background-color: #fff;
     border-color: #ddd;
     color: #333;
   }
-  
+
   .polygon-btn:hover {
     background-color: #f0f0f0;
     color: #000;
   }
-  
-  .selected-info {
+
+  .selected-info, .canvas-controls {
     background-color: #f0f0f0;
+  }
+
+  .editor-canvas {
+    background-color: #fafafa;
+    border-color: #ccc;
   }
 }
