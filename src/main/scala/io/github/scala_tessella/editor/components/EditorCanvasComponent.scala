@@ -10,7 +10,7 @@ object EditorCanvas:
     div(
       className := "canvas-container",
       h2("Canvas"),
-      CanvasControls.element,
+      CanvasControlComponent.element,
       svg.svg(
         svg.className := "editor-canvas",
         svg.width := "800",

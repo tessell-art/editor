@@ -26,6 +26,13 @@ object AppState:
   val dragStart: Var[Option[Point]] = Var(None)
   val canvasElementRef: Var[Option[dom.Element]] = Var(None)
 
+  // Visualization toggles
+  val showNodeLabels: Var[Boolean] = Var(false)
+
+  // Toggle node labels visibility
+  def toggleNodeLabels(): Unit =
+    showNodeLabels.update(!_)
+
   // Polygon selection with tiling creation logic
   def selectPolygon(sides: Int): Unit =
     selectedPolygon.set(Some(sides))

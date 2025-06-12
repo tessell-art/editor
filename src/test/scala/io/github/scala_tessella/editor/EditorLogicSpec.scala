@@ -1,4 +1,3 @@
-
 package io.github.scala_tessella.editor
 
 import munit.FunSuite
@@ -13,19 +12,37 @@ class EditorLogicSpec extends FunSuite:
     AppState.selectedPolygon.set(None)
     AppState.clearTiling() // Start with empty tiling
     AppState.viewTransform.set(ViewTransform())
+    AppState.showNodeLabels.set(false) // Start with labels hidden
 
   test("Editor should start with empty tiling") {
     assert(AppState.isTilingEmpty)
     assert(AppState.currentTiling.now().isEmpty)
   }
 
+  test("Node labels should be hidden by default") {
+    assert(!AppState.showNodeLabels.now())
+  }
+
+  test("Toggle node labels should work") {
+    // Initially hidden
+    assert(!AppState.showNodeLabels.now())
+
+    // Toggle to show
+    AppState.toggleNodeLabels()
+    assert(AppState.showNodeLabels.now())
+
+    // Toggle to hide
+    AppState.toggleNodeLabels()
+    assert(!AppState.showNodeLabels.now())
+  }
+
   test("Polygon selection should create tiling when tiling is empty") {
     // Initially tiling should be empty
     assert(AppState.isTilingEmpty)
-    
+
     // Select a triangle (3 sides)
     AppState.selectPolygon(3)
-    
+
     // Now tiling should be created
     assert(!AppState.isTilingEmpty)
     assert(AppState.currentTiling.now().isDefined)
@@ -37,11 +54,11 @@ class EditorLogicSpec extends FunSuite:
     AppState.selectPolygon(6)
     val initialTiling = AppState.currentTiling.now()
     assert(initialTiling.isDefined)
-    
+
     // Select a different polygon - should not change tiling
     AppState.selectPolygon(4)
     val afterTiling = AppState.currentTiling.now()
-    
+
     // Tiling should be the same
     assertEquals(afterTiling, initialTiling)
     // But selection should change
@@ -52,15 +69,27 @@ class EditorLogicSpec extends FunSuite:
     // Create a tiling
     AppState.selectPolygon(6)
     assert(!AppState.isTilingEmpty)
-    
+
     // Clear tiling
     AppState.clearTiling()
-    
+
     // Should be empty again
     assert(AppState.isTilingEmpty)
     assert(AppState.currentTiling.now().isEmpty)
     assert(AppState.selectedTilingPolygons.now().isEmpty)
     assert(AppState.selectedPerimeterEdges.now().isEmpty)
+  }
+
+  test("Clear tiling should not affect node label visibility") {
+    // Set node labels to visible
+    AppState.showNodeLabels.set(true)
+
+    // Create and clear tiling
+    AppState.selectPolygon(6)
+    AppState.clearTiling()
+
+    // Node labels visibility should remain unchanged
+    assert(AppState.showNodeLabels.now())
   }
 
   test("Polygon selection state should work independently") {
@@ -117,4 +146,16 @@ class EditorLogicSpec extends FunSuite:
     assert(AppState.selectedElements.now().isEmpty)
     assert(AppState.selectedTilingPolygons.now().isEmpty)
     assert(AppState.selectedPerimeterEdges.now().isEmpty)
+  }
+
+  test("Clear all selections should not affect node label visibility") {
+    // Set node labels to visible
+    AppState.showNodeLabels.set(true)
+
+    // Set up and clear selections
+    AppState.selectedElements.set(Set("elem1"))
+    AppState.clearAllSelections()
+
+    // Node labels visibility should remain unchanged
+    assert(AppState.showNodeLabels.now())
   }

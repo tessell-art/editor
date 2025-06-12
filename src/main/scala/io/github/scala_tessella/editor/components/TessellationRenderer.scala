@@ -8,19 +8,65 @@ import io.github.scala_tessella.editor.models.{AppState, Point}
 
 object TessellationRenderer:
   def renderTiling(tiling: Tiling): Element =
-    val tilingPolygons = tiling.orientedPolygons.map(_.toPolygonPathNodes).zipWithIndex.map { 
+    val tilingPolygons = tiling.orientedPolygons.map(_.toPolygonPathNodes).zipWithIndex.map {
       case (nodes, index) => renderTilingPolygon(tiling, nodes, s"tiling-poly-$index")
     }
-    
-    val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map { 
+
+    val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map {
       case (edge, index) => renderPerimeterEdge(tiling, edge, s"perimeter-edge-$index")
     }.toList
+
+    val nodeLabels = children <-- AppState.showNodeLabels.signal.map { showLabels =>
+      if (showLabels) renderNodeLabels(tiling)
+      else List.empty
+    }
 
     svg.g(
       svg.className := "tessellation",
       tilingPolygons,
-      perimeterEdges
+      perimeterEdges,
+      nodeLabels
     )
+
+  private def renderNodeLabels(tiling: Tiling): List[Element] =
+    // Get all unique nodes from the tiling
+    val allNodes = tiling.graphNodes
+
+    allNodes.map { node =>
+      val vertex = tiling.coords(node)
+
+      // Convert tessella coordinates to canvas coordinates
+      val x = vertex.x * 50 + 400
+      val y = vertex.y * 50 + 300
+
+      // Offset the label slightly from the vertex to avoid overlap
+      val offsetX = x + 8
+      val offsetY = y - 8
+
+      svg.text(
+        svg.x := offsetX.toString,
+        svg.y := offsetY.toString,
+        svg.fontSize <-- AppState.viewTransform.signal.map(transform =>
+          // Scale font size with zoom but keep it readable
+          val baseFontSize = 12
+          val scaledSize = (baseFontSize / transform.scale).max(8).min(20)
+          scaledSize.toString
+        ),
+        svg.fill := "#ffeb3b", // Bright yellow for visibility
+        svg.fontFamily := "monospace",
+        svg.fontWeight := "bold",
+        svg.textAnchor := "start",
+        svg.dominantBaseline := "middle",
+        svg.className := "node-label",
+        // Add stroke for better readability
+        svg.stroke := "#000",
+        svg.strokeWidth <-- AppState.viewTransform.signal.map(transform =>
+          (0.5 / transform.scale).max(0.2).min(1.0).toString
+        ),
+        svg.paintOrder := "stroke fill",
+        node.toString
+      )
+    }
 
   private def renderTilingPolygon(tiling: Tiling, nodes: Vector[TilingNode], id: String): Element =
     val center = Point(0, 0)
@@ -98,7 +144,7 @@ object GridRenderer:
 object PolygonRenderer:
   def renderCanvasPolygon(polygon: io.github.scala_tessella.editor.models.CanvasPolygon): Element =
     import scala.math.{cos, Pi, sin}
-    
+
     val points = (0 until polygon.sides).map { i =>
       val angle = (2 * Pi * i / polygon.sides) - (Pi / 2) + polygon.rotation
       val x = polygon.center.x + polygon.radius * cos(angle)
@@ -144,7 +190,7 @@ object PolygonRenderer:
 
   def renderPolygonPoints(polygon: io.github.scala_tessella.editor.models.CanvasPolygon): List[Element] =
     import scala.math.{cos, Pi, sin}
-    
+
     (0 until polygon.sides).map { i =>
       val angle = (2 * Pi * i / polygon.sides) - (Pi / 2) + polygon.rotation
       val x = polygon.center.x + polygon.radius * cos(angle)
