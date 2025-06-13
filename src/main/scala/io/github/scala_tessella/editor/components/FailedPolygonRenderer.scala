@@ -84,26 +84,18 @@ object FailedPolygonRenderer:
 
     // Generate polygon vertices around the calculated center
     val angleStep = 2 * Pi / polygonSides
-    val direction = if (wasFlipped) -1 else 1
     val radius = sideLength / (2 * sin(Pi / polygonSides))
-
-    // For odd-sided and flipped, add half-step correction
-    val parityCorrection =
-      if (wasFlipped && polygonSides % 2 == 1) angleStep / 2
-      else 0.0
-    val extraCorrection =
-      if (polygonSides % 2 == 1) angleStep / 2
-      else 0.0
-
+    val winding = if (wasFlipped) -1 else 1
     val edgeAngle = atan2(edgeUnitY, edgeUnitX)
-    val baseStartAngle = edgeAngle + Pi / 2
-    val edgeCenterCorrection = -Pi / polygonSides
+    val isOdd = polygonSides % 2 == 1
 
-    val startAngle =
-      baseStartAngle + edgeCenterCorrection + (direction * parityCorrection) + extraCorrection
+    val baseOffset = -Math.PI / polygonSides
+    val oddHalfStep = if (isOdd && !wasFlipped) angleStep / 2 else 0.0
+
+    val startAngle = edgeAngle + Math.PI / 2 + baseOffset + oddHalfStep
 
     (0 until polygonSides).map { i =>
-      val angle = startAngle + direction * i * angleStep
+      val angle = startAngle + winding * i * angleStep
       val x = centerX + radius * cos(angle)
       val y = centerY + radius * sin(angle)
       val canvasX = x * 50 + 400
