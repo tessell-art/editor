@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.AppState
-import io.github.scala_tessella.editor.utils.{PolygonUtils, TilingGenerator}
+import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, TilingGenerator}
 import scala.math.{cos, Pi, sin}
 
 object PolygonPaletteComponent:
@@ -17,7 +17,7 @@ object PolygonPaletteComponent:
       div(
         className := "selected-info",
         child.maybe <-- AppState.selectedPolygon.signal.map(_.map(sides =>
-          p(s"Selected: ${sides}-sided polygon (${PolygonUtils.polygonName(sides)})")
+          p(s"Selected: $sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})")
         ))
       ),
       tilingStatus(),
@@ -52,7 +52,7 @@ object PolygonPaletteComponent:
         if (selected.contains(sides)) "polygon-btn selected" else "polygon-btn"
       ),
       tpe := "button",
-      title := s"${sides}-sided polygon (${PolygonUtils.polygonName(sides)})",
+      title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
       onClick --> { _ => AppState.selectPolygon(sides) }, // Use new selectPolygon method
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)

@@ -35,7 +35,7 @@ object TessellationRenderer:
     }.toList
 
     val nodeLabels = children <-- AppState.showNodeLabels.signal.map { showLabels =>
-      if (showLabels) renderNodeLabels(tiling)
+      if showLabels then renderNodeLabels(tiling)
       else List.empty
     }
 

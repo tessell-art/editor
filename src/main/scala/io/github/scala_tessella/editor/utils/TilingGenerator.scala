@@ -8,42 +8,37 @@ object TilingGenerator:
 
   /** Create a tiling from a polygon with the specified number of sides */
   def createTilingFromPolygon(sides: Int): Option[Tiling] =
-    try {
+    try
       Some(Tiling.fromPolygon(Polygon(sides)))
-    } catch {
+    catch
       case _: Exception => None
-    }
 
   def generateSampleTiling(): Option[Tiling] =
-    try {
+    try
       Tiling.pattern_2x33344_2x3446_3636(6, 6).toOption
-    } catch {
+    catch
       case _: Exception => None
-    }
 
   def generateHexagonTiling(): Unit =
-    try {
+    try
       val tiling = Tiling.pattern_666(3, 3).toOption.get
       AppState.currentTiling.set(Some(tiling))
-    } catch {
+    catch
       case _: Exception =>
         AppState.showError("Failed to generate hexagon tiling")
-    }
 
   def generateTriangleTiling(): Unit =
-    try {
+    try
       val tiling = Tiling.pattern_333333(3, 3).toOption.get
       AppState.currentTiling.set(Some(tiling))
-    } catch {
+    catch
       case _: Exception =>
         AppState.showError("Failed to generate triangle tiling")
-    }
 
   def generateMixedTiling(): Unit =
-    try {
+    try
       val tiling = Tiling.pattern_3464(3).toOption.get
       AppState.currentTiling.set(Some(tiling))
-    } catch {
+    catch
       case _: Exception =>
         AppState.showError("Failed to generate mixed tiling")
-    }

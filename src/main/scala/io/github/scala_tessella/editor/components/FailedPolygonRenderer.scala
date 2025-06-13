@@ -4,7 +4,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.{RegularPolygon, Tiling}
 import io.github.scala_tessella.tessella.Topology.Edge
-import io.github.scala_tessella.editor.models.{AppState, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.models.FailedPolygonPlacement
 import io.github.scala_tessella.tessella.Geometry.Point
 
 import scala.math.*
@@ -25,7 +25,7 @@ object FailedPolygonRenderer:
 
       // Get flip info for animation direction
       val (_, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
-      val scaleValues = if (wasFlipped) "1;0.95;1" else "1;1.05;1"
+      val scaleValues = if wasFlipped then "1;0.95;1" else "1;1.05;1"
 
       svg.g(
         // Use CSS for transform origin so animation will scale from edge
@@ -53,10 +53,8 @@ object FailedPolygonRenderer:
     }
 
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
-    import io.github.scala_tessella.tessella.RegularPolygon.Polygon
 
     val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
-    val polygon = Polygon(polygonSides)
 
     // Get the edge coordinates
     val vertex1 = tiling.coords(edge.lesserNode)
@@ -85,12 +83,12 @@ object FailedPolygonRenderer:
     // Generate polygon vertices around the calculated center
     val angleStep = 2 * Pi / polygonSides
     val radius = sideLength / (2 * sin(Pi / polygonSides))
-    val winding = if (wasFlipped) -1 else 1
+    val winding = if wasFlipped then -1 else 1
     val edgeAngle = atan2(edgeUnitY, edgeUnitX)
     val isOdd = polygonSides % 2 == 1
 
     val baseOffset = -Math.PI / polygonSides
-    val oddHalfStep = if (isOdd && !wasFlipped) angleStep / 2 else 0.0
+    val oddHalfStep = if isOdd && !wasFlipped then angleStep / 2 else 0.0
 
     val startAngle = edgeAngle + Math.PI / 2 + baseOffset + oddHalfStep
 
@@ -104,7 +102,7 @@ object FailedPolygonRenderer:
     }.toVector
 
   private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: Tiling): ((Double, Double), Boolean) =
-    try {
+    try
       val vertex1 = tiling.coords(edge.lesserNode)
       val vertex2 = tiling.coords(edge.greaterNode)
 
@@ -133,12 +131,12 @@ object FailedPolygonRenderer:
       val containingPolygon: Option[tiling.PolygonPath] = tiling.orientedPolygons.find { poly =>
         val polyNodes = poly.toPolygonPathNodes
         val polyEdges = polyNodes.zip(polyNodes.tail :+ polyNodes.head).map { case (n1, n2) =>
-          if (n1 < n2) Edge(n1, n2) else Edge(n2, n1)
+          if n1 < n2 then Edge(n1, n2) else Edge(n2, n1)
         }
         polyEdges.contains(edge)
       }
 
-      containingPolygon match {
+      containingPolygon match
         case Some(poly) =>
           val polyVertices: Vector[Point] = poly.toPolygonPathNodes.map(tiling.coords)
 
@@ -147,22 +145,20 @@ object FailedPolygonRenderer:
           val point2Inside = isPointInPolygon(testPoint2X, testPoint2Y, polyVertices)
 
           // Return the direction that points OUTWARD and whether we used the flipped direction
-          if (point1Inside) {
+          if point1Inside then
             // perp1 points inward, so use perp2 (outward) - this is a flip
             ((perp2X, perp2Y), true)
-          } else if (point2Inside) {
+          else if point2Inside then
             // perp2 points inward, so use perp1 (outward) - this is not a flip
             ((perp1X, perp1Y), false)
-          } else {
+          else
             // Fallback: neither point is clearly inside, use perp1 without flip
             ((perp1X, perp1Y), false)
-          }
 
         case None =>
           // Fallback if we can't find the containing polygon
           ((perp1X, perp1Y), false)
-      }
-    } catch {
+    catch
       case e: Exception =>
         // Fallback to simple perpendicular if calculation fails
         val vertex1 = tiling.coords(edge.lesserNode)
@@ -171,23 +167,20 @@ object FailedPolygonRenderer:
         val edgeVectorY = vertex2.y - vertex1.y
         val length = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)
         ((-edgeVectorY / length, edgeVectorX / length), false)
-    }
 
   // Point-in-polygon test using ray casting algorithm
   private def isPointInPolygon(px: Double, py: Double, vertices: Vector[Point]): Boolean =
     var inside = false
     var j = vertices.length - 1
 
-    for (i <- vertices.indices) {
+    for (i <- vertices.indices)
       val xi = vertices(i).x
       val yi = vertices(i).y
       val xj = vertices(j).x
       val yj = vertices(j).y
 
-      if (((yi > py) != (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+      if ((yi > py) != (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi) then
         inside = !inside
-      }
       j = i
-    }
 
     inside

@@ -19,7 +19,7 @@ object MouseHandler:
     AppState.dragStart.set(Some(Point(event.clientX, event.clientY)))
 
   def handleMouseMove(event: MouseEvent): Unit =
-    if (AppState.isDragging.now()) {
+    if AppState.isDragging.now() then
       AppState.dragStart.now().foreach { start =>
         val deltaX = event.clientX - start.x
         val deltaY = event.clientY - start.y
@@ -29,7 +29,6 @@ object MouseHandler:
         ))
         AppState.dragStart.set(Some(Point(event.clientX, event.clientY)))
       }
-    }
 
   def handleMouseUp(event: MouseEvent): Unit =
     AppState.isDragging.set(false)

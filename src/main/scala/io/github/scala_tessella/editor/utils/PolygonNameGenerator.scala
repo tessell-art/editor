@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-object PolygonUtils:
+object PolygonNameGenerator:
   def polygonName(sides: Int): String = sides match
     case 3 => "Triangle"
     case 4 => "Square"
