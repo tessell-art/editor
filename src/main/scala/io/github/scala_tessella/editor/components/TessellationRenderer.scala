@@ -1,4 +1,3 @@
-
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
@@ -7,13 +6,26 @@ import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as T
 import io.github.scala_tessella.editor.models.{AppState, Point}
 
 object TessellationRenderer:
+
+  private val selectionPattern: Element = svg.defs(
+    svg.pattern(
+      svg.idAttr := "selection-pattern",
+      svg.patternUnits := "userSpaceOnUse",
+      svg.width := "8",
+      svg.height := "8",
+      svg.path(
+        svg.d := "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4",
+        svg.stroke := "rgba(40, 40, 40, 0.6)",
+        svg.strokeWidth := "1.5"
+      )
+    )
+  )
+
   def renderTiling(tiling: Tiling): Element =
     val tilingPolygons = tiling.orientedPolygons.map { poly =>
       val nodes = poly.toPolygonPathNodes
-      // Stable id: use sorted node ids concatenated (order does not matter for selection)
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
-      // Assign a color for this tag if needed
       AppState.getOrAssignPolygonColor(polyTag)
       renderTilingPolygon(tiling, nodes, polygonId, polyTag)
     }
@@ -29,6 +41,7 @@ object TessellationRenderer:
 
     svg.g(
       svg.className := "tessellation",
+      selectionPattern,
       tilingPolygons,
       perimeterEdges,
       nodeLabels
@@ -83,7 +96,6 @@ object TessellationRenderer:
     val center = Point(0, 0)
     val isSelected = AppState.selectedTilingPolygons.signal.map(_.contains(id))
 
-    // Convert tessella coordinates to canvas coordinates
     val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
 
     val points = nodes.map(tiling.coords).map { vertex =>
@@ -92,24 +104,29 @@ object TessellationRenderer:
       s"$x,$y"
     }.mkString(" ")
 
-    // Compute color string reactively
     val rgbSignal = AppState.polygonColors.signal.map { colors =>
       val (r, g, b) = colors.getOrElse(polyTag, (200, 200, 200))
-      s"rgba($r, $g, $b, 1.0)" // background alpha for non-selected
+      s"rgb($r, $g, $b)"
     }
 
-    svg.polygon(
+    val basePolygon = svg.polygon(
       svg.points := points,
-      svg.fill <-- isSelected.combineWithFn(rgbSignal) { (selected, color) =>
-        if (selected) "rgba(255, 107, 107, 0.4)" // Highlighted color (keep your selection style)
-        else color
-      },
-      svg.stroke <-- isSelected.map(selected =>
-        if (selected) "#ff6b6b" else "#646cff"
-      ),
-      svg.strokeWidth <-- isSelected.map(selected => if (selected) "3" else "1.5"),
+      svg.fill <-- rgbSignal,
+      svg.stroke <-- isSelected.map(selected => if (selected) "#ff6b6b" else "#646cff"),
+      svg.strokeWidth <-- isSelected.map(selected => if (selected) "3.5" else "1.5"),
       svg.className := "tiling-polygon",
       onClick --> { _ => AppState.toggleTilingPolygonSelection(id) }
+    )
+
+    val patternOverlay = svg.polygon(
+      svg.points := points,
+      svg.fill := "url(#selection-pattern)",
+      svg.pointerEvents := "none"
+    )
+
+    svg.g(
+      basePolygon,
+      child.maybe <-- isSelected.map(selected => if (selected) Some(patternOverlay) else None)
     )
 
   private def renderPerimeterEdge(tiling: Tiling, edge: Edge, edgeIndex: Int, id: String): Element =
@@ -139,7 +156,7 @@ object TessellationRenderer:
         // Optional: Could trigger additional state changes here
       },
       onMouseLeave --> { _ =>
-        // Optional: Could trigger additional state changes here  
+        // Optional: Could trigger additional state changes here
       },
       onClick --> { _ => AppState.handlePerimeterEdgeClick(id, edgeIndex) }
     )
