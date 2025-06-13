@@ -39,12 +39,18 @@ object TessellationRenderer:
       else List.empty
     }
 
+    // Failed polygon wireframe overlay
+    val failedPolygonWireframe = child.maybe <-- AppState.failedPlacement.signal.map { placement =>
+      placement.map(FailedPolygonRenderer.renderFailedPlacement)
+    }
+
     svg.g(
       svg.className := "tessellation",
       selectionPattern,
       tilingPolygons,
       perimeterEdges,
-      nodeLabels
+      nodeLabels,
+      failedPolygonWireframe
     )
 
   private def renderNodeLabels(tiling: Tiling): List[Element] =

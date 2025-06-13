@@ -3,10 +3,19 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
+import io.github.scala_tessella.tessella.Topology.Edge
 import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.TilingGenerator
 import scala.scalajs.js
 import scala.util.Try
+
+// Case class to represent a failed polygon placement
+case class FailedPolygonPlacement(
+                                   edgeIndex: Int,
+                                   polygonSides: Int,
+                                   edge: Edge,
+                                   tiling: Tiling
+                                 )
 
 object AppState:
   // Polygon palette state
@@ -29,6 +38,9 @@ object AppState:
 
   // Error message state
   val errorMessage: Var[Option[String]] = Var(None)
+
+  // Failed polygon placement state - for showing wireframe feedback
+  val failedPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
 
   // Canvas interaction state
   val isDragging: Var[Boolean] = Var(false)
@@ -58,22 +70,27 @@ object AppState:
   def toggleNodeLabels(): Unit =
     showNodeLabels.update(!_)
 
-  // Show error message temporarily
-  def showError(message: String): Unit =
+  // Show error message temporarily with optional failed placement info
+  def showError(message: String, placement: Option[FailedPolygonPlacement] = None): Unit =
     errorMessage.set(Some(message))
+    failedPlacement.set(placement)
 
-    // Clear error after 3 seconds, but only if window is available (browser environment)
+    // Clear error and failed placement after 3 seconds
     Try {
       if (js.typeOf(js.Dynamic.global.window) != "undefined") {
-        dom.window.setTimeout(() => errorMessage.set(None), 3000)
+        dom.window.setTimeout(() => {
+          errorMessage.set(None)
+          failedPlacement.set(None)
+        }, 3000)
       }
     }.recover {
       case _ => // Ignore errors in test environment
     }
 
-  // Clear error message
+  // Clear error message and failed placement
   def clearError(): Unit =
     errorMessage.set(None)
+    failedPlacement.set(None)
 
   // Polygon selection with tiling creation logic
   def selectPolygon(sides: Int): Unit =
@@ -140,8 +157,9 @@ object AppState:
                 selectedPerimeterEdges.set(Set.empty)
                 clearError()
               case Left(errMsg) =>
-                // Failure: show error message
-                showError(s"Cannot grow edge with ${polygonSides}-sided polygon: ${errMsg}")
+                // Failure: show error message with wireframe
+                val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
+                showError(s"Cannot grow edge with ${polygonSides}-sided polygon: ${errMsg}", Some(placement))
             }
           } else {
             showError("Invalid edge index")

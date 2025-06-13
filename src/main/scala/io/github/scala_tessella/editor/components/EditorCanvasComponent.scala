@@ -10,7 +10,7 @@ object EditorCanvasComponent:
       className := "canvas-container",
       h2("Canvas"),
       CanvasControlComponent.element,
-      ErrorMessage.element,
+      ErrorMessageComponent.element,
       svg.svg(
         svg.className := "editor-canvas",
         svg.width := "800",
