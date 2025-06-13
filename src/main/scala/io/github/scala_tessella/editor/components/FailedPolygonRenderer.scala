@@ -14,33 +14,42 @@ object FailedPolygonRenderer:
   def renderFailedPlacement(placement: FailedPolygonPlacement): Element =
     try {
       val wireframePoints = calculateWireframePoints(placement)
+      val points = wireframePoints.map { case (x, y) => s"$x,$y" }.mkString(" ")
 
-      val points = wireframePoints.map { case (x, y) =>
-        s"$x,$y"
-      }.mkString(" ")
+      // Find transform origin at the edge midpoint in canvas coordinates
+      val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
+      val vertex1 = tiling.coords(edge.lesserNode)
+      val vertex2 = tiling.coords(edge.greaterNode)
+      val attachmentX = (vertex1.x + vertex2.x) / 2 * 50 + 400
+      val attachmentY = (vertex1.y + vertex2.y) / 2 * 50 + 300
 
-      svg.polygon(
-        svg.points := points,
-        svg.fill := "none",
-        svg.stroke := "#ff4444",
-        svg.strokeWidth := "2",
-        svg.strokeDashArray := "5,5",
-        svg.opacity := "0.8",
-        svg.className := "failed-polygon-wireframe",
-        // Add a subtle animation to make it more noticeable
-        svg.animateTransform(
-          svg.attributeName := "transform",
-          svg.attributeType := "XML",
-          svg.typ := "scale",
-          svg.values := "1;1.05;1",
-          svg.dur := "1s",
-          svg.repeatCount := "indefinite"
+      // Get flip info for animation direction
+      val (_, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
+      val scaleValues = if (wasFlipped) "1;0.95;1" else "1;1.05;1"
+
+      svg.g(
+        // Use CSS for transform origin so animation will scale from edge
+//        svg.style := s"transform-origin: $attachmentX $attachmentY;",
+        svg.polygon(
+          svg.points := points,
+          svg.fill := "none",
+          svg.stroke := "#ff4444",
+          svg.strokeWidth := "2",
+          svg.strokeDashArray := "5,5",
+          svg.opacity := "0.8",
+          svg.className := "failed-polygon-wireframe",
+//          svg.animateTransform(
+//            svg.attributeName := "transform",
+//            svg.attributeType := "XML",
+//            svg.typ := "scale",
+//            svg.values := scaleValues,
+//            svg.dur := "1s",
+//            svg.repeatCount := "indefinite"
+//          )
         )
       )
     } catch {
-      case e: Exception =>
-        // If we can't calculate the wireframe, return empty element
-        svg.g()
+      case _: Exception => svg.g()
     }
 
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
@@ -75,25 +84,30 @@ object FailedPolygonRenderer:
 
     // Generate polygon vertices around the calculated center
     val angleStep = 2 * Pi / polygonSides
+    val direction = if (wasFlipped) -1 else 1
     val radius = sideLength / (2 * sin(Pi / polygonSides))
 
-    // Start angle to align one edge with the perimeter edge
+    // For odd-sided and flipped, add half-step correction
+    val parityCorrection =
+      if (wasFlipped && polygonSides % 2 == 1) angleStep / 2
+      else 0.0
+    val extraCorrection =
+      if (polygonSides % 2 == 1) angleStep / 2
+      else 0.0
+
     val edgeAngle = atan2(edgeUnitY, edgeUnitX)
     val baseStartAngle = edgeAngle + Pi / 2
+    val edgeCenterCorrection = -Pi / polygonSides
 
-    // If we flipped the direction, we need to rotate the polygon by π/n to maintain proper alignment
-    val rotationCorrection = if (wasFlipped) Pi / polygonSides else 0.0
-    val startAngle = baseStartAngle + rotationCorrection
+    val startAngle =
+      baseStartAngle + edgeCenterCorrection + (direction * parityCorrection) + extraCorrection
 
     (0 until polygonSides).map { i =>
-      val angle = startAngle + i * angleStep
+      val angle = startAngle + direction * i * angleStep
       val x = centerX + radius * cos(angle)
       val y = centerY + radius * sin(angle)
-
-      // Convert to canvas coordinates
       val canvasX = x * 50 + 400
       val canvasY = y * 50 + 300
-
       (canvasX, canvasY)
     }.toVector
 
