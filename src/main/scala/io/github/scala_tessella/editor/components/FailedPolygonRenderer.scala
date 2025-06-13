@@ -62,8 +62,8 @@ object FailedPolygonRenderer:
     val edgeUnitX = edgeVectorX / edgeLength
     val edgeUnitY = edgeVectorY / edgeLength
 
-    // Calculate the correct outward direction
-    val outwardDirection = calculateOutwardDirection(edge, tiling)
+    // Calculate the correct outward direction and whether we flipped
+    val (outwardDirection, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
     val (perpX, perpY) = outwardDirection
 
     // Calculate the center of the failed polygon
@@ -78,7 +78,12 @@ object FailedPolygonRenderer:
     val radius = sideLength / (2 * sin(Pi / polygonSides))
 
     // Start angle to align one edge with the perimeter edge
-    val startAngle = atan2(edgeUnitY, edgeUnitX) + Pi / 2
+    val edgeAngle = atan2(edgeUnitY, edgeUnitX)
+    val baseStartAngle = edgeAngle + Pi / 2
+
+    // If we flipped the direction, we need to rotate the polygon by π/n to maintain proper alignment
+    val rotationCorrection = if (wasFlipped) Pi / polygonSides else 0.0
+    val startAngle = baseStartAngle + rotationCorrection
 
     (0 until polygonSides).map { i =>
       val angle = startAngle + i * angleStep
@@ -92,7 +97,7 @@ object FailedPolygonRenderer:
       (canvasX, canvasY)
     }.toVector
 
-  private def calculateOutwardDirection(edge: Edge, tiling: Tiling): (Double, Double) =
+  private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: Tiling): ((Double, Double), Boolean) =
     try {
       val vertex1 = tiling.coords(edge.lesserNode)
       val vertex2 = tiling.coords(edge.greaterNode)
@@ -103,9 +108,9 @@ object FailedPolygonRenderer:
       val edgeLength = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)
 
       // Calculate both possible perpendicular directions (normalized)
-      val perp1X = -edgeVectorY / edgeLength  // One perpendicular
+      val perp1X = -edgeVectorY / edgeLength  // First perpendicular
       val perp1Y = edgeVectorX / edgeLength
-      val perp2X = edgeVectorY / edgeLength   // Other perpendicular
+      val perp2X = edgeVectorY / edgeLength   // Second perpendicular (opposite of first)
       val perp2Y = -edgeVectorX / edgeLength
 
       // Calculate edge midpoint
@@ -135,19 +140,21 @@ object FailedPolygonRenderer:
           val point1Inside = isPointInPolygon(testPoint1X, testPoint1Y, polyVertices)
           val point2Inside = isPointInPolygon(testPoint2X, testPoint2Y, polyVertices)
 
-          // Return the direction that points OUTWARD (opposite of inward)
+          // Return the direction that points OUTWARD and whether we used the flipped direction
           if (point1Inside) {
-            (perp2X, perp2Y)  // perp1 points inward, so use perp2 (outward)
+            // perp1 points inward, so use perp2 (outward) - this is a flip
+            ((perp2X, perp2Y), true)
           } else if (point2Inside) {
-            (perp1X, perp1Y)  // perp2 points inward, so use perp1 (outward)
+            // perp2 points inward, so use perp1 (outward) - this is not a flip
+            ((perp1X, perp1Y), false)
           } else {
-            // Fallback: neither point is clearly inside, use perp1
-            (perp1X, perp1Y)
+            // Fallback: neither point is clearly inside, use perp1 without flip
+            ((perp1X, perp1Y), false)
           }
 
         case None =>
           // Fallback if we can't find the containing polygon
-          (perp1X, perp1Y)
+          ((perp1X, perp1Y), false)
       }
     } catch {
       case e: Exception =>
@@ -157,7 +164,7 @@ object FailedPolygonRenderer:
         val edgeVectorX = vertex2.x - vertex1.x
         val edgeVectorY = vertex2.y - vertex1.y
         val length = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)
-        (-edgeVectorY / length, edgeVectorX / length)
+        ((-edgeVectorY / length, edgeVectorX / length), false)
     }
 
   // Point-in-polygon test using ray casting algorithm
