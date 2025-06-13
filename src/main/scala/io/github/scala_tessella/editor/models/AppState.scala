@@ -21,6 +21,9 @@ object AppState:
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
   val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
 
+  val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80)) // Default: Material green (R,G,B)
+  val polygonColors: Var[Map[String, (Int, Int, Int)]] = Var(Map.empty)
+
   // Visualization state
   val showNodeLabels: Var[Boolean] = Var(false)
 
@@ -142,3 +145,12 @@ object AppState:
     if (selectedTilingPolygons.now().nonEmpty) {
       showError("Tessellation polygon deletion not supported yet")
     }
+
+  // Helper to get or generate a unique RGB color for a given polygon id
+  def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =
+    polygonColors.now().get(polyTag) match
+      case Some(rgb) => rgb
+      case None =>
+        val rgb = fillColor.now()
+        polygonColors.update(_ + (polyTag -> rgb))
+        rgb

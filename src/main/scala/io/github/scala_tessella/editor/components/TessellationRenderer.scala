@@ -13,7 +13,9 @@ object TessellationRenderer:
       // Stable id: use sorted node ids concatenated (order does not matter for selection)
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
-      renderTilingPolygon(tiling, nodes, polygonId)
+      // Assign a color for this tag if needed
+      AppState.getOrAssignPolygonColor(polyTag)
+      renderTilingPolygon(tiling, nodes, polygonId, polyTag)
     }
 
     val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map {
@@ -77,7 +79,7 @@ object TessellationRenderer:
       )
     }
 
-  private def renderTilingPolygon(tiling: Tiling, nodes: Vector[TilingNode], id: String): Element =
+  private def renderTilingPolygon(tiling: Tiling, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val center = Point(0, 0)
     val isSelected = AppState.selectedTilingPolygons.signal.map(_.contains(id))
 
@@ -90,11 +92,18 @@ object TessellationRenderer:
       s"$x,$y"
     }.mkString(" ")
 
+    // Compute color string reactively
+    val rgbSignal = AppState.polygonColors.signal.map { colors =>
+      val (r, g, b) = colors.getOrElse(polyTag, (200, 200, 200))
+      s"rgba($r, $g, $b, 0.6)" // background alpha for non-selected
+    }
+
     svg.polygon(
       svg.points := points,
-      svg.fill <-- isSelected.map(selected =>
-        if (selected) "rgba(255, 107, 107, 0.4)" else "rgba(100, 108, 255, 0.2)"
-      ),
+      svg.fill <-- isSelected.combineWithFn(rgbSignal) { (selected, color) =>
+        if (selected) "rgba(255, 107, 107, 0.4)" // Highlighted color (keep your selection style)
+        else color
+      },
       svg.stroke <-- isSelected.map(selected =>
         if (selected) "#ff6b6b" else "#646cff"
       ),
