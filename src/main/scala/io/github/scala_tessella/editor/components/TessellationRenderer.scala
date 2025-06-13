@@ -3,13 +3,17 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
-import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import io.github.scala_tessella.editor.models.{AppState, Point}
 
 object TessellationRenderer:
   def renderTiling(tiling: Tiling): Element =
-    val tilingPolygons = tiling.orientedPolygons.map(_.toPolygonPathNodes).zipWithIndex.map {
-      case (nodes, index) => renderTilingPolygon(tiling, nodes, s"tiling-poly-$index")
+    val tilingPolygons = tiling.orientedPolygons.map { poly =>
+      val nodes = poly.toPolygonPathNodes
+      // Stable id: use sorted node ids concatenated (order does not matter for selection)
+      val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+      val polygonId = s"tiling-poly-$polyTag"
+      renderTilingPolygon(tiling, nodes, polygonId)
     }
 
     val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map {
