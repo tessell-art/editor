@@ -43,6 +43,6 @@ object CanvasControlComponent:
     div(
       className := "transform-info",
       child.text <-- AppState.viewTransform.signal.map(t =>
-        f"Scale: ${t.scale}%.2f | Rotation: ${t.rotationDegrees}%.0f°"
+        f"Zoom: ${t.scale*100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
       )
     )
