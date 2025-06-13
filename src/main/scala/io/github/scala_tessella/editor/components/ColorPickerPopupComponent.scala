@@ -1,3 +1,4 @@
+
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
@@ -33,7 +34,12 @@ object ColorPickerPopupComponent:
           button("Cancel", onClick --> { _ => isOpen.set(false) }),
           button("OK",
             onClick --> { _ =>
-              AppState.fillColor.set(tempColor.now())
+              val newColor = tempColor.now()
+              AppState.fillColor.set(newColor)
+
+              // Apply the new color to all currently selected polygons
+              AppState.applyColorToSelectedPolygons(newColor)
+
               isOpen.set(false)
             }
           )

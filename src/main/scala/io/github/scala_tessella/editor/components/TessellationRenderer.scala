@@ -95,7 +95,7 @@ object TessellationRenderer:
     // Compute color string reactively
     val rgbSignal = AppState.polygonColors.signal.map { colors =>
       val (r, g, b) = colors.getOrElse(polyTag, (200, 200, 200))
-      s"rgba($r, $g, $b, 0.6)" // background alpha for non-selected
+      s"rgba($r, $g, $b, 1.0)" // background alpha for non-selected
     }
 
     svg.polygon(

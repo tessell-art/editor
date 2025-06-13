@@ -35,6 +35,25 @@ object AppState:
   val dragStart: Var[Option[Point]] = Var(None)
   val canvasElementRef: Var[Option[dom.Element]] = Var(None)
 
+  // Apply color to selected polygons
+  def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
+    val selectedIds = selectedTilingPolygons.now()
+    if (selectedIds.nonEmpty) {
+      // Extract polygon tags from the selected polygon IDs
+      val selectedTags = selectedIds.map { id =>
+        // Remove "tiling-poly-" prefix to get the polygon tag
+        if (id.startsWith("tiling-poly-")) id.substring("tiling-poly-".length)
+        else id
+      }
+
+      // Update colors for selected polygon tags
+      polygonColors.update { currentColors =>
+        selectedTags.foldLeft(currentColors) { (colors, tag) =>
+          colors + (tag -> color)
+        }
+      }
+    }
+
   // Toggle node labels visibility
   def toggleNodeLabels(): Unit =
     showNodeLabels.update(!_)
