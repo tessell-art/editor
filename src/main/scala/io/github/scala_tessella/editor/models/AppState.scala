@@ -159,7 +159,11 @@ object AppState:
               case Left(errMsg) =>
                 // Failure: show error message with wireframe
                 val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
-                showError(s"Cannot grow edge with ${polygonSides}-sided polygon: ${errMsg}", Some(placement))
+                val truncated =
+                  val idx = errMsg.indexOf("See SVG")
+                  if idx >= 0 then errMsg.substring(0, idx)
+                  else errMsg
+                showError(s"Cannot grow edge with ${polygonSides}-sided polygon: ${truncated}", Some(placement))
             }
           } else {
             showError("Invalid edge index")
