@@ -51,3 +51,26 @@
   background: #646cff;
   color: white;
 }
+
+.toggle-btn.mode-select {
+  background-color: #4CAF50;
+  border-color: #45a049;
+}
+
+.toggle-btn.mode-delete {
+  background-color: #f44336;
+  border-color: #d32f2f;
+}
+
+.toggle-btn.mode-delete:hover {
+  background-color: #e53935;
+}
+
+.tiling-polygon.delete-mode {
+  opacity: 0.8;
+}
+
+.tiling-polygon.delete-mode:hover {
+  opacity: 1.0;
+  filter: brightness(1.1);
+}

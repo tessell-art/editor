@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
-import io.github.scala_tessella.editor.models.{AppState, Point}
+import io.github.scala_tessella.editor.models.{AppState, Point, EditorMode}
 
 object TessellationRenderer:
 
@@ -115,13 +115,38 @@ object TessellationRenderer:
       s"rgb($r, $g, $b)"
     }
 
+    // Update stroke and styling based on editor mode
+    val strokeColorSignal = isSelected.combineWith(AppState.editorMode.signal).map {
+      case (selected, mode) =>
+        if (selected) "#ff6b6b"
+        else mode match
+          case EditorMode.Select => "#646cff"
+          case EditorMode.Delete => "#ff4444" // Red tint for delete mode
+    }
+
+    val strokeWidthSignal = isSelected.combineWith(AppState.editorMode.signal).map {
+      case (selected, mode) =>
+        if (selected) "3.5"
+        else mode match
+          case EditorMode.Select => "1.5"
+          case EditorMode.Delete => "2.0" // Slightly thicker in delete mode
+    }
+
     val basePolygon = svg.polygon(
       svg.points := points,
       svg.fill <-- rgbSignal,
-      svg.stroke <-- isSelected.map(selected => if (selected) "#ff6b6b" else "#646cff"),
-      svg.strokeWidth <-- isSelected.map(selected => if (selected) "3.5" else "1.5"),
-      svg.className := "tiling-polygon",
-      onClick --> { _ => AppState.toggleTilingPolygonSelection(id) }
+      svg.stroke <-- strokeColorSignal,
+      svg.strokeWidth <-- strokeWidthSignal,
+      svg.className <-- AppState.editorMode.signal.map {
+        case EditorMode.Select => "tiling-polygon"
+        case EditorMode.Delete => "tiling-polygon delete-mode"
+      },
+      // Add cursor style based on mode
+      svg.style <-- AppState.editorMode.signal.map {
+        case EditorMode.Select => "cursor: pointer;"
+        case EditorMode.Delete => "cursor: crosshair;"
+      },
+      onClick --> { _ => AppState.handleTilingPolygonClick(id) }
     )
 
     val patternOverlay = svg.polygon(

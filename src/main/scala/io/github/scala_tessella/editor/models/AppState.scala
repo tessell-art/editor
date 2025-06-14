@@ -17,6 +17,10 @@ case class FailedPolygonPlacement(
                                    tiling: Tiling
                                  )
 
+// Editor mode enumeration
+enum EditorMode:
+  case Select, Delete
+
 object AppState:
   // Polygon palette state
   val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
@@ -24,6 +28,9 @@ object AppState:
 
   // Canvas state - simplified to only include view transform
   val viewTransform: Var[ViewTransform] = Var(ViewTransform())
+
+  // Editor mode state
+  val editorMode: Var[EditorMode] = Var(EditorMode.Select)
 
   // Tessellation state - start with empty tiling
   val currentTiling: Var[Option[Tiling]] = Var(None)
@@ -47,6 +54,13 @@ object AppState:
   val dragStart: Var[Option[Point]] = Var(None)
   val canvasElementRef: Var[Option[dom.Element]] = Var(None)
 
+  // Toggle editor mode between Select and Delete
+  def toggleEditorMode(): Unit =
+    editorMode.update {
+      case EditorMode.Select => EditorMode.Delete
+      case EditorMode.Delete => EditorMode.Select
+    }
+
   // Apply color to selected polygons
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
     val selectedIds = selectedTilingPolygons.now()
@@ -64,7 +78,6 @@ object AppState:
           colors + (tag -> color)
         }
       }
-
 
   // Toggle node labels visibility
   def toggleNodeLabels(): Unit =
@@ -119,12 +132,41 @@ object AppState:
     selectedTilingPolygons.set(Set.empty)
     selectedPerimeterEdges.set(Set.empty)
 
+  // Handle tiling polygon click based on current editor mode
+  def handleTilingPolygonClick(polygonId: String): Unit =
+    editorMode.now() match
+      case EditorMode.Select =>
+        toggleTilingPolygonSelection(polygonId)
+      case EditorMode.Delete =>
+        attemptPolygonDeletion(polygonId)
+
   // Toggle tiling polygon selection
   def toggleTilingPolygonSelection(polygonId: String): Unit =
     selectedTilingPolygons.update { selected =>
       if selected.contains(polygonId) then selected - polygonId
       else selected + polygonId
     }
+
+  // Attempt to delete a polygon from the tessellation
+  private def attemptPolygonDeletion(polygonId: String): Unit =
+    currentTiling.now() match
+      case Some(tiling) =>
+        // Extract polygon tag from the ID
+        val polyTag = if polygonId.startsWith("tiling-poly-") then
+          polygonId.substring("tiling-poly-".length)
+        else
+          polygonId
+
+        // For now, show a message that deletion is not yet implemented
+        // In the future, you would implement actual polygon removal logic here
+        showError(s"Polygon deletion not yet implemented. Would delete polygon: $polyTag")
+
+      // Optionally, you could implement a simple removal by reconstructing the tiling
+      // without the selected polygon, but this would require more complex logic
+      // to ensure the resulting tiling is still valid
+
+      case None =>
+        showError("No tessellation available to modify")
 
   // Toggle perimeter edge selection
   def togglePerimeterEdgeSelection(edgeId: String): Unit =

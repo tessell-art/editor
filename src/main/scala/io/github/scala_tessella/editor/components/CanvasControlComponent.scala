@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.components.ColorPickerPopupComponent
-import io.github.scala_tessella.editor.models.{AppState, ViewTransform}
+import io.github.scala_tessella.editor.models.{AppState, ViewTransform, EditorMode}
 import scala.math.{max, min}
 
 object CanvasControlComponent:
@@ -57,6 +57,21 @@ object CanvasControlComponent:
             if (show) "toggle-btn active" else "toggle-btn"
           ),
           onClick --> { _ => AppState.toggleNodeLabels() }
+        ),
+        button(
+          child.text <-- AppState.editorMode.signal.map {
+            case EditorMode.Select => "Mode: Select"
+            case EditorMode.Delete => "Mode: Delete"
+          },
+          className <-- AppState.editorMode.signal.map {
+            case EditorMode.Select => "toggle-btn mode-select"
+            case EditorMode.Delete => "toggle-btn mode-delete active"
+          },
+          onClick --> { _ => AppState.toggleEditorMode() },
+          title <-- AppState.editorMode.signal.map {
+            case EditorMode.Select => "Click to switch to Delete mode"
+            case EditorMode.Delete => "Click to switch to Select mode"
+          }
         )
       ),
       ColorPickerPopupComponent.element(showColorPicker, tempColor),
