@@ -220,7 +220,7 @@ object AppState:
             val perimeterNodes = perimeterEdges.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
 
             // Find which polygon edges are on the perimeter
-            val edgesOnPerimeter = polygonEdges.intersect(perimeterEdges)
+            val edgesOnPerimeter: Set[Edge] = polygonEdges.intersect(perimeterEdges)
 
             // Find which polygon nodes are on the perimeter
             val nodesOnPerimeter = polygonNodesSet.intersect(perimeterNodes)
@@ -244,9 +244,18 @@ object AppState:
                 else
                   // All checks passed - this polygon could theoretically be deleted
                   val edgeCount = edgesOnPerimeter.size
-                  val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
+                  val edgeList: String = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
                   showError(s"Polygon $polyTag is potentially deletable: Would remove $edgeCount continuous perimeter edge${if edgeCount > 1 then "s" else ""} ($edgeList). Actual deletion logic not yet implemented.")
-
+                  val result: Either[String, Tiling] =
+                    Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
+                  result match
+                    case Right(newTiling) =>
+                      // Success: update tiling and clear selections
+                      currentTiling.set(Some(newTiling))
+                      clearError()
+                    case Left(errMsg) =>
+                      // Failure: show an error message
+                      showError(s"Cannot remove $polygonSides-sided polygon: $errMsg")
           case None =>
             showError(s"Could not find polygon with tag: $polyTag")
 
