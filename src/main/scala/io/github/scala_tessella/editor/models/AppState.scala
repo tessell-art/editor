@@ -1,4 +1,3 @@
-
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.{*, given}
@@ -17,6 +16,13 @@ case class FailedPolygonPlacement(
                                    edge: Edge,
                                    tiling: Tiling
                                  )
+
+// Case class to represent a failed polygon deletion
+case class FailedPolygonDeletion(
+                                  polygonId: String,
+                                  polygonNodes: Vector[TilingNode],
+                                  tiling: Tiling
+                                )
 
 // Editor mode enumeration
 enum EditorMode:
@@ -49,6 +55,9 @@ object AppState:
 
   // Failed polygon placement state - for showing wireframe feedback
   val failedPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
+
+  // Failed polygon deletion state - for showing wireframe feedback
+  val failedDeletion: Var[Option[FailedPolygonDeletion]] = Var(None)
 
   // Canvas interaction state
   val isDragging: Var[Boolean] = Var(false)
@@ -85,16 +94,18 @@ object AppState:
     showNodeLabels.update(!_)
 
   // Show error message temporarily with optional failed placement info
-  def showError(message: String, placement: Option[FailedPolygonPlacement] = None): Unit =
+  def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
     errorMessage.set(Some(message))
     failedPlacement.set(placement)
+    failedDeletion.set(deletion)
 
-    // Clear error and failed placement after 3 seconds
+    // Clear error and failed placement/deletion after 3 seconds
     Try {
       if (js.typeOf(js.Dynamic.global.window) != "undefined") {
         dom.window.setTimeout(() => {
           errorMessage.set(None)
           failedPlacement.set(None)
+          failedDeletion.set(None)
         }, 3000)
       }
     }.recover {
@@ -105,6 +116,7 @@ object AppState:
   def clearError(): Unit =
     errorMessage.set(None)
     failedPlacement.set(None)
+    failedDeletion.set(None)
 
   // Polygon selection with tiling creation logic
   def selectPolygon(sides: Int): Unit =
@@ -225,13 +237,16 @@ object AppState:
             // Find which polygon nodes are on the perimeter
             val nodesOnPerimeter = polygonNodesSet.intersect(perimeterNodes)
 
+            // Create failed deletion object for wireframe effect
+            val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, tiling)
+
             if edgesOnPerimeter.isEmpty then
-              showError(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.")
+              showError(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.", deletion = Some(failedDeletionInfo))
             else
               // Check if perimeter edges form a continuous path
               if !areEdgesContinuous(edgesOnPerimeter) then
                 val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                showError(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.")
+                showError(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.", deletion = Some(failedDeletionInfo))
               else
                 // Check if there are polygon nodes on perimeter that are not part of the found edges
                 val nodesInPerimeterEdges = edgesOnPerimeter.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
@@ -240,12 +255,11 @@ object AppState:
                 if isolatedPerimeterNodes.nonEmpty then
                   val nodeList = isolatedPerimeterNodes.mkString(", ")
                   val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                  showError(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.")
+                  showError(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.", deletion = Some(failedDeletionInfo))
                 else
                   // All checks passed - this polygon could theoretically be deleted
                   val edgeCount = edgesOnPerimeter.size
                   val edgeList: String = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                  showError(s"Polygon $polyTag is potentially deletable: Would remove $edgeCount continuous perimeter edge${if edgeCount > 1 then "s" else ""} ($edgeList). Actual deletion logic not yet implemented.")
                   val result: Either[String, Tiling] =
                     Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
                   result match

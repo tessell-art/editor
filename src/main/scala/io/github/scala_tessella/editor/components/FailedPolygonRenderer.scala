@@ -1,8 +1,8 @@
 
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.tessella.{RegularPolygon, Tiling}
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.editor.models.{FailedPolygonPlacement, FailedPolygonDeletion}
 import io.github.scala_tessella.tessella.Topology.Edge
 import io.github.scala_tessella.editor.models.FailedPolygonPlacement
 import io.github.scala_tessella.tessella.Geometry.Point
@@ -29,7 +29,7 @@ object FailedPolygonRenderer:
 
       svg.g(
         // Use CSS for transform origin so animation will scale from edge
-//        svg.style := s"transform-origin: $attachmentX $attachmentY;",
+        //        svg.style := s"transform-origin: $attachmentX $attachmentY;",
         svg.polygon(
           svg.points := points,
           svg.fill := "none",
@@ -38,12 +38,54 @@ object FailedPolygonRenderer:
           svg.strokeDashArray := "5,5",
           svg.opacity := "0.8",
           svg.className := "failed-polygon-wireframe",
+          //          svg.animateTransform(
+          //            svg.attributeName := "transform",
+          //            svg.attributeType := "XML",
+          //            svg.typ := "scale",
+          //            svg.values := scaleValues,
+          //            svg.dur := "1s",
+          //            svg.repeatCount := "indefinite"
+          //          )
+        )
+      )
+    } catch {
+      case _: Exception => svg.g()
+    }
+
+  def renderFailedDeletion(deletion: FailedPolygonDeletion): Element =
+    try {
+      val FailedPolygonDeletion(polygonId, polygonNodes, tiling) = deletion
+
+      // Calculate polygon points in canvas coordinates
+      val center = Point(0, 0)
+      val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
+
+      val points = polygonNodes.map(tiling.coords).map { vertex =>
+        val x = canvasCenter.x + vertex.x * 50
+        val y = canvasCenter.y + vertex.y * 50
+        s"$x,$y"
+      }.mkString(" ")
+
+      // Calculate polygon center for animation origin
+      val centerX = polygonNodes.map(tiling.coords).map(_.x).sum / polygonNodes.length * 50 + 400
+      val centerY = polygonNodes.map(tiling.coords).map(_.y).sum / polygonNodes.length * 50 + 300
+
+      svg.g(
+        svg.polygon(
+          svg.points := points,
+          svg.fill := "none",
+          svg.stroke := "#ff4444",
+          svg.strokeWidth := "3",
+          svg.strokeDashArray := "8,4",
+          svg.opacity := "0.9",
+          svg.className := "failed-deletion-wireframe",
+//          // Pulsing animation to indicate deletion attempt
 //          svg.animateTransform(
 //            svg.attributeName := "transform",
 //            svg.attributeType := "XML",
 //            svg.typ := "scale",
-//            svg.values := scaleValues,
-//            svg.dur := "1s",
+//            svg.values := "1;0.9;1",
+//            svg.dur := "1.5s",
 //            svg.repeatCount := "indefinite"
 //          )
         )
@@ -101,7 +143,7 @@ object FailedPolygonRenderer:
       (canvasX, canvasY)
     }.toVector
 
-  private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: Tiling): ((Double, Double), Boolean) =
+  private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: io.github.scala_tessella.tessella.Tiling): ((Double, Double), Boolean) =
     try
       val vertex1 = tiling.coords(edge.lesserNode)
       val vertex2 = tiling.coords(edge.greaterNode)

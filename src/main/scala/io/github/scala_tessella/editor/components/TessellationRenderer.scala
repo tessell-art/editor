@@ -1,9 +1,9 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.Tiling
-import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
-import io.github.scala_tessella.editor.models.{AppState, Point, EditorMode}
+import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode, NodeOrdering}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, Point}
 
 object TessellationRenderer:
 
@@ -39,9 +39,14 @@ object TessellationRenderer:
       else List.empty
     }
 
-    // Failed polygon wireframe overlay
+    // Failed polygon wireframe overlay for placement
     val failedPolygonWireframe = child.maybe <-- AppState.failedPlacement.signal.map { placement =>
       placement.map(FailedPolygonRenderer.renderFailedPlacement)
+    }
+
+    // Failed polygon wireframe overlay for deletion
+    val failedDeletionWireframe = child.maybe <-- AppState.failedDeletion.signal.map { deletion =>
+      deletion.map(FailedPolygonRenderer.renderFailedDeletion)
     }
 
     svg.g(
@@ -50,7 +55,8 @@ object TessellationRenderer:
       tilingPolygons,
       perimeterEdges,
       nodeLabels,
-      failedPolygonWireframe
+      failedPolygonWireframe,
+      failedDeletionWireframe
     )
 
   private def renderNodeLabels(tiling: Tiling): List[Element] =
@@ -115,6 +121,11 @@ object TessellationRenderer:
       s"rgb($r, $g, $b)"
     }
 
+    // Check if this polygon should be hidden due to failed deletion
+    val shouldHideForDeletion = AppState.failedDeletion.signal.map { deletion =>
+      deletion.exists(_.polygonId == id)
+    }
+
     // Update stroke and styling based on editor mode
     val strokeColorSignal = isSelected.combineWith(AppState.editorMode.signal).map {
       case (selected, mode) =>
@@ -146,18 +157,24 @@ object TessellationRenderer:
         case EditorMode.Select => "cursor: pointer;"
         case EditorMode.Delete => "cursor: crosshair;"
       },
+      // Hide polygon when showing deletion wireframe
+      svg.opacity <-- shouldHideForDeletion.map(hide => if hide then "0" else "1"),
       onClick --> { _ => AppState.handleTilingPolygonClick(id) }
     )
 
     val patternOverlay = svg.polygon(
       svg.points := points,
       svg.fill := "url(#selection-pattern)",
-      svg.pointerEvents := "none"
+      svg.pointerEvents := "none",
+      // Hide pattern overlay when showing deletion wireframe
+      svg.opacity <-- shouldHideForDeletion.map(hide => if hide then "0" else "1")
     )
 
     svg.g(
       basePolygon,
-      child.maybe <-- isSelected.map(selected => if (selected) Some(patternOverlay) else None)
+      child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map {
+        case (selected, hidden) => if (selected && !hidden) Some(patternOverlay) else None
+      }
     )
 
   private def renderPerimeterEdge(tiling: Tiling, edge: Edge, edgeIndex: Int, id: String): Element =
