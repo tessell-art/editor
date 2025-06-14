@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
-import io.github.scala_tessella.tessella.Topology.Edge
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering}
 import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.TilingGenerator
 import scala.scalajs.js
@@ -157,13 +157,38 @@ object AppState:
         else
           polygonId
 
-        // For now, show a message that deletion is not yet implemented
-        // In the future, you would implement actual polygon removal logic here
-        showError(s"Polygon deletion not yet implemented. Would delete polygon: $polyTag")
+        // Find the specific polygon in the tiling
+        val targetPolygon = tiling.orientedPolygons.find { poly =>
+          val nodes = poly.toPolygonPathNodes
+          val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+          tag == polyTag
+        }
 
-      // Optionally, you could implement a simple removal by reconstructing the tiling
-      // without the selected polygon, but this would require more complex logic
-      // to ensure the resulting tiling is still valid
+        targetPolygon match
+          case Some(polygon) =>
+            // Get the polygon's nodes and edges
+            val polygonNodes = polygon.toPolygonPathNodes
+            val polygonEdges = polygonNodes.zipWithIndex.map { case (node, i) =>
+              val nextNode = polygonNodes((i + 1) % polygonNodes.length)
+              Edge(node, nextNode)
+            }.toSet
+
+            // Get perimeter edges
+            val perimeterEdges = tiling.perimeter.toRingEdges.toSet
+
+            // Find which polygon edges are on the perimeter
+            val edgesOnPerimeter = polygonEdges.intersect(perimeterEdges)
+
+            if edgesOnPerimeter.nonEmpty then
+              val edgeCount = edgesOnPerimeter.size
+              val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
+              showError(s"Potentially deletable polygon $polyTag: would remove $edgeCount perimeter edge${if edgeCount > 1 then "s" else ""} ($edgeList). Deletion of polygons with perimeter edges not yet supported.")
+            else
+              // This polygon has no perimeter edges, so it could not be deleted
+              showError(s"Polygon $polyTag has no perimeter edges, it cannot be removed safely.")
+
+          case None =>
+            showError(s"Could not find polygon with tag: $polyTag")
 
       case None =>
         showError("No tessellation available to modify")
