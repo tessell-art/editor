@@ -122,8 +122,9 @@ object TessellationRenderer:
     }
 
     // Check if this polygon should be hidden due to failed deletion
-    val shouldHideForDeletion = AppState.failedDeletion.signal.map { deletion =>
-      deletion.exists(_.polygonId == id)
+    val shouldHideForDeletion = AppState.failedDeletion.signal.map {
+      case Some(failedDel) => failedDel.polygonId == id
+      case None => false
     }
 
     // Update stroke and styling based on editor mode
@@ -153,12 +154,14 @@ object TessellationRenderer:
         case EditorMode.Delete => "tiling-polygon delete-mode"
       },
       // Add cursor style based on mode
-      svg.style <-- AppState.editorMode.signal.map {
-        case EditorMode.Select => "cursor: pointer;"
-        case EditorMode.Delete => "cursor: crosshair;"
+      svg.style <-- shouldHideForDeletion.combineWith(AppState.editorMode.signal).map {
+        case (hidden, mode) =>
+          val cursor = mode match
+            case EditorMode.Select => "cursor: pointer;"
+            case EditorMode.Delete => "cursor: crosshair;"
+          val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
+          cursor + opacity
       },
-      // Hide polygon when showing deletion wireframe
-      svg.opacity <-- shouldHideForDeletion.map(hide => if hide then "0" else "1"),
       onClick --> { _ => AppState.handleTilingPolygonClick(id) }
     )
 
@@ -167,7 +170,7 @@ object TessellationRenderer:
       svg.fill := "url(#selection-pattern)",
       svg.pointerEvents := "none",
       // Hide pattern overlay when showing deletion wireframe
-      svg.opacity <-- shouldHideForDeletion.map(hide => if hide then "0" else "1")
+      svg.style <-- shouldHideForDeletion.map(hidden => if hidden then "opacity: 0;" else "opacity: 1;")
     )
 
     svg.g(
