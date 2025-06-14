@@ -14,6 +14,7 @@ object KeyboardHandler:
     event.key match
       case "r" | "R" => AppState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 15))
       case "e" | "E" => AppState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 15))
+      case "z" if event.ctrlKey => event.preventDefault(); AppState.undo()
       case "+" | "=" => AppState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.1, 5.0)))
       case "-" | "_" => AppState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.1, 0.1)))
       case "Escape" => AppState.clearAllSelections()

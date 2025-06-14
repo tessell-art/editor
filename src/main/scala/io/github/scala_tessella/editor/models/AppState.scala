@@ -5,7 +5,7 @@ import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import org.scalajs.dom
-import io.github.scala_tessella.editor.utils.TilingGenerator
+import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
 
 import scala.scalajs.js
 import scala.util.Try
@@ -157,14 +157,18 @@ object AppState:
 
       // If tiling is empty, create a new tiling from the selected polygon
       if currentTiling.now().isEmpty then
+        // Save state before creating new tiling
+        UndoManager.saveState()
+
         withLoadingState { () =>
           TilingGenerator.createTilingFromPolygon(sides)
-        }.foreach {
-          case Some(tiling) =>
-            currentTiling.set(Some(tiling))
-            clearAllSelections() // Clear selections when new tiling is created
-          case None =>
-            showError(s"Failed to create tiling from $sides-sided polygon")
+        }.foreach { result =>
+          result match
+            case Some(tiling) =>
+              currentTiling.set(Some(tiling))
+              clearAllSelections() // Clear selections when new tiling is created
+            case None =>
+              showError(s"Failed to create tiling from $sides-sided polygon")
         }
 
   // Check if tiling is empty
@@ -173,6 +177,10 @@ object AppState:
   // Clear tiling and reset to empty state
   def clearTiling(): Unit =
     if !isProcessing.now() then
+      // Save state before clearing
+      if currentTiling.now().nonEmpty then
+        UndoManager.saveState()
+
       currentTiling.set(None)
       selectedTilingPolygons.set(Set.empty)
       selectedPerimeterEdges.set(Set.empty)
@@ -242,6 +250,8 @@ object AppState:
 
   // Attempt to delete a polygon from the tessellation
   private def attemptPolygonDeletion(polygonId: String): Unit =
+    // Save state before attempting deletion
+    UndoManager.saveState()
     withLoadingState { () =>
       currentTiling.now() match
         case Some(tiling) =>
@@ -333,6 +343,8 @@ object AppState:
     if !isProcessing.now() then
       (currentTiling.now(), selectedPolygon.now()) match
         case (Some(tiling), Some(polygonSides)) =>
+          // Save state before growing edge
+          UndoManager.saveState()
           // Try to grow the edge with the selected polygon
           withLoadingState { () =>
             try
@@ -390,3 +402,7 @@ object AppState:
         val rgb = fillColor.now()
         polygonColors.update(_ + (polyTag -> rgb))
         rgb
+
+  def undo(): Unit =
+    if !isProcessing.now() then
+      UndoManager.undo() 

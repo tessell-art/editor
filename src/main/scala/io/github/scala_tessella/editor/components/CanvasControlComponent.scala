@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.components.ColorPickerPopupComponent
+import io.github.scala_tessella.editor.components.{ColorPickerPopupComponent, UndoComponent}
 import io.github.scala_tessella.editor.models.{AppState, ViewTransform, EditorMode}
 import scala.math.{max, min}
 
@@ -74,6 +74,7 @@ object CanvasControlComponent:
           }
         )
       ),
+      UndoComponent.element,
       ColorPickerPopupComponent.element(showColorPicker, tempColor),
       transformInfo()
     )
