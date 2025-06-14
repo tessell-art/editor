@@ -118,7 +118,7 @@ object TessellationRenderer:
     // Update stroke and styling based on editor mode
     val strokeColorSignal = isSelected.combineWith(AppState.editorMode.signal).map {
       case (selected, mode) =>
-        if (selected) "#ff6b6b"
+        if selected then "#ff6b6b"
         else mode match
           case EditorMode.Select => "#646cff"
           case EditorMode.Delete => "#ff4444" // Red tint for delete mode
@@ -126,7 +126,7 @@ object TessellationRenderer:
 
     val strokeWidthSignal = isSelected.combineWith(AppState.editorMode.signal).map {
       case (selected, mode) =>
-        if (selected) "3.5"
+        if selected then "3.5"
         else mode match
           case EditorMode.Select => "1.5"
           case EditorMode.Delete => "2.0" // Slightly thicker in delete mode
