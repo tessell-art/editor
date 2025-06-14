@@ -3,11 +3,14 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
-import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode, NodeOrdering}
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.TilingGenerator
+
 import scala.scalajs.js
 import scala.util.Try
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 // Case class to represent a failed polygon placement
 case class FailedPolygonPlacement(
@@ -39,6 +42,9 @@ object AppState:
   // Editor mode state
   val editorMode: Var[EditorMode] = Var(EditorMode.Select)
 
+  // Loading state for expensive operations
+  val isProcessing: Var[Boolean] = Var(false)
+
   // Tessellation state - start with empty tiling
   val currentTiling: Var[Option[Tiling]] = Var(None)
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
@@ -64,34 +70,60 @@ object AppState:
   val dragStart: Var[Option[Point]] = Var(None)
   val canvasElementRef: Var[Option[dom.Element]] = Var(None)
 
+  // JavaScript-compatible delay function [[2]](https://stackoverflow.com/questions/46617946/sleep-inside-future-in-scala-js)
+  private def delay(milliseconds: Int): Future[Unit] = {
+    val p = Promise[Unit]()
+    js.timers.setTimeout(milliseconds) {
+      p.success(())
+    }
+    p.future
+  }
+
+  // Helper to execute expensive operations with loading state
+  private def withLoadingState[T](operation: () => T): Future[T] = {
+    isProcessing.set(true)
+
+    // Use delay instead of Thread.sleep to let UI update before computation
+    delay(50).map { _ =>
+      try {
+        operation()
+      } finally {
+        isProcessing.set(false)
+      }
+    }
+  }
+
   // Toggle editor mode between Select and Delete
   def toggleEditorMode(): Unit =
-    editorMode.update {
-      case EditorMode.Select => EditorMode.Delete
-      case EditorMode.Delete => EditorMode.Select
-    }
+    if !isProcessing.now() then
+      editorMode.update {
+        case EditorMode.Select => EditorMode.Delete
+        case EditorMode.Delete => EditorMode.Select
+      }
 
   // Apply color to selected polygons
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
-    val selectedIds = selectedTilingPolygons.now()
-    if selectedIds.nonEmpty then
-      // Extract polygon tags from the selected polygon IDs
-      val selectedTags = selectedIds.map { id =>
-        // Remove "tiling-poly-" prefix to get the polygon tag
-        if id.startsWith("tiling-poly-") then id.substring("tiling-poly-".length)
-        else id
-      }
-
-      // Update colors for selected polygon tags
-      polygonColors.update { currentColors =>
-        selectedTags.foldLeft(currentColors) { (colors, tag) =>
-          colors + (tag -> color)
+    if !isProcessing.now() then
+      val selectedIds = selectedTilingPolygons.now()
+      if selectedIds.nonEmpty then
+        // Extract polygon tags from the selected polygon IDs
+        val selectedTags = selectedIds.map { id =>
+          // Remove "tiling-poly-" prefix to get the polygon tag
+          if id.startsWith("tiling-poly-") then id.substring("tiling-poly-".length)
+          else id
         }
-      }
+
+        // Update colors for selected polygon tags
+        polygonColors.update { currentColors =>
+          selectedTags.foldLeft(currentColors) { (colors, tag) =>
+            colors + (tag -> color)
+          }
+        }
 
   // Toggle node labels visibility
   def toggleNodeLabels(): Unit =
-    showNodeLabels.update(!_)
+    if !isProcessing.now() then
+      showNodeLabels.update(!_)
 
   // Show error message temporarily with optional failed placement info
   def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
@@ -120,45 +152,53 @@ object AppState:
 
   // Polygon selection with tiling creation logic
   def selectPolygon(sides: Int): Unit =
-    selectedPolygon.set(Some(sides))
+    if !isProcessing.now() then
+      selectedPolygon.set(Some(sides))
 
-    // If tiling is empty, create a new tiling from the selected polygon
-    if currentTiling.now().isEmpty then
-      TilingGenerator.createTilingFromPolygon(sides) match
-        case Some(tiling) =>
-          currentTiling.set(Some(tiling))
-          clearAllSelections() // Clear selections when new tiling is created
-        case None =>
-          showError(s"Failed to create tiling from $sides-sided polygon")
+      // If tiling is empty, create a new tiling from the selected polygon
+      if currentTiling.now().isEmpty then
+        withLoadingState { () =>
+          TilingGenerator.createTilingFromPolygon(sides)
+        }.foreach {
+          case Some(tiling) =>
+            currentTiling.set(Some(tiling))
+            clearAllSelections() // Clear selections when new tiling is created
+          case None =>
+            showError(s"Failed to create tiling from $sides-sided polygon")
+        }
 
   // Check if tiling is empty
   def isTilingEmpty: Boolean = currentTiling.now().isEmpty
 
   // Clear tiling and reset to empty state
   def clearTiling(): Unit =
-    currentTiling.set(None)
-    selectedTilingPolygons.set(Set.empty)
-    selectedPerimeterEdges.set(Set.empty)
+    if !isProcessing.now() then
+      currentTiling.set(None)
+      selectedTilingPolygons.set(Set.empty)
+      selectedPerimeterEdges.set(Set.empty)
 
   // Clear all selections
   def clearAllSelections(): Unit =
-    selectedTilingPolygons.set(Set.empty)
-    selectedPerimeterEdges.set(Set.empty)
+    if !isProcessing.now() then
+      selectedTilingPolygons.set(Set.empty)
+      selectedPerimeterEdges.set(Set.empty)
 
   // Handle tiling polygon click based on current editor mode
   def handleTilingPolygonClick(polygonId: String): Unit =
-    editorMode.now() match
-      case EditorMode.Select =>
-        toggleTilingPolygonSelection(polygonId)
-      case EditorMode.Delete =>
-        attemptPolygonDeletion(polygonId)
+    if !isProcessing.now() then
+      editorMode.now() match
+        case EditorMode.Select =>
+          toggleTilingPolygonSelection(polygonId)
+        case EditorMode.Delete =>
+          attemptPolygonDeletion(polygonId)
 
   // Toggle tiling polygon selection
   def toggleTilingPolygonSelection(polygonId: String): Unit =
-    selectedTilingPolygons.update { selected =>
-      if selected.contains(polygonId) then selected - polygonId
-      else selected + polygonId
-    }
+    if !isProcessing.now() then
+      selectedTilingPolygons.update { selected =>
+        if selected.contains(polygonId) then selected - polygonId
+        else selected + polygonId
+      }
 
   // Helper to check if edges form a continuous path
   private def areEdgesContinuous(edges: Set[Edge]): Boolean =
@@ -202,102 +242,112 @@ object AppState:
 
   // Attempt to delete a polygon from the tessellation
   private def attemptPolygonDeletion(polygonId: String): Unit =
-    currentTiling.now() match
-      case Some(tiling) =>
-        // Extract polygon tag from the ID
-        val polyTag = if polygonId.startsWith("tiling-poly-") then
-          polygonId.substring("tiling-poly-".length)
-        else
-          polygonId
+    withLoadingState { () =>
+      currentTiling.now() match
+        case Some(tiling) =>
+          // Extract polygon tag from the ID
+          val polyTag = if polygonId.startsWith("tiling-poly-") then
+            polygonId.substring("tiling-poly-".length)
+          else
+            polygonId
 
-        // Find the specific polygon in the tiling
-        val targetPolygon = tiling.orientedPolygons.find { poly =>
-          val nodes = poly.toPolygonPathNodes
-          val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
-          tag == polyTag
-        }
+          // Find the specific polygon in the tiling
+          val targetPolygon = tiling.orientedPolygons.find { poly =>
+            val nodes = poly.toPolygonPathNodes
+            val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+            tag == polyTag
+          }
 
-        targetPolygon match
-          case Some(polygon) =>
-            // Get the polygon's nodes and edges
-            val polygonNodes = polygon.toPolygonPathNodes
-            val polygonNodesSet = polygonNodes.toSet
-            val polygonEdges = polygonNodes.zipWithIndex.map { case (node, i) =>
-              val nextNode = polygonNodes((i + 1) % polygonNodes.length)
-              Edge(node, nextNode)
-            }.toSet
+          targetPolygon match
+            case Some(polygon) =>
+              // Get the polygon's nodes and edges
+              val polygonNodes = polygon.toPolygonPathNodes
+              val polygonNodesSet = polygonNodes.toSet
+              val polygonEdges = polygonNodes.zipWithIndex.map { case (node, i) =>
+                val nextNode = polygonNodes((i + 1) % polygonNodes.length)
+                Edge(node, nextNode)
+              }.toSet
 
-            // Get perimeter edges and perimeter nodes
-            val perimeterEdges = tiling.perimeter.toRingEdges.toSet
-            val perimeterNodes = perimeterEdges.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
+              // Get perimeter edges and perimeter nodes
+              val perimeterEdges = tiling.perimeter.toRingEdges.toSet
+              val perimeterNodes = perimeterEdges.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
 
-            // Find which polygon edges are on the perimeter
-            val edgesOnPerimeter: Set[Edge] = polygonEdges.intersect(perimeterEdges)
+              // Find which polygon edges are on the perimeter
+              val edgesOnPerimeter: Set[Edge] = polygonEdges.intersect(perimeterEdges)
 
-            // Find which polygon nodes are on the perimeter
-            val nodesOnPerimeter = polygonNodesSet.intersect(perimeterNodes)
+              // Find which polygon nodes are on the perimeter
+              val nodesOnPerimeter = polygonNodesSet.intersect(perimeterNodes)
 
-            // Create failed deletion object for wireframe effect
-            val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, tiling)
+              // Create failed deletion object for wireframe effect
+              val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, tiling)
 
-            if edgesOnPerimeter.isEmpty then
-              showError(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.", deletion = Some(failedDeletionInfo))
-            else
-              // Check if perimeter edges form a continuous path
-              if !areEdgesContinuous(edgesOnPerimeter) then
-                val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                showError(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.", deletion = Some(failedDeletionInfo))
+              if edgesOnPerimeter.isEmpty then
+                showError(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.", deletion = Some(failedDeletionInfo))
               else
-                // Check if there are polygon nodes on perimeter that are not part of the found edges
-                val nodesInPerimeterEdges = edgesOnPerimeter.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
-                val isolatedPerimeterNodes = nodesOnPerimeter -- nodesInPerimeterEdges
-
-                if isolatedPerimeterNodes.nonEmpty then
-                  val nodeList = isolatedPerimeterNodes.mkString(", ")
+                // Check if perimeter edges form a continuous path
+                if !areEdgesContinuous(edgesOnPerimeter) then
                   val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                  showError(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.", deletion = Some(failedDeletionInfo))
+                  showError(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.", deletion = Some(failedDeletionInfo))
                 else
-                  // All checks passed - this polygon could theoretically be deleted
-                  val edgeCount = edgesOnPerimeter.size
-                  val edgeList: String = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                  val result: Either[String, Tiling] =
-                    Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
-                  result match
-                    case Right(newTiling) =>
-                      // Success: update tiling and clear selections
-                      currentTiling.set(Some(newTiling))
-                      clearError()
-                    case Left(errMsg) =>
-                      // Failure: show an error message
-                      showError(s"Cannot remove $polygonSides-sided polygon: $errMsg")
-          case None =>
-            showError(s"Could not find polygon with tag: $polyTag")
+                  // Check if there are polygon nodes on perimeter that are not part of the found edges
+                  val nodesInPerimeterEdges = edgesOnPerimeter.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
+                  val isolatedPerimeterNodes = nodesOnPerimeter -- nodesInPerimeterEdges
 
-      case None =>
-        showError("No tessellation available to modify")
+                  if isolatedPerimeterNodes.nonEmpty then
+                    val nodeList = isolatedPerimeterNodes.mkString(", ")
+                    val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
+                    showError(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.", deletion = Some(failedDeletionInfo))
+                  else
+                    // All checks passed - try actual deletion
+                    val result: Either[String, Tiling] =
+                      Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
+                    result match
+                      case Right(newTiling) =>
+                        // Success: update tiling and clear selections
+                        currentTiling.set(Some(newTiling))
+                        clearError()
+                      case Left(errMsg) =>
+                        // Failure: show an error message
+                        showError(s"Cannot remove polygon: $errMsg", deletion = Some(failedDeletionInfo))
+
+            case None =>
+              showError(s"Could not find polygon with tag: $polyTag")
+
+        case None =>
+          showError("No tessellation available to modify")
+    }.recover {
+      case ex: Exception =>
+        showError(s"Error during polygon deletion: ${ex.getMessage}")
+    }
 
   // Toggle perimeter edge selection
   def togglePerimeterEdgeSelection(edgeId: String): Unit =
-    selectedPerimeterEdges.update { selected =>
-      if selected.contains(edgeId) then selected - edgeId
-      else selected + edgeId
-    }
+    if !isProcessing.now() then
+      selectedPerimeterEdges.update { selected =>
+        if selected.contains(edgeId) then selected - edgeId
+        else selected + edgeId
+      }
 
   // Handle perimeter edge click with polygon growth
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
-    (currentTiling.now(), selectedPolygon.now()) match
-      case (Some(tiling), Some(polygonSides)) =>
-        // Try to grow the edge with the selected polygon
-        try
-          import io.github.scala_tessella.tessella.RegularPolygon.Polygon
-          val polygon = Polygon(polygonSides)
-          val perimeterEdges = tiling.perimeter.toRingEdges.toVector
+    if !isProcessing.now() then
+      (currentTiling.now(), selectedPolygon.now()) match
+        case (Some(tiling), Some(polygonSides)) =>
+          // Try to grow the edge with the selected polygon
+          withLoadingState { () =>
+            try
+              import io.github.scala_tessella.tessella.RegularPolygon.Polygon
+              val polygon = Polygon(polygonSides)
+              val perimeterEdges = tiling.perimeter.toRingEdges.toVector
 
-          if edgeIndex < perimeterEdges.length then
-            val selectedEdge = perimeterEdges(edgeIndex)
-
-            val result = tiling.maybeGrowEdge(selectedEdge, polygon, AFTER_PERIMETER)
-
+              if edgeIndex < perimeterEdges.length then
+                val selectedEdge = perimeterEdges(edgeIndex)
+                tiling.maybeGrowEdge(selectedEdge, polygon, AFTER_PERIMETER)
+              else
+                Left("Invalid edge index")
+            catch
+              case e: Exception => Left(s"Error growing edge: ${e.getMessage}")
+          }.foreach { result =>
             result match
               case Right(newTiling) =>
                 // Success: update tiling and clear selections
@@ -306,29 +356,31 @@ object AppState:
                 clearError()
               case Left(errMsg) =>
                 // Failure: show error message with wireframe
-                val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
-                val truncated =
-                  val idx = errMsg.indexOf("See SVG")
-                  if idx >= 0 then errMsg.substring(0, idx)
-                  else errMsg
-                showError(s"Cannot grow edge with $polygonSides-sided polygon: $truncated", Some(placement))
-          else
-            showError("Invalid edge index")
-        catch
-          case e: Exception =>
-            showError(s"Error growing edge: ${e.getMessage}")
-      case (None, _) =>
-        showError("No tiling available to grow")
-      case (_, None) =>
-        // No polygon selected, just toggle selection
-        togglePerimeterEdgeSelection(edgeId)
+                val perimeterEdges = tiling.perimeter.toRingEdges.toVector
+                if edgeIndex < perimeterEdges.length then
+                  val selectedEdge = perimeterEdges(edgeIndex)
+                  val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
+                  val truncated =
+                    val idx = errMsg.indexOf("See SVG")
+                    if idx >= 0 then errMsg.substring(0, idx)
+                    else errMsg
+                  showError(s"Cannot grow edge with $polygonSides-sided polygon: $truncated", Some(placement))
+                else
+                  showError(errMsg)
+          }
+        case (None, _) =>
+          showError("No tiling available to grow")
+        case (_, None) =>
+          // No polygon selected, just toggle selection
+          togglePerimeterEdgeSelection(edgeId)
 
   // Delete selected elements (only applies to tiling polygons now)
   def deleteSelectedElements(): Unit =
-    // For now, we don't support deleting parts of tessellations
-    // This could be enhanced later to support tiling modifications
-    if (selectedTilingPolygons.now().nonEmpty) then
-      showError("Tessellation polygon deletion not supported yet")
+    if !isProcessing.now() then
+      // For now, we don't support deleting parts of tessellations
+      // This could be enhanced later to support tiling modifications
+      if (selectedTilingPolygons.now().nonEmpty) then
+        showError("Tessellation polygon deletion not supported yet")
 
   // Helper to get or generate a unique RGB color for a given polygon id
   def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =

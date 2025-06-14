@@ -27,9 +27,11 @@ object PolygonPaletteComponent:
   private def tilingStatus(): Element =
     div(
       className := "tiling-status",
-      child <-- AppState.currentTiling.signal.map {
-        case Some(_) => p("Tiling: Active", className := "status active")
-        case None => p("Tiling: Empty", className := "status empty")
+      child <-- AppState.currentTiling.signal.combineWith(AppState.isProcessing.signal).map {
+        case (Some(_), false) => p("Tiling: Active", className := "status active")
+        case (Some(_), true) => p("Tiling: Processing...", className := "status processing")
+        case (None, false) => p("Tiling: Empty", className := "status empty")
+        case (None, true) => p("Tiling: Creating...", className := "status processing")
       }
     )
 
@@ -37,23 +39,38 @@ object PolygonPaletteComponent:
     div(
       className := "tiling-controls",
       h3("Tessellation"),
-      button("Generate Hexagon Tiling", onClick --> { _ => TilingGenerator.generateHexagonTiling() }),
-      button("Generate Triangle Tiling", onClick --> { _ => TilingGenerator.generateTriangleTiling() }),
-      button("Generate Mixed Tiling", onClick --> { _ => TilingGenerator.generateMixedTiling() }),
+      button(
+        "Generate Hexagon Tiling",
+        disabled <-- AppState.isProcessing.signal,
+        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => TilingGenerator.generateHexagonTiling() }
+      ),
+      button(
+        "Generate Triangle Tiling",
+        disabled <-- AppState.isProcessing.signal,
+        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => TilingGenerator.generateTriangleTiling() }
+      ),
+      button(
+        "Generate Mixed Tiling",
+        disabled <-- AppState.isProcessing.signal,
+        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => TilingGenerator.generateMixedTiling() }
+      ),
       button(
         "Clear Tiling",
-        onClick --> { _ => AppState.clearTiling() }
+        disabled <-- AppState.isProcessing.signal,
+        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => AppState.clearTiling() }
       )
     )
 
   private def polygonButton(sides: Int): Element =
     button(
-      className <-- AppState.selectedPolygon.signal.map(selected =>
-        if (selected.contains(sides)) "polygon-btn selected" else "polygon-btn"
-      ),
+      className <-- AppState.selectedPolygon.signal.combineWith(AppState.isProcessing.signal).map { (selected, processing) =>
+        val baseClass = if (selected.contains(sides)) "polygon-btn selected" else "polygon-btn"
+        if processing then s"$baseClass disabled" else baseClass
+      },
       tpe := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
-      onClick --> { _ => AppState.selectPolygon(sides) }, // Use new selectPolygon method
+      disabled <-- AppState.isProcessing.signal,
+      onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => AppState.selectPolygon(sides) },
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)
     )

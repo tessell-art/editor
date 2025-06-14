@@ -11,6 +11,8 @@ object EditorCanvasComponent:
       h2("Canvas"),
       CanvasControlComponent.element,
       ErrorMessageComponent.element,
+      // Loading indicator
+      loadingIndicator(),
       svg.svg(
         svg.className := "editor-canvas",
         svg.width := "800",
@@ -21,6 +23,16 @@ object EditorCanvasComponent:
         // Store reference to the canvas element
         onMountCallback(ctx => AppState.canvasElementRef.set(Some(ctx.thisNode.ref))),
 
+        // Dynamic cursor based on loading state and editor mode
+        svg.style <-- AppState.isProcessing.signal.combineWith(AppState.editorMode.signal).map {
+          case (isProcessing, mode) =>
+            if isProcessing then
+              "cursor: wait; pointer-events: none;"
+            else mode match
+              case io.github.scala_tessella.editor.models.EditorMode.Select => "cursor: default;"
+              case io.github.scala_tessella.editor.models.EditorMode.Delete => "cursor: crosshair;"
+        },
+
         // Add grid pattern definition here
         GridRenderer.patternDef,
 
@@ -30,11 +42,23 @@ object EditorCanvasComponent:
         // Main content group with transforms
         contentGroup(),
 
-        onMouseDown --> MouseHandler.handleMouseDown,
-        onMouseMove --> MouseHandler.handleMouseMove,
-        onMouseUp --> MouseHandler.handleMouseUp,
-        onWheel --> MouseHandler.handleWheel,
-        onKeyDown --> KeyboardHandler.handleKeyDown
+        // Disable mouse events when processing
+        onMouseDown.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleMouseDown,
+        onMouseMove.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleMouseMove,
+        onMouseUp.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleMouseUp,
+        onWheel.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleWheel,
+        onKeyDown.filter(_ => !AppState.isProcessing.now()) --> KeyboardHandler.handleKeyDown
+      )
+    )
+
+  private def loadingIndicator(): Element =
+    div(
+      className := "loading-indicator",
+      display <-- AppState.isProcessing.signal.map(processing => if processing then "block" else "none"),
+      div(
+        className := "loading-content",
+        div(className := "spinner"),
+        p("Processing tessellation...")
       )
     )
 
