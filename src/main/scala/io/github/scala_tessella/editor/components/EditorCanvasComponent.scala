@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.AppState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.interactions.{KeyboardHandler, MouseHandler}
 
 object EditorCanvasComponent:
@@ -21,10 +21,10 @@ object EditorCanvasComponent:
         svg.tabIndex := "0",
 
         // Store reference to the canvas element
-        onMountCallback(ctx => AppState.canvasElementRef.set(Some(ctx.thisNode.ref))),
+        onMountCallback(ctx => EditorState.canvasElementRef.set(Some(ctx.thisNode.ref))),
 
         // Dynamic cursor based on loading state and editor mode
-        svg.style <-- AppState.isProcessing.signal.combineWith(AppState.editorMode.signal).map {
+        svg.style <-- EditorState.isProcessing.signal.combineWith(EditorState.editorMode.signal).map {
           case (isProcessing, mode) =>
             if isProcessing then
               "cursor: wait; pointer-events: none;"
@@ -43,18 +43,18 @@ object EditorCanvasComponent:
         contentGroup(),
 
         // Disable mouse events when processing
-        onMouseDown.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleMouseDown,
-        onMouseMove.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleMouseMove,
-        onMouseUp.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleMouseUp,
-        onWheel.filter(_ => !AppState.isProcessing.now()) --> MouseHandler.handleWheel,
-        onKeyDown.filter(_ => !AppState.isProcessing.now()) --> KeyboardHandler.handleKeyDown
+        onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseDown,
+        onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseMove,
+        onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseUp,
+        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleWheel,
+        onKeyDown.filter(_ => !EditorState.isProcessing.now()) --> KeyboardHandler.handleKeyDown
       )
     )
 
   private def loadingIndicator(): Element =
     div(
       className := "loading-indicator",
-      display <-- AppState.isProcessing.signal.map(processing => if processing then "block" else "none"),
+      display <-- EditorState.isProcessing.signal.map(processing => if processing then "block" else "none"),
       div(
         className := "loading-content",
         div(className := "spinner"),
@@ -73,7 +73,7 @@ object EditorCanvasComponent:
 
   private def contentGroup(): Element =
     svg.g(
-      svg.transform <-- AppState.viewTransform.signal.map(transform =>
+      svg.transform <-- EditorState.viewTransform.signal.map(transform =>
         s"translate(${transform.panX}, ${transform.panY}) scale(${transform.scale}) rotate(${transform.rotationDegrees} 400 300)"
       ),
 
@@ -81,10 +81,10 @@ object EditorCanvasComponent:
       GridRenderer.element,
 
       // Render tessellation if available
-      child.maybe <-- AppState.currentTiling.signal.map(_.map(TessellationRenderer.renderTiling)),
+      child.maybe <-- EditorState.currentTiling.signal.map(_.map(TessellationRenderer.renderTiling)),
 
       // Show message when no tessellation is available
-      child.maybe <-- AppState.currentTiling.signal.map { tiling =>
+      child.maybe <-- EditorState.currentTiling.signal.map { tiling =>
         if (tiling.isEmpty) Some(noTessellationMessage()) else None
       }
     )

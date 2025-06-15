@@ -18,11 +18,11 @@ object AppStateSnapshot:
   // Create a snapshot from current AppState
   def fromCurrentState: AppStateSnapshot =
     AppStateSnapshot(
-      tiling = AppState.currentTiling.now(),
-      selectedPolygon = AppState.selectedPolygon.now(),
-      selectedPerimeterEdges = AppState.selectedPerimeterEdges.now(),
-      selectedTilingPolygons = AppState.selectedTilingPolygons.now(),
-      polygonColors = AppState.polygonColors.now(),
-      fillColor = AppState.fillColor.now(),
-      editorMode = AppState.editorMode.now()
+      tiling = EditorState.currentTiling.now(),
+      selectedPolygon = EditorState.selectedPolygon.now(),
+      selectedPerimeterEdges = EditorState.selectedPerimeterEdges.now(),
+      selectedTilingPolygons = EditorState.selectedTilingPolygons.now(),
+      polygonColors = EditorState.polygonColors.now(),
+      fillColor = EditorState.fillColor.now(),
+      editorMode = EditorState.editorMode.now()
     )

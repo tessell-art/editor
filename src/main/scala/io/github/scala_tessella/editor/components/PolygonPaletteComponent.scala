@@ -1,9 +1,10 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.AppState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, TilingGenerator}
-import scala.math.{cos, Pi, sin}
+
+import scala.math.{Pi, cos, sin}
 
 object PolygonPaletteComponent:
   def element: Element =
@@ -12,11 +13,11 @@ object PolygonPaletteComponent:
       h2("Select a Polygon Shape"),
       div(
         className := "palette-grid",
-        AppState.polygonSides.map(sides => polygonButton(sides))
+        EditorState.polygonSides.map(sides => polygonButton(sides))
       ),
       div(
         className := "selected-info",
-        child.maybe <-- AppState.selectedPolygon.signal.map(_.map(sides =>
+        child.maybe <-- EditorState.selectedPolygon.signal.map(_.map(sides =>
           p(s"Selected: $sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})")
         ))
       ),
@@ -27,7 +28,7 @@ object PolygonPaletteComponent:
   private def tilingStatus(): Element =
     div(
       className := "tiling-status",
-      child <-- AppState.currentTiling.signal.combineWith(AppState.isProcessing.signal).map {
+      child <-- EditorState.currentTiling.signal.combineWith(EditorState.isProcessing.signal).map {
         case (Some(_), false) => p("Tiling: Active", className := "status active")
         case (Some(_), true) => p("Tiling: Processing...", className := "status processing")
         case (None, false) => p("Tiling: Empty", className := "status empty")
@@ -41,36 +42,36 @@ object PolygonPaletteComponent:
       h3("Tessellation"),
       button(
         "Generate Hexagon Tiling",
-        disabled <-- AppState.isProcessing.signal,
-        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => TilingGenerator.generateHexagonTiling() }
+        disabled <-- EditorState.isProcessing.signal,
+        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => TilingGenerator.generateHexagonTiling() }
       ),
       button(
         "Generate Triangle Tiling",
-        disabled <-- AppState.isProcessing.signal,
-        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => TilingGenerator.generateTriangleTiling() }
+        disabled <-- EditorState.isProcessing.signal,
+        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => TilingGenerator.generateTriangleTiling() }
       ),
       button(
         "Generate Mixed Tiling",
-        disabled <-- AppState.isProcessing.signal,
-        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => TilingGenerator.generateMixedTiling() }
+        disabled <-- EditorState.isProcessing.signal,
+        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => TilingGenerator.generateMixedTiling() }
       ),
       button(
         "Clear Tiling",
-        disabled <-- AppState.isProcessing.signal,
-        onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => AppState.clearTiling() }
+        disabled <-- EditorState.isProcessing.signal,
+        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => AppState.clearTiling() }
       )
     )
 
   private def polygonButton(sides: Int): Element =
     button(
-      className <-- AppState.selectedPolygon.signal.combineWith(AppState.isProcessing.signal).map { (selected, processing) =>
+      className <-- EditorState.selectedPolygon.signal.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
         val baseClass = if (selected.contains(sides)) "polygon-btn selected" else "polygon-btn"
         if processing then s"$baseClass disabled" else baseClass
       },
       tpe := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
-      disabled <-- AppState.isProcessing.signal,
-      onClick.filter(_ => !AppState.isProcessing.now()) --> { _ => AppState.selectPolygon(sides) },
+      disabled <-- EditorState.isProcessing.signal,
+      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => AppState.selectPolygon(sides) },
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)
     )

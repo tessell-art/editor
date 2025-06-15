@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.{AppState, AppStateSnapshot}
+import io.github.scala_tessella.editor.models.{AppState, AppStateSnapshot, EditorState}
 import com.raquo.laminar.api.L.{Var, Signal}
 import scala.collection.mutable
 
@@ -16,7 +16,7 @@ object UndoManager:
 
   // Save the current state to the undo stack
   def saveState(): Unit =
-    if !AppState.isProcessing.now() then
+    if !EditorState.isProcessing.now() then
       val snapshot = AppStateSnapshot.fromCurrentState
       
       // Don't save if the state hasn't actually changed
@@ -42,7 +42,7 @@ object UndoManager:
 
   // Undo the last operation
   def undo(): Unit =
-    if !AppState.isProcessing.now() && undoStack.nonEmpty then
+    if !EditorState.isProcessing.now() && undoStack.nonEmpty then
       val previousState = undoStack.pop()
       restoreState(previousState)
       updateUndoSignals()
@@ -59,13 +59,13 @@ object UndoManager:
 
   // Restore a previous state
   private def restoreState(snapshot: AppStateSnapshot): Unit =
-    AppState.currentTiling.set(snapshot.tiling)
-    AppState.selectedPolygon.set(snapshot.selectedPolygon)
-    AppState.selectedPerimeterEdges.set(snapshot.selectedPerimeterEdges)
-    AppState.selectedTilingPolygons.set(snapshot.selectedTilingPolygons)
-    AppState.polygonColors.set(snapshot.polygonColors)
-    AppState.fillColor.set(snapshot.fillColor)
-    AppState.editorMode.set(snapshot.editorMode)
+    EditorState.currentTiling.set(snapshot.tiling)
+    EditorState.selectedPolygon.set(snapshot.selectedPolygon)
+    EditorState.selectedPerimeterEdges.set(snapshot.selectedPerimeterEdges)
+    EditorState.selectedTilingPolygons.set(snapshot.selectedTilingPolygons)
+    EditorState.polygonColors.set(snapshot.polygonColors)
+    EditorState.fillColor.set(snapshot.fillColor)
+    EditorState.editorMode.set(snapshot.editorMode)
     
     // Clear any error states when undoing
     AppState.clearError()

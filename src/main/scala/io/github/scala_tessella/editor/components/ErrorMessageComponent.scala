@@ -1,13 +1,13 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.AppState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
 object ErrorMessageComponent:
   def element: Element =
     div(
       className := "error-container",
-      child.maybe <-- AppState.errorMessage.signal.map(_.map(message =>
+      child.maybe <-- EditorState.errorMessage.signal.map(_.map(message =>
         div(
           className := "error-message",
           span(className := "error-icon", "⚠️"),

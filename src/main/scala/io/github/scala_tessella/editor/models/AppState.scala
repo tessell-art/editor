@@ -6,6 +6,7 @@ import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PE
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
+import io.github.scala_tessella.editor.models.EditorState.*
 
 import scala.scalajs.js
 import scala.util.Try
@@ -32,43 +33,6 @@ enum EditorMode:
   case Select, Delete
 
 object AppState:
-  // Polygon palette state
-  val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
-  val selectedPolygon: Var[Option[Int]] = Var[Option[Int]](None)
-
-  // Canvas state - simplified to only include view transform
-  val viewTransform: Var[ViewTransform] = Var(ViewTransform())
-
-  // Editor mode state
-  val editorMode: Var[EditorMode] = Var(EditorMode.Select)
-
-  // Loading state for expensive operations
-  val isProcessing: Var[Boolean] = Var(false)
-
-  // Tessellation state - start with empty tiling
-  val currentTiling: Var[Option[Tiling]] = Var(None)
-  val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
-  val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
-
-  val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80)) // Default: Material green (R,G,B)
-  val polygonColors: Var[Map[String, (Int, Int, Int)]] = Var(Map.empty)
-
-  // Visualization state
-  val showNodeLabels: Var[Boolean] = Var(false)
-
-  // Error message state
-  val errorMessage: Var[Option[String]] = Var(None)
-
-  // Failed polygon placement state - for showing wireframe feedback
-  val failedPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
-
-  // Failed polygon deletion state - for showing wireframe feedback
-  val failedDeletion: Var[Option[FailedPolygonDeletion]] = Var(None)
-
-  // Canvas interaction state
-  val isDragging: Var[Boolean] = Var(false)
-  val dragStart: Var[Option[Point]] = Var(None)
-  val canvasElementRef: Var[Option[dom.Element]] = Var(None)
 
   // JavaScript-compatible delay function
   private def delay(milliseconds: Int): Future[Unit] = {
@@ -253,7 +217,6 @@ object AppState:
     // All nodes involved in edges should be visited
     visited.size == adjacency.size
 
-  // Attempt to delete a polygon from the tessellation
   // Attempt to delete a polygon from the tessellation
   private def attemptPolygonDeletion(polygonId: String): Unit =
     val future = withLoadingState { () =>

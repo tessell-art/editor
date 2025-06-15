@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.AppState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.utils.UndoManager
 
 object UndoComponent:
@@ -10,7 +10,7 @@ object UndoComponent:
       className := "undo-controls",
       button(
         className := "undo-button",
-        disabled <-- UndoManager.canUndo.signal.map(!_).combineWith(AppState.isProcessing.signal).map(_ || _),
+        disabled <-- UndoManager.canUndo.signal.map(!_).combineWith(EditorState.isProcessing.signal).map(_ || _),
         title := UndoManager.getUndoPreview.getOrElse("No actions to undo"),
         onClick --> { _ => AppState.undo() },
         span(className := "icon", "↶"), // Undo arrow icon

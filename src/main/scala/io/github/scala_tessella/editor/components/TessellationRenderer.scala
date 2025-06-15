@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode, NodeOrdering}
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, Point}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Point}
 
 object TessellationRenderer:
 
@@ -34,18 +34,18 @@ object TessellationRenderer:
       case (edge, index) => renderPerimeterEdge(tiling, edge, index, s"perimeter-edge-$index")
     }.toList
 
-    val nodeLabels = children <-- AppState.showNodeLabels.signal.map { showLabels =>
+    val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
       if showLabels then renderNodeLabels(tiling)
       else List.empty
     }
 
     // Failed polygon wireframe overlay for placement
-    val failedPolygonWireframe = child.maybe <-- AppState.failedPlacement.signal.map { placement =>
+    val failedPolygonWireframe = child.maybe <-- EditorState.failedPlacement.signal.map { placement =>
       placement.map(FailedPolygonRenderer.renderFailedPlacement)
     }
 
     // Failed polygon wireframe overlay for deletion
-    val failedDeletionWireframe = child.maybe <-- AppState.failedDeletion.signal.map { deletion =>
+    val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map { deletion =>
       deletion.map(FailedPolygonRenderer.renderFailedDeletion)
     }
 
@@ -77,14 +77,14 @@ object TessellationRenderer:
       svg.text(
         svg.x := offsetX.toString,
         svg.y := offsetY.toString,
-        svg.fontSize <-- AppState.viewTransform.signal.map(transform =>
+        svg.fontSize <-- EditorState.viewTransform.signal.map(transform =>
           // Scale font size with zoom but keep it readable
           val baseFontSize = 12
           val scaledSize = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
         ),
         // Counter-rotate the text to keep it readable
-        svg.transform <-- AppState.viewTransform.signal.map(transform =>
+        svg.transform <-- EditorState.viewTransform.signal.map(transform =>
           // Rotate around the text position to counter the canvas rotation
           s"rotate(${-transform.rotationDegrees} $offsetX $offsetY)"
         ),
@@ -96,7 +96,7 @@ object TessellationRenderer:
         svg.className := "node-label",
         // Add stroke for better readability
         svg.stroke := "#000",
-        svg.strokeWidth <-- AppState.viewTransform.signal.map(transform =>
+        svg.strokeWidth <-- EditorState.viewTransform.signal.map(transform =>
           (0.5 / transform.scale).max(0.2).min(1.0).toString
         ),
         svg.paintOrder := "stroke fill",
@@ -106,7 +106,7 @@ object TessellationRenderer:
 
   private def renderTilingPolygon(tiling: Tiling, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val center = Point(0, 0)
-    val isSelected = AppState.selectedTilingPolygons.signal.map(_.contains(id))
+    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
 
     val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
 
@@ -116,19 +116,19 @@ object TessellationRenderer:
       s"$x,$y"
     }.mkString(" ")
 
-    val rgbSignal = AppState.polygonColors.signal.map { colors =>
+    val rgbSignal = EditorState.polygonColors.signal.map { colors =>
       val (r, g, b) = colors.getOrElse(polyTag, (200, 200, 200))
       s"rgb($r, $g, $b)"
     }
 
     // Check if this polygon should be hidden due to failed deletion
-    val shouldHideForDeletion = AppState.failedDeletion.signal.map {
+    val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
       case Some(failedDel) => failedDel.polygonId == id
       case None => false
     }
 
     // Update stroke and styling based on editor mode
-    val strokeColorSignal = isSelected.combineWith(AppState.editorMode.signal).map {
+    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
       case (selected, mode) =>
         if selected then "#ff6b6b"
         else mode match
@@ -136,7 +136,7 @@ object TessellationRenderer:
           case EditorMode.Delete => "#ff4444" // Red tint for delete mode
     }
 
-    val strokeWidthSignal = isSelected.combineWith(AppState.editorMode.signal).map {
+    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
       case (selected, mode) =>
         if selected then "3.5"
         else mode match
@@ -149,12 +149,12 @@ object TessellationRenderer:
       svg.fill <-- rgbSignal,
       svg.stroke <-- strokeColorSignal,
       svg.strokeWidth <-- strokeWidthSignal,
-      svg.className <-- AppState.editorMode.signal.map {
+      svg.className <-- EditorState.editorMode.signal.map {
         case EditorMode.Select => "tiling-polygon"
         case EditorMode.Delete => "tiling-polygon delete-mode"
       },
       // Add cursor style based on mode
-      svg.style <-- shouldHideForDeletion.combineWith(AppState.editorMode.signal).map {
+      svg.style <-- shouldHideForDeletion.combineWith(EditorState.editorMode.signal).map {
         case (hidden, mode) =>
           val cursor = mode match
             case EditorMode.Select => "cursor: pointer;"
@@ -183,7 +183,7 @@ object TessellationRenderer:
   private def renderPerimeterEdge(tiling: Tiling, edge: Edge, edgeIndex: Int, id: String): Element =
     val vertex1 = tiling.coords(edge.lesserNode)
     val vertex2 = tiling.coords(edge.greaterNode)
-    val isSelected = AppState.selectedPerimeterEdges.signal.map(_.contains(id))
+    val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates
     val x1 = vertex1.x * 50 + 400

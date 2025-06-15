@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.AppState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
 object GridRenderer:
   private val patternId = "grid-pattern"
@@ -19,7 +19,7 @@ object GridRenderer:
           svg.fill := "none",
           svg.stroke := "#444",
           // Adjust stroke width based on zoom to keep it visually constant
-          svg.strokeWidth <-- AppState.viewTransform.signal.map(t => (1.0 / t.scale).max(0.1).min(2.0).toString)
+          svg.strokeWidth <-- EditorState.viewTransform.signal.map(t => (1.0 / t.scale).max(0.1).min(2.0).toString)
         )
       )
     )

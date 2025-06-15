@@ -2,30 +2,31 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.components.{ColorPickerPopupComponent, UndoComponent}
-import io.github.scala_tessella.editor.models.{AppState, ViewTransform, EditorMode}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
+
 import scala.math.{max, min}
 
 object CanvasControlComponent:
   private val showColorPicker = Var(false)
-  private val tempColor = Var(AppState.fillColor.now())
+  private val tempColor = Var(EditorState.fillColor.now())
 
   def element: Element =
     div(
       className := "canvas-controls",
       div(
         className := "control-group",
-        button("Reset View", onClick --> { _ => AppState.viewTransform.set(ViewTransform()) }),
+        button("Reset View", onClick --> { _ => EditorState.viewTransform.set(ViewTransform()) }),
         button("Zoom In", onClick --> { _ =>
-          AppState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))
+          EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))
         }),
         button("Zoom Out", onClick --> { _ =>
-          AppState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))
+          EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))
         }),
         button("Rotate Left", onClick --> { _ =>
-          AppState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))
+          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))
         }),
         button("Rotate Right", onClick --> { _ =>
-          AppState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
+          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
         }),
         button(
           "Fill Color ",
@@ -37,11 +38,11 @@ object CanvasControlComponent:
               svg.height := "18",
               svg.x := "2",
               svg.y := "2",
-              svg.fill <-- AppState.fillColor.signal.map { case (r,g,b) => f"rgb($r,$g,$b)" }
+              svg.fill <-- EditorState.fillColor.signal.map { case (r,g,b) => f"rgb($r,$g,$b)" }
             )
           ),
           onClick --> { _ =>
-            tempColor.set(AppState.fillColor.now())
+            tempColor.set(EditorState.fillColor.now())
             showColorPicker.set(true)
           },
           styleAttr := "margin-left: 8px; border: 1px solid #888; background: #222; color: white; display: inline-flex; align-items: center; gap: 0.3em; padding: 0.3em 0.9em; border-radius: 5px"
@@ -50,25 +51,25 @@ object CanvasControlComponent:
       div(
         className := "visualization-controls",
         button(
-          child.text <-- AppState.showNodeLabels.signal.map(show =>
+          child.text <-- EditorState.showNodeLabels.signal.map(show =>
             if (show) "Hide Node Labels" else "Show Node Labels"
           ),
-          className <-- AppState.showNodeLabels.signal.map(show =>
+          className <-- EditorState.showNodeLabels.signal.map(show =>
             if (show) "toggle-btn active" else "toggle-btn"
           ),
           onClick --> { _ => AppState.toggleNodeLabels() }
         ),
         button(
-          child.text <-- AppState.editorMode.signal.map {
+          child.text <-- EditorState.editorMode.signal.map {
             case EditorMode.Select => "Mode: Select"
             case EditorMode.Delete => "Mode: Delete"
           },
-          className <-- AppState.editorMode.signal.map {
+          className <-- EditorState.editorMode.signal.map {
             case EditorMode.Select => "toggle-btn mode-select"
             case EditorMode.Delete => "toggle-btn mode-delete active"
           },
           onClick --> { _ => AppState.toggleEditorMode() },
-          title <-- AppState.editorMode.signal.map {
+          title <-- EditorState.editorMode.signal.map {
             case EditorMode.Select => "Click to switch to Delete mode"
             case EditorMode.Delete => "Click to switch to Select mode"
           }
@@ -82,7 +83,7 @@ object CanvasControlComponent:
   private def transformInfo(): Element =
     div(
       className := "transform-info",
-      child.text <-- AppState.viewTransform.signal.map(t =>
+      child.text <-- EditorState.viewTransform.signal.map(t =>
         f"Zoom: ${t.scale*100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
       )
     )
