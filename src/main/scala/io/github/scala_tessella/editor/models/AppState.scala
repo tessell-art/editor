@@ -4,15 +4,12 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
-import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
 import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.utils.AsyncUtils.withLoadingState
 import io.github.scala_tessella.editor.operations.ErrorOperations.{showError, clearError}
+import io.github.scala_tessella.editor.operations.SelectionOperations.*
 
-import scala.scalajs.js
-import scala.util.Try
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 // Case class to represent a failed polygon placement
@@ -86,12 +83,6 @@ object AppState:
       selectedTilingPolygons.set(Set.empty)
       selectedPerimeterEdges.set(Set.empty)
 
-  // Clear all selections
-  def clearAllSelections(): Unit =
-    if !isProcessing.now() then
-      selectedTilingPolygons.set(Set.empty)
-      selectedPerimeterEdges.set(Set.empty)
-
   // Handle tiling polygon click based on current editor mode
   def handleTilingPolygonClick(polygonId: String): Unit =
     if !isProcessing.now() then
@@ -100,14 +91,6 @@ object AppState:
           toggleTilingPolygonSelection(polygonId)
         case EditorMode.Delete =>
           attemptPolygonDeletion(polygonId)
-
-  // Toggle tiling polygon selection
-  def toggleTilingPolygonSelection(polygonId: String): Unit =
-    if !isProcessing.now() then
-      selectedTilingPolygons.update { selected =>
-        if selected.contains(polygonId) then selected - polygonId
-        else selected + polygonId
-      }
 
   // Helper to check if edges form a continuous path
   private def areEdgesContinuous(edges: Set[Edge]): Boolean =
@@ -255,13 +238,6 @@ object AppState:
       case ex: Exception =>
         showError(s"Error during polygon deletion: ${ex.getMessage}")
     }
-  // Toggle perimeter edge selection
-  def togglePerimeterEdgeSelection(edgeId: String): Unit =
-    if !isProcessing.now() then
-      selectedPerimeterEdges.update { selected =>
-        if selected.contains(edgeId) then selected - edgeId
-        else selected + edgeId
-      }
 
   // Handle perimeter edge click with polygon growth
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
