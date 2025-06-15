@@ -59,7 +59,6 @@ object AppState:
         case EditorMode.Delete =>
           attemptPolygonDeletion(polygonId)
 
-
   // Attempt to delete a polygon from the tessellation
   private def attemptPolygonDeletion(polygonId: String): Unit =
     val future = withLoadingState { () =>
