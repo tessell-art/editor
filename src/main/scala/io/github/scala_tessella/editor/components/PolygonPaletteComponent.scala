@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, TilingGenerator}
+import io.github.scala_tessella.editor.operations.TessellationOperations.{clearTiling, selectPolygon}
 
 import scala.math.{Pi, cos, sin}
 
@@ -58,7 +59,7 @@ object PolygonPaletteComponent:
       button(
         "Clear Tiling",
         disabled <-- EditorState.isProcessing.signal,
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => AppState.clearTiling() }
+        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => clearTiling() }
       )
     )
 
@@ -71,7 +72,7 @@ object PolygonPaletteComponent:
       tpe := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
       disabled <-- EditorState.isProcessing.signal,
-      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => AppState.selectPolygon(sides) },
+      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => selectPolygon(sides) },
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)
     )

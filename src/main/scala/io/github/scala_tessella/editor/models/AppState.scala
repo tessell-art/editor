@@ -4,11 +4,12 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
-import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
+import io.github.scala_tessella.editor.utils.UndoManager
 import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.utils.AsyncUtils.withLoadingState
-import io.github.scala_tessella.editor.operations.ErrorOperations.{showError, clearError}
+import io.github.scala_tessella.editor.operations.ErrorOperations.{clearError, showError}
 import io.github.scala_tessella.editor.operations.SelectionOperations.*
+import io.github.scala_tessella.editor.operations.TessellationOperations.areEdgesContinuous
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -46,42 +47,8 @@ object AppState:
     if !isProcessing.now() then
       showNodeLabels.update(!_)
 
-  // Polygon selection with tiling creation logic
-  def selectPolygon(sides: Int): Unit =
-    if !isProcessing.now() then
-      selectedPolygon.set(Some(sides))
-
-      // If tiling is empty, create a new tiling from the selected polygon
-      if currentTiling.now().isEmpty then
-        // Save state before creating new tiling
-        UndoManager.saveState()
-
-        withLoadingState { () =>
-          TilingGenerator.createTilingFromPolygon(sides)
-        }.foreach { result =>
-          result match
-            case Some(tiling) =>
-              currentTiling.set(Some(tiling))
-              clearAllSelections() // Clear selections when new tiling is created
-            case None =>
-              // Failed to create tiling - undo the saved state since operation failed
-              UndoManager.undo()
-              showError(s"Failed to create tiling from $sides-sided polygon")
-        }
-
   // Check if tiling is empty
   def isTilingEmpty: Boolean = currentTiling.now().isEmpty
-
-  // Clear tiling and reset to empty state
-  def clearTiling(): Unit =
-    if !isProcessing.now() then
-      // Save state before clearing
-      if currentTiling.now().nonEmpty then
-        UndoManager.saveState()
-
-      currentTiling.set(None)
-      selectedTilingPolygons.set(Set.empty)
-      selectedPerimeterEdges.set(Set.empty)
 
   // Handle tiling polygon click based on current editor mode
   def handleTilingPolygonClick(polygonId: String): Unit =
@@ -92,45 +59,6 @@ object AppState:
         case EditorMode.Delete =>
           attemptPolygonDeletion(polygonId)
 
-  // Helper to check if edges form a continuous path
-  private def areEdgesContinuous(edges: Set[Edge]): Boolean =
-    if edges.isEmpty then return true
-    if edges.size == 1 then return true
-
-    // Build adjacency map
-    val adjacency = scala.collection.mutable.Map[TilingNode, Set[TilingNode]]()
-    edges.foreach { edge =>
-      val lesser: TilingNode = edge.lesserNode
-      val greater: TilingNode = edge.greaterNode
-      adjacency(lesser) = adjacency.getOrElse(lesser, Set.empty) + greater
-      adjacency(greater) = adjacency.getOrElse(greater, Set.empty) + lesser
-    }
-
-    // For edges to form a continuous path, each node should have at most 2 connections
-    // and all edges should be connected in a single path or cycle
-    val nodeDegrees = adjacency.view.mapValues(_.size).toMap
-
-    // Check if any node has more than 2 connections (would mean branching)
-    if nodeDegrees.values.exists(_ > 2) then return false
-
-    // Check connectivity - start from any node and traverse
-    val startNode = adjacency.keys.head
-    val visited = scala.collection.mutable.Set[TilingNode]()
-    val queue = scala.collection.mutable.Queue[TilingNode](startNode)
-
-    while queue.nonEmpty do
-      val current = queue.dequeue()
-      if !visited.contains(current) then
-        visited.add(current)
-        adjacency.get(current).foreach { neighbors =>
-          neighbors.foreach { neighbor =>
-            if !visited.contains(neighbor) then
-              queue.enqueue(neighbor)
-          }
-        }
-
-    // All nodes involved in edges should be visited
-    visited.size == adjacency.size
 
   // Attempt to delete a polygon from the tessellation
   private def attemptPolygonDeletion(polygonId: String): Unit =
@@ -208,30 +136,29 @@ object AppState:
           Left("No tessellation available to modify")
     }
 
-    future.foreach { result =>
-      result match
-        case Right(newTiling) =>
-          // Success: save state before change, then update tiling
-          UndoManager.saveState()
-          currentTiling.set(Some(newTiling))
-          clearError()
-        case Left(errMsg) =>
-          // Failure: show error with wireframe info
-          val polygonNodes = currentTiling.now().flatMap { tiling =>
-            val polyTag = if polygonId.startsWith("tiling-poly-") then
-              polygonId.substring("tiling-poly-".length)
-            else
-              polygonId
+    future.foreach {
+      case Right(newTiling) =>
+        // Success: save state before change, then update tiling
+        UndoManager.saveState()
+        currentTiling.set(Some(newTiling))
+        clearError()
+      case Left(errMsg) =>
+        // Failure: show error with wireframe info
+        val polygonNodes = currentTiling.now().flatMap { tiling =>
+          val polyTag = if polygonId.startsWith("tiling-poly-") then
+            polygonId.substring("tiling-poly-".length)
+          else
+            polygonId
 
-            tiling.orientedPolygons.find { poly =>
-              val nodes = poly.toPolygonPathNodes
-              val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
-              tag == polyTag
-            }.map(_.toPolygonPathNodes)
-          }.getOrElse(Vector.empty)
+          tiling.orientedPolygons.find { poly =>
+            val nodes = poly.toPolygonPathNodes
+            val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+            tag == polyTag
+          }.map(_.toPolygonPathNodes)
+        }.getOrElse(Vector.empty)
 
-          val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, currentTiling.now().get)
-          showError(errMsg, deletion = Some(failedDeletionInfo))
+        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, currentTiling.now().get)
+        showError(errMsg, deletion = Some(failedDeletionInfo))
     }
 
     future.recover {
@@ -258,27 +185,26 @@ object AppState:
                 Left("Invalid edge index")
             catch
               case e: Exception => Left(s"Error growing edge: ${e.getMessage}")
-          }.foreach { result =>
-            result match
-              case Right(newTiling) =>
-                // Success: save state before change, then update tiling
-                UndoManager.saveState()
-                currentTiling.set(Some(newTiling))
-                selectedPerimeterEdges.set(Set.empty)
-                clearError()
-              case Left(errMsg) =>
-                // Failure: show error message with wireframe (no state to undo)
-                val perimeterEdges = tiling.perimeter.toRingEdges.toVector
-                if edgeIndex < perimeterEdges.length then
-                  val selectedEdge = perimeterEdges(edgeIndex)
-                  val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
-                  val truncated =
-                    val idx = errMsg.indexOf("See SVG")
-                    if idx >= 0 then errMsg.substring(0, idx)
-                    else errMsg
-                  showError(s"Cannot grow edge with $polygonSides-sided polygon: $truncated", Some(placement))
-                else
-                  showError(errMsg)
+          }.foreach {
+            case Right(newTiling) =>
+              // Success: save state before change, then update tiling
+              UndoManager.saveState()
+              currentTiling.set(Some(newTiling))
+              selectedPerimeterEdges.set(Set.empty)
+              clearError()
+            case Left(errMsg) =>
+              // Failure: show error message with wireframe (no state to undo)
+              val perimeterEdges = tiling.perimeter.toRingEdges.toVector
+              if edgeIndex < perimeterEdges.length then
+                val selectedEdge = perimeterEdges(edgeIndex)
+                val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
+                val truncated =
+                  val idx = errMsg.indexOf("See SVG")
+                  if idx >= 0 then errMsg.substring(0, idx)
+                  else errMsg
+                showError(s"Cannot grow edge with $polygonSides-sided polygon: $truncated", Some(placement))
+              else
+                showError(errMsg)
           }
         case (None, _) =>
           showError("No tiling available to grow")
