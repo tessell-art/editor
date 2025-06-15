@@ -7,7 +7,7 @@ import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as T
 import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
 import io.github.scala_tessella.editor.models.EditorState.*
-
+import io.github.scala_tessella.editor.utils.AsyncUtils.withLoadingState
 import scala.scalajs.js
 import scala.util.Try
 import scala.concurrent.{Future, Promise}
@@ -33,29 +33,6 @@ enum EditorMode:
   case Select, Delete
 
 object AppState:
-
-  // JavaScript-compatible delay function
-  private def delay(milliseconds: Int): Future[Unit] = {
-    val p = Promise[Unit]()
-    js.timers.setTimeout(milliseconds) {
-      p.success(())
-    }
-    p.future
-  }
-
-  // Helper to execute expensive operations with loading state
-  private def withLoadingState[T](operation: () => T): Future[T] = {
-    isProcessing.set(true)
-
-    // Use delay instead of Thread.sleep to let UI update before computation
-    delay(50).map { _ =>
-      try {
-        operation()
-      } finally {
-        isProcessing.set(false)
-      }
-    }
-  }
 
   // Toggle editor mode between Select and Delete
   def toggleEditorMode(): Unit =
