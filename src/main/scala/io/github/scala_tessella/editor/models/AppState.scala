@@ -42,28 +42,6 @@ object AppState:
         case EditorMode.Delete => EditorMode.Select
       }
 
-  // Apply color to selected polygons
-  def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
-    if !isProcessing.now() then
-      val selectedIds = selectedTilingPolygons.now()
-      if selectedIds.nonEmpty then
-        // Save state before applying colors
-        UndoManager.saveState()
-
-        // Extract polygon tags from the selected polygon IDs
-        val selectedTags = selectedIds.map { id =>
-          // Remove "tiling-poly-" prefix to get the polygon tag
-          if id.startsWith("tiling-poly-") then id.substring("tiling-poly-".length)
-          else id
-        }
-
-        // Update colors for selected polygon tags
-        polygonColors.update { currentColors =>
-          selectedTags.foldLeft(currentColors) { (colors, tag) =>
-            colors + (tag -> color)
-          }
-        }
-
   // Toggle node labels visibility
   def toggleNodeLabels(): Unit =
     if !isProcessing.now() then
@@ -362,15 +340,6 @@ object AppState:
       // This could be enhanced later to support tiling modifications
       if (selectedTilingPolygons.now().nonEmpty) then
         showError("Tessellation polygon deletion not supported yet")
-
-  // Helper to get or generate a unique RGB color for a given polygon id
-  def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =
-    polygonColors.now().get(polyTag) match
-      case Some(rgb) => rgb
-      case None =>
-        val rgb = fillColor.now()
-        polygonColors.update(_ + (polyTag -> rgb))
-        rgb
 
   def undo(): Unit =
     if !isProcessing.now() then

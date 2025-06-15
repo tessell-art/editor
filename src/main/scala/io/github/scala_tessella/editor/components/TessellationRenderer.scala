@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode, NodeOrdering}
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Point}
-
+import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 object TessellationRenderer:
 
   private val selectionPattern: Element = svg.defs(
@@ -26,7 +26,7 @@ object TessellationRenderer:
       val nodes = poly.toPolygonPathNodes
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
-      AppState.getOrAssignPolygonColor(polyTag)
+      getOrAssignPolygonColor(polyTag)
       renderTilingPolygon(tiling, nodes, polygonId, polyTag)
     }
 

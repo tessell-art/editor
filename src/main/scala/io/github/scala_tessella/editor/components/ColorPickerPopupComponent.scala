@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
 
 object ColorPickerPopupComponent:
   def element(isOpen: Var[Boolean], tempColor: Var[(Int, Int, Int)]): Element =
@@ -38,7 +39,7 @@ object ColorPickerPopupComponent:
               EditorState.fillColor.set(newColor)
 
               // Apply the new color to all currently selected polygons
-              AppState.applyColorToSelectedPolygons(newColor)
+              applyColorToSelectedPolygons(newColor)
 
               isOpen.set(false)
             }
