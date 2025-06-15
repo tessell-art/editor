@@ -4,20 +4,14 @@ import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.UndoManager
 
+import io.github.scala_tessella.tessella.Tiling
+import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
+
 // Case class to represent a failed polygon placement
-case class FailedPolygonPlacement(
-                                   edgeIndex: Int,
-                                   polygonSides: Int,
-                                   edge: io.github.scala_tessella.tessella.Topology.Edge,
-                                   tiling: io.github.scala_tessella.tessella.Tiling
-                                 )
+case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: Edge, tiling: Tiling)
 
 // Case class to represent a failed polygon deletion
-case class FailedPolygonDeletion(
-                                  polygonId: String,
-                                  polygonNodes: Vector[io.github.scala_tessella.tessella.Topology.Node],
-                                  tiling: io.github.scala_tessella.tessella.Tiling
-                                )
+case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode], tiling: Tiling)
 
 // Editor mode enumeration
 enum EditorMode:
@@ -42,8 +36,10 @@ object AppState:
   def isTilingEmpty: Boolean = currentTiling.now().isEmpty
 
   // Delegate to operation objects
-  def selectPolygon(sides: Int): Unit = TessellationOperations.selectPolygon(sides)
-  def clearTiling(): Unit = TessellationOperations.clearTiling()
+  def selectPolygon(sides: Int): Unit =
+    TessellationOperations.selectPolygon(sides)
+  def clearTiling(): Unit =
+    TessellationOperations.clearTiling()
 
   def handleTilingPolygonClick(polygonId: String): Unit =
     SelectionOperations.handleTilingPolygonClick(polygonId)
@@ -57,7 +53,8 @@ object AppState:
 
   def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
     ErrorOperations.showError(message, placement, deletion)
-  def clearError(): Unit = ErrorOperations.clearError()
+  def clearError(): Unit =
+    ErrorOperations.clearError()
 
   def deleteSelectedElements(): Unit =
     if !isProcessing.now() then
