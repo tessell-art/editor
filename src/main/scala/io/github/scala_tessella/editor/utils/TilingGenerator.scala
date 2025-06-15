@@ -2,7 +2,8 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.RegularPolygon.Polygon
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.operations.ErrorOperations.{showError, clearError}
 
 object TilingGenerator:
 
@@ -25,7 +26,7 @@ object TilingGenerator:
       EditorState.currentTiling.set(Some(tiling))
     catch
       case _: Exception =>
-        AppState.showError("Failed to generate hexagon tiling")
+        showError("Failed to generate hexagon tiling")
 
   def generateTriangleTiling(): Unit =
     try
@@ -33,7 +34,7 @@ object TilingGenerator:
       EditorState.currentTiling.set(Some(tiling))
     catch
       case _: Exception =>
-        AppState.showError("Failed to generate triangle tiling")
+        showError("Failed to generate triangle tiling")
 
   def generateMixedTiling(): Unit =
     try
@@ -41,4 +42,4 @@ object TilingGenerator:
       EditorState.currentTiling.set(Some(tiling))
     catch
       case _: Exception =>
-        AppState.showError("Failed to generate mixed tiling")
+        showError("Failed to generate mixed tiling")

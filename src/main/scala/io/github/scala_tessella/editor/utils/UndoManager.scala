@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.{AppState, AppStateSnapshot, EditorState}
+import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
+import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
 import com.raquo.laminar.api.L.{Var, Signal}
 import scala.collection.mutable
 
@@ -68,7 +69,7 @@ object UndoManager:
     EditorState.editorMode.set(snapshot.editorMode)
     
     // Clear any error states when undoing
-    AppState.clearError()
+    clearError()
 
   // Update the signals that track undo availability
   private def updateUndoSignals(): Unit =

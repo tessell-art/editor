@@ -8,6 +8,8 @@ import org.scalajs.dom
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
 import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.utils.AsyncUtils.withLoadingState
+import io.github.scala_tessella.editor.operations.ErrorOperations.{showError, clearError}
+
 import scala.scalajs.js
 import scala.util.Try
 import scala.concurrent.{Future, Promise}
@@ -46,31 +48,6 @@ object AppState:
   def toggleNodeLabels(): Unit =
     if !isProcessing.now() then
       showNodeLabels.update(!_)
-
-  // Show error message temporarily with optional failed placement info
-  def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
-    errorMessage.set(Some(message))
-    failedPlacement.set(placement)
-    failedDeletion.set(deletion)
-
-    // Clear error and failed placement/deletion after 3 seconds
-    Try {
-      if (js.typeOf(js.Dynamic.global.window) != "undefined") {
-        dom.window.setTimeout(() => {
-          errorMessage.set(None)
-          failedPlacement.set(None)
-          failedDeletion.set(None)
-        }, 3000)
-      }
-    }.recover {
-      case _ => // Ignore errors in test environment
-    }
-
-  // Clear error message and failed placement
-  def clearError(): Unit =
-    errorMessage.set(None)
-    failedPlacement.set(None)
-    failedDeletion.set(None)
 
   // Polygon selection with tiling creation logic
   def selectPolygon(sides: Int): Unit =
