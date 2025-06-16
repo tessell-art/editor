@@ -36,118 +36,79 @@ object TessellationOperations:
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
 
-  // Helper to check if edges form a continuous path
-  def areEdgesContinuous(edges: Set[Edge]): Boolean =
-    if edges.isEmpty then return true
-    if edges.size == 1 then return true
-
-    // Build adjacency map
-    val adjacency = scala.collection.mutable.Map[TilingNode, Set[TilingNode]]()
-    edges.foreach { edge =>
-      val lesser: TilingNode = edge.lesserNode
-      val greater: TilingNode = edge.greaterNode
-      adjacency(lesser) = adjacency.getOrElse(lesser, Set.empty) + greater
-      adjacency(greater) = adjacency.getOrElse(greater, Set.empty) + lesser
-    }
-
-    // For edges to form a continuous path, each node should have at most 2 connections
-    // and all edges should be connected in a single path or cycle
-    val nodeDegrees = adjacency.view.mapValues(_.size).toMap
-
-    // Check if any node has more than 2 connections (would mean branching)
-    if nodeDegrees.values.exists(_ > 2) then return false
-
-    // Check connectivity - start from any node and traverse
-    val startNode = adjacency.keys.head
-    val visited = scala.collection.mutable.Set[TilingNode]()
-    val queue = scala.collection.mutable.Queue[TilingNode](startNode)
-
-    while queue.nonEmpty do
-      val current = queue.dequeue()
-      if !visited.contains(current) then
-        visited.add(current)
-        adjacency.get(current).foreach { neighbors =>
-          neighbors.foreach { neighbor =>
-            if !visited.contains(neighbor) then
-              queue.enqueue(neighbor)
-          }
-        }
-
-    // All nodes involved in edges should be visited
-    visited.size == adjacency.size
-
   // Attempt to delete a polygon from the tessellation
   def attemptPolygonDeletion(polygonId: String): Unit =
-    val future = AsyncUtils.withLoadingState { () =>
-      EditorState.currentTiling.now() match
-        case Some(tiling) =>
-          // Extract polygon tag from the ID
-          val polyTag = if polygonId.startsWith("tiling-poly-") then
-            polygonId.substring("tiling-poly-".length)
-          else
-            polygonId
+    val future =
+      AsyncUtils.withLoadingState { () =>
+        EditorState.currentTiling.now() match
+          case Some(tiling) =>
+            // Extract polygon tag from the ID
+            val polyTag = if polygonId.startsWith("tiling-poly-") then
+              polygonId.substring("tiling-poly-".length)
+            else
+              polygonId
 
-          // Find the specific polygon in the tiling
-          val targetPolygon = tiling.orientedPolygons.find { poly =>
-            val nodes = poly.toPolygonPathNodes
-            val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
-            tag == polyTag
-          }
+            // Find the specific polygon in the tiling
+            val targetPolygon = tiling.orientedPolygons.find { poly =>
+              val nodes = poly.toPolygonPathNodes
+              val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+              tag == polyTag
+            }
 
-          targetPolygon match
-            case Some(polygon) =>
-              // Get the polygon's nodes and edges
-              val polygonNodes = polygon.toPolygonPathNodes
-              val polygonNodesSet = polygonNodes.toSet
-              val polygonEdges = polygonNodes.zipWithIndex.map { case (node, i) =>
-                val nextNode = polygonNodes((i + 1) % polygonNodes.length)
-                Edge(node, nextNode)
-              }.toSet
+            targetPolygon match
+              case Some(polygon) =>
+                // Get the polygon's nodes and edges
+                val polygonNodes = polygon.toPolygonPathNodes
+                val polygonNodesSet = polygonNodes.toSet
+                val polygonEdges = polygonNodes.zipWithIndex.map { case (node, i) =>
+                  val nextNode = polygonNodes((i + 1) % polygonNodes.length)
+                  Edge(node, nextNode)
+                }.toSet
 
-              // Get perimeter edges and perimeter nodes
-              val perimeterEdges = tiling.perimeter.toRingEdges.toSet
-              val perimeterNodes = perimeterEdges.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
+                // Get perimeter edges and perimeter nodes
+                val perimeterEdges = tiling.perimeter.toRingEdges.toSet
+                val perimeterNodes = perimeterEdges.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
 
-              // Find which polygon edges are on the perimeter
-              val edgesOnPerimeter: Set[Edge] = polygonEdges.intersect(perimeterEdges)
+                // Find which polygon edges are on the perimeter
+                val edgesOnPerimeter: Set[Edge] = polygonEdges.intersect(perimeterEdges)
 
-              // Find which polygon nodes are on the perimeter
-              val nodesOnPerimeter = polygonNodesSet.intersect(perimeterNodes)
+                // Find which polygon nodes are on the perimeter
+                val nodesOnPerimeter = polygonNodesSet.intersect(perimeterNodes)
 
-              if edgesOnPerimeter.isEmpty then
-                Left(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.")
-              else
-                // Check if perimeter edges form a continuous path
-                if !areEdgesContinuous(edgesOnPerimeter) then
-                  val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                  Left(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.")
+                if edgesOnPerimeter.isEmpty then
+                  Left(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.")
                 else
-                  // Check if there are polygon nodes on perimeter that are not part of the found edges
-                  val nodesInPerimeterEdges = edgesOnPerimeter.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
-                  val isolatedPerimeterNodes = nodesOnPerimeter -- nodesInPerimeterEdges
-
-                  if isolatedPerimeterNodes.nonEmpty then
-                    val nodeList = isolatedPerimeterNodes.mkString(", ")
+                  // Check if perimeter edges form a continuous path
+                  if edgesOnPerimeter.toList.areContinuous then
                     val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
-                    Left(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.")
+                    Left(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.")
                   else
-                    // All checks passed - try actual deletion
-                    val result: Either[String, Tiling] =
-                      Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
-                    result match
-                      case Right(newTiling) =>
-                        // Success: return the new tiling
-                        Right(newTiling)
-                      case Left(errMsg) =>
-                        // Failure: return error with wireframe info
-                        Left(s"Cannot remove polygon: $errMsg")
+                    // Check if there are polygon nodes on perimeter that are not part of the found edges
+                    val nodesInPerimeterEdges = edgesOnPerimeter.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
+                    val isolatedPerimeterNodes = nodesOnPerimeter -- nodesInPerimeterEdges
 
-            case None =>
-              Left(s"Could not find polygon with tag: $polyTag")
+                    if isolatedPerimeterNodes.nonEmpty then
+                      val nodeList = isolatedPerimeterNodes.mkString(", ")
+                      val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
+                      Left(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.")
+                    else
+                      // All checks passed - try actual deletion
+                      val result: Either[String, Tiling] =
+                        Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
+                      result match
+                        case Right(newTiling) =>
+                          // Success: return the new tiling
+                          Right(newTiling)
+                        case Left(errMsg) =>
+                          // Failure: return error with wireframe info
+                          Left(s"Cannot remove polygon: $errMsg")
 
-        case None =>
-          Left("No tessellation available to modify")
-    }
+              case None =>
+                Left(s"Could not find polygon with tag: $polyTag")
+
+          case None =>
+            Left("No tessellation available to modify")
+      }
 
     future.foreach {
       case Right(newTiling) =>
