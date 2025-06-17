@@ -1,8 +1,9 @@
-
 package io.github.scala_tessella.editor.components
 
+import be.doeraene.webcomponents.ui5.ColourPicker
+import be.doeraene.webcomponents.ui5.scaladsl.colour.Colour
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
 
 object ColorPickerPopupComponent:
@@ -16,19 +17,13 @@ object ColorPickerPopupComponent:
         className := "popup-content",
         onClick.map(_.stopPropagation()) --> Observer.empty,
         h3("Select Color"),
-        // The native color-picker input:
-        input(
-          typ := "color",
-          value <-- tempColor.signal.map { case (r,g,b) =>
-            f"#${r}%02x${g}%02x${b}%02x"
-          },
-          onInput.mapToValue.map(hex =>
-            (
-              Integer.parseInt(hex.substring(1,3), 16),
-              Integer.parseInt(hex.substring(3,5), 16),
-              Integer.parseInt(hex.substring(5,7), 16)
-            )
-          ) --> tempColor.writer
+        // The laminar-ui5 color-picker:
+        ColourPicker(
+          _.value <-- tempColor.signal.map { case (r, g, b) => Colour(r, g, b) },
+          _.events.onChange.map { event =>
+            val color = event.target.value
+            (color.red, color.green, color.blue)
+          } --> tempColor.writer
         ),
         div(
           className := "popup-actions",
