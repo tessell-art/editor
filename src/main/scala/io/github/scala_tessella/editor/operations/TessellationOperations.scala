@@ -33,6 +33,7 @@ object TessellationOperations:
         UndoManager.saveState()
 
       EditorState.currentTiling.set(None)
+      EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
 
