@@ -79,7 +79,7 @@ object TessellationOperations:
                   Left(s"Cannot delete polygon $polyTag: No perimeter edges found. Internal polygons cannot be deleted as it would create holes in the tessellation.")
                 else
                   // Check if perimeter edges form a continuous path
-                  if edgesOnPerimeter.toList.areContinuous then
+                  if !edgesOnPerimeter.toList.areContinuous then
                     val edgeList = edgesOnPerimeter.map(edge => s"${edge.lesserNode}-${edge.greaterNode}").mkString(", ")
                     Left(s"Cannot delete polygon $polyTag: Perimeter edges ($edgeList) do not form a continuous path. Deletion would split the tessellation.")
                   else
