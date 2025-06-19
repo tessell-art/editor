@@ -55,7 +55,7 @@ object FailedPolygonRenderer:
 
   def renderFailedDeletion(deletion: FailedPolygonDeletion, coordinates: Coords): Element =
     try {
-      val FailedPolygonDeletion(polygonId, polygonNodes, tiling) = deletion
+      val FailedPolygonDeletion(polygonId, polygonNodes) = deletion
 
       // Calculate polygon points in canvas coordinates
       val center = Point(0, 0)
@@ -173,9 +173,7 @@ object FailedPolygonRenderer:
       // Find the polygon that contains this perimeter edge
       val containingPolygon: Option[tiling.PolygonPath] = tiling.orientedPolygons.find { poly =>
         val polyNodes = poly.toPolygonPathNodes
-        val polyEdges = polyNodes.zip(polyNodes.tail :+ polyNodes.head).map { case (n1, n2) =>
-          if n1 < n2 then Edge(n1, n2) else Edge(n2, n1)
-        }
+        val polyEdges = polyNodes.zip(polyNodes.tail :+ polyNodes.head).map { case (n1, n2) => Edge(n2, n1) }
         polyEdges.contains(edge)
       }
 

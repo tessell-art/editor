@@ -132,7 +132,7 @@ object TessellationOperations:
           }.map(_.toPolygonPathNodes)
         }.getOrElse(Vector.empty)
 
-        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, currentTiling.now().get)
+        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
         ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
     }
 

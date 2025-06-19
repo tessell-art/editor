@@ -11,7 +11,7 @@ import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
 case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: Edge, tiling: Tiling)
 
 // Case class to represent a failed polygon deletion
-case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode], tiling: Tiling)
+case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode])
 
 // Editor mode enumeration
 enum EditorMode:
