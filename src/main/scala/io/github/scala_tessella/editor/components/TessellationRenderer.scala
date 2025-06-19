@@ -1,10 +1,13 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.tessella.Tiling
-import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode, NodeOrdering}
+import io.github.scala_tessella.tessella.{Tiling, TilingCoordinates}
+import io.github.scala_tessella.tessella.TilingCoordinates.{affine, Coords}
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
+
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Point}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
+
 object TessellationRenderer:
 
   private val selectionPattern: Element = svg.defs(
@@ -21,24 +24,60 @@ object TessellationRenderer:
     )
   )
 
-  def renderTiling(tiling: Tiling): Element = renderTilingWithComparison(tiling, None)
+  def renderTiling(tiling: Tiling): Element =
 
-  def renderTilingWithComparison(tiling: Tiling, previousTiling: Option[Tiling]): Element =
+    // Find one polygon that exists in both current and previous tiling
+    val commonPolygonNodes: Option[Vector[TilingNode]] =
+//      previousTiling.flatMap { prevTiling =>
+//        tiling.orientedPolygons.view.map { currentPoly =>
+//          val currentNodes = currentPoly.toPolygonPathNodes
+//          val currentPolyTag = currentNodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+//
+//          // Check if this polygon exists in the previous tiling
+//          val existsInPrevious = prevTiling.orientedPolygons.exists { prevPoly =>
+//            val prevNodes = prevPoly.toPolygonPathNodes
+//            val prevPolyTag = prevNodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+//            prevPolyTag == currentPolyTag
+//          }
+//
+//          if existsInPrevious then Some(currentNodes) else None
+//        }.collectFirst { case Some(nodes) => nodes }
+//      }
+      None
 
+    println(s"Common polygon nodes: $commonPolygonNodes")
+
+    val transformedCoords: Coords =
+      commonPolygonNodes match
+        case Some(nodes) =>
+//          val (n0, n1, n2) = (nodes(0), nodes(1), nodes(2))
+//          println(s"Affine previous nodes: $n0, $n1, $n2")
+//          println(s"Affine previous points: ${previousTiling.get.coords(n0)}, ${previousTiling.get.coords(n1)}, ${previousTiling.get.coords(n2)}")
+//          tiling.coords.affine(
+//            (n0, n1, n2),
+//            (previousTiling.get.coords(n0), previousTiling.get.coords(n1), previousTiling.get.coords(n2))
+//          ) match {
+//            case Some(value) => println(s"Tranformed coords: $value"); value
+//            case None => println("Affine failed"); tiling.coords
+//          }
+          tiling.coords
+        case None => println("No common polygon nodes"); tiling.coords
+
+    EditorState.currentCoords.set(transformedCoords)
     val tilingPolygons = tiling.orientedPolygons.map { poly =>
       val nodes = poly.toPolygonPathNodes
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
       getOrAssignPolygonColor(polyTag)
-      renderTilingPolygon(tiling, nodes, polygonId, polyTag)
+      renderTilingPolygon(transformedCoords, nodes, polygonId, polyTag)
     }
 
     val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map {
-      case (edge, index) => renderPerimeterEdge(tiling, edge, index, s"perimeter-edge-$index")
+      case (edge, index) => renderPerimeterEdge(transformedCoords, edge, index, s"perimeter-edge-$index")
     }.toList
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
-      if showLabels then renderNodeLabels(tiling)
+      if showLabels then renderNodeLabels(transformedCoords)
       else List.empty
     }
 
@@ -62,12 +101,12 @@ object TessellationRenderer:
       failedDeletionWireframe
     )
 
-  private def renderNodeLabels(tiling: Tiling): List[Element] =
+  private def renderNodeLabels(coordinates: Coords): List[Element] =
     // Get all unique nodes from the tiling
-    val allNodes = tiling.graphNodes
+    val allNodes = coordinates.keys.toList
 
     allNodes.map { node =>
-      val vertex = tiling.coords(node)
+      val vertex = coordinates(node)
 
       // Convert tessella coordinates to canvas coordinates
       val x = vertex.x * 50 + 400
@@ -107,13 +146,13 @@ object TessellationRenderer:
       )
     }
 
-  private def renderTilingPolygon(tiling: Tiling, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
+  private def renderTilingPolygon(coordinates: Coords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val center = Point(0, 0)
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
 
     val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
 
-    val points = nodes.map(tiling.coords).map { vertex =>
+    val points = nodes.map(coordinates).map { vertex =>
       val x = canvasCenter.x + vertex.x * 50
       val y = canvasCenter.y + vertex.y * 50
       s"$x,$y"
@@ -183,9 +222,9 @@ object TessellationRenderer:
       }
     )
 
-  private def renderPerimeterEdge(tiling: Tiling, edge: Edge, edgeIndex: Int, id: String): Element =
-    val vertex1 = tiling.coords(edge.lesserNode)
-    val vertex2 = tiling.coords(edge.greaterNode)
+  private def renderPerimeterEdge(coordinates: Coords, edge: Edge, edgeIndex: Int, id: String): Element =
+    val vertex1 = coordinates(edge.lesserNode)
+    val vertex2 = coordinates(edge.greaterNode)
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates
