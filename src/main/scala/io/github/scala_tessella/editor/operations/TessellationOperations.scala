@@ -1,27 +1,32 @@
 
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.EditorState.currentTiling
+import io.github.scala_tessella.editor.models.EditorState.{currentTiling, previousTiling}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.ErrorOperations.showError
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager, AsyncUtils}
 import io.github.scala_tessella.tessella.Tiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
-import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object TessellationOperations:
 
+  def updateTiling(newTiling: Option[Tiling]): Unit =
+    val current = currentTiling.now()
+    previousTiling.set(current)
+    currentTiling.set(newTiling)
+
   def selectPolygon(sides: Int): Unit =
     if !EditorState.isProcessing.now() then
       EditorState.selectedPolygon.set(Some(sides))
 
-      if EditorState.currentTiling.now().isEmpty then
+      if currentTiling.now().isEmpty then
         UndoManager.saveState()
         TilingGenerator.createTilingFromPolygon(sides) match
           case Some(tiling) =>
-            EditorState.currentTiling.set(Some(tiling))
+            updateTiling(Some(tiling))
             SelectionOperations.clearAllSelections()
           case None =>
             UndoManager.undo()
@@ -29,10 +34,10 @@ object TessellationOperations:
 
   def clearTiling(): Unit =
     if !EditorState.isProcessing.now() then
-      if EditorState.currentTiling.now().nonEmpty then
+      if currentTiling.now().nonEmpty then
         UndoManager.saveState()
 
-      EditorState.currentTiling.set(None)
+      updateTiling(None)
       EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
@@ -41,7 +46,7 @@ object TessellationOperations:
   def attemptPolygonDeletion(polygonId: String): Unit =
     val future =
       AsyncUtils.withLoadingState { () =>
-        EditorState.currentTiling.now() match
+        currentTiling.now() match
           case Some(tiling) =>
             // Extract polygon tag from the ID
             val polyTag = if polygonId.startsWith("tiling-poly-") then
@@ -115,11 +120,11 @@ object TessellationOperations:
       case Right(newTiling) =>
         // Success: save state before change, then update tiling
         UndoManager.saveState()
-        EditorState.currentTiling.set(Some(newTiling))
+        updateTiling(Some(newTiling))
         ErrorOperations.clearError()
       case Left(errMsg) =>
         // Failure: show error with wireframe info
-        val polygonNodes = EditorState.currentTiling.now().flatMap { tiling =>
+        val polygonNodes = currentTiling.now().flatMap { tiling =>
           val polyTag = if polygonId.startsWith("tiling-poly-") then
             polygonId.substring("tiling-poly-".length)
           else
@@ -132,7 +137,7 @@ object TessellationOperations:
           }.map(_.toPolygonPathNodes)
         }.getOrElse(Vector.empty)
 
-        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, EditorState.currentTiling.now().get)
+        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes, currentTiling.now().get)
         ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
     }
 
@@ -143,7 +148,7 @@ object TessellationOperations:
 
   // Handle perimeter edge click with polygon growth
   def attemptPolygonGrowth(edgeId: String, edgeIndex: Int): Unit =
-    (EditorState.currentTiling.now(), EditorState.selectedPolygon.now()) match
+    (currentTiling.now(), EditorState.selectedPolygon.now()) match
       case (Some(tiling), Some(polygonSides)) =>
         // Try to grow the edge with the selected polygon
         AsyncUtils.withLoadingState { () =>
@@ -163,7 +168,7 @@ object TessellationOperations:
           case Right(newTiling) =>
             // Success: save state before change, then update tiling
             UndoManager.saveState()
-            EditorState.currentTiling.set(Some(newTiling))
+            updateTiling(Some(newTiling))
             EditorState.selectedPerimeterEdges.set(Set.empty)
             ErrorOperations.clearError()
           case Left(errMsg) =>

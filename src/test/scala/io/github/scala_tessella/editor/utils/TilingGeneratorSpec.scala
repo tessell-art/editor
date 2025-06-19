@@ -27,9 +27,3 @@ class TilingGeneratorSpec extends FunSuite:
     val largePolygon = TilingGenerator.createTilingFromPolygon(42)
     assert(largePolygon.isDefined || largePolygon.isEmpty)
   }
-
-  test("generateSampleTiling should return valid tiling or None") {
-    val tiling = TilingGenerator.generateSampleTiling()
-    // Should either return a valid tessellation or None (if generation fails)
-    assert(tiling.isDefined || tiling.isEmpty)
-  }

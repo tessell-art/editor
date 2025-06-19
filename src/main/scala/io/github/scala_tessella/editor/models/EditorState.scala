@@ -20,6 +20,7 @@ object EditorState:
 
   // Tessellation state
   val currentTiling: Var[Option[Tiling]] = Var(None)
+  val previousTiling: Var[Option[Tiling]] = Var(None)
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
   val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
 

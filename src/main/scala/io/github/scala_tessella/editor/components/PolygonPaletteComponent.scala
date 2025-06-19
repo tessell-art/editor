@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, TilingGenerator}
+import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.operations.TessellationOperations.{clearTiling, selectPolygon}
 
 import scala.math.{Pi, cos, sin}
@@ -41,21 +41,6 @@ object PolygonPaletteComponent:
     div(
       className := "tiling-controls",
       h3("Tessellation"),
-      button(
-        "Generate Hexagon Tiling",
-        disabled <-- EditorState.isProcessing.signal,
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => TilingGenerator.generateHexagonTiling() }
-      ),
-      button(
-        "Generate Triangle Tiling",
-        disabled <-- EditorState.isProcessing.signal,
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => TilingGenerator.generateTriangleTiling() }
-      ),
-      button(
-        "Generate Mixed Tiling",
-        disabled <-- EditorState.isProcessing.signal,
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => TilingGenerator.generateMixedTiling() }
-      ),
       button(
         "Clear Tiling",
         disabled <-- EditorState.isProcessing.signal,
