@@ -21,7 +21,10 @@ object TessellationRenderer:
     )
   )
 
-  def renderTiling(tiling: Tiling): Element =
+  def renderTiling(tiling: Tiling): Element = renderTilingWithComparison(tiling, None)
+
+  def renderTilingWithComparison(tiling: Tiling, previousTiling: Option[Tiling]): Element =
+
     val tilingPolygons = tiling.orientedPolygons.map { poly =>
       val nodes = poly.toPolygonPathNodes
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
