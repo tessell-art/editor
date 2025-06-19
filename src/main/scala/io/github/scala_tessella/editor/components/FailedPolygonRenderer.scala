@@ -2,29 +2,30 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.editor.models.{FailedPolygonPlacement, FailedPolygonDeletion}
 import io.github.scala_tessella.tessella.Topology.Edge
-import io.github.scala_tessella.editor.models.FailedPolygonPlacement
 import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.tessella.TilingCoordinates.Coords
+import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
+import io.github.scala_tessella.tessella.Tiling
 
 import scala.math.*
 
 object FailedPolygonRenderer:
 
-  def renderFailedPlacement(placement: FailedPolygonPlacement): Element =
+  def renderFailedPlacement(placement: FailedPolygonPlacement, coordinates: Coords): Element =
     try {
-      val wireframePoints = calculateWireframePoints(placement)
+      val wireframePoints = calculateWireframePoints(placement, coordinates)
       val points = wireframePoints.map { case (x, y) => s"$x,$y" }.mkString(" ")
 
       // Find transform origin at the edge midpoint in canvas coordinates
       val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
-      val vertex1 = tiling.coords(edge.lesserNode)
-      val vertex2 = tiling.coords(edge.greaterNode)
+      val vertex1 = coordinates(edge.lesserNode)
+      val vertex2 = coordinates(edge.greaterNode)
       val attachmentX = (vertex1.x + vertex2.x) / 2 * 50 + 400
       val attachmentY = (vertex1.y + vertex2.y) / 2 * 50 + 300
 
       // Get flip info for animation direction
-      val (_, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
+      val (_, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling, coordinates)
       val scaleValues = if wasFlipped then "1;0.95;1" else "1;1.05;1"
 
       svg.g(
@@ -52,7 +53,7 @@ object FailedPolygonRenderer:
       case _: Exception => svg.g()
     }
 
-  def renderFailedDeletion(deletion: FailedPolygonDeletion): Element =
+  def renderFailedDeletion(deletion: FailedPolygonDeletion, coordinates: Coords): Element =
     try {
       val FailedPolygonDeletion(polygonId, polygonNodes, tiling) = deletion
 
@@ -60,15 +61,15 @@ object FailedPolygonRenderer:
       val center = Point(0, 0)
       val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
 
-      val points = polygonNodes.map(tiling.coords).map { vertex =>
+      val points = polygonNodes.map(coordinates).map { vertex =>
         val x = canvasCenter.x + vertex.x * 50
         val y = canvasCenter.y + vertex.y * 50
         s"$x,$y"
       }.mkString(" ")
 
       // Calculate polygon center for animation origin
-      val centerX = polygonNodes.map(tiling.coords).map(_.x).sum / polygonNodes.length * 50 + 400
-      val centerY = polygonNodes.map(tiling.coords).map(_.y).sum / polygonNodes.length * 50 + 300
+      val centerX = polygonNodes.map(coordinates).map(_.x).sum / polygonNodes.length * 50 + 400
+      val centerY = polygonNodes.map(coordinates).map(_.y).sum / polygonNodes.length * 50 + 300
 
       svg.g(
         svg.polygon(
@@ -94,13 +95,13 @@ object FailedPolygonRenderer:
       case _: Exception => svg.g()
     }
 
-  private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
+  private def calculateWireframePoints(placement: FailedPolygonPlacement, coordinates: Coords): Vector[(Double, Double)] =
 
     val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
 
     // Get the edge coordinates
-    val vertex1 = tiling.coords(edge.lesserNode)
-    val vertex2 = tiling.coords(edge.greaterNode)
+    val vertex1 = coordinates(edge.lesserNode)
+    val vertex2 = coordinates(edge.greaterNode)
 
     // Calculate edge vector and length
     val edgeVectorX = vertex2.x - vertex1.x
@@ -112,7 +113,7 @@ object FailedPolygonRenderer:
     val edgeUnitY = edgeVectorY / edgeLength
 
     // Calculate the correct outward direction and whether we flipped
-    val (outwardDirection, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
+    val (outwardDirection, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling, coordinates)
     val (perpX, perpY) = outwardDirection
 
     // Calculate the center of the failed polygon
@@ -143,10 +144,10 @@ object FailedPolygonRenderer:
       (canvasX, canvasY)
     }.toVector
 
-  private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: io.github.scala_tessella.tessella.Tiling): ((Double, Double), Boolean) =
+  private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: Tiling, coordinates: Coords): ((Double, Double), Boolean) =
     try
-      val vertex1 = tiling.coords(edge.lesserNode)
-      val vertex2 = tiling.coords(edge.greaterNode)
+      val vertex1 = coordinates(edge.lesserNode)
+      val vertex2 = coordinates(edge.greaterNode)
 
       // Calculate edge vector
       val edgeVectorX = vertex2.x - vertex1.x
@@ -180,7 +181,7 @@ object FailedPolygonRenderer:
 
       containingPolygon match
         case Some(poly) =>
-          val polyVertices: Vector[Point] = poly.toPolygonPathNodes.map(tiling.coords)
+          val polyVertices: Vector[Point] = poly.toPolygonPathNodes.map(coordinates)
 
           // Check which test point is inside the containing polygon
           val point1Inside = isPointInPolygon(testPoint1X, testPoint1Y, polyVertices)
@@ -203,8 +204,8 @@ object FailedPolygonRenderer:
     catch
       case e: Exception =>
         // Fallback to simple perpendicular if calculation fails
-        val vertex1 = tiling.coords(edge.lesserNode)
-        val vertex2 = tiling.coords(edge.greaterNode)
+        val vertex1 = coordinates(edge.lesserNode)
+        val vertex2 = coordinates(edge.greaterNode)
         val edgeVectorX = vertex2.x - vertex1.x
         val edgeVectorY = vertex2.y - vertex1.y
         val length = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)

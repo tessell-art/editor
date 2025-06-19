@@ -69,12 +69,12 @@ object TessellationRenderer:
 
     // Failed polygon wireframe overlay for placement
     val failedPolygonWireframe = child.maybe <-- EditorState.failedPlacement.signal.map { placement =>
-      placement.map(FailedPolygonRenderer.renderFailedPlacement)
+      placement.map(x => FailedPolygonRenderer.renderFailedPlacement(x, transformedCoords))
     }
 
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map { deletion =>
-      deletion.map(FailedPolygonRenderer.renderFailedDeletion)
+      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, transformedCoords))
     }
 
     svg.g(
