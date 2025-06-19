@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.{Tiling, TilingCoordinates}
-import io.github.scala_tessella.tessella.TilingCoordinates.{affine, Coords}
+import io.github.scala_tessella.tessella.TilingCoordinates.{transform, Coords}
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Point}
@@ -41,7 +41,7 @@ object TessellationRenderer:
           val (n0, n1, n2) = (nodes(0), nodes(1), nodes(2))
 //          println(s"Affine previous nodes: $n0, $n1, $n2")
 //          println(s"Affine previous points: ${previousCoords(n0)}, ${previousCoords(n1)}, ${previousCoords(n2)}")
-          tiling.coords.affine(
+          tiling.coords.transform(
             (n0, n1, n2),
             (previousCoords(n0), previousCoords(n1), previousCoords(n2))
           ) match
