@@ -25,43 +25,29 @@ object TessellationRenderer:
   )
 
   def renderTiling(tiling: Tiling): Element =
+    val previousCoords = EditorState.currentCoords.now()
 
-    // Find one polygon that exists in both current and previous tiling
+    // Find one polygon that exists in the current tiling and previous coords
     val commonPolygonNodes: Option[Vector[TilingNode]] =
-//      previousTiling.flatMap { prevTiling =>
-//        tiling.orientedPolygons.view.map { currentPoly =>
-//          val currentNodes = currentPoly.toPolygonPathNodes
-//          val currentPolyTag = currentNodes.sorted(NodeOrdering).map(_.toString).mkString("-")
-//
-//          // Check if this polygon exists in the previous tiling
-//          val existsInPrevious = prevTiling.orientedPolygons.exists { prevPoly =>
-//            val prevNodes = prevPoly.toPolygonPathNodes
-//            val prevPolyTag = prevNodes.sorted(NodeOrdering).map(_.toString).mkString("-")
-//            prevPolyTag == currentPolyTag
-//          }
-//
-//          if existsInPrevious then Some(currentNodes) else None
-//        }.collectFirst { case Some(nodes) => nodes }
-//      }
-      None
+      tiling.orientedPolygons
+        .find(_.toPolygonPathNodes.forall(previousCoords.contains _))
+        .map(_.toPolygonPathNodes)
 
-    println(s"Common polygon nodes: $commonPolygonNodes")
+//    println(s"Common polygon nodes: $commonPolygonNodes")
 
     val transformedCoords: Coords =
       commonPolygonNodes match
         case Some(nodes) =>
-//          val (n0, n1, n2) = (nodes(0), nodes(1), nodes(2))
+          val (n0, n1, n2) = (nodes(0), nodes(1), nodes(2))
 //          println(s"Affine previous nodes: $n0, $n1, $n2")
-//          println(s"Affine previous points: ${previousTiling.get.coords(n0)}, ${previousTiling.get.coords(n1)}, ${previousTiling.get.coords(n2)}")
-//          tiling.coords.affine(
-//            (n0, n1, n2),
-//            (previousTiling.get.coords(n0), previousTiling.get.coords(n1), previousTiling.get.coords(n2))
-//          ) match {
-//            case Some(value) => println(s"Tranformed coords: $value"); value
-//            case None => println("Affine failed"); tiling.coords
-//          }
-          tiling.coords
-        case None => println("No common polygon nodes"); tiling.coords
+//          println(s"Affine previous points: ${previousCoords(n0)}, ${previousCoords(n1)}, ${previousCoords(n2)}")
+          tiling.coords.affine(
+            (n0, n1, n2),
+            (previousCoords(n0), previousCoords(n1), previousCoords(n2))
+          ) match
+            case Some(coordinates) => coordinates
+            case None => tiling.coords
+        case None => tiling.coords
 
     EditorState.currentCoords.set(transformedCoords)
     val tilingPolygons = tiling.orientedPolygons.map { poly =>
