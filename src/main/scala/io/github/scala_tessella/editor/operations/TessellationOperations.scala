@@ -5,7 +5,7 @@ import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.ErrorOperations.showError
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager, AsyncUtils}
-import io.github.scala_tessella.tessella.Tiling
+import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering}
 
@@ -50,16 +50,14 @@ object TessellationOperations:
               polygonId
 
             // Find the specific polygon in the tiling
-            val targetPolygon = tiling.orientedPolygons.find { poly =>
-              val nodes = poly.toPolygonPathNodes
+            val targetPolygon = tiling.orientedPolygons.find { nodes =>
               val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
               tag == polyTag
             }
 
             targetPolygon match
-              case Some(polygon) =>
+              case Some(polygonNodes) =>
                 // Get the polygon's nodes and edges
-                val polygonNodes = polygon.toPolygonPathNodes
                 val polygonNodesSet = polygonNodes.toSet
                 val polygonEdges = polygonNodes.zipWithIndex.map { case (node, i) =>
                   val nextNode = polygonNodes((i + 1) % polygonNodes.length)
@@ -67,7 +65,7 @@ object TessellationOperations:
                 }.toSet
 
                 // Get perimeter edges and perimeter nodes
-                val perimeterEdges = tiling.perimeter.toRingEdges.toSet
+                val perimeterEdges = tiling.perimeter.toEdgesO.toSet
                 val perimeterNodes = perimeterEdges.flatMap(edge => Set(edge.lesserNode, edge.greaterNode))
 
                 // Find which polygon edges are on the perimeter
@@ -94,8 +92,8 @@ object TessellationOperations:
                       Left(s"Cannot delete polygon $polyTag: Has isolated perimeter nodes ($nodeList) not connected to perimeter edges ($edgeList). Deletion would split the tessellation.")
                     else
                       // All checks passed - try actual deletion
-                      val result: Either[String, Tiling] =
-                        Tiling.maybe(tiling.graphEdges.diff(edgesOnPerimeter.toSeq))
+                      val result: Either[String, IncrementalTiling] =
+                        tiling.removePolygon(polygonNodes)
                       result match
                         case Right(newTiling) =>
                           // Success: return the new tiling
@@ -125,11 +123,10 @@ object TessellationOperations:
           else
             polygonId
 
-          tiling.orientedPolygons.find { poly =>
-            val nodes = poly.toPolygonPathNodes
+          tiling.orientedPolygons.find { nodes =>
             val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
             tag == polyTag
-          }.map(_.toPolygonPathNodes)
+          }
         }.getOrElse(Vector.empty)
 
         val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
@@ -150,11 +147,11 @@ object TessellationOperations:
           try
             import io.github.scala_tessella.tessella.RegularPolygon.Polygon
             val polygon = Polygon(polygonSides)
-            val perimeterEdges = tiling.perimeter.toRingEdges.toVector
+            val perimeterEdges = tiling.perimeter.toEdgesO.toVector
 
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              tiling.maybeGrowEdge(selectedEdge, polygon, AFTER_PERIMETER)
+              tiling.addPolygon(polygon, selectedEdge)
             else
               Left("Invalid edge index")
           catch
@@ -168,7 +165,7 @@ object TessellationOperations:
             ErrorOperations.clearError()
           case Left(errMsg) =>
             // Failure: show error message with wireframe (no state to undo)
-            val perimeterEdges = tiling.perimeter.toRingEdges.toVector
+            val perimeterEdges = tiling.perimeter.toEdgesO.toVector
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)

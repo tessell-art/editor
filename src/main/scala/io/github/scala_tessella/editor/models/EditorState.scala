@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.tessella.Tiling
+import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import org.scalajs.dom
 
@@ -20,8 +20,7 @@ object EditorState:
   val isProcessing: Var[Boolean] = Var(false)
 
   // Tessellation state
-  val currentTiling: Var[Option[Tiling]] = Var(None)
-  val currentCoords: Var[Coords] = Var(Map.empty)
+  val currentTiling: Var[Option[IncrementalTiling]] = Var(None)
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
   val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
 

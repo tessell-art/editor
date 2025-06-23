@@ -4,11 +4,11 @@ import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.UndoManager
 
-import io.github.scala_tessella.tessella.Tiling
+import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
 
 // Case class to represent a failed polygon placement
-case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: Edge, tiling: Tiling)
+case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: Edge, tiling: IncrementalTiling)
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode])
