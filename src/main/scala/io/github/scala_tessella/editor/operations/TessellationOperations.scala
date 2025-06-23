@@ -1,10 +1,10 @@
-
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.ErrorOperations.showError
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager, AsyncUtils}
+
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
