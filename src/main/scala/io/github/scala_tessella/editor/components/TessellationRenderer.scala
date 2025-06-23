@@ -1,12 +1,13 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.tessella.{IncrementalTiling, TilingCoordinates}
-import io.github.scala_tessella.tessella.TilingCoordinates.{transform, Coords}
-import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
-
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Point}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
+
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.tessella.{IncrementalTiling, TilingCoordinates}
+import io.github.scala_tessella.tessella.TilingCoordinates.Coords
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 
 object TessellationRenderer:
 

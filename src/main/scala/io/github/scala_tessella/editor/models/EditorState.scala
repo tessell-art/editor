@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import org.scalajs.dom
 
 object EditorState:
