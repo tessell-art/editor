@@ -81,7 +81,9 @@ object EditorCanvasComponent:
       GridRenderer.element,
 
       // Render tessellation if available
-      child.maybe <-- EditorState.currentTiling.signal.map(_.map(TessellationRenderer.renderTiling)),
+      child <-- EditorState.currentTiling.signal.map {
+        tiling => TessellationRenderer.renderTiling(tiling)
+      },
 
       // Show message when no tessellation is available
       child.maybe <-- EditorState.currentTiling.signal.map { tiling =>

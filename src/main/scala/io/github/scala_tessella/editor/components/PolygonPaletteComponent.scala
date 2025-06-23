@@ -30,10 +30,10 @@ object PolygonPaletteComponent:
     div(
       className := "tiling-status",
       child <-- EditorState.currentTiling.signal.combineWith(EditorState.isProcessing.signal).map {
-        case (Some(_), false) => p("Tiling: Active", className := "status active")
-        case (Some(_), true) => p("Tiling: Processing...", className := "status processing")
-        case (None, false) => p("Tiling: Empty", className := "status empty")
-        case (None, true) => p("Tiling: Creating...", className := "status processing")
+        case (tiling, false) if tiling.isEmpty => p("Tiling: Empty", className := "status empty")
+        case (tiling, true) if tiling.isEmpty => p("Tiling: Creating...", className := "status processing")
+        case (_, false) => p("Tiling: Active", className := "status active")
+        case (_, true) => p("Tiling: Processing...", className := "status processing")
       }
     )
 

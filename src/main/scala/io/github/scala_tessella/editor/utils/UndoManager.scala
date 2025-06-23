@@ -85,9 +85,9 @@ object UndoManager:
   def getUndoPreview: Option[String] =
     if undoStack.nonEmpty then
       val snapshot = undoStack.top
-      val desc = snapshot.tiling match
-        case Some(_) => "Tessellation modification"
-        case None => "Clear tessellation"
+      val desc = 
+        if snapshot.tiling.isEmpty then "Clear tessellation"
+        else "Tessellation modification"
       Some(s"Undo: $desc")
     else
       None

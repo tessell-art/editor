@@ -20,7 +20,7 @@ object EditorState:
   val isProcessing: Var[Boolean] = Var(false)
 
   // Tessellation state
-  val currentTiling: Var[Option[IncrementalTiling]] = Var(None)
+  val currentTiling: Var[IncrementalTiling] = Var(IncrementalTiling.empty)
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
   val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
 
