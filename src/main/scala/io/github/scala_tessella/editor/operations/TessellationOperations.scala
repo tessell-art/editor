@@ -6,8 +6,7 @@ import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletio
 import io.github.scala_tessella.editor.operations.ErrorOperations.showError
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager, AsyncUtils}
 import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.TilingGrowth.OtherNodeStrategy.AFTER_PERIMETER
-import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering}
+import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
