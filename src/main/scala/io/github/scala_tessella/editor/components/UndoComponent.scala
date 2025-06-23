@@ -15,6 +15,7 @@ object UndoComponent:
         title := UndoManager.getUndoPreview.getOrElse("No actions to undo"),
         onClick --> { _ => AppState.undo() },
         span(className := "icon", "↶"), // Undo arrow icon
+        span(className := "button-text", " "),
         span(
           className := "button-text",
           child.text <-- UndoManager.undoCount.signal.map { count =>
