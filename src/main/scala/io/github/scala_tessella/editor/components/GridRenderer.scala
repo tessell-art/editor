@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
+
+import com.raquo.laminar.api.L.{*, given}
 
 object GridRenderer:
   private val patternId = "grid-pattern"

@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, MouseEventHandler}
+
+import com.raquo.laminar.api.L.{*, given}
 
 object EditorCanvasComponent:
   def element: Element =

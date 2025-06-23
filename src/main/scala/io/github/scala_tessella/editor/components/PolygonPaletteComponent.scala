@@ -1,9 +1,10 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.operations.TessellationOperations.{clearTiling, selectPolygon}
+
+import com.raquo.laminar.api.L.{*, given}
 
 import scala.math.{Pi, cos, sin}
 

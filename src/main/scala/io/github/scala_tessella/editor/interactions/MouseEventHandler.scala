@@ -4,7 +4,7 @@ import io.github.scala_tessella.tessella.Geometry.Point
 
 import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom.{MouseEvent, WheelEvent}
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.EditorState
 
 import scala.math.{max, min}
 
