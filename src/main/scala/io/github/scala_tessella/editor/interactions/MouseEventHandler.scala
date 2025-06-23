@@ -5,7 +5,7 @@ import org.scalajs.dom.{MouseEvent, WheelEvent}
 import io.github.scala_tessella.editor.models.{AppState, EditorState, Point}
 import scala.math.{max, min}
 
-object MouseHandler:
+object MouseEventHandler:
   def mouseEventHandlers: List[Modifier[?]] = List(
     onMouseDown --> handleMouseDown,
     onMouseMove --> handleMouseMove,

@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
-import io.github.scala_tessella.editor.interactions.{KeyboardHandler, MouseHandler}
+import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, MouseEventHandler}
 
 object EditorCanvasComponent:
   def element: Element =
@@ -43,11 +43,11 @@ object EditorCanvasComponent:
         contentGroup(),
 
         // Disable mouse events when processing
-        onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseDown,
-        onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseMove,
-        onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseUp,
-        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleWheel,
-        onKeyDown.filter(_ => !EditorState.isProcessing.now()) --> KeyboardHandler.handleKeyDown
+        onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
+        onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
+        onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
+        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel,
+        onKeyDown.filter(_ => !EditorState.isProcessing.now()) --> KeyboardEventHandler.handleKeyDown
       )
     )
 

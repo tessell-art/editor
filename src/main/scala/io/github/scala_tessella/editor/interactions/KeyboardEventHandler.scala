@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSe
 
 import scala.math.{max, min}
 
-object KeyboardHandler:
+object KeyboardEventHandler:
   def keyboardEventHandlers: List[Modifier[?]] = List(
     onKeyDown --> handleKeyDown
   )
