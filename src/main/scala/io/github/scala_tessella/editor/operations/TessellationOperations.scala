@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.EditorState.currentTiling
+import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strictness}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.ErrorOperations.showError
 import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager, AsyncUtils}
@@ -105,7 +105,7 @@ object TessellationOperations:
     }
 
   // Handle perimeter edge click with polygon growth
-  def attemptPolygonGrowth(edgeId: String, edgeIndex: Int): Unit =
+  def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
     (currentTiling.now(), EditorState.selectedPolygon.now()) match
       case (tiling, _) if tiling.isEmpty=>
         ErrorOperations.showError("No tiling available to grow")
@@ -119,7 +119,7 @@ object TessellationOperations:
 
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              tiling.addPolygon(polygon, selectedEdge)
+              tiling.addPolygon(polygon, selectedEdge, strictness.now())
             else
               Left("Invalid edge index")
           catch

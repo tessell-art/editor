@@ -32,6 +32,6 @@ object SelectionOperations:
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     if !EditorState.isProcessing.now() then
       (EditorState.currentTiling.now(), EditorState.selectedPolygon.now()) match
-        case (tiling, Some(_)) if !tiling.isEmpty => TessellationOperations.attemptPolygonGrowth(edgeId, edgeIndex)
+        case (tiling, Some(_)) if !tiling.isEmpty => TessellationOperations.attemptPolygonAddition(edgeId, edgeIndex)
         case (_, None)                            => togglePerimeterEdgeSelection(edgeId)
         case (_, _)                               => ErrorOperations.showError("No tiling available to grow")

@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import org.scalajs.dom
 
 object EditorState:
@@ -23,6 +24,7 @@ object EditorState:
   val currentTiling: Var[IncrementalTiling] = Var(IncrementalTiling.empty)
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
   val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
+  val strictness: Var[Strictness] = Var(Strictness.STRICT)
 
   // Color state
   val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80))

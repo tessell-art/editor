@@ -5,6 +5,7 @@ import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.UndoManager
 
 import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
 
 // Case class to represent a failed polygon placement
@@ -29,6 +30,14 @@ object AppState:
         case EditorMode.Delete => EditorMode.Select
       }
 
+  def toggleStrictness(): Unit =
+    if !isProcessing.now() then
+      strictness.update {
+        case Strictness.STRICT   => Strictness.TOUCHING
+        case Strictness.TOUCHING => Strictness.CROSSING
+        case Strictness.CROSSING => Strictness.STRICT
+      }
+
   def toggleNodeLabels(): Unit =
     if !isProcessing.now() then
       showNodeLabels.update(!_)
@@ -38,21 +47,25 @@ object AppState:
   // Delegate to operation objects
   def selectPolygon(sides: Int): Unit =
     TessellationOperations.selectPolygon(sides)
+
   def clearTiling(): Unit =
     TessellationOperations.clearTiling()
 
   def handleTilingPolygonClick(polygonId: String): Unit =
     SelectionOperations.handleTilingPolygonClick(polygonId)
+
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     SelectionOperations.handlePerimeterEdgeClick(edgeId, edgeIndex)
 
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
     ColorOperations.applyColorToSelectedPolygons(color)
+
   def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =
     ColorOperations.getOrAssignPolygonColor(polyTag)
 
   def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
     ErrorOperations.showError(message, placement, deletion)
+
   def clearError(): Unit =
     ErrorOperations.clearError()
 

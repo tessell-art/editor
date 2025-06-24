@@ -1,8 +1,10 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.components.{ColorPickerPopupComponent, UndoComponent}
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
+
+import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 import scala.math.{max, min}
 
@@ -38,7 +40,7 @@ object CanvasControlComponent:
               svg.height := "18",
               svg.x := "2",
               svg.y := "2",
-              svg.fill <-- EditorState.fillColor.signal.map { case (r,g,b) => f"rgb($r,$g,$b)" }
+              svg.fill <-- EditorState.fillColor.signal.map { case (r, g, b) => f"rgb($r,$g,$b)" }
             )
           ),
           onClick --> { _ =>
@@ -58,6 +60,16 @@ object CanvasControlComponent:
             if (show) "toggle-btn active" else "toggle-btn"
           ),
           onClick --> { _ => AppState.toggleNodeLabels() }
+        ),
+        button(
+          child.text <-- EditorState.strictness.signal.map(s => s"Strictness: ${s.toString.toLowerCase.capitalize}"),
+          className := "toggle-btn",
+          onClick --> { _ => AppState.toggleStrictness() },
+          title <-- EditorState.strictness.signal.map {
+            case Strictness.STRICT   => "Current mode is STRICT: prevents adding a polygon that would invalidate the tessellation. Click to switch to TOUCHING."
+            case Strictness.TOUCHING => "Current mode is TOUCHING: allows adding a polygon sharing non-continuous edges with the perimeter. Click to switch to CROSSING."
+            case Strictness.CROSSING => "Current mode is CROSSING: allows adding a polygon crossing the edges of the perimeter. Click to switch to STRICT."
+          }
         ),
         button(
           child.text <-- EditorState.editorMode.signal.map {
@@ -84,6 +96,6 @@ object CanvasControlComponent:
     div(
       className := "transform-info",
       child.text <-- EditorState.viewTransform.signal.map(t =>
-        f"Zoom: ${t.scale*100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
+        f"Zoom: ${t.scale * 100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
       )
     )
