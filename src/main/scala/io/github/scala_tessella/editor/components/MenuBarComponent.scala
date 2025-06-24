@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
+import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.editor.utils.UndoManager
 
 import scala.math.{max, min}
 
@@ -83,7 +84,7 @@ object MenuBarComponent {
     // NOTE: I'm assuming AppState has undo/redo logic like:
     // undo(): Unit, redo(): Unit, canUndo: Signal[Boolean], canRedo: Signal[Boolean]
     menuItem("Edit",
-//      dropdownLink("Undo", () => AppState.undo(), AppState.canUndo.signal),
+      dropdownLink("Undo", () => AppState.undo(), UndoManager.canUndo.signal),
 //      dropdownLink("Redo", () => AppState.redo(), AppState.canRedo.signal),
       div(className := "menu-separator"),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
