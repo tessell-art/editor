@@ -15,19 +15,19 @@ object CanvasControlComponent:
       className := "canvas-controls",
       div(
         className := "control-group",
-        button("Reset View", onClick --> { _ => EditorState.viewTransform.set(ViewTransform()) }),
-        button("Zoom In", onClick --> { _ =>
-          EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))
-        }),
-        button("Zoom Out", onClick --> { _ =>
-          EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))
-        }),
-        button("Rotate Left", onClick --> { _ =>
-          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))
-        }),
-        button("Rotate Right", onClick --> { _ =>
-          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
-        }),
+//        button("Reset View", onClick --> { _ => EditorState.viewTransform.set(ViewTransform()) }),
+//        button("Zoom In", onClick --> { _ =>
+//          EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))
+//        }),
+//        button("Zoom Out", onClick --> { _ =>
+//          EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))
+//        }),
+//        button("Rotate Left", onClick --> { _ =>
+//          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))
+//        }),
+//        button("Rotate Right", onClick --> { _ =>
+//          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
+//        }),
         button(
           "Fill Color ",
           svg.svg(

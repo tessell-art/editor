@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.components
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.editor.operations.TessellationOperations.clearTiling
 import io.github.scala_tessella.editor.utils.UndoManager
 
 import scala.math.{max, min}
@@ -87,11 +88,15 @@ object MenuBarComponent {
       dropdownLink("Undo", () => AppState.undo(), AppState.canUndo),
       dropdownLink("Redo", () => AppState.redo(), AppState.canRedo),
       div(className := "menu-separator"),
-      dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
-      dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))),
-      dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))),
-      dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))),
-      dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))),
+      dropdownLink("Clear tiling", () => clearTiling()),
+      div(className := "menu-separator"),
+      dropdownLinkDynamic(
+        EditorState.editorMode.signal.map {
+          case EditorMode.Select => "Switch to Delete Mode"
+          case EditorMode.Delete => "Switch to Select Mode"
+        },
+        () => AppState.toggleEditorMode()
+      ),
       div(className := "menu-separator"),
       a(
         href := "#",
@@ -112,13 +117,11 @@ object MenuBarComponent {
         () => AppState.toggleNodeLabels()
       ),
       div(className := "menu-separator"),
-      dropdownLinkDynamic(
-        EditorState.editorMode.signal.map {
-          case EditorMode.Select => "Switch to Delete Mode"
-          case EditorMode.Delete => "Switch to Select Mode"
-        },
-        () => AppState.toggleEditorMode()
-      )
+      dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
+      dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))),
+      dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))),
+      dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))),
+      dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30)))
     )
   }
 
