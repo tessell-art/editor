@@ -100,7 +100,7 @@ object EditorCanvasComponent:
         svg.fill := "#888",
         svg.textAnchor := "middle",
         svg.fontFamily := "Arial, sans-serif",
-        "No tessellation available"
+        "Empty tessellation"
       ),
       svg.text(
         svg.x := "400",
@@ -109,6 +109,6 @@ object EditorCanvasComponent:
         svg.fill := "#666",
         svg.textAnchor := "middle",
         svg.fontFamily := "Arial, sans-serif",
-        "Select a polygon from the palette to start a tessellation"
+        "Select a polygon to start a tessellation"
       )
     )

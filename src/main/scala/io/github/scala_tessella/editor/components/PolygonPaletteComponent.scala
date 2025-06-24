@@ -12,7 +12,7 @@ object PolygonPaletteComponent:
   def element: Element =
     div(
       className := "polygon-palette",
-      h2("Select a Polygon Shape"),
+      h2("Polygon Shape"),
       div(
         className := "palette-grid",
         EditorState.polygonSides.map(sides => polygonButton(sides))
@@ -23,8 +23,7 @@ object PolygonPaletteComponent:
           p(s"Selected: $sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})")
         ))
       ),
-      tilingStatus(),
-      tilingControls()
+      tilingStatus()
     )
 
   private def tilingStatus(): Element =
@@ -36,17 +35,6 @@ object PolygonPaletteComponent:
         case (_, false) => p("Tiling: Active", className := "status active")
         case (_, true) => p("Tiling: Processing...", className := "status processing")
       }
-    )
-
-  private def tilingControls(): Element =
-    div(
-      className := "tiling-controls",
-      h3("Tessellation"),
-      button(
-        "Clear Tiling",
-        disabled <-- EditorState.isProcessing.signal,
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => clearTiling() }
-      )
     )
 
   private def polygonButton(sides: Int): Element =
