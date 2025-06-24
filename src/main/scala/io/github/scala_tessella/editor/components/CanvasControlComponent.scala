@@ -1,6 +1,5 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.components.{ColorPickerPopupComponent, UndoComponent}
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
 
 import com.raquo.laminar.api.L.{*, given}
@@ -9,8 +8,7 @@ import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import scala.math.{max, min}
 
 object CanvasControlComponent:
-  private val showColorPicker = Var(false)
-  private val tempColor = Var(EditorState.fillColor.now())
+  // Local state for color picker is no longer needed here
 
   def element: Element =
     div(
@@ -44,8 +42,9 @@ object CanvasControlComponent:
             )
           ),
           onClick --> { _ =>
-            tempColor.set(EditorState.fillColor.now())
-            showColorPicker.set(true)
+            // Use shared state from EditorState
+            EditorState.tempColor.set(EditorState.fillColor.now())
+            EditorState.showColorPicker.set(true)
           },
           styleAttr := "margin-left: 8px; border: 1px solid #888; background: #222; color: white; display: inline-flex; align-items: center; gap: 0.3em; padding: 0.3em 0.9em; border-radius: 5px"
         )
@@ -88,7 +87,7 @@ object CanvasControlComponent:
         )
       ),
       UndoComponent.element,
-      ColorPickerPopupComponent.element(showColorPicker, tempColor),
+      // ColorPickerPopupComponent is no longer rendered here, it will be moved to the main view
       transformInfo()
     )
 

@@ -30,6 +30,10 @@ object EditorState:
   val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80))
   val polygonColors: Var[Map[String, (Int, Int, Int)]] = Var(Map.empty)
 
+  // Color picker
+  val showColorPicker: Var[Boolean] = Var(false)
+  val tempColor: Var[(Int, Int, Int)] = Var(fillColor.now())
+
   // Visualization state
   val showNodeLabels: Var[Boolean] = Var(false)
 

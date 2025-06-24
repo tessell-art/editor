@@ -9,7 +9,7 @@ object EditorCanvasComponent:
   def element: Element =
     div(
       className := "canvas-container",
-      h2("Canvas"),
+//      h2("Canvas"),
       CanvasControlComponent.element,
       ErrorMessageComponent.element,
       // Loading indicator
