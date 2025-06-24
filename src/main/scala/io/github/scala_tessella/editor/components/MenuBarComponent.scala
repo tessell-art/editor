@@ -84,8 +84,8 @@ object MenuBarComponent {
     // NOTE: I'm assuming AppState has undo/redo logic like:
     // undo(): Unit, redo(): Unit, canUndo: Signal[Boolean], canRedo: Signal[Boolean]
     menuItem("Edit",
-      dropdownLink("Undo", () => AppState.undo(), UndoManager.canUndo.signal),
-//      dropdownLink("Redo", () => AppState.redo(), AppState.canRedo.signal),
+      dropdownLink("Undo", () => AppState.undo(), AppState.canUndo),
+      dropdownLink("Redo", () => AppState.redo(), AppState.canRedo),
       div(className := "menu-separator"),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
       dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))),

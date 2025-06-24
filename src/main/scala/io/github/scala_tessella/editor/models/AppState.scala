@@ -4,6 +4,7 @@ import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.UndoManager
 
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
@@ -21,6 +22,10 @@ enum EditorMode:
 object AppState:
   // Expose state for components to read
   export EditorState.*
+
+  // Expose undo/redo capabilities for UI components
+  val canUndo: Signal[Boolean] = UndoManager.canUndo.signal
+  val canRedo: Signal[Boolean] = UndoManager.canRedo.signal
 
   // Simple UI operations
   def toggleEditorMode(): Unit =
@@ -77,3 +82,7 @@ object AppState:
   def undo(): Unit =
     if !isProcessing.now() then
       UndoManager.undo()
+
+  def redo(): Unit =
+    if !isProcessing.now() then
+      UndoManager.redo()
