@@ -47,8 +47,7 @@ object EditorCanvasComponent:
         onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
         onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
         onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
-        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel,
-        onKeyDown.filter(_ => !EditorState.isProcessing.now()) --> KeyboardEventHandler.handleKeyDown
+        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel
       )
     )
 

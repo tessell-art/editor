@@ -1,9 +1,11 @@
 package io.github.scala_tessella.editor
 
+import models.AppState
+import components.{PolygonPaletteComponent, EditorCanvasComponent}
+import interactions.KeyboardEventHandler
+
 import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
-import io.github.scala_tessella.editor.models.AppState
-import io.github.scala_tessella.editor.components.{PolygonPaletteComponent, EditorCanvasComponent}
 
 @main
 def Editor(): Unit =
@@ -20,5 +22,7 @@ object EditorApp:
         className := "editor-layout",
         PolygonPaletteComponent.element,
         EditorCanvasComponent.element
-      )
+      ),
+      // Global keyboard event handlers
+      KeyboardEventHandler.keyboardEventHandlers
     )
