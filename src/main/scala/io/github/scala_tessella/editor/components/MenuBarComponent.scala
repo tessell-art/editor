@@ -2,8 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.operations.TessellationOperations.clearTiling
-import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, UndoManager}
-
+import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImporter, UndoManager}
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
@@ -75,12 +74,12 @@ object MenuBarComponent:
         // Placeholder for Import functionality
         println("Import from .DOT... clicked")
       }),
+      dropdownLink("Import from SVG...", () => SvgImporter.trigger()),
       dropdownLink(
         "Export to .DOT...",
         () => DotExporter.exportTilingToDOT(),
         enabled = isTilingEmpty.map(!_)
       ),
-
       div(className := "menu-separator"),
       dropdownLink(
         "Export SVG...",
