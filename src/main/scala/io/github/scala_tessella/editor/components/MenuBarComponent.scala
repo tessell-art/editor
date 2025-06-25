@@ -2,19 +2,19 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.operations.TessellationOperations.clearTiling
-import io.github.scala_tessella.editor.utils.{SvgExporter, UndoManager}
+import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, UndoManager}
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 import scala.math.{max, min}
 
-object MenuBarComponent {
+object MenuBarComponent:
 
   // This state is for the mobile view, to toggle the hamburger menu
   private val isMenuOpen = Var(false)
 
-  def element: Element = {
+  def element: Element =
     navTag(
       className := "menu-bar",
       // Hamburger button for small screens
@@ -32,10 +32,9 @@ object MenuBarComponent {
         optionsMenu()
       )
     )
-  }
 
   // A helper to create a top-level menu item like "File", "Edit"
-  private def menuItem(title: String, children: Mod[HtmlElement]*): Element = {
+  private def menuItem(title: String, children: Mod[HtmlElement]*): Element =
     div(
       className := "menu-item",
       button(
@@ -47,48 +46,48 @@ object MenuBarComponent {
         children
       )
     )
-  }
 
   // A helper for creating a clickable link in a dropdown
-  private def dropdownLink(title: String, action: () => Unit, enabled: Signal[Boolean] = Val(true)): Element = {
+  private def dropdownLink(title: String, action: () => Unit, enabled: Signal[Boolean] = Val(true)): Element =
     a(
       href := "#",
       title,
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
       disabled <-- enabled.map(!_)
     )
-  }
 
   // A helper for creating a dropdown link with dynamic text
-  private def dropdownLinkDynamic[T](title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true)): Element = {
+  private def dropdownLinkDynamic[T](title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true)): Element =
     a(
       href := "#",
       child.text <-- title,
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
       disabled <-- enabled.map(!_)
     )
-  }
 
-  private def fileMenu(): Element = {
+  private def fileMenu(): Element =
+    val isTilingEmpty =
+      EditorState.currentTiling.signal.map(_.isEmpty)
     menuItem("File",
       dropdownLink("Import from .DOT...", () => {
         // Placeholder for Import functionality
         println("Import from .DOT... clicked")
       }),
-      dropdownLink("Export to .DOT...", () => {
-        // Placeholder for Export functionality
-        println("Export to .DOT... clicked")
-      }),
+      dropdownLink(
+        "Export to .DOT...",
+        () => DotExporter.exportTilingToDOT(),
+        enabled = isTilingEmpty.map(!_)
+      ),
+
       div(className := "menu-separator"),
       dropdownLink(
         "Export SVG...",
         () => SvgExporter.exportTilingToSVG(),
-        enabled = EditorState.currentTiling.signal.map(!_.isEmpty)
+        enabled = isTilingEmpty.map(!_)
       )
     )
-  }
 
-  private def editMenu(): Element = {
+  private def editMenu(): Element =
     val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
     val hasSelection = EditorState.selectedTilingPolygons.signal
       .combineWith(EditorState.selectedPerimeterEdges.signal)
@@ -121,9 +120,8 @@ object MenuBarComponent {
         }
       )
     )
-  }
 
-  private def viewMenu(): Element = {
+  private def viewMenu(): Element =
     menuItem("View",
       dropdownLinkDynamic(
         EditorState.showNodeLabels.signal.map(show => if (show) "Hide Node Labels" else "Show Node Labels"),
@@ -136,9 +134,8 @@ object MenuBarComponent {
       dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))),
       dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30)))
     )
-  }
 
-  private def optionsMenu(): Element = {
+  private def optionsMenu(): Element =
     menuItem("Options",
       dropdownLinkDynamic(
         EditorState.strictness.signal.map {
@@ -149,5 +146,3 @@ object MenuBarComponent {
         () => AppState.toggleStrictness()
       )
     )
-  }
-}

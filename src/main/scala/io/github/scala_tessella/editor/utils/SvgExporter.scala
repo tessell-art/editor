@@ -14,7 +14,7 @@ object SvgExporter:
     val tiling = EditorState.currentTiling.now()
     if !tiling.isEmpty then
       val svgContent = generateSvgContent(tiling)
-      triggerDownload(svgContent, "tessellation.svg")
+      FileDownloader.trigger(svgContent, "tessellation.svg", "image/svg+xml;charset=utf-8")
 
   private def generateSvgContent(tiling: IncrementalTiling): String =
     val coordinates = tiling.coordinates
@@ -70,15 +70,3 @@ object SvgExporter:
        |    </rdf:RDF>
        |  </metadata>
        |</svg>""".stripMargin
-
-  private def triggerDownload(content: String, filename: String): Unit =
-    val blobPropertyBag = new BlobPropertyBag { `type` = "image/svg+xml;charset=utf-8" }
-    val blob = new Blob(js.Array(content), blobPropertyBag)
-    val url = dom.URL.createObjectURL(blob)
-    val a = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
-    a.href = url
-    a.download = filename
-    dom.document.body.appendChild(a)
-    a.click()
-    dom.document.body.removeChild(a)
-    dom.URL.revokeObjectURL(url)

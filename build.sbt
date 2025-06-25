@@ -27,7 +27,7 @@ lazy val editor = project.in(file("."))
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
     libraryDependencies += "be.doeraene" %%% "web-components-ui5" % "2.1.0",
     libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
-    libraryDependencies += "io.github.scala-tessella" %%% "tessella" % "0.3.0+78-7fd3eca7+20250624-1557",
+    libraryDependencies += "io.github.scala-tessella" %%% "tessella" % "0.3.0+82-36f127a8+20250625-1307",
 
     // Test dependencies
     libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,
