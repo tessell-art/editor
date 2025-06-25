@@ -26,7 +26,7 @@ object SvgExporter:
     val minY = allPoints.map(_.y).min
     val maxY = allPoints.map(_.y).max
 
-    val (scale, strokeWidth) = (50.0, 1.5)
+    val (scale, strokeWidth, strokeWidthPeri) = (50.0, 1.5, 10.5)
     val padding = 20.0
 
     val width = (maxX - minX) * scale + 2 * padding
@@ -47,8 +47,25 @@ object SvgExporter:
 
       val nodesStr = nodes.map(_.toString).mkString(",")
 
-      s"""  <polygon data-nodes="$nodesStr" points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
+      s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
     }.mkString("\n")
+
+    val polygonsGroup =
+      s"""  <g id="tiling-polygons">
+         |$polygonsXml
+         |  </g>""".stripMargin
+
+    val perimeterNodes = tiling.perimeter
+    val perimeterXml =
+      if perimeterNodes.isEmpty then ""
+      else
+        val points = perimeterNodes.map(coordinates).map { vertex =>
+          val x = vertex.x * scale + offsetX
+          val y = vertex.y * scale + offsetY
+          s"$x,$y"
+        }.mkString(" ")
+        val nodesStr = perimeterNodes.map(_.toString).mkString(",")
+        s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
     val labelsXml =
       if !EditorState.showNodeLabels.now() then ""
@@ -61,7 +78,8 @@ object SvgExporter:
 
     s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
-       |$polygonsXml
+       |$perimeterXml
+       |$polygonsGroup
        |$labelsXml
        |  <metadata>
        |    <rdf:RDF>
