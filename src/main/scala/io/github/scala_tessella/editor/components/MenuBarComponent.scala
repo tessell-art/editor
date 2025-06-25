@@ -70,20 +70,20 @@ object MenuBarComponent:
     val isTilingEmpty =
       EditorState.currentTiling.signal.map(_.isEmpty)
     menuItem("File",
+      dropdownLink("Load SVG...", () => SvgImporter.trigger()),
+      dropdownLink(
+        "Save SVG...",
+        () => SvgExporter.exportTilingToSVG(),
+        enabled = isTilingEmpty.map(!_)
+      ),
+      div(className := "menu-separator"),
       dropdownLink("Import from .DOT...", () => {
         // Placeholder for Import functionality
         println("Import from .DOT... clicked")
       }),
-      dropdownLink("Import from SVG...", () => SvgImporter.trigger()),
       dropdownLink(
         "Export to .DOT...",
         () => DotExporter.exportTilingToDOT(),
-        enabled = isTilingEmpty.map(!_)
-      ),
-      div(className := "menu-separator"),
-      dropdownLink(
-        "Export SVG...",
-        () => SvgExporter.exportTilingToSVG(),
         enabled = isTilingEmpty.map(!_)
       )
     )
