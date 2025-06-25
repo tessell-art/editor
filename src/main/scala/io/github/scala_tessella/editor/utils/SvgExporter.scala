@@ -54,7 +54,8 @@ object SvgExporter:
        |</svg>""".stripMargin
 
   private def triggerDownload(content: String, filename: String): Unit =
-    val blob = new Blob(js.Array(content), BlobPropertyBag("image/svg+xml;charset=utf-8"))
+    val blobPropertyBag = new BlobPropertyBag { `type` = "image/svg+xml;charset=utf-8" }
+    val blob = new Blob(js.Array(content), blobPropertyBag)
     val url = dom.URL.createObjectURL(blob)
     val a = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
     a.href = url
