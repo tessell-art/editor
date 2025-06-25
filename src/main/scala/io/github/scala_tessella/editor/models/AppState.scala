@@ -79,6 +79,11 @@ object AppState:
       if selectedTilingPolygons.now().nonEmpty then
         ErrorOperations.showError("Tessellation polygon deletion not supported yet")
 
+  def selectPolygonsBySides(sides: Int): Unit =
+    if !isProcessing.now() && !isTilingEmpty then
+      UndoManager.saveState()
+      SelectionOperations.selectPolygonsBySides(sides)
+
   def selectAll(): Unit =
     if !isProcessing.now() && !isTilingEmpty then
       UndoManager.saveState()

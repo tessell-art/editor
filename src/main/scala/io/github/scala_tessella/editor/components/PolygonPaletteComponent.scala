@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
-import io.github.scala_tessella.editor.operations.TessellationOperations.{clearTiling, selectPolygon}
+import io.github.scala_tessella.editor.operations.TessellationOperations.selectPolygon
 
 import com.raquo.laminar.api.L.{*, given}
 
@@ -12,16 +12,25 @@ object PolygonPaletteComponent:
   def element: Element =
     div(
       className := "polygon-palette",
-      h2("Polygon Shape"),
+//      h2("Polygon Shape"),
       div(
         className := "palette-grid",
         EditorState.polygonSides.map(sides => polygonButton(sides))
       ),
       div(
         className := "selected-info",
-        child.maybe <-- EditorState.selectedPolygon.signal.map(_.map(sides =>
-          p(s"Selected: $sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})")
-        ))
+        child.maybe <-- EditorState.selectedPolygon.signal.map(_.map { sides =>
+          val polygonName = PolygonNameGenerator.polygonName(sides)
+          div(
+//            p(s"Selected: $sides-sided polygon ($polygonName)"),
+            button(
+              className := "select-all-by-type-btn",
+              s"Select all ${polygonName}s",
+              onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
+              disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+            )
+          )
+        })
       ),
       tilingStatus()
     )

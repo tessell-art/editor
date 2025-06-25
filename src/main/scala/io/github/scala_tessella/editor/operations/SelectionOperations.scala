@@ -22,6 +22,18 @@ object SelectionOperations:
         EditorState.selectedTilingPolygons.set(allPolygonIds)
         EditorState.selectedPerimeterEdges.set(Set.empty)
 
+  def selectPolygonsBySides(sides: Int): Unit =
+    if !EditorState.isProcessing.now() then
+      val tiling = EditorState.currentTiling.now()
+      if !tiling.isEmpty then
+        val polygonIdsToAdd = tiling.orientedPolygons.collect {
+          case nodes if nodes.length == sides =>
+            val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+            s"tiling-poly-$polyTag"
+        }.toSet
+        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+//        EditorState.selectedTilingPolygons.update(_ ++ polygonIdsToAdd)
+
   def toggleTilingPolygonSelection(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
       EditorState.selectedTilingPolygons.update { selected =>
