@@ -53,7 +53,7 @@ object MenuBarComponent:
       href := "#",
       title,
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
-      disabled <-- enabled.map(!_)
+      className.toggle("disabled") <-- enabled.map(!_)
     )
 
   // A helper for creating a dropdown link with dynamic text
@@ -62,7 +62,7 @@ object MenuBarComponent:
       href := "#",
       child.text <-- title,
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
-      disabled <-- enabled.map(!_)
+      className.toggle("disabled") <-- enabled.map(!_)
     )
 
   private def fileMenu(): Element =
