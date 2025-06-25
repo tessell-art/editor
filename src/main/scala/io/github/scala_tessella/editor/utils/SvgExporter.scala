@@ -45,7 +45,9 @@ object SvgExporter:
         s"$x,$y"
       }.mkString(" ")
 
-      s"""  <polygon points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
+      val nodesStr = nodes.map(_.toString).mkString(",")
+
+      s"""  <polygon data-nodes="$nodesStr" points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
     }.mkString("\n")
 
     val labelsXml =
