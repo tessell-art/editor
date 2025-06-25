@@ -47,10 +47,10 @@ object CanvasControlComponent:
             EditorState.showColorPicker.set(true)
           },
           styleAttr := "margin-left: 8px; border: 1px solid #888; background: #222; color: white; display: inline-flex; align-items: center; gap: 0.3em; padding: 0.3em 0.9em; border-radius: 5px"
-        )
-      ),
-      div(
-        className := "visualization-controls",
+        ),
+//      ),
+//      div(
+//        className := "visualization-controls",
         button(
           child.text <-- EditorState.showNodeLabels.signal.map(show =>
             if (show) "Hide Node Labels" else "Show Node Labels"
