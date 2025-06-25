@@ -50,16 +50,6 @@ object SvgImporter:
       else None
     }
 
-  // This class must extend IncrementalTiling to be compatible with EditorState
-  // and override coordinates to set them from the SVG data.
-  class ImportedTiling(
-                        nodes: Set[Node],
-                        edges: Set[Edge],
-                        polygons: List[List[Node]],
-                        perimeter: List[Node],
-                        val coordinates: Coords
-                      )
-
   def importTilingFromSVG(svgContent: String): Unit = Try {
     val parser = new dom.DOMParser()
     // The second parameter to parseFromString requires a specific MIMEType.
@@ -126,16 +116,13 @@ object SvgImporter:
       (nodes.last +: nodes).sliding(2).map(p => Edge(p.head, p.last))
     ).toSet
 
-    val newTiling = new ImportedTiling(
-      allNodes,
-      allEdges,
-      polygonsAsNodes,
-      perimeterAsNodes,
-      finalCoords
-    )
-
     EditorState.currentTiling.set(
-      IncrementalTiling.fromPolygon(10)
+      IncrementalTiling.withValidation(
+        allEdges.toList,
+        polygonsAsNodes.map(_.toVector),
+        perimeterAsNodes.toVector,
+        finalCoords
+      ).toOption.get
     )
   }.recover { case e: Throwable =>
     dom.window.alert(s"Failed to import SVG: ${e.getMessage}")
