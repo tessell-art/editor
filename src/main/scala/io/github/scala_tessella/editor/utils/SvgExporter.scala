@@ -48,9 +48,17 @@ object SvgExporter:
       s"""  <polygon points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
     }.mkString("\n")
 
-    s"""<svg width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
+    s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
        |$polygonsXml
+       |  <metadata>
+       |    <rdf:RDF>
+       |      <cc:Work>
+       |        <dc:source rdf:resource="https://github.com/scala-tessella/tessella">Tessella</dc:source>
+       |        <cc:license rdf:resource="https://www.apache.org/licenses/LICENSE-2.0"/>
+       |      </cc:Work>
+       |    </rdf:RDF>
+       |  </metadata>
        |</svg>""".stripMargin
 
   private def triggerDownload(content: String, filename: String): Unit =
