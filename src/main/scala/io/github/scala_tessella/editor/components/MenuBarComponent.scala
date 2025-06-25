@@ -1,10 +1,11 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
-import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.operations.TessellationOperations.clearTiling
 import io.github.scala_tessella.editor.utils.UndoManager
+
+import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 import scala.math.{max, min}
 
@@ -82,11 +83,17 @@ object MenuBarComponent {
   }
 
   private def editMenu(): Element = {
-    // NOTE: I'm assuming AppState has undo/redo logic like:
-    // undo(): Unit, redo(): Unit, canUndo: Signal[Boolean], canRedo: Signal[Boolean]
+    val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
+    val hasSelection = EditorState.selectedTilingPolygons.signal
+      .combineWith(EditorState.selectedPerimeterEdges.signal)
+      .map((polys, edges) => polys.nonEmpty || edges.nonEmpty)
+
     menuItem("Edit",
       dropdownLink("Undo", () => AppState.undo(), AppState.canUndo),
       dropdownLink("Redo", () => AppState.redo(), AppState.canRedo),
+      div(className := "menu-separator"),
+      dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
+      dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection),
       div(className := "menu-separator"),
       dropdownLink("Clear tiling", () => clearTiling()),
       div(className := "menu-separator"),

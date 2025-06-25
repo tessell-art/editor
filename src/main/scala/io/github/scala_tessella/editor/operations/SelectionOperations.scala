@@ -1,6 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.{EditorState, EditorMode}
+import io.github.scala_tessella.editor.models.{EditorMode, EditorState}
+
+import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 object SelectionOperations:
 
@@ -8,6 +10,17 @@ object SelectionOperations:
     if !EditorState.isProcessing.now() then
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
+
+  def selectAllPolygons(): Unit =
+    if !EditorState.isProcessing.now() then
+      val tiling = EditorState.currentTiling.now()
+      if !tiling.isEmpty then
+        val allPolygonIds = tiling.orientedPolygons.map { nodes =>
+          val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+          s"tiling-poly-$polyTag"
+        }.toSet
+        EditorState.selectedTilingPolygons.set(allPolygonIds)
+        EditorState.selectedPerimeterEdges.set(Set.empty)
 
   def toggleTilingPolygonSelection(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
