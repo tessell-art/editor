@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.tessella.Tiling
+import io.github.scala_tessella.tessella.IncrementalTiling
 
 // Represents a snapshot of the application state that can be undone
 case class AppStateSnapshot(
-  tiling: Option[Tiling],
+  tiling: IncrementalTiling,
   selectedPolygon: Option[Int],
   selectedPerimeterEdges: Set[String],
   selectedTilingPolygons: Set[String],

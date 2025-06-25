@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.tessella.Tiling
-import io.github.scala_tessella.tessella.TilingCoordinates.Coords
+import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import org.scalajs.dom
 
 object EditorState:
@@ -20,14 +21,18 @@ object EditorState:
   val isProcessing: Var[Boolean] = Var(false)
 
   // Tessellation state
-  val currentTiling: Var[Option[Tiling]] = Var(None)
-  val currentCoords: Var[Coords] = Var(Map.empty)
+  val currentTiling: Var[IncrementalTiling] = Var(IncrementalTiling.empty)
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
   val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
+  val strictness: Var[Strictness] = Var(Strictness.STRICT)
 
   // Color state
   val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80))
   val polygonColors: Var[Map[String, (Int, Int, Int)]] = Var(Map.empty)
+
+  // Color picker
+  val showColorPicker: Var[Boolean] = Var(false)
+  val tempColor: Var[(Int, Int, Int)] = Var(fillColor.now())
 
   // Visualization state
   val showNodeLabels: Var[Boolean] = Var(false)

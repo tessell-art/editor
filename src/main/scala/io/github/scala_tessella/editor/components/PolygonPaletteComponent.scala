@@ -1,9 +1,10 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
-import io.github.scala_tessella.editor.operations.TessellationOperations.{clearTiling, selectPolygon}
+import io.github.scala_tessella.editor.operations.TessellationOperations.selectPolygon
+
+import com.raquo.laminar.api.L.{*, given}
 
 import scala.math.{Pi, cos, sin}
 
@@ -11,41 +12,38 @@ object PolygonPaletteComponent:
   def element: Element =
     div(
       className := "polygon-palette",
-      h2("Select a Polygon Shape"),
+//      h2("Polygon Shape"),
       div(
         className := "palette-grid",
         EditorState.polygonSides.map(sides => polygonButton(sides))
       ),
       div(
         className := "selected-info",
-        child.maybe <-- EditorState.selectedPolygon.signal.map(_.map(sides =>
-          p(s"Selected: $sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})")
-        ))
+        child.maybe <-- EditorState.selectedPolygon.signal.map(_.map { sides =>
+          val polygonName = PolygonNameGenerator.polygonName(sides)
+          div(
+//            p(s"Selected: $sides-sided polygon ($polygonName)"),
+            button(
+              className := "select-all-by-type-btn",
+              s"Select all ${polygonName}s",
+              onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
+              disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+            )
+          )
+        })
       ),
-      tilingStatus(),
-      tilingControls()
+      tilingStatus()
     )
 
   private def tilingStatus(): Element =
     div(
       className := "tiling-status",
       child <-- EditorState.currentTiling.signal.combineWith(EditorState.isProcessing.signal).map {
-        case (Some(_), false) => p("Tiling: Active", className := "status active")
-        case (Some(_), true) => p("Tiling: Processing...", className := "status processing")
-        case (None, false) => p("Tiling: Empty", className := "status empty")
-        case (None, true) => p("Tiling: Creating...", className := "status processing")
+        case (tiling, false) if tiling.isEmpty => p("Tiling: Empty", className := "status empty")
+        case (tiling, true) if tiling.isEmpty => p("Tiling: Creating...", className := "status processing")
+        case (_, false) => p("Tiling: Active", className := "status active")
+        case (_, true) => p("Tiling: Processing...", className := "status processing")
       }
-    )
-
-  private def tilingControls(): Element =
-    div(
-      className := "tiling-controls",
-      h3("Tessellation"),
-      button(
-        "Clear Tiling",
-        disabled <-- EditorState.isProcessing.signal,
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => clearTiling() }
-      )
     )
 
   private def polygonButton(sides: Int): Element =

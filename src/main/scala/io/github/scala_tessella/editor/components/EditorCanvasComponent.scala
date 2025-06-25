@@ -1,14 +1,15 @@
 package io.github.scala_tessella.editor.components
 
+import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, MouseEventHandler}
+
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
-import io.github.scala_tessella.editor.interactions.{KeyboardHandler, MouseHandler}
 
 object EditorCanvasComponent:
   def element: Element =
     div(
       className := "canvas-container",
-      h2("Canvas"),
+//      h2("Canvas"),
       CanvasControlComponent.element,
       ErrorMessageComponent.element,
       // Loading indicator
@@ -43,11 +44,10 @@ object EditorCanvasComponent:
         contentGroup(),
 
         // Disable mouse events when processing
-        onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseDown,
-        onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseMove,
-        onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleMouseUp,
-        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseHandler.handleWheel,
-        onKeyDown.filter(_ => !EditorState.isProcessing.now()) --> KeyboardHandler.handleKeyDown
+        onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
+        onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
+        onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
+        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel
       )
     )
 
@@ -81,7 +81,9 @@ object EditorCanvasComponent:
       GridRenderer.element,
 
       // Render tessellation if available
-      child.maybe <-- EditorState.currentTiling.signal.map(_.map(TessellationRenderer.renderTiling)),
+      child <-- EditorState.currentTiling.signal.map {
+        tiling => TessellationRenderer.renderTiling(tiling)
+      },
 
       // Show message when no tessellation is available
       child.maybe <-- EditorState.currentTiling.signal.map { tiling =>
@@ -98,7 +100,7 @@ object EditorCanvasComponent:
         svg.fill := "#888",
         svg.textAnchor := "middle",
         svg.fontFamily := "Arial, sans-serif",
-        "No tessellation available"
+        "Empty tessellation"
       ),
       svg.text(
         svg.x := "400",
@@ -107,6 +109,6 @@ object EditorCanvasComponent:
         svg.fill := "#666",
         svg.textAnchor := "middle",
         svg.fontFamily := "Arial, sans-serif",
-        "Select a polygon from the palette to start a tessellation"
+        "Select a polygon to start a tessellation"
       )
     )

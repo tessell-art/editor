@@ -1,12 +1,13 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.tessella.{Tiling, TilingCoordinates}
-import io.github.scala_tessella.tessella.TilingCoordinates.{transform, Coords}
-import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
-
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Point}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
+
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.tessella.{IncrementalTiling, TilingCoordinates}
+import io.github.scala_tessella.tessella.TilingCoordinates.Coords
+import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 
 object TessellationRenderer:
 
@@ -24,57 +25,32 @@ object TessellationRenderer:
     )
   )
 
-  def renderTiling(tiling: Tiling): Element =
-    val previousCoords = EditorState.currentCoords.now()
+  def renderTiling(tiling: IncrementalTiling): Element =
 
-    // Find one polygon that exists in the current tiling and previous coords
-    val commonPolygonNodes: Option[Vector[TilingNode]] =
-      tiling.orientedPolygons
-        .find(_.toPolygonPathNodes.forall(previousCoords.contains _))
-        .map(_.toPolygonPathNodes)
-
-//    println(s"Common polygon nodes: $commonPolygonNodes")
-
-    val transformedCoords: Coords =
-      commonPolygonNodes match
-        case Some(nodes) =>
-          val (n0, n1, n2) = (nodes(0), nodes(1), nodes(2))
-//          println(s"Affine previous nodes: $n0, $n1, $n2")
-//          println(s"Affine previous points: ${previousCoords(n0)}, ${previousCoords(n1)}, ${previousCoords(n2)}")
-          tiling.coords.transform(
-            (n0, n1, n2),
-            (previousCoords(n0), previousCoords(n1), previousCoords(n2))
-          ) match
-            case Some(coordinates) => coordinates
-            case None => tiling.coords
-        case None => tiling.coords
-
-    EditorState.currentCoords.set(transformedCoords)
-    val tilingPolygons = tiling.orientedPolygons.map { poly =>
-      val nodes = poly.toPolygonPathNodes
+    val tilingPolygons = tiling.orientedPolygons.map { nodes =>
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
       getOrAssignPolygonColor(polyTag)
-      renderTilingPolygon(transformedCoords, nodes, polygonId, polyTag)
+      renderTilingPolygon(tiling.coordinates, nodes, polygonId, polyTag)
     }
 
-    val perimeterEdges = tiling.perimeter.toRingEdges.zipWithIndex.map {
-      case (edge, index) => renderPerimeterEdge(transformedCoords, edge, index, s"perimeter-edge-$index")
+    val perimeterEdges = tiling.perimeter.toEdgesO.zipWithIndex.map {
+      case (edge, index) => renderPerimeterEdge(tiling.coordinates, edge, index, s"perimeter-edge-$index")
     }.toList
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
-      if showLabels then renderNodeLabels(transformedCoords)
+      if showLabels then renderNodeLabels(tiling.coordinates)
       else List.empty
     }
 
     // Failed polygon wireframe overlay for placement
     val failedPolygonWireframe = child.maybe <-- EditorState.failedPlacement.signal.map { placement =>
-      placement.map(x => FailedPolygonRenderer.renderFailedPlacement(x, transformedCoords))
+      placement.map(FailedPolygonRenderer.renderFailedPlacement)
     }
 
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map { deletion =>
-      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, transformedCoords))
+      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
     }
 
     svg.g(

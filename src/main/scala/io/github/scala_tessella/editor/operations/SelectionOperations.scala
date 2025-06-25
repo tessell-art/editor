@@ -1,6 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.{EditorState, EditorMode}
+import io.github.scala_tessella.editor.models.{EditorMode, EditorState}
+
+import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 object SelectionOperations:
 
@@ -8,6 +10,29 @@ object SelectionOperations:
     if !EditorState.isProcessing.now() then
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
+
+  def selectAllPolygons(): Unit =
+    if !EditorState.isProcessing.now() then
+      val tiling = EditorState.currentTiling.now()
+      if !tiling.isEmpty then
+        val allPolygonIds = tiling.orientedPolygons.map { nodes =>
+          val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+          s"tiling-poly-$polyTag"
+        }.toSet
+        EditorState.selectedTilingPolygons.set(allPolygonIds)
+        EditorState.selectedPerimeterEdges.set(Set.empty)
+
+  def selectPolygonsBySides(sides: Int): Unit =
+    if !EditorState.isProcessing.now() then
+      val tiling = EditorState.currentTiling.now()
+      if !tiling.isEmpty then
+        val polygonIdsToAdd = tiling.orientedPolygons.collect {
+          case nodes if nodes.length == sides =>
+            val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+            s"tiling-poly-$polyTag"
+        }.toSet
+        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+//        EditorState.selectedTilingPolygons.update(_ ++ polygonIdsToAdd)
 
   def toggleTilingPolygonSelection(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
@@ -32,6 +57,6 @@ object SelectionOperations:
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     if !EditorState.isProcessing.now() then
       (EditorState.currentTiling.now(), EditorState.selectedPolygon.now()) match
-        case (Some(_), Some(_)) => TessellationOperations.attemptPolygonGrowth(edgeId, edgeIndex)
-        case (None, _)          => ErrorOperations.showError("No tiling available to grow")
-        case (_, None)          => togglePerimeterEdgeSelection(edgeId)
+        case (tiling, Some(_)) if !tiling.isEmpty => TessellationOperations.attemptPolygonAddition(edgeId, edgeIndex)
+        case (_, None)                            => togglePerimeterEdgeSelection(edgeId)
+        case (_, _)                               => ErrorOperations.showError("No tiling available to grow")

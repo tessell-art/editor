@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
+
+import com.raquo.laminar.api.L.{*, given}
 
 object ErrorMessageComponent:
   def element: Element =

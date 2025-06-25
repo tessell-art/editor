@@ -74,3 +74,8 @@
   opacity: 1.0;
   filter: brightness(1.1);
 }
+
+.redo-button {
+  /* Add styling similar to .undo-button */
+  margin-left: 5px;
+}
