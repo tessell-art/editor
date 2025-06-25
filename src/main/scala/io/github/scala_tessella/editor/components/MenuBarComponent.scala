@@ -48,21 +48,23 @@ object MenuBarComponent:
     )
 
   // A helper for creating a clickable link in a dropdown
-  private def dropdownLink(title: String, action: () => Unit, enabled: Signal[Boolean] = Val(true)): Element =
+  private def dropdownLink(title: String, action: () => Unit, enabled: Signal[Boolean] = Val(true), shortcut: Option[String] = None): Element =
     a(
       href := "#",
-      title,
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
-      className.toggle("disabled") <-- enabled.map(!_)
+      className.toggle("disabled") <-- enabled.map(!_),
+      span(title),
+      shortcut.map(s => span(className := "shortcut", s))
     )
 
   // A helper for creating a dropdown link with dynamic text
-  private def dropdownLinkDynamic[T](title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true)): Element =
+  private def dropdownLinkDynamic[T](title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true), shortcut: Option[String] = None): Element =
     a(
       href := "#",
-      child.text <-- title,
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
-      className.toggle("disabled") <-- enabled.map(!_)
+      className.toggle("disabled") <-- enabled.map(!_),
+      span(child.text <-- title),
+      shortcut.map(s => span(className := "shortcut", s))
     )
 
   private def fileMenu(): Element =
@@ -94,11 +96,11 @@ object MenuBarComponent:
       .map((polys, edges) => polys.nonEmpty || edges.nonEmpty)
 
     menuItem("Edit",
-      dropdownLink("Undo", () => AppState.undo(), AppState.canUndo),
+      dropdownLink("Undo", () => AppState.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
       dropdownLink("Redo", () => AppState.redo(), AppState.canRedo),
       div(className := "menu-separator"),
       dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
-      dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection),
+      dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
       div(className := "menu-separator"),
       dropdownLink("Clear tiling", () => clearTiling()),
       div(className := "menu-separator"),
@@ -129,10 +131,10 @@ object MenuBarComponent:
       ),
       div(className := "menu-separator"),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
-      dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))),
-      dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))),
-      dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))),
-      dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30)))
+      dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))), shortcut = Some("+")),
+      dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))), shortcut = Some("-")),
+      dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30)), shortcut = Some("E")),
+      dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30)), shortcut = Some("R"))
     )
 
   private def optionsMenu(): Element =
