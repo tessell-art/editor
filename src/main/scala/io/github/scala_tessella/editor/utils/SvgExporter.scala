@@ -48,9 +48,19 @@ object SvgExporter:
       s"""  <polygon points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
     }.mkString("\n")
 
+    val labelsXml =
+      if !EditorState.showNodeLabels.now() then ""
+      else
+        tiling.coordinates.map { (node, vertex) =>
+          val labelX = vertex.x * scale + offsetX + 8
+          val labelY = vertex.y * scale + offsetY - 8
+          s"""  <text x="$labelX" y="$labelY" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">${node.toString}</text>"""
+        }.mkString("\n")
+
     s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
        |$polygonsXml
+       |$labelsXml
        |  <metadata>
        |    <rdf:RDF>
        |      <cc:Work>
