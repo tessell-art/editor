@@ -129,6 +129,7 @@ object MenuBarComponent:
     )
 
   private def viewMenu(): Element =
+    val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
     menuItem("View",
       dropdownLinkDynamic(
         EditorState.showNodeLabels.signal.map(show => if (show) "Hide Node Labels" else "Show Node Labels"),
@@ -136,6 +137,8 @@ object MenuBarComponent:
       ),
       div(className := "menu-separator"),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
+      dropdownLink("Fit to canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
+      div(className := "menu-separator"),
       dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))), shortcut = Some("+")),
       dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))), shortcut = Some("-")),
       dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30)), shortcut = Some("E")),
