@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.operations.TessellationOperations.clearTiling
+import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImporter, UndoManager}
+
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
@@ -106,7 +107,7 @@ object MenuBarComponent:
       dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
       dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
       div(className := "menu-separator"),
-      dropdownLink("Clear tiling", () => clearTiling()),
+      dropdownLink("Clear tiling", () => AppState.clearTiling()),
       div(className := "menu-separator"),
       dropdownLinkDynamic(
         EditorState.editorMode.signal.map {

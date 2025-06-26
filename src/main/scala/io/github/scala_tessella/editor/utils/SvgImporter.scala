@@ -122,6 +122,6 @@ object SvgImporter:
     }.recover { case e: Throwable =>
       val explanation: String =
         "Only SVG saved by this editor with dedicated metadata can be loaded."
-      dom.window.alert(s"Failed to import SVG: ${e.getMessage}.\n$explanation")
+      dom.window.alert(s"Failed to import SVG: ${e.getMessage}\n$explanation")
       e.printStackTrace()
     }
