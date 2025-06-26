@@ -114,18 +114,26 @@ object AppState:
       val canvasRect = canvasElement.getBoundingClientRect()
       val canvasWidth = canvasRect.width
       val canvasHeight = canvasRect.height
+      val currentTransform = EditorState.viewTransform.now()
 
       if canvasWidth > 0 && canvasHeight > 0 then
-        val minX = coords.map(_._1).min
-        val maxX = coords.map(_._1).max
-        val minY = coords.map(_._2).min
-        val maxY = coords.map(_._2).max
+        val rad = currentTransform.rotationDegrees * Math.PI / 180
+        val cosRad = Math.cos(rad)
+        val sinRad = Math.sin(rad)
+
+        val rotatedCoords = coords.map { case (x, y) =>
+          (x * cosRad - y * sinRad, x * sinRad + y * cosRad)
+        }
+
+        val minX = rotatedCoords.map(_._1).min
+        val maxX = rotatedCoords.map(_._1).max
+        val minY = rotatedCoords.map(_._2).min
+        val maxY = rotatedCoords.map(_._2).max
 
         val tilingWidth = maxX - minX
         val tilingHeight = maxY - minY
 
         if tilingWidth > 0 || tilingHeight > 0 then
-          val currentTransform = EditorState.viewTransform.now()
           val padding = 40.0
 
           val safeTilingWidth = if tilingWidth <= 0 then 1 else tilingWidth

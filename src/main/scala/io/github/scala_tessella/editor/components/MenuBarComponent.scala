@@ -136,8 +136,8 @@ object MenuBarComponent:
         () => AppState.toggleNodeLabels()
       ),
       div(className := "menu-separator"),
-      dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
       dropdownLink("Fit to canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
+      dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
       div(className := "menu-separator"),
       dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))), shortcut = Some("+")),
       dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))), shortcut = Some("-")),
