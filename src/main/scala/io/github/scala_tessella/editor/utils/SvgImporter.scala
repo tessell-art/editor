@@ -83,7 +83,6 @@ object SvgImporter:
               else
                 tilingPolygons = tilingPolygons :+ nodes
                 parseColor(fill).foreach { rgb =>
-                  // Use NodeOrdering for consistency with SvgExporter
                   val polyTag = nodes.sorted.map(_.toString).mkString("-")
                   EditorState.polygonColors.update(_ + (polyTag -> rgb))
                 }
@@ -107,13 +106,8 @@ object SvgImporter:
       val polygonsAsNodes = tilingPolygons.map(_.map(Node(_)))
       val perimeterAsNodes = perimeterNodes.map(Node(_))
 
-      val allEdges: Set[Edge] = polygonsAsNodes.flatMap(nodes =>
-        (nodes.last +: nodes).sliding(2).map(p => Edge(p.head, p.last))
-      ).toSet
-
       EditorState.currentTiling.set(
         IncrementalTiling.withValidation(
-          allEdges.toList,
           polygonsAsNodes.map(_.toVector),
           perimeterAsNodes.toVector,
           finalCoords
