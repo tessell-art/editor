@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
-import io.github.scala_tessella.tessella.Topology.{Edge, Node, NodeOrdering}
+import io.github.scala_tessella.tessella.Topology.{Edge, Node}
 import io.github.scala_tessella.tessella.IncrementalTiling
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent, SVGElement}
@@ -119,6 +119,7 @@ object SvgImporter:
           finalCoords
         ).toOption.get
       )
+      AppState.fitTilingToCanvas()
     }.recover { case e: Throwable =>
       val explanation: String =
         "Only SVG saved by this editor with dedicated metadata can be loaded."
