@@ -91,7 +91,9 @@ object MenuBarComponent:
         "Export to .DOT...",
         () => DotExporter.exportTilingToDOT(),
         enabled = isTilingEmpty.map(!_)
-      )
+      ),
+      div(className := "menu-separator"),
+      dropdownLink("Clear tiling", () => AppState.clearTiling())
     )
 
   private def editMenu(): Element =
@@ -104,11 +106,6 @@ object MenuBarComponent:
       dropdownLink("Undo", () => AppState.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
       dropdownLink("Redo", () => AppState.redo(), AppState.canRedo),
       div(className := "menu-separator"),
-      dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
-      dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
-      div(className := "menu-separator"),
-      dropdownLink("Clear tiling", () => AppState.clearTiling()),
-      div(className := "menu-separator"),
       dropdownLinkDynamic(
         EditorState.editorMode.signal.map {
           case EditorMode.Select => "Switch to Delete Mode"
@@ -116,6 +113,9 @@ object MenuBarComponent:
         },
         () => AppState.toggleEditorMode()
       ),
+      div(className := "menu-separator"),
+      dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
+      dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
       div(className := "menu-separator"),
       a(
         href := "#",
