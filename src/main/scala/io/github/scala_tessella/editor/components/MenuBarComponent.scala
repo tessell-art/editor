@@ -5,6 +5,7 @@ import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImporter, UndoManager}
 
 import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 import scala.math.{max, min}
@@ -15,22 +16,25 @@ object MenuBarComponent:
   private val isMenuOpen = Var(false)
 
   def element: Element =
-    navTag(
-      className := "menu-bar",
-      // Hamburger button for small screens
-      button(
-        className := "menu-toggle",
-        onClick --> { _ => isMenuOpen.update(!_) },
-        "☰"
+    div(
+      navTag(
+        className := "menu-bar",
+        // Hamburger button for small screens
+        button(
+          className := "menu-toggle",
+          onClick --> { _ => isMenuOpen.update(!_) },
+          "☰"
+        ),
+        // The menu itself
+        div(
+          className <-- isMenuOpen.signal.map(open => if (open) "menu-items-container open" else "menu-items-container"),
+          fileMenu(),
+          editMenu(),
+          viewMenu(),
+          helpMenu()
+        )
       ),
-      // The menu itself
-      div(
-        className <-- isMenuOpen.signal.map(open => if (open) "menu-items-container open" else "menu-items-container"),
-        fileMenu(),
-        editMenu(),
-        viewMenu(),
-        optionsMenu()
-      )
+      helpPopup()
     )
 
   // A helper to create a top-level menu item like "File", "Edit"
@@ -125,6 +129,15 @@ object MenuBarComponent:
           EditorState.showColorPicker.set(true)
           isMenuOpen.set(false)
         }
+      ),
+      div(className := "menu-separator"),
+      dropdownLinkDynamic(
+        EditorState.strictness.signal.map {
+          case Strictness.STRICT   => "Switch to Touching Strictness"
+          case Strictness.TOUCHING => "Switch to Crossing Strictness"
+          case Strictness.CROSSING => "Switch to Strict Strictness"
+        },
+        () => AppState.toggleStrictness()
       )
     )
 
@@ -145,14 +158,46 @@ object MenuBarComponent:
       dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30)), shortcut = Some("R"))
     )
 
-  private def optionsMenu(): Element =
-    menuItem("Options",
-      dropdownLinkDynamic(
-        EditorState.strictness.signal.map {
-          case Strictness.STRICT   => "Switch to Touching Strictness"
-          case Strictness.TOUCHING => "Switch to Crossing Strictness"
-          case Strictness.CROSSING => "Switch to Strict Strictness"
-        },
-        () => AppState.toggleStrictness()
+  private def helpMenu(): Element =
+    menuItem("Help",
+      dropdownLink("About...", () => {
+        EditorState.showAboutPopup.set(true)
+      }),
+    )
+
+  private def helpPopup(): Element =
+    div(
+      className := "popup-overlay",
+      display <-- EditorState.showAboutPopup.signal.map(if (_) "flex" else "none"),
+      onClick --> (_ => EditorState.showAboutPopup.set(false)),
+      div(
+        className := "popup-content",
+        onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
+        h2("About Scala-Tessella Editor"),
+        p(
+          "This editor allows you to create, view, and manipulate tessellations interactively. ",
+          "It's built with Scala.js and the UI is powered by the ",
+          a(
+            href := "https://laminar.dev/",
+            target := "_blank",
+            rel := "noopener noreferrer",
+            "Laminar"
+          ),
+          " library."
+        ),
+        p(
+          "For more information, tutorials, and to contribute, please visit the official ",
+          a(
+            href := "https://github.com/scala-tessella/scala-tessella-editor",
+            target := "_blank", // Opens in a new tab
+            rel := "noopener noreferrer",
+            "GitHub repository"
+          ),
+          "."
+        ),
+        p(
+          className := "popup-close-hint",
+          "Click on the gray area to close this popup."
+        )
       )
     )

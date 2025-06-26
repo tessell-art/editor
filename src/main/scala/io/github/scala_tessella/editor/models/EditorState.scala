@@ -50,3 +50,6 @@ object EditorState:
   val isDragging: Var[Boolean] = Var(false)
   val dragStart: Var[Option[Point]] = Var(None)
   val canvasElementRef: Var[Option[dom.Element]] = Var(None)
+
+  // About popup state
+  val showAboutPopup: Var[Boolean] = Var(false)
