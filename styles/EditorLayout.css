@@ -6,3 +6,32 @@
   gap: 2rem;
   align-items: start;
 }
+
+
+/* Editor Layout */
+.editor-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.top-bar-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  margin-bottom: 8px; /* Add some space between this bar and controls below */
+}
+
+.current-file-name {
+  font-family: monospace;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.transform-info {
+  font-family: monospace;
+  font-size: 12px;
+  color: #aaa;
+}

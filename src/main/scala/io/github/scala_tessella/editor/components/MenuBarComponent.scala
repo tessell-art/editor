@@ -29,11 +29,6 @@ object MenuBarComponent:
         editMenu(),
         viewMenu(),
         optionsMenu()
-      ),
-      // Display current file name
-      span(
-        className := "current-file-name",
-        child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
       )
     )
 
