@@ -57,6 +57,16 @@ object CanvasControlComponent:
             },
             styleAttr := "margin-left: 8px; border: 1px solid #888; background: #222; color: white; display: inline-flex; align-items: center; gap: 0.3em; padding: 0.3em 0.9em; border-radius: 5px"
           ),
+          button(
+            "Pick Color",
+            className <-- EditorState.isEyedropperActive.signal.map(active =>
+              if (active) "toggle-btn active" else "toggle-btn"
+            ),
+            onClick --> { _ =>
+              EditorState.isEyedropperActive.update(!_)
+            },
+            title := "Activate color picker to select a color from an existing polygon"
+          ),
           //      ),
           //      div(
           //        className := "visualization-controls",
