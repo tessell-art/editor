@@ -31,19 +31,7 @@ object PolygonPaletteComponent:
             )
           )
         })
-      ),
-      tilingStatus()
-    )
-
-  private def tilingStatus(): Element =
-    div(
-      className := "tiling-status",
-      child <-- EditorState.currentTiling.signal.combineWith(EditorState.isProcessing.signal).map {
-        case (tiling, false) if tiling.isEmpty => p("Tiling: Empty", className := "status empty")
-        case (tiling, true) if tiling.isEmpty => p("Tiling: Creating...", className := "status processing")
-        case (_, false) => p("Tiling: Active", className := "status active")
-        case (_, true) => p("Tiling: Processing...", className := "status processing")
-      }
+      )
     )
 
   private def polygonButton(sides: Int): Element =
