@@ -26,6 +26,7 @@ object SvgImporter:
         reader.onload = (_: ProgressEvent) => {
           val content = reader.result.toString
           importTilingFromSVG(content)
+          EditorState.currentFileName.set(Some(file.name))
         }
         reader.readAsText(file)
     }

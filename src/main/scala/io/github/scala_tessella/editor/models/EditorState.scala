@@ -7,6 +7,9 @@ import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import org.scalajs.dom
 
 object EditorState:
+  // File state
+  val currentFileName: Var[Option[String]] = Var(None)
+
   // Polygon palette state
   val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
   val selectedPolygon: Var[Option[Int]] = Var[Option[Int]](None)

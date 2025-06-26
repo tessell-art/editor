@@ -55,6 +55,7 @@ object AppState:
 
   def clearTiling(): Unit =
     TessellationOperations.clearTiling()
+    EditorState.currentFileName.set(None)
 
   def handleTilingPolygonClick(polygonId: String): Unit =
     SelectionOperations.handleTilingPolygonClick(polygonId)

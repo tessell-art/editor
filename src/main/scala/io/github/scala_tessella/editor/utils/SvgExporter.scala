@@ -10,11 +10,21 @@ import scala.scalajs.js
 
 object SvgExporter:
 
+  // "Save As..." functionality
   def exportTilingToSVG(): Unit =
     val tiling = EditorState.currentTiling.now()
     if !tiling.isEmpty then
       val svgContent = generateSvgContent(tiling)
       FileDownloader.trigger(svgContent, "tessellation.svg", "image/svg+xml;charset=utf-8")
+
+  // "Save" functionality
+  def saveTilingToSVG(): Unit =
+    EditorState.currentFileName.now().foreach { fileName =>
+      val tiling = EditorState.currentTiling.now()
+      if !tiling.isEmpty then
+        val svgContent = generateSvgContent(tiling)
+        FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
+    }
 
   private def generateSvgContent(tiling: IncrementalTiling): String =
     val coordinates = tiling.coordinates

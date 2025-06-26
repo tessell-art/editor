@@ -29,6 +29,11 @@ object MenuBarComponent:
         editMenu(),
         viewMenu(),
         optionsMenu()
+      ),
+      // Display current file name
+      span(
+        className := "current-file-name",
+        child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
       )
     )
 
@@ -67,12 +72,17 @@ object MenuBarComponent:
     )
 
   private def fileMenu(): Element =
-    val isTilingEmpty =
-      EditorState.currentTiling.signal.map(_.isEmpty)
+    val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
+    val hasFileName = EditorState.currentFileName.signal.map(_.isDefined)
     menuItem("File",
       dropdownLink("Load SVG...", () => SvgImporter.trigger()),
       dropdownLink(
-        "Save SVG...",
+        "Save SVG",
+        () => SvgExporter.saveTilingToSVG(),
+        enabled = hasFileName
+      ),
+      dropdownLink(
+        "Save SVG as...",
         () => SvgExporter.exportTilingToSVG(),
         enabled = isTilingEmpty.map(!_)
       ),
