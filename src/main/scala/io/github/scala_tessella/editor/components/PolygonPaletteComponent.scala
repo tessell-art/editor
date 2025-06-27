@@ -5,6 +5,7 @@ import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.operations.TessellationOperations.selectPolygon
 
 import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.features.unitArrows
 
 import scala.math.{Pi, cos, sin}
 
@@ -15,7 +16,8 @@ object PolygonPaletteComponent:
 //      h2("Polygon Shape"),
       div(
         className := "palette-grid",
-        EditorState.polygonSides.map(sides => polygonButton(sides))
+        EditorState.polygonSides.map(sides => polygonButton(sides)),
+        customPolygonSelector()
       ),
       div(
         className := "selected-info",
@@ -31,6 +33,49 @@ object PolygonPaletteComponent:
             )
           )
         })
+      )
+    )
+
+  private def customPolygonSelector(): Element =
+    val customSides = Var(11) // Local state for the input field, default to 11
+
+    // Signal to check if the custom polygon is currently selected
+    val isSelected = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
+      (maybeSelected, currentCustom) => maybeSelected.contains(currentCustom)
+    }
+
+    // Create a combined signal for the CSS class to handle selection and disabled states
+    val cssClass = isSelected.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
+      val baseClass = if (selected) "polygon-btn selected" else "polygon-btn"
+      val customClass = s"$baseClass custom-polygon-creator"
+      if (processing) s"$customClass disabled" else customClass
+    }
+
+    div(
+      className <-- cssClass,
+      title <-- customSides.signal.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
+      // The whole div is clickable to select the polygon with the current number of sides
+      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
+        selectPolygon(customSides.now())
+      },
+      // Dynamic SVG preview, which updates as the number of sides changes
+      child <-- customSides.signal.map(sides =>
+        if (sides >= 3 && sides <= 100) polygonSvg(sides) else div() // Render svg only if sides are valid
+      ),
+      // Number input, which acts as the label
+      input(
+        tpe := "number",
+        className := "polygon-label-input",
+        minAttr := "3",
+        maxAttr := "100",
+        // Two-way binding between the input field and the `customSides` variable
+        controlled(
+          value <-- customSides.signal.map(_.toString),
+          onInput.mapToValue.map(_.toIntOption.getOrElse(3)).map(s => Math.max(3, Math.min(s, 100))) --> customSides
+        ),
+        // Prevent clicks on the input from triggering the container's onClick handler
+        onClick.stopPropagation --> {},
+        disabled <-- EditorState.isProcessing.signal
       )
     )
 
