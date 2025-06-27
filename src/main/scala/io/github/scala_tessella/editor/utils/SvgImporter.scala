@@ -106,13 +106,13 @@ object SvgImporter:
       val polygonsAsNodes = tilingPolygons.map(_.map(Node(_)))
       val perimeterAsNodes = perimeterNodes.map(Node(_))
 
-      EditorState.currentTiling.set(
-        IncrementalTiling.withValidation(
-          polygonsAsNodes.map(_.toVector),
-          perimeterAsNodes.toVector,
-          finalCoords
-        ).toOption.get
-      )
+      IncrementalTiling.maybe(
+        polygonsAsNodes.map(_.toVector),
+        perimeterAsNodes.toVector,
+        finalCoords
+      ) match
+        case Left(message) => throw new Error(message)
+        case Right(tiling) => EditorState.currentTiling.set(tiling)
       AppState.fitTilingToCanvas()
     }.recover { case e: Throwable =>
       val explanation: String =
