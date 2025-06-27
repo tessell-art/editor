@@ -11,11 +11,17 @@ import scala.scalajs.js
 object SvgExporter:
 
   // "Save As..." functionality
-  def exportTilingToSVG(): Unit =
+  def saveAsTilingToSVG(): Unit =
     val tiling = EditorState.currentTiling.now()
     if !tiling.isEmpty then
-      val svgContent = generateSvgContent(tiling)
-      FileDownloader.trigger(svgContent, "tessellation.svg", "image/svg+xml;charset=utf-8")
+      val currentName = EditorState.currentFileName.now().getOrElse("tessellation.svg")
+      Option(dom.window.prompt("Enter file name for the SVG:", currentName)).foreach { newName =>
+        if newName.nonEmpty then
+          val finalName = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
+          val svgContent = generateSvgContent(tiling)
+          FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
+          EditorState.currentFileName.set(Some(finalName))
+      }
 
   // "Save" functionality
   def saveTilingToSVG(): Unit =

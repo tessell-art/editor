@@ -84,7 +84,7 @@ object MenuBarComponent:
       ),
       dropdownLink(
         "Save SVG as...",
-        () => SvgExporter.exportTilingToSVG(),
+        () => SvgExporter.saveAsTilingToSVG(),
         enabled = isTilingEmpty.map(!_)
       ),
       div(className := "menu-separator"),
