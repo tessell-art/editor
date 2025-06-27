@@ -15,13 +15,13 @@ object UndoComponent:
         title <-- UndoManager.canUndo.signal.map(isUndoable => if (isUndoable) UndoManager.getUndoPreview.getOrElse("Undo") else "No actions to undo"),
         onClick --> { _ => AppState.undo() },
         span(className := "icon", "↶"), // Undo arrow icon
-        span(className := "button-text", " "),
-        span(
-          className := "button-text",
-          child.text <-- UndoManager.undoCount.signal.map { count =>
-            if count > 0 then s"Undo ($count)" else "Undo"
-          }
-        )
+//        span(className := "button-text", " "),
+//        span(
+//          className := "button-text",
+//          child.text <-- UndoManager.undoCount.signal.map { count =>
+//            if count > 0 then s"Undo ($count)" else "Undo"
+//          }
+//        )
       ),
       button(
         className := "redo-button",
@@ -29,12 +29,12 @@ object UndoComponent:
         title <-- UndoManager.canRedo.signal.map(isRedoable => if (isRedoable) UndoManager.getRedoPreview.getOrElse("Redo") else "No actions to redo"),
         onClick --> { _ => AppState.redo() },
         span(className := "icon", "↷"), // Redo arrow icon
-        span(className := "button-text", " "),
-        span(
-          className := "button-text",
-          child.text <-- UndoManager.redoCount.signal.map { count =>
-            if count > 0 then s"Redo ($count)" else "Redo"
-          }
-        )
+//        span(className := "button-text", " "),
+//        span(
+//          className := "button-text",
+//          child.text <-- UndoManager.redoCount.signal.map { count =>
+//            if count > 0 then s"Redo ($count)" else "Redo"
+//          }
+//        )
       )
     )

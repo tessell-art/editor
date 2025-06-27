@@ -38,7 +38,7 @@ object CanvasControlComponent:
           //          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
           //        }),
           button(
-            "Fill Color ",
+            "Fill ",
             svg.svg(
               svg.width := "24",
               svg.height := "24",
@@ -60,7 +60,7 @@ object CanvasControlComponent:
           button(
             "Pick Color",
             className <-- EditorState.isEyedropperActive.signal.map(active =>
-              if (active) "toggle-btn active" else "toggle-btn"
+              if active then "toggle-btn active" else "toggle-btn"
             ),
             onClick --> { _ =>
               EditorState.isEyedropperActive.update(!_)
@@ -70,7 +70,7 @@ object CanvasControlComponent:
           button(
             "Select By Color",
             className <-- EditorState.isColorSelectorActive.signal.map(active =>
-              if (active) "toggle-btn active" else "toggle-btn"
+              if active then "toggle-btn active" else "toggle-btn"
             ),
             onClick --> { _ =>
               EditorState.isColorSelectorActive.update(!_)
@@ -82,10 +82,10 @@ object CanvasControlComponent:
           //        className := "visualization-controls",
           button(
             child.text <-- EditorState.showNodeLabels.signal.map(show =>
-              if (show) "Hide Node Labels" else "Show Node Labels"
+              if show then "Hide Labels" else "Show Labels"
             ),
             className <-- EditorState.showNodeLabels.signal.map(show =>
-              if (show) "toggle-btn active" else "toggle-btn"
+              if show then "toggle-btn active" else "toggle-btn"
             ),
             onClick --> { _ => AppState.toggleNodeLabels() }
           ),
