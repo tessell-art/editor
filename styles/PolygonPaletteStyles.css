@@ -68,3 +68,17 @@
   color: #646cff;
   font-weight: 500;
 }
+
+.polygon-label-input {
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.custom-polygon-creator {
+  height: 60px;
+  padding-top: 0.3rem;
+  padding-bottom: 0.2rem;
+  width: 36px;
+  margin-top: 4px;
+  margin-left: 3px;
+}
