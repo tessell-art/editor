@@ -61,19 +61,18 @@ object SelectionOperations:
 
   def handleTilingPolygonClick(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
-      if (EditorState.isEyedropperActive.now()) {
+      if EditorState.isEyedropperActive.now() then
         val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
         EditorState.polygonColors.now().get(polyTag).foreach { color =>
           EditorState.fillColor.set(color)
           EditorState.isEyedropperActive.set(false) // Deactivate after picking
         }
-      } else if (EditorState.isColorSelectorActive.now()) {
+      else if EditorState.isColorSelectorActive.now() then
         selectPolygonsByColor(polygonId)
-      } else{
+      else
         EditorState.editorMode.now() match
           case EditorMode.Select => toggleTilingPolygonSelection(polygonId)
           case EditorMode.Delete => TessellationOperations.attemptPolygonDeletion(polygonId)
-      }
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     if !EditorState.isProcessing.now() then
