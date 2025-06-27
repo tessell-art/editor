@@ -61,3 +61,56 @@ object ViewOperations:
             )
           )
     }
+
+  def rotateView(delta: Double): Unit =
+    val currentTransform = EditorState.viewTransform.now()
+    val scale = currentTransform.scale
+    val panX = currentTransform.panX
+    val panY = currentTransform.panY
+    val rotationRad = currentTransform.rotationDegrees * Math.PI / 180
+
+    val viewCenterX = 400.0
+    val viewCenterY = 300.0
+
+    // Inverse transform of view center to get world point
+    val p_after_inv_pan_x = viewCenterX - panX
+    val p_after_inv_pan_y = viewCenterY - panY
+
+    val p_after_inv_scale_x = p_after_inv_pan_x / scale
+    val p_after_inv_scale_y = p_after_inv_pan_y / scale
+
+    val cos_inv_rot = Math.cos(-rotationRad)
+    val sin_inv_rot = Math.sin(-rotationRad)
+
+    val p_intermediate_x = p_after_inv_scale_x - viewCenterX
+    val p_intermediate_y = p_after_inv_scale_y - viewCenterY
+
+    val world_x = viewCenterX + p_intermediate_x * cos_inv_rot - p_intermediate_y * sin_inv_rot
+    val world_y = viewCenterY + p_intermediate_x * sin_inv_rot + p_intermediate_y * cos_inv_rot
+
+    // Calculate new pan with new rotation
+    val newRotationDegrees = currentTransform.rotationDegrees + delta
+    val newRotationRad = newRotationDegrees * Math.PI / 180
+
+    // Forward transform the world point with new rotation
+    val cos_new_rot = Math.cos(newRotationRad)
+    val sin_new_rot = Math.sin(newRotationRad)
+
+    val p_intermediate2_x = world_x - viewCenterX
+    val p_intermediate2_y = world_y - viewCenterY
+
+    val p_after_rot_x = viewCenterX + p_intermediate2_x * cos_new_rot - p_intermediate2_y * sin_new_rot
+    val p_after_rot_y = viewCenterY + p_intermediate2_x * sin_new_rot + p_intermediate2_y * cos_new_rot
+
+    val p_after_scale_x = p_after_rot_x * scale
+    val p_after_scale_y = p_after_rot_y * scale
+
+    val newPanX = viewCenterX - p_after_scale_x
+    val newPanY = viewCenterY - p_after_scale_y
+
+    EditorState.viewTransform.set(
+      currentTransform.withRotation(newRotationDegrees).copy(
+        panX = newPanX,
+        panY = newPanY
+      )
+    )

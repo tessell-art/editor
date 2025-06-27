@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.operations.TessellationOperations
+import io.github.scala_tessella.editor.operations.{TessellationOperations, ViewOperations}
 import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImporter, UndoManager}
 
 import com.raquo.laminar.api.L.{*, given}
@@ -154,8 +154,8 @@ object MenuBarComponent:
       div(className := "menu-separator"),
       dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))), shortcut = Some("+")),
       dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))), shortcut = Some("-")),
-      dropdownLink("Rotate Left", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30)), shortcut = Some("E")),
-      dropdownLink("Rotate Right", () => EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30)), shortcut = Some("R"))
+      dropdownLink("Rotate Left", () => ViewOperations.rotateView(-30), shortcut = Some("E")),
+      dropdownLink("Rotate Right", () => ViewOperations.rotateView(30), shortcut = Some("R"))
     )
 
   private def helpMenu(): Element =

@@ -2,8 +2,8 @@ package io.github.scala_tessella.editor.interactions
 
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
-
 import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.editor.operations.ViewOperations
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 
@@ -28,10 +28,10 @@ object KeyboardEventHandler:
       event.key match
         case "r" | "R" =>
           event.preventDefault()
-          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 15))
+          ViewOperations.rotateView(+15)
         case "e" | "E" =>
           event.preventDefault()
-          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 15))
+          ViewOperations.rotateView(-15)
         case "Z" if event.ctrlKey && event.shiftKey =>
           event.preventDefault()
           AppState.redo()
