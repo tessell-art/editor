@@ -95,10 +95,10 @@ object MenuBarComponent:
         enabled = isTilingEmpty.map(!_)
       ),
       div(className := "menu-separator"),
-      dropdownLink("Import from .DOT...", () => {
-        // Placeholder for Import functionality
-        println("Import from .DOT... clicked")
-      }),
+//      dropdownLink("Import from .DOT...", () => {
+//        // Placeholder for Import functionality
+//        println("Import from .DOT... clicked")
+//      }),
       dropdownLink(
         "Export to .DOT...",
         () => DotExporter.exportTilingToDOT(),
