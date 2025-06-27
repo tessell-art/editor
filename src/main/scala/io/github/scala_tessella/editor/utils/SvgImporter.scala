@@ -114,6 +114,7 @@ object SvgImporter:
         case Left(message) => throw new Error(message)
         case Right(tiling) => EditorState.currentTiling.set(tiling)
       AppState.fitTilingToCanvas()
+      UndoManager.clearHistory()
     }.recover { case e: Throwable =>
       val explanation: String =
         "Only SVG saved by this editor with dedicated metadata can be loaded."

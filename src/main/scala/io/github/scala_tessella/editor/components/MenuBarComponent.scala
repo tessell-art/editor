@@ -95,9 +95,7 @@ object MenuBarComponent:
         "Export to .DOT...",
         () => DotExporter.exportTilingToDOT(),
         enabled = isTilingEmpty.map(!_)
-      ),
-      div(className := "menu-separator"),
-      dropdownLink("Clear tiling", () => AppState.clearTiling())
+      )
     )
 
   private def editMenu(): Element =
@@ -108,7 +106,9 @@ object MenuBarComponent:
 
     menuItem("Edit",
       dropdownLink("Undo", () => AppState.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink("Redo", () => AppState.redo(), AppState.canRedo),
+      dropdownLink("Redo", () => AppState.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
+      div(className := "menu-separator"),
+      dropdownLink("Clear tiling", () => AppState.clearTiling()),
       div(className := "menu-separator"),
       dropdownLinkDynamic(
         EditorState.editorMode.signal.map {

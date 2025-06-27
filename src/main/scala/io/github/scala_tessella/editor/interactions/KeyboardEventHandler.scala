@@ -32,6 +32,9 @@ object KeyboardEventHandler:
         case "e" | "E" =>
           event.preventDefault()
           EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 15))
+        case "Z" if event.ctrlKey && event.shiftKey =>
+          event.preventDefault()
+          AppState.redo()
         case "z" if event.ctrlKey =>
           event.preventDefault()
           AppState.undo()
