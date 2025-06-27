@@ -19,6 +19,7 @@ object EditorState:
 
   // Editor mode state
   val editorMode: Var[EditorMode] = Var(EditorMode.Select)
+  val isColorSelectorActive: Var[Boolean] = Var(false)
 
   // Loading state
   val isProcessing: Var[Boolean] = Var(false)

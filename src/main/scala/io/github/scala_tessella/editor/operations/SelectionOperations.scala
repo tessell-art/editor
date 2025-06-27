@@ -34,6 +34,17 @@ object SelectionOperations:
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 //        EditorState.selectedTilingPolygons.update(_ ++ polygonIdsToAdd)
 
+  def selectPolygonsByColor(polygonId: String): Unit =
+    if !EditorState.isProcessing.now() then
+      val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+      EditorState.polygonColors.now().get(polyTag).foreach { color =>
+        val polygonIdsToAdd = EditorState.polygonColors.now().collect {
+          case (tag, c) if c == color => s"tiling-poly-$tag"
+        }.toSet
+        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+      }
+      EditorState.isColorSelectorActive.set(false) // Deactivate after picking
+
   def toggleTilingPolygonSelection(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
       EditorState.selectedTilingPolygons.update { selected =>
@@ -56,7 +67,9 @@ object SelectionOperations:
           EditorState.fillColor.set(color)
           EditorState.isEyedropperActive.set(false) // Deactivate after picking
         }
-      } else {
+      } else if (EditorState.isColorSelectorActive.now()) {
+        selectPolygonsByColor(polygonId)
+      } else{
         EditorState.editorMode.now() match
           case EditorMode.Select => toggleTilingPolygonSelection(polygonId)
           case EditorMode.Delete => TessellationOperations.attemptPolygonDeletion(polygonId)

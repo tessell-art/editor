@@ -67,6 +67,16 @@ object CanvasControlComponent:
             },
             title := "Activate color picker to select a color from an existing polygon"
           ),
+          button(
+            "Select By Color",
+            className <-- EditorState.isColorSelectorActive.signal.map(active =>
+              if (active) "toggle-btn active" else "toggle-btn"
+            ),
+            onClick --> { _ =>
+              EditorState.isColorSelectorActive.update(!_)
+            },
+            title := "Activate selector to select all polygons with the same color"
+          ),
           //      ),
           //      div(
           //        className := "visualization-controls",
