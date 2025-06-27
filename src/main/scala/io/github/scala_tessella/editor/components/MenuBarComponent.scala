@@ -79,7 +79,8 @@ object MenuBarComponent:
       dropdownLink(
         "Save SVG",
         () => SvgExporter.saveTilingToSVG(),
-        enabled = hasFileName
+        enabled = hasFileName.combineWith(isTilingEmpty).map(_ && !_),
+        shortcut = Some("Ctrl+S")
       ),
       dropdownLink(
         "Save SVG as...",

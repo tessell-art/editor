@@ -4,6 +4,7 @@ import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.operations.ViewOperations
+import io.github.scala_tessella.editor.utils.SvgExporter
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 
@@ -38,6 +39,11 @@ object KeyboardEventHandler:
         case "z" if event.ctrlKey =>
           event.preventDefault()
           AppState.undo()
+        case "s" if event.ctrlKey =>
+          val isTilingEmpty = EditorState.currentTiling.now().isEmpty
+          val hasFileName = EditorState.currentFileName.now().isDefined
+          if hasFileName && !isTilingEmpty then
+            SvgExporter.saveTilingToSVG()
         case "+" | "=" =>
           event.preventDefault()
           EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.1, 5.0)))
