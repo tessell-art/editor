@@ -75,6 +75,13 @@ object MenuBarComponent:
     val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
     val hasFileName = EditorState.currentFileName.signal.map(_.isDefined)
     menuItem("File",
+      dropdownLink("New", () =>
+        AppState.clearTiling()
+        EditorState.currentFileName.set(None)
+        UndoManager.clearHistory()
+        EditorState.viewTransform.set(ViewTransform())
+      ),
+      div(className := "menu-separator"),
       dropdownLink("Load SVG...", () => SvgImporter.trigger()),
       dropdownLink(
         "Save SVG",
