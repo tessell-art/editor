@@ -5,9 +5,9 @@ import org.scalajs.dom.{Blob, BlobPropertyBag}
 
 import scala.scalajs.js
 
-object FileDownloader {
+object FileDownloader:
 
-  def trigger(content: String, filename: String, mimeType: String): Unit = {
+  def trigger(content: String, filename: String, mimeType: String): Unit =
     val blobPropertyBag = new BlobPropertyBag { `type` = mimeType }
     val blob = new Blob(js.Array(content), blobPropertyBag)
     val url = dom.URL.createObjectURL(blob)
@@ -18,6 +18,3 @@ object FileDownloader {
     a.click()
     dom.document.body.removeChild(a)
     dom.URL.revokeObjectURL(url)
-  }
-
-}
