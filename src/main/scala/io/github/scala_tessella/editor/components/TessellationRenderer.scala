@@ -11,6 +11,8 @@ import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as T
 
 object TessellationRenderer:
 
+  private val eyedropperCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 56 56'%3E%3Cpath fill='white' stroke='black' stroke-width='2' d='M39.6 28.9L40.3 28.1c1.1-1.2 1.1-2.6-.1-3.8L39.5 23.6c3.5-3.2 7.5-3.6 9.9-6.1 3.5-3.5 2.3-8.4-.1-10.9s-7.4-3.6-10.9-.1c-2.5 2.4-2.9 6.4-6.1 10l-.7-.7c-1.2-1.2-2.6-1.1-3.8.1l-.7.6c-1.4 1.4-1.2 2.6 0 3.8l1 1L10.6 39C3.3 46.2 6.8 45.1 2.9 50.7l2.1 2.2c5.4-3.9 4.7-0 12-7.3L34.8 27.8l1 1c1.2 1.2 2.4 1.5 3.8.1zM10.1 46.1c-.9-.9-.7-1.8.2-2.7L30.3 23.3l2.5 2.5L12.8 45.9c-.8.8-1.8 1-2.7.2z'/%3E%3C/svg%3E\") 2 30, auto"
+
   private val selectionPattern: Element = svg.defs(
     svg.pattern(
       svg.idAttr := "selection-pattern",
@@ -158,11 +160,13 @@ object TessellationRenderer:
         case EditorMode.Delete => "tiling-polygon delete-mode"
       },
       // Add cursor style based on mode
-      svg.style <-- shouldHideForDeletion.combineWith(EditorState.editorMode.signal).map {
-        case (hidden, mode) =>
-          val cursor = mode match
-            case EditorMode.Select => "cursor: pointer;"
-            case EditorMode.Delete => "cursor: crosshair;"
+      svg.style <-- shouldHideForDeletion.combineWith(EditorState.editorMode.signal).combineWith(EditorState.isEyedropperActive).map {
+        case (hidden, mode, eyeOn) =>
+          val cursor =
+            if eyeOn then s"cursor: $eyedropperCursor;"
+            else mode match
+              case EditorMode.Select => "cursor: pointer;"
+              case EditorMode.Delete => "cursor: crosshair;"
           val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
           cursor + opacity
       },

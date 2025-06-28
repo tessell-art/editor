@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{EditorMode, EditorState}
 import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, MouseEventHandler}
 
 import com.raquo.laminar.api.L.{*, given}
