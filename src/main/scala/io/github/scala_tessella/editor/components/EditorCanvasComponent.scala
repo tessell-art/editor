@@ -29,7 +29,7 @@ object EditorCanvasComponent:
           case (isProcessing, mode) =>
             if isProcessing then
               "cursor: wait; pointer-events: none;"
-            else 
+            else
               "cursor: default;"
         },
 
@@ -37,7 +37,7 @@ object EditorCanvasComponent:
         GridRenderer.patternDef,
 
         // Background
-        background(),
+//        background(),
 
         // Main content group with transforms
         contentGroup(),
