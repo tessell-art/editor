@@ -161,10 +161,14 @@ object TessellationRenderer:
         case EditorMode.Delete => "tiling-polygon delete-mode"
       },
       // Add cursor style based on mode
-      svg.style <-- shouldHideForDeletion.combineWith(EditorState.editorMode.signal).combineWith(EditorState.isEyedropperActive).map {
-        case (hidden, mode, eyeOn) =>
+      svg.style <-- shouldHideForDeletion
+        .combineWith(EditorState.editorMode.signal)
+        .combineWith(EditorState.isEyedropperActive)
+        .combineWith(EditorState.isColorSelectorActive).map {
+        case (hidden, mode, eyeOn, colorOn) =>
           val cursor =
             if eyeOn then s"cursor: $eyedropperCursor;"
+            else if colorOn then "cursor: pointer;"
             else mode match
               case EditorMode.Select => "cursor: pointer;"
               case EditorMode.Delete => s"cursor: $deleteCursor;"
