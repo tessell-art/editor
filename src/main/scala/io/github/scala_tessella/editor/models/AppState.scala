@@ -38,9 +38,8 @@ object AppState:
   def toggleStrictness(): Unit =
     if !isProcessing.now() then
       strictness.update {
-        case Strictness.STRICT   => Strictness.TOUCHING
-        case Strictness.TOUCHING => Strictness.CROSSING
-        case Strictness.CROSSING => Strictness.STRICT
+        case Strictness.STRICT => Strictness.CROSSING
+        case _                 => Strictness.STRICT
       }
 
   def toggleNodeLabels(): Unit =

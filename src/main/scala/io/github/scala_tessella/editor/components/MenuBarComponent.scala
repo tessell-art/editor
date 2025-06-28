@@ -141,9 +141,8 @@ object MenuBarComponent:
       div(className := "menu-separator"),
       dropdownLinkDynamic(
         EditorState.strictness.signal.map {
-          case Strictness.STRICT   => "Switch to Touching Strictness"
-          case Strictness.TOUCHING => "Switch to Crossing Strictness"
-          case Strictness.CROSSING => "Switch to Strict Strictness"
+          case Strictness.STRICT   => "Switch Validation OFF"
+          case _                   => "Switch Validation ON"
         },
         () => AppState.toggleStrictness()
       )

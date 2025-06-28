@@ -100,13 +100,15 @@ object CanvasControlComponent:
             onClick --> { _ => AppState.toggleNodeLabels() }
           ),
           button(
-            child.text <-- EditorState.strictness.signal.map(s => s"Strictness: ${s.toString.toLowerCase.capitalize}"),
-            className := "toggle-btn",
+            child.text <-- EditorState.strictness.signal.map(s => s"Validation: ${if s == Strictness.STRICT then "ON" else "OFF"}"),
+            className <-- EditorState.strictness.signal.map {
+              case Strictness.STRICT => "toggle-btn"
+              case _                 => "toggle-btn active"
+            },
             onClick --> { _ => AppState.toggleStrictness() },
             title <-- EditorState.strictness.signal.map {
-              case Strictness.STRICT => "Current mode is STRICT: prevents adding a polygon that would invalidate the tessellation. Click to switch to TOUCHING."
-              case Strictness.TOUCHING => "Current mode is TOUCHING: allows adding a polygon sharing non-continuous edges with the perimeter. Click to switch to CROSSING."
-              case Strictness.CROSSING => "Current mode is CROSSING: allows adding a polygon crossing the edges of the perimeter. Click to switch to STRICT."
+              case Strictness.STRICT => "Current mode is STRICT: prevents adding a polygon that would invalidate the tessellation. Click to switch to CROSSING."
+              case _                 => "Current mode is CROSSING: allows adding a polygon touching and crossing the edges of the perimeter. Click to switch to STRICT."
             }
           ),
           button(
