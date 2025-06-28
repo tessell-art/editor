@@ -29,9 +29,8 @@ object EditorCanvasComponent:
           case (isProcessing, mode) =>
             if isProcessing then
               "cursor: wait; pointer-events: none;"
-            else mode match
-              case io.github.scala_tessella.editor.models.EditorMode.Select => "cursor: default;"
-              case io.github.scala_tessella.editor.models.EditorMode.Delete => "cursor: crosshair;"
+            else 
+              "cursor: default;"
         },
 
         // Add grid pattern definition here
