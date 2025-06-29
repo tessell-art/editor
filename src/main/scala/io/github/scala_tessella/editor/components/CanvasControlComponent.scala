@@ -66,7 +66,7 @@ object CanvasControlComponent:
                 svg.d := "M 39.6485 28.9024 L 40.3048 28.1758 C 41.4532 26.9805 41.5001 25.5742 40.2813 24.3555 L 39.5782 23.6758 C 43.1641 20.4649 47.1485 20.0195 49.6095 17.5117 C 53.1015 13.9961 51.9533 9.0742 49.5159 6.6133 C 47.0780 4.1289 42.2032 3.0742 38.6172 6.5195 C 36.0860 8.9571 35.6641 12.9649 32.4532 16.5508 L 31.7735 15.8476 C 30.5548 14.6289 29.1485 14.6758 27.9532 15.8242 L 27.2266 16.4805 C 25.7969 17.8633 26.0548 19.0820 27.2969 20.3242 L 28.2813 21.3086 L 10.5860 39.0274 C 3.3438 46.2695 6.8360 45.1445 2.8985 50.6992 L 4.9845 52.9258 C 10.3750 49.0117 9.6485 52.8555 16.9845 45.5195 L 34.7969 27.8242 L 35.8048 28.8320 C 37.0469 30.0742 38.2657 30.3320 39.6485 28.9024 Z M 10.1172 46.1289 C 9.2501 45.1914 9.4141 44.3008 10.3516 43.3633 L 30.2969 23.3242 L 32.8516 25.8789 L 12.8126 45.8945 C 11.9923 46.7383 10.9141 46.9961 10.1172 46.1289 Z"
               )
             ),
-            "Pick Color",
+//            "Pick Color",
             className <-- EditorState.isEyedropperActive.signal.map(active =>
               if active then "toggle-btn active" else "toggle-btn"
             ),
@@ -99,7 +99,7 @@ object CanvasControlComponent:
                 )
               )
             ),
-            "Select By Color",
+//            "Select By Color",
             className <-- EditorState.isColorSelectorActive.signal.map(active =>
               if active then "toggle-btn active" else "toggle-btn"
             ),
@@ -109,6 +109,27 @@ object CanvasControlComponent:
             },
             title := "Activate selector to select all polygons with the same color"
           ),
+          button(
+            svg.svg(
+              svg.width := "1em",
+              svg.height := "1em",
+              svg.viewBox := "-871 1129 256 256",
+              svg.fill := "currentColor",
+              svg.path(
+                svg.d := "M-871,1185.5l199.2,199.7l56.8-56.7l-199.2-199.7L-871,1185.5z M-627,1328.5l-36.3,36.3l-187.3-187.7l36.4-36.2l25.4,25.4 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2L-627,1328.5z M-820.3,1165.2c3.1,3,3.2,8,0.2,11.2c-3,3.1-8,3.2-11.2,0.2c-3.1-3-3.2-8-0.2-11.2 C-828.5,1162.3-823.5,1162.2-820.3,1165.2z"
+              )
+            ),
+            className := "toggle-btn",
+//            className <-- EditorState.isMeasureActive.signal.map(active =>
+//              if active then "toggle-btn active" else "toggle-btn"
+//            ),
+            styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
+//            onClick --> { _ =>
+//              EditorState.isMeasureActive.update(!_)
+//            },
+            title := "Activate measure mode"
+          ),
+
           //      ),
           //      div(
           //        className := "visualization-controls",
