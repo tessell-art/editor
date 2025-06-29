@@ -8,34 +8,13 @@ import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import scala.math.{max, min}
 
 object CanvasControlComponent:
-  // Local state for color picker is no longer needed here
 
   def element: Element =
     div(
       div(
-        className := "top-bar-info",
-        div(
-          className := "current-file-name",
-          child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
-        )
-      ),
-      div(
         className := "canvas-controls",
         div(
           className := "control-group",
-          //        button("Reset View", onClick --> { _ => EditorState.viewTransform.set(ViewTransform()) }),
-          //        button("Zoom In", onClick --> { _ =>
-          //          EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0)))
-          //        }),
-          //        button("Zoom Out", onClick --> { _ =>
-          //          EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1)))
-          //        }),
-          //        button("Rotate Left", onClick --> { _ =>
-          //          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees - 30))
-          //        }),
-          //        button("Rotate Right", onClick --> { _ =>
-          //          EditorState.viewTransform.update(t => t.withRotation(t.rotationDegrees + 30))
-          //        }),
           button(
             "Fill ",
             svg.svg(
@@ -171,6 +150,11 @@ object CanvasControlComponent:
           )
         ),
         UndoComponent.element
-        // ColorPickerPopupComponent is no longer rendered here, it will be moved to the main view
+      ),
+      div(
+        div(
+          className := "current-file-name",
+          child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
+        )
       )
     )

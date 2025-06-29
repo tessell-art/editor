@@ -7,14 +7,6 @@
   align-items: start;
 }
 
-.top-bar-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 8px;
-  margin-bottom: 8px; /* Add some space between this bar and controls below */
-}
-
 .current-file-name {
   font-family: monospace;
   font-size: 14px;
