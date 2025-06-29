@@ -147,14 +147,8 @@ object CanvasControlComponent:
               case EditorMode.Select => "Click to switch to Delete mode"
               case EditorMode.Delete => "Click to switch to Select mode"
             }
-          )
-        ),
-        UndoComponent.element
-      ),
-      div(
-        div(
-          className := "current-file-name",
-          child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
+          ),
+          UndoComponent.element
         )
       )
     )

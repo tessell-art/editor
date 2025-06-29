@@ -14,7 +14,13 @@ object EditorCanvasComponent:
       ErrorMessageComponent.element,
       // Loading indicator
       loadingIndicator(),
-      // A new wrapper for the SVG and its overlays
+      div(
+        div(
+          className := "current-file-name",
+          child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
+        )
+      ),
+        // A new wrapper for the SVG and its overlays
       div(
         className := "editor-canvas-wrapper",
         svg.svg(
