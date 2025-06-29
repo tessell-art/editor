@@ -9,44 +9,54 @@ object EditorCanvasComponent:
   def element: Element =
     div(
       className := "canvas-container",
-//      h2("Canvas"),
+      //      h2("Canvas"),
       CanvasControlComponent.element,
       ErrorMessageComponent.element,
       // Loading indicator
       loadingIndicator(),
-      svg.svg(
-        svg.className := "editor-canvas",
-        svg.width := "800",
-        svg.height := "600",
-        svg.viewBox := "0 0 800 600",
-        svg.tabIndex := "0",
+      // A new wrapper for the SVG and its overlays
+      div(
+        className := "editor-canvas-wrapper",
+        svg.svg(
+          svg.className := "editor-canvas",
+          // The fixed width and height have been removed to allow CSS to control the size
+          svg.viewBox := "0 0 800 600",
+          svg.tabIndex := "0",
 
-        // Store reference to the canvas element
-        onMountCallback(ctx => EditorState.canvasElementRef.set(Some(ctx.thisNode.ref))),
+          // Store reference to the canvas element
+          onMountCallback(ctx => EditorState.canvasElementRef.set(Some(ctx.thisNode.ref))),
 
-        // Dynamic cursor based on loading state and editor mode
-        svg.style <-- EditorState.isProcessing.signal.combineWith(EditorState.editorMode.signal).map {
-          case (isProcessing, mode) =>
-            if isProcessing then
-              "cursor: wait; pointer-events: none;"
-            else
-              "cursor: default;"
-        },
+          // Dynamic cursor based on loading state and editor mode
+          svg.style <-- EditorState.isProcessing.signal.combineWith(EditorState.editorMode.signal).map {
+            case (isProcessing, mode) =>
+              if isProcessing then
+                "cursor: wait; pointer-events: none;"
+              else
+                "cursor: default;"
+          },
 
-        // Add grid pattern definition here
-        GridRenderer.patternDef,
+          // Add grid pattern definition here
+          GridRenderer.patternDef,
 
-        // Background
-//        background(),
+          // Background
+//          background(),
 
-        // Main content group with transforms
-        contentGroup(),
+          // Main content group with transforms
+          contentGroup(),
 
-        // Disable mouse events when processing
-        onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
-        onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
-        onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
-        onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel
+          // Disable mouse events when processing
+          onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
+          onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
+          onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
+          onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel
+        ),
+        // HTML placeholder text is now inside the wrapper
+        div(
+          child.text <-- EditorState.viewTransform.signal.map(t =>
+            f"Zoom: ${t.scale * 100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
+          ),
+          className := "foo-placeholder"
+        )
       )
     )
 

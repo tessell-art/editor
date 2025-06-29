@@ -17,8 +17,7 @@ object CanvasControlComponent:
         div(
           className := "current-file-name",
           child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
-        ),
-        transformInfo()
+        )
       ),
       div(
         className := "canvas-controls",
@@ -129,13 +128,5 @@ object CanvasControlComponent:
         ),
         UndoComponent.element
         // ColorPickerPopupComponent is no longer rendered here, it will be moved to the main view
-      )
-    )
-
-  private def transformInfo(): Element =
-    div(
-      className := "transform-info",
-      child.text <-- EditorState.viewTransform.signal.map(t =>
-        f"Zoom: ${t.scale * 100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
       )
     )

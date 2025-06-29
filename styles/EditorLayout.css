@@ -1,12 +1,11 @@
-
 /* Editor Layout */
 .editor-layout {
   display: grid;
+  /* Default for larger screens: 300px for the palette, rest for canvas */
   grid-template-columns: 300px 1fr;
   gap: 0.5rem;
   align-items: start;
 }
-
 
 .top-bar-info {
   display: flex;
@@ -22,8 +21,10 @@
   color: #ccc;
 }
 
-.transform-info {
-  font-family: monospace;
-  font-size: 12px;
-  color: #aaa;
+/* Media query for medium screens to adjust palette width */
+@media (max-width: 1200px) {
+  .editor-layout {
+    /* Reduce palette column width to encourage 3 buttons per row instead of 4 */
+    grid-template-columns: 240px 1fr;
+  }
 }

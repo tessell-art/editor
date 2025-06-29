@@ -1,0 +1,34 @@
+/* Add to your main stylesheet */
+
+/* This rule makes the container for the palette and canvas a flexbox */
+/* This makes the canvas container grow to fill remaining horizontal space */
+.canvas-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The wrapper now fills the available space of its parent */
+.editor-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    flex-grow: 1; /* Allows the wrapper to fill vertical space */
+}
+
+/* The SVG element itself will fill its wrapper */
+.editor-canvas {
+    width: 100%;
+    height: 100%;
+    display: block; /* Removes any extra space below the SVG */
+}
+
+/* The placeholder styling is unchanged but is included for completeness */
+.foo-placeholder {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #AAAAAA;
+    pointer-events: none;
+}

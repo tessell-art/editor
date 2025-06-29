@@ -1,5 +1,6 @@
 /* Responsive design */
-@media (max-width: 1200px) {
+/* This breakpoint handles the switch to a stacked, mobile-friendly layout */
+@media (max-width: 992px) { /* Changed from 1200px to apply stacking later */
   .editor-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -23,12 +24,6 @@
   .canvas-controls {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .transform-info {
-    text-align: center;
-    margin-left: 0;
-    margin-top: 0.5rem;
   }
 
   .editor-canvas {
