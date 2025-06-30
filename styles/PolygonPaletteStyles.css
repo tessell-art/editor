@@ -56,8 +56,8 @@
 }
 
 .selected-info {
-  margin-top: 1rem;
-  padding: 0.8rem;
+  margin-top: 0.5rem;
+  padding: 0.3rem;
   background-color: #333;
   border-radius: 6px;
   min-height: 1.5rem;

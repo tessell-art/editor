@@ -108,7 +108,21 @@ object CanvasControlComponent:
 //            },
             title := "Activate measure mode"
           ),
-
+          button(
+            child.text <-- EditorState.editorMode.signal.map {
+              case EditorMode.Select => "Mode: Select"
+              case EditorMode.Delete => "Mode: Delete"
+            },
+            className <-- EditorState.editorMode.signal.map {
+              case EditorMode.Select => "toggle-btn mode-select"
+              case EditorMode.Delete => "toggle-btn mode-delete active"
+            },
+            onClick --> { _ => AppState.toggleEditorMode() },
+            title <-- EditorState.editorMode.signal.map {
+              case EditorMode.Select => "Click to switch to Delete mode"
+              case EditorMode.Delete => "Click to switch to Select mode"
+            }
+          ),
           //      ),
           //      div(
           //        className := "visualization-controls",
@@ -131,21 +145,6 @@ object CanvasControlComponent:
             title <-- EditorState.strictness.signal.map {
               case Strictness.STRICT => "Current mode is STRICT: prevents adding a polygon that would invalidate the tessellation. Click to switch to CROSSING."
               case _                 => "Current mode is CROSSING: allows adding a polygon touching and crossing the edges of the perimeter. Click to switch to STRICT."
-            }
-          ),
-          button(
-            child.text <-- EditorState.editorMode.signal.map {
-              case EditorMode.Select => "Mode: Select"
-              case EditorMode.Delete => "Mode: Delete"
-            },
-            className <-- EditorState.editorMode.signal.map {
-              case EditorMode.Select => "toggle-btn mode-select"
-              case EditorMode.Delete => "toggle-btn mode-delete active"
-            },
-            onClick --> { _ => AppState.toggleEditorMode() },
-            title <-- EditorState.editorMode.signal.map {
-              case EditorMode.Select => "Click to switch to Delete mode"
-              case EditorMode.Delete => "Click to switch to Select mode"
             }
           ),
           UndoComponent.element
