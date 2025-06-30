@@ -52,6 +52,7 @@ object CanvasControlComponent:
             styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
               EditorState.isEyedropperActive.update(!_)
+              EditorState.isColorSelectorActive.set(false)
             },
             title := "Activate color picker to select a color from an existing polygon"
           ),
@@ -85,6 +86,7 @@ object CanvasControlComponent:
             styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
               EditorState.isColorSelectorActive.update(!_)
+              EditorState.isEyedropperActive.set(false)
             },
             title := "Activate selector to select all polygons with the same color"
           ),
