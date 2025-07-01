@@ -19,8 +19,9 @@ case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingN
 enum EditorMode:
   case Select, Delete
 
+// Tool enumeration
 enum Tool:
-  case SelectByColor, ColorPicker
+  case ColorPicker, SelectByColor, Measurement
 
 object AppState:
   // Expose state for components to read

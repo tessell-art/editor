@@ -107,13 +107,17 @@ object CanvasControlComponent:
               )
             ),
             className := "toggle-btn",
-//            className <-- EditorState.isMeasureActive.signal.map(active =>
-//              if active then "toggle-btn active" else "toggle-btn"
-//            ),
+            className <-- EditorState.activeTool.signal.map {
+              case Some(Tool.Measurement) => "toggle-btn active"
+              case _                      => "toggle-btn"
+            },
             styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
-//            onClick --> { _ =>
-//              EditorState.isMeasureActive.update(!_)
-//            },
+            onClick --> { _ =>
+              EditorState.activeTool.update {
+                case Some(Tool.Measurement) => None
+                case _                      => Some(Tool.Measurement)
+              }
+            },
             title := "Activate measure mode"
           ),
           button(
