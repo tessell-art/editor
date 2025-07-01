@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool, ViewTransform}
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
@@ -46,13 +46,16 @@ object CanvasControlComponent:
               )
             ),
 //            "Pick Color",
-            className <-- EditorState.isEyedropperActive.signal.map(active =>
-              if active then "toggle-btn active" else "toggle-btn"
-            ),
+            className <-- EditorState.activeTool.signal.map {
+              case Some(Tool.ColorPicker) => "toggle-btn active"
+              case _                      => "toggle-btn"
+            },
             styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
-              EditorState.isEyedropperActive.update(!_)
-              EditorState.isColorSelectorActive.set(false)
+              EditorState.activeTool.update {
+                case Some(Tool.ColorPicker) => None
+                case _                      => Some(Tool.ColorPicker)
+              }
             },
             title := "Activate color picker to select a color from an existing polygon"
           ),
@@ -80,13 +83,16 @@ object CanvasControlComponent:
               )
             ),
 //            "Select By Color",
-            className <-- EditorState.isColorSelectorActive.signal.map(active =>
-              if active then "toggle-btn active" else "toggle-btn"
-            ),
+            className <-- EditorState.activeTool.signal.map {
+              case Some(Tool.SelectByColor) => "toggle-btn active"
+              case _                        => "toggle-btn"
+            },
             styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
-              EditorState.isColorSelectorActive.update(!_)
-              EditorState.isEyedropperActive.set(false)
+              EditorState.activeTool.update {
+                case Some(Tool.SelectByColor) => None
+                case _                        => Some(Tool.SelectByColor)
+              }
             },
             title := "Activate selector to select all polygons with the same color"
           ),

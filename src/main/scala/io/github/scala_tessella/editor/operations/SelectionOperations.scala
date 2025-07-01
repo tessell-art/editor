@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.{EditorMode, EditorState}
-
+import io.github.scala_tessella.editor.models.{EditorMode, EditorState, Tool}
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 object SelectionOperations:
@@ -43,7 +42,7 @@ object SelectionOperations:
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
       }
-      EditorState.isColorSelectorActive.set(false) // Deactivate after picking
+      EditorState.activeTool.set(None) // Deactivate after picking
 
   def toggleTilingPolygonSelection(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
@@ -61,18 +60,19 @@ object SelectionOperations:
 
   def handleTilingPolygonClick(polygonId: String): Unit =
     if !EditorState.isProcessing.now() then
-      if EditorState.isEyedropperActive.now() then
-        val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
-        EditorState.polygonColors.now().get(polyTag).foreach { color =>
-          EditorState.fillColor.set(color)
-          EditorState.isEyedropperActive.set(false) // Deactivate after picking
-        }
-      else if EditorState.isColorSelectorActive.now() then
-        selectPolygonsByColor(polygonId)
-      else
-        EditorState.editorMode.now() match
-          case EditorMode.Select => toggleTilingPolygonSelection(polygonId)
-          case EditorMode.Delete => TessellationOperations.attemptPolygonDeletion(polygonId)
+      EditorState.activeTool.now() match
+        case Some(Tool.ColorPicker) =>
+          val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+          EditorState.polygonColors.now().get(polyTag).foreach { color =>
+            EditorState.fillColor.set(color)
+            EditorState.activeTool.set(None) // Deactivate after picking
+          }
+        case Some(Tool.SelectByColor) =>
+          selectPolygonsByColor(polygonId)
+        case _ =>
+          EditorState.editorMode.now() match
+            case EditorMode.Select => toggleTilingPolygonSelection(polygonId)
+            case EditorMode.Delete => TessellationOperations.attemptPolygonDeletion(polygonId)
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     if !EditorState.isProcessing.now() then

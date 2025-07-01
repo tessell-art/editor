@@ -19,7 +19,7 @@ object EditorState:
 
   // Editor mode state
   val editorMode: Var[EditorMode] = Var(EditorMode.Select)
-  val isColorSelectorActive: Var[Boolean] = Var(false)
+  val activeTool: Var[Option[Tool]] = Var(None)
 
   // Loading state
   val isProcessing: Var[Boolean] = Var(false)
@@ -37,7 +37,6 @@ object EditorState:
   // Color picker
   val showColorPicker: Var[Boolean] = Var(false)
   val tempColor: Var[(Int, Int, Int)] = Var(fillColor.now())
-  val isEyedropperActive: Var[Boolean] = Var(false)
 
   // Visualization state
   val showNodeLabels: Var[Boolean] = Var(false)

@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 
 import com.raquo.laminar.api.L.*
@@ -164,13 +164,12 @@ object TessellationRenderer:
       // Add cursor style based on mode
       svg.style <-- shouldHideForDeletion
         .combineWith(EditorState.editorMode.signal)
-        .combineWith(EditorState.isEyedropperActive)
-        .combineWith(EditorState.isColorSelectorActive).map {
-          case (hidden, mode, eyeOn, colorOn) =>
-            val cursor =
-              if eyeOn then s"cursor: $eyedropperCursor;"
-              else if colorOn then s"cursor: $selectByColorCursor;"
-              else mode match
+        .combineWith(EditorState.activeTool.signal).map {
+          case (hidden, mode, tool) =>
+            val cursor = tool match
+              case Some(Tool.ColorPicker)   => s"cursor: $eyedropperCursor;"
+              case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
+              case _ => mode match
                 case EditorMode.Select => "cursor: pointer;"
                 case EditorMode.Delete => s"cursor: $deleteCursor;"
             val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
