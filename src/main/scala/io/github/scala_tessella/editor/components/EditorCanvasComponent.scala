@@ -20,6 +20,13 @@ object EditorCanvasComponent:
           child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
         )
       ),
+      div(
+        className := "measurement-result",
+        child.text <-- EditorState.measurementResult.signal.map {
+          case Some(result) => f"Distance: $result%.6f units"
+          case None         => ""
+        }
+      ),
         // A new wrapper for the SVG and its overlays
       div(
         className := "editor-canvas-wrapper",
@@ -59,7 +66,7 @@ object EditorCanvasComponent:
         // HTML placeholder text is now inside the wrapper
         div(
           child.text <-- EditorState.viewTransform.signal.map(t =>
-            f"Zoom: ${t.scale * 100}%.0f${'%'} | Rotation: ${t.rotationDegrees}%.0f°"
+            f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}%.0f°"
           ),
           className := "foo-placeholder"
         )

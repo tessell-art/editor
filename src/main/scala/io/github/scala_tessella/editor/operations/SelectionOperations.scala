@@ -15,16 +15,21 @@ object SelectionOperations:
         case (None, _) =>
           // No start point, so set this as the start point
           EditorState.measurementStartPoint.set(Some(point))
+          EditorState.measurementResult.set(None)
         case (Some(start), _) if start == point =>
           // Clicked on the start point, clear both start and end points
           EditorState.measurementStartPoint.set(None)
           EditorState.measurementEndPoint.set(None)
+          EditorState.measurementResult.set(None)
         case (Some(_), Some(end)) if end == point =>
           // Clicked on the end point, clear only the end point
           EditorState.measurementEndPoint.set(None)
-        case (Some(_), _) =>
+          EditorState.measurementResult.set(None)
+        case (Some(start), _) =>
           // Start point is set, so set this as the end point
           EditorState.measurementEndPoint.set(Some(point))
+          val distance = point.point.distanceTo(start.point)
+          EditorState.measurementResult.set(Some(distance))
 
   def clearAllSelections(): Unit =
     if !EditorState.isProcessing.now() then

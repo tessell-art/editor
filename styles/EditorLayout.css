@@ -13,6 +13,12 @@
   color: #ccc;
 }
 
+.measurement-result {
+  /*font-family: monospace;*/
+  font-size: 14px;
+  color: #ccc;
+}
+
 /* Media query for medium screens to adjust palette width */
 @media (max-width: 1200px) {
   .editor-layout {
