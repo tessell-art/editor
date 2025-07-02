@@ -8,7 +8,10 @@ object SelectionOperations:
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     if !EditorState.isProcessing.now() then
-      EditorState.measurementStartPoint.set(Some(point))
+      EditorState.measurementStartPoint.update {
+        case Some(p) if p == point => None
+        case _                     => Some(point)
+      }
 
   def clearAllSelections(): Unit =
     if !EditorState.isProcessing.now() then

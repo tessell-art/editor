@@ -150,9 +150,9 @@ object TessellationRenderer:
       svg.cx := x.toString,
       svg.cy := y.toString,
       svg.r := "5",
-      svg.className := "measurement-start-point"
+      svg.className := "measurement-start-point",
+      onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
     )
-
 
   private def renderTilingPolygon(coordinates: Coords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val center = Point(0, 0)
