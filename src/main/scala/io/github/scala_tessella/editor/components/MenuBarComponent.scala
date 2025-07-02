@@ -28,6 +28,7 @@ object MenuBarComponent:
         button(
           className := "menu-toggle",
           onClick --> { _ => isMenuOpen.update(!_) },
+          aria.label := "Toggle navigation menu",
           "☰"
         ),
         // The menu itself
