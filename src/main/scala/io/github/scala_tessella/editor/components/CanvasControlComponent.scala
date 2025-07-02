@@ -115,11 +115,7 @@ object CanvasControlComponent:
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.Measurement) =>
-                  EditorState.clickablePoints.set(Nil)
-                  EditorState.measurementStartPoint.set(None)
-                  EditorState.measurementEndPoint.set(None)
-                  EditorState.highlightedPolygonId.set(None)
-                  EditorState.measurementResult.set(None)
+                  AppState.clearMeasurements()
                   None
                 case _ => Some(Tool.Measurement)
               }

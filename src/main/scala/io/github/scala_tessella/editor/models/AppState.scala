@@ -66,6 +66,7 @@ object AppState:
     TessellationOperations.selectPolygon(sides)
 
   def clearTiling(): Unit =
+    clearMeasurements()
     TessellationOperations.clearTiling()
 
   def handleTilingPolygonClick(polygonId: String): Unit =
@@ -119,3 +120,10 @@ object AppState:
 
   def fitTilingToCanvas(): Unit =
     ViewOperations.fitTilingToCanvas()
+    
+  def clearMeasurements(): Unit =
+    clickablePoints.set(Nil)
+    measurementStartPoint.set(None)
+    measurementEndPoint.set(None)
+    highlightedPolygonId.set(None)
+    measurementResult.set(None)
