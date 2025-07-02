@@ -86,6 +86,14 @@ object SelectionOperations:
 
   def handleTilingPolygonClick(polygonId: String): Unit =
     EditorState.activeTool.now() match
+      case Some(Tool.ColorPicker) =>
+        val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+        EditorState.polygonColors.now().get(polyTag).foreach { color =>
+          EditorState.fillColor.set(color)
+          EditorState.activeTool.set(None) // Deactivate after picking
+        }
+      case Some(Tool.SelectByColor) =>
+        selectPolygonsByColor(polygonId)
       case Some(Tool.Measurement) =>
         handlePolygonClickForMeasurement(polygonId)
       case _ =>
