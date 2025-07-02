@@ -6,6 +6,10 @@ import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 object SelectionOperations:
 
+  def handlePointClickForMeasurement(point: ClickablePoint): Unit =
+    if !EditorState.isProcessing.now() then
+      EditorState.measurementStartPoint.set(Some(point))
+
   def clearAllSelections(): Unit =
     if !EditorState.isProcessing.now() then
       EditorState.selectedTilingPolygons.set(Set.empty)

@@ -58,7 +58,13 @@ object TessellationRenderer:
       deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
     }
 
-    val clickablePoints = children <-- EditorState.clickablePoints.signal.map(_.map(renderClickablePoint))
+    val clickablePointsDisplay = children <-- EditorState.clickablePoints.signal
+      .combineWith(EditorState.measurementStartPoint.signal)
+      .map { (points, startPointOpt) =>
+        points.filterNot(p => startPointOpt.contains(p)).map(renderClickablePoint)
+      }
+
+    val measurementStartPointDisplay = child.maybe <-- EditorState.measurementStartPoint.signal.map(_.map(renderMeasurementStartPoint))
 
     svg.g(
       svg.className := "tessellation",
@@ -68,7 +74,8 @@ object TessellationRenderer:
       nodeLabels,
       failedPolygonWireframe,
       failedDeletionWireframe,
-      clickablePoints
+      clickablePointsDisplay,
+      measurementStartPointDisplay
     )
 
   private def renderNodeLabels(coordinates: Coords): List[Element] =
@@ -129,9 +136,23 @@ object TessellationRenderer:
       svg.stroke := "black",
       svg.strokeWidth := "1",
       svg.className := "clickable-point",
+      onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point)),
 //      svg.cursor := "pointer",
       svg.pointerEvents := "visible"
     )
+
+  private def renderMeasurementStartPoint(p: ClickablePoint): Element =
+    val canvasCenter = Point(400, 300)
+    val x = canvasCenter.x + p.point.x * 50
+    val y = canvasCenter.y + p.point.y * 50
+
+    svg.circle(
+      svg.cx := x.toString,
+      svg.cy := y.toString,
+      svg.r := "5",
+      svg.className := "measurement-start-point"
+    )
+
 
   private def renderTilingPolygon(coordinates: Coords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val center = Point(0, 0)

@@ -74,6 +74,9 @@ object AppState:
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     SelectionOperations.handlePerimeterEdgeClick(edgeId, edgeIndex)
 
+  def handlePointClickForMeasurement(point: ClickablePoint): Unit =
+    SelectionOperations.handlePointClickForMeasurement(point)
+
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
     ColorOperations.applyColorToSelectedPolygons(color)
 
