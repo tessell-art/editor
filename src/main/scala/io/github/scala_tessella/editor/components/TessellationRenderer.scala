@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 
 import com.raquo.laminar.api.L.*
@@ -58,6 +58,8 @@ object TessellationRenderer:
       deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
     }
 
+    val clickablePoints = children <-- EditorState.clickablePoints.signal.map(_.map(renderClickablePoint))
+
     svg.g(
       svg.className := "tessellation",
       selectionPattern,
@@ -65,7 +67,8 @@ object TessellationRenderer:
       perimeterEdges,
       nodeLabels,
       failedPolygonWireframe,
-      failedDeletionWireframe
+      failedDeletionWireframe,
+      clickablePoints
     )
 
   private def renderNodeLabels(coordinates: Coords): List[Element] =
@@ -112,6 +115,23 @@ object TessellationRenderer:
         node.toString
       )
     }
+
+  private def renderClickablePoint(p: ClickablePoint): Element =
+    val canvasCenter = Point(400, 300)
+    val x = canvasCenter.x + p.point.x * 50
+    val y = canvasCenter.y + p.point.y * 50
+
+    svg.circle(
+      svg.cx := x.toString,
+      svg.cy := y.toString,
+      svg.r := "5",
+      svg.fill := "#ff9500",
+      svg.stroke := "black",
+      svg.strokeWidth := "1",
+      svg.className := "clickable-point",
+//      svg.cursor := "pointer",
+      svg.pointerEvents := "visible"
+    )
 
   private def renderTilingPolygon(coordinates: Coords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val center = Point(0, 0)
@@ -217,6 +237,7 @@ object TessellationRenderer:
       svg.strokeWidth <-- isSelected.map(selected => if (selected) "4" else "3"),
       svg.strokeLineCap := "round", // Rounded line caps for better appearance
       svg.className := "perimeter-edge",
+      svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ => "none")),
       // Enhanced visual feedback
       onMouseEnter --> { _ =>
         // Optional: Could trigger additional state changes here

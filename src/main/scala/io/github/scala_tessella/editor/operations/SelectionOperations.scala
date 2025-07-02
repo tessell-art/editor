@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.{EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 object SelectionOperations:
@@ -59,20 +60,50 @@ object SelectionOperations:
       }
 
   def handleTilingPolygonClick(polygonId: String): Unit =
-    if !EditorState.isProcessing.now() then
-      EditorState.activeTool.now() match
-        case Some(Tool.ColorPicker) =>
-          val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
-          EditorState.polygonColors.now().get(polyTag).foreach { color =>
-            EditorState.fillColor.set(color)
-            EditorState.activeTool.set(None) // Deactivate after picking
-          }
-        case Some(Tool.SelectByColor) =>
-          selectPolygonsByColor(polygonId)
-        case _ =>
-          EditorState.editorMode.now() match
-            case EditorMode.Select => toggleTilingPolygonSelection(polygonId)
-            case EditorMode.Delete => TessellationOperations.attemptPolygonDeletion(polygonId)
+    EditorState.activeTool.now() match
+      case Some(Tool.Measurement) =>
+        handlePolygonClickForMeasurement(polygonId)
+      case _ =>
+        EditorState.editorMode.now() match
+          case EditorMode.Select =>
+            toggleTilingPolygonSelection(polygonId)
+          case EditorMode.Delete =>
+            TessellationOperations.attemptPolygonDeletion(polygonId)
+
+  private def handlePolygonClickForMeasurement(polygonId: String): Unit =
+    EditorState.currentTiling.now() match
+      case tiling if !tiling.isEmpty =>
+        val polyTag = polygonId.stripPrefix("tiling-poly-")
+
+        tiling.orientedPolygons.find { nodes =>
+          val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+          tag == polyTag
+        } match
+          case Some(polygonNodes) =>
+            EditorState.highlightedPolygonId.set(Some(polygonId))
+
+            val coords = tiling.coordinates
+            val vertices = polygonNodes.map(coords)
+
+            val vertexPoints = polygonNodes.zip(vertices).map { case (node, point) =>
+              ClickablePoint(point, Anchor.Vertex(node))
+            }
+
+            val centerX = vertices.map(_.x).sum / vertices.size
+            val centerY = vertices.map(_.y).sum / vertices.size
+            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center)
+
+            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
+            val midPoints = edges.map { case (node1, node2) =>
+              val p1 = coords(node1)
+              val p2 = coords(node2)
+              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
+            }
+
+            EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)
+
+          case None => ()
+      case _ => ()
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     if !EditorState.isProcessing.now() then
