@@ -159,6 +159,9 @@ object TessellationRenderer:
       svg.cx := x.toString,
       svg.cy := y.toString,
       svg.r := "5",
+      svg.fill := "#00C853",
+      svg.stroke := "black",
+      svg.strokeWidth := "1",
       svg.className := "measurement-start-point",
       onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
     )
@@ -172,7 +175,7 @@ object TessellationRenderer:
       svg.cx := x.toString,
       svg.cy := y.toString,
       svg.r := "5",
-      svg.fill := "#33cc33",
+      svg.fill := "#D50000",
       svg.stroke := "black",
       svg.strokeWidth := "1",
       svg.className := "measurement-end-point",
