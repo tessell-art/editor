@@ -69,7 +69,7 @@ object EditorCanvasComponent:
           child.text <-- EditorState.viewTransform.signal.map(t =>
             f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}%.0f°"
           ),
-          className := "foo-placeholder"
+          className := "zoom-rotation"
         )
       )
     )

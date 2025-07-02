@@ -140,13 +140,13 @@ object TessellationRenderer:
     svg.circle(
       svg.cx := x.toString,
       svg.cy := y.toString,
-      svg.r := "5",
+      svg.r := "4",
       svg.fill := "#ff9500",
       svg.stroke := "black",
       svg.strokeWidth := "1",
       svg.className := "clickable-point",
       onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point)),
-//      svg.cursor := "pointer",
+      svg.style := "cursor: crosshair;",
       svg.pointerEvents := "visible"
     )
 

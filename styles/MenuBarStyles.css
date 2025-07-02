@@ -7,6 +7,8 @@
     padding: 0 10px;
     position: relative;
     z-index: 1000;
+    height: 40px;
+    margin-bottom: 8px;
 }
 
 .menu-toggle {
@@ -16,7 +18,8 @@
     color: white;
     font-size: 24px;
     cursor: pointer;
-    padding: 10px;
+    padding: 0px 10px;
+    margin-top: -4px
 }
 
 .menu-items-container {
@@ -32,10 +35,11 @@
     background: none;
     border: none;
     color: white;
-    padding: 15px 20px;
+    padding: 5px 20px;
     font-size: 16px;
     cursor: pointer;
     font-family: inherit;
+    border-radius: 0px;
 }
 
 .menu-button:hover, .menu-item:hover > .menu-button {
