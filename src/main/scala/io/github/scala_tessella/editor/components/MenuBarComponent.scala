@@ -19,6 +19,11 @@ object MenuBarComponent:
     div(
       navTag(
         className := "menu-bar",
+        img(
+          src := "tessella-logo.svg",
+          alt := "Tessella Logo",
+          className := "menu-bar-logo"
+        ),
         // Hamburger button for small screens
         button(
           className := "menu-toggle",
@@ -180,22 +185,23 @@ object MenuBarComponent:
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
-        h2("About Scala-Tessella Editor"),
+        img(
+          src := "tessella-logo.svg",
+          alt := "Tessella Logo",
+          className := "popup-logo"
+        ),
+
+        h1("Tessella"),
+        h2("Regular polygon tessellation editor"),
         p(
-          "This editor allows you to create, view, and manipulate tessellations interactively. ",
-          "It's built with Scala.js and the UI is powered by the ",
-          a(
-            href := "https://laminar.dev/",
-            target := "_blank",
-            rel := "noopener noreferrer",
-            "Laminar"
-          ),
-          " library."
+          className := "popup-text",
+          "Allows you to create, view, and manipulate edge-to-edge regular polygon tessellations of the plane interactively. ",
         ),
         p(
-          "For more information, tutorials, and to contribute, please visit the official ",
+          className := "popup-text",
+          "The editor it's built on top of the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
           a(
-            href := "https://github.com/scala-tessella/scala-tessella-editor",
+            href := "https://github.com/scala-tessella/tessella",
             target := "_blank", // Opens in a new tab
             rel := "noopener noreferrer",
             "GitHub repository"
@@ -204,7 +210,7 @@ object MenuBarComponent:
         ),
         p(
           className := "popup-close-hint",
-          "Click on the gray area to close this popup."
+          "Click outside of this popup to close it."
         )
       )
     )
