@@ -113,8 +113,8 @@ object MenuBarComponent:
       .map((polys, edges) => polys.nonEmpty || edges.nonEmpty)
 
     menuItem("Edit",
-      dropdownLink("Undo", () => AppState.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink("Redo", () => AppState.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
+      dropdownLink("↶ Undo", () => AppState.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
+      dropdownLink("↷ Redo", () => AppState.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
       dropdownLink("Clear tiling", () => AppState.clearTiling()),
       div(className := "menu-separator"),

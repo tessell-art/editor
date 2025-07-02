@@ -6,6 +6,8 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
 
+import scala.scalajs.js.timers.setTimeout
+
 object ColorPickerPopupComponent:
   def element(isOpen: Var[Boolean], tempColor: Var[(Int, Int, Int)]): Element =
     div(
@@ -23,7 +25,19 @@ object ColorPickerPopupComponent:
           _.events.onChange.map { event =>
             val color = event.target.value
             (color.red, color.green, color.blue)
-          } --> tempColor.writer
+          } --> tempColor.writer,
+          // After the component mounts, find and remove the alpha slider from its shadow DOM
+          onMountCallback(ctx => {
+            setTimeout(0) { // Wait a tick for the shadow DOM to be ready
+              val shadowRoot = ctx.thisNode.ref.shadowRoot
+              if (shadowRoot != null) {
+                val alphaSlider = shadowRoot.querySelector("ui5-slider.ui5-color-picker-alpha-slider")
+                if (alphaSlider != null) {
+                  alphaSlider.parentNode.removeChild(alphaSlider)
+                }
+              }
+            }
+          })
         ),
         div(
           className := "popup-actions",
