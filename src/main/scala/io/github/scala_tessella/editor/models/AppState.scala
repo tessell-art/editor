@@ -5,6 +5,7 @@ import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.UndoManager
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
@@ -14,6 +15,14 @@ case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: Edge,
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode])
+
+enum Anchor:
+
+  case Vertex(node: TilingNode)
+  case Center
+  case MidPoint
+
+case class ClickablePoint(point: Point, anchor: Anchor)
 
 // Editor mode enumeration
 enum EditorMode:

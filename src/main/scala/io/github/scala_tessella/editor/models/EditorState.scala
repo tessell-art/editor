@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
+import io.github.scala_tessella.tessella.Topology.{Node => TilingNode}
 import org.scalajs.dom
 
 object EditorState:
@@ -53,3 +54,9 @@ object EditorState:
 
   // About popup state
   val showAboutPopup: Var[Boolean] = Var(false)
+
+  // Measurement tool state
+  val measurementStartNode: Var[Option[TilingNode]] = Var(None)
+  val highlightedPolygonId: Var[Option[String]] = Var(None)
+  val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
+  val measurementResult: Var[Option[Double]] = Var(None)
