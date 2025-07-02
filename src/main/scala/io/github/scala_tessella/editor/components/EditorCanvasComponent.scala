@@ -15,17 +15,18 @@ object EditorCanvasComponent:
       // Loading indicator
       loadingIndicator(),
       div(
+        className := "file-and-measurement-container",
         div(
-          className := "current-file-name",
+          className := "file-name",
           child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
+        ),
+        div(
+          className := "measurement-result",
+          child.text <-- EditorState.measurementResult.signal.map {
+            case Some(result) => f"Distance: $result%.6f units"
+            case None => ""
+          }
         )
-      ),
-      div(
-        className := "measurement-result",
-        child.text <-- EditorState.measurementResult.signal.map {
-          case Some(result) => f"Distance: $result%.6f units"
-          case None         => ""
-        }
       ),
         // A new wrapper for the SVG and its overlays
       div(

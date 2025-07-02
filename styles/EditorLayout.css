@@ -7,14 +7,25 @@
   align-items: start;
 }
 
-.current-file-name {
+.file-and-measurement-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+  height: 2em;
+  line-height: 2em;
+}
+
+.file-name {
+  text-align: left;
   font-family: monospace;
   font-size: 14px;
   color: #ccc;
 }
 
 .measurement-result {
-  /*font-family: monospace;*/
+  text-align: right;
+  font-family: Arial, sans-serif;
   font-size: 14px;
   color: #ccc;
 }
