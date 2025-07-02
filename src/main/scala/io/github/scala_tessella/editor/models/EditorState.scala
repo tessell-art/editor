@@ -56,7 +56,7 @@ object EditorState:
   val showAboutPopup: Var[Boolean] = Var(false)
 
   // Measurement tool state
-  val measurementStartNode: Var[Option[TilingNode]] = Var(None)
+  val measurementStartPoint: Var[Option[ClickablePoint]] = Var(None)
   val highlightedPolygonId: Var[Option[String]] = Var(None)
   val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
   val measurementResult: Var[Option[Double]] = Var(None)
