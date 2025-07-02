@@ -8,10 +8,23 @@ object SelectionOperations:
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     if !EditorState.isProcessing.now() then
-      EditorState.measurementStartPoint.update {
-        case Some(p) if p == point => None
-        case _                     => Some(point)
-      }
+      val startOpt = EditorState.measurementStartPoint.now()
+      val endOpt = EditorState.measurementEndPoint.now()
+
+      (startOpt, endOpt) match
+        case (None, _) =>
+          // No start point, so set this as the start point
+          EditorState.measurementStartPoint.set(Some(point))
+        case (Some(start), _) if start == point =>
+          // Clicked on the start point, clear both start and end points
+          EditorState.measurementStartPoint.set(None)
+          EditorState.measurementEndPoint.set(None)
+        case (Some(_), Some(end)) if end == point =>
+          // Clicked on the end point, clear only the end point
+          EditorState.measurementEndPoint.set(None)
+        case (Some(_), _) =>
+          // Start point is set, so set this as the end point
+          EditorState.measurementEndPoint.set(Some(point))
 
   def clearAllSelections(): Unit =
     if !EditorState.isProcessing.now() then

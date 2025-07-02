@@ -65,6 +65,13 @@ object TessellationRenderer:
       }
 
     val measurementStartPointDisplay = child.maybe <-- EditorState.measurementStartPoint.signal.map(_.map(renderMeasurementStartPoint))
+    val measurementEndPointDisplay = child.maybe <-- EditorState.measurementEndPoint.signal.map(_.map(renderMeasurementEndPoint))
+    val measurementLineDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
+      .combineWith(EditorState.measurementEndPoint.signal)
+      .map {
+        case (Some(start), Some(end)) => Some(renderMeasurementLine(start, end))
+        case _                        => None
+      }
 
     svg.g(
       svg.className := "tessellation",
@@ -75,7 +82,9 @@ object TessellationRenderer:
       failedPolygonWireframe,
       failedDeletionWireframe,
       clickablePointsDisplay,
-      measurementStartPointDisplay
+      measurementStartPointDisplay,
+      measurementEndPointDisplay,
+      measurementLineDisplay
     )
 
   private def renderNodeLabels(coordinates: Coords): List[Element] =
@@ -152,6 +161,41 @@ object TessellationRenderer:
       svg.r := "5",
       svg.className := "measurement-start-point",
       onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
+    )
+
+  private def renderMeasurementEndPoint(p: ClickablePoint): Element =
+    val canvasCenter = Point(400, 300)
+    val x = canvasCenter.x + p.point.x * 50
+    val y = canvasCenter.y + p.point.y * 50
+
+    svg.circle(
+      svg.cx := x.toString,
+      svg.cy := y.toString,
+      svg.r := "5",
+      svg.fill := "#33cc33",
+      svg.stroke := "black",
+      svg.strokeWidth := "1",
+      svg.className := "measurement-end-point",
+      onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
+    )
+
+  private def renderMeasurementLine(start: ClickablePoint, end: ClickablePoint): Element =
+    val canvasCenter = Point(400, 300)
+    val x1 = canvasCenter.x + start.point.x * 50
+    val y1 = canvasCenter.y + start.point.y * 50
+    val x2 = canvasCenter.x + end.point.x * 50
+    val y2 = canvasCenter.y + end.point.y * 50
+
+    svg.line(
+      svg.x1 := x1.toString,
+      svg.y1 := y1.toString,
+      svg.x2 := x2.toString,
+      svg.y2 := y2.toString,
+      svg.stroke := "#ffffff",
+      svg.strokeWidth := "2",
+      svg.strokeDashArray := "5, 5",
+      svg.className := "measurement-line",
+      svg.pointerEvents := "none"
     )
 
   private def renderTilingPolygon(coordinates: Coords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
