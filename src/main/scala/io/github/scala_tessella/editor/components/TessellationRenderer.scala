@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorState, EditorMode, Tool}
+import io.github.scala_tessella.editor.models.EditorConfig.*
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 
 import com.raquo.laminar.api.L.*
@@ -95,8 +96,8 @@ object TessellationRenderer:
       val vertex = coordinates(node)
 
       // Convert tessella coordinates to canvas coordinates
-      val x = vertex.x * 50 + 400
-      val y = vertex.y * 50 + 300
+      val x = vertex.x * canvasScale + canvasCenterX
+      val y = vertex.y * canvasScale + canvasCenterY
 
       // Offset the label slightly from the vertex to avoid overlap
       val offsetX = x + 8
@@ -133,9 +134,9 @@ object TessellationRenderer:
     }
 
   private def renderClickablePoint(p: ClickablePoint): Element =
-    val canvasCenter = Point(400, 300)
-    val x = canvasCenter.x + p.point.x * 50
-    val y = canvasCenter.y + p.point.y * 50
+    val canvasCenter = Point(canvasCenterX, canvasCenterY)
+    val x = canvasCenter.x + p.point.x * canvasScale
+    val y = canvasCenter.y + p.point.y * canvasScale
 
     svg.circle(
       svg.cx := x.toString,
@@ -151,9 +152,9 @@ object TessellationRenderer:
     )
 
   private def renderMeasurementStartPoint(p: ClickablePoint): Element =
-    val canvasCenter = Point(400, 300)
-    val x = canvasCenter.x + p.point.x * 50
-    val y = canvasCenter.y + p.point.y * 50
+    val canvasCenter = Point(canvasCenterX, canvasCenterY)
+    val x = canvasCenter.x + p.point.x * canvasScale
+    val y = canvasCenter.y + p.point.y * canvasScale
 
     svg.circle(
       svg.cx := x.toString,
@@ -167,9 +168,9 @@ object TessellationRenderer:
     )
 
   private def renderMeasurementEndPoint(p: ClickablePoint): Element =
-    val canvasCenter = Point(400, 300)
-    val x = canvasCenter.x + p.point.x * 50
-    val y = canvasCenter.y + p.point.y * 50
+    val canvasCenter = Point(canvasCenterX, canvasCenterY)
+    val x = canvasCenter.x + p.point.x * canvasScale
+    val y = canvasCenter.y + p.point.y * canvasScale
 
     svg.circle(
       svg.cx := x.toString,
@@ -183,11 +184,11 @@ object TessellationRenderer:
     )
 
   private def renderMeasurementLine(start: ClickablePoint, end: ClickablePoint): Element =
-    val canvasCenter = Point(400, 300)
-    val x1 = canvasCenter.x + start.point.x * 50
-    val y1 = canvasCenter.y + start.point.y * 50
-    val x2 = canvasCenter.x + end.point.x * 50
-    val y2 = canvasCenter.y + end.point.y * 50
+    val canvasCenter = Point(canvasCenterX, canvasCenterY)
+    val x1 = canvasCenter.x + start.point.x * canvasScale
+    val y1 = canvasCenter.y + start.point.y * canvasScale
+    val x2 = canvasCenter.x + end.point.x * canvasScale
+    val y2 = canvasCenter.y + end.point.y * canvasScale
 
     svg.line(
       svg.x1 := x1.toString,
@@ -205,11 +206,11 @@ object TessellationRenderer:
     val center = Point(0, 0)
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
 
-    val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
+    val canvasCenter = Point(center.x * canvasScale + canvasCenterX, center.y * canvasScale + canvasCenterY)
 
     val points = nodes.map(coordinates).map { vertex =>
-      val x = canvasCenter.x + vertex.x * 50
-      val y = canvasCenter.y + vertex.y * 50
+      val x = canvasCenter.x + vertex.x * canvasScale
+      val y = canvasCenter.y + vertex.y * canvasScale
       s"$x,$y"
     }.mkString(" ")
 
@@ -289,10 +290,10 @@ object TessellationRenderer:
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates
-    val x1 = vertex1.x * 50 + 400
-    val y1 = vertex1.y * 50 + 300
-    val x2 = vertex2.x * 50 + 400
-    val y2 = vertex2.y * 50 + 300
+    val x1 = vertex1.x * canvasScale + canvasCenterX
+    val y1 = vertex1.y * canvasScale + canvasCenterY
+    val x2 = vertex2.x * canvasScale + canvasCenterX
+    val y2 = vertex2.y * canvasScale + canvasCenterY
 
     svg.line(
       svg.x1 := x1.toString,

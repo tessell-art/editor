@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 import org.scalajs.dom
@@ -42,7 +42,7 @@ object SvgExporter:
     val minY = allPoints.map(_.y).min
     val maxY = allPoints.map(_.y).max
 
-    val (scale, strokeWidth, strokeWidthPeri) = (50.0, 1.5, 10.5)
+    val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
     val padding = 20.0
 
     val width = (maxX - minX) * scale + 2 * padding

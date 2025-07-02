@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.operations.TessellationOperations.selectPolygon
 
@@ -16,7 +16,7 @@ object PolygonPaletteComponent:
 //      h2("Polygon Shape"),
       div(
         className := "palette-grid",
-        EditorState.polygonSides.map(sides => polygonButton(sides)),
+        EditorConfig.polygonSides.map(sides => polygonButton(sides)),
         customPolygonSelector()
       ),
       div(

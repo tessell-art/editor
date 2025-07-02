@@ -1,6 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.EditorConfig.*
+
 
 object ViewOperations:
 
@@ -8,7 +10,7 @@ object ViewOperations:
     val tiling = EditorState.currentTiling.now()
     if tiling.isEmpty then return
 
-    val coords = tiling.coordinates.values.map(p => (p.x * 50, p.y * 50))
+    val coords = tiling.coordinates.values.map(p => (p.x * canvasScale, p.y * canvasScale))
     if coords.isEmpty then return
 
     EditorState.canvasElementRef.now().foreach { canvasElement =>
@@ -47,8 +49,8 @@ object ViewOperations:
           val tilingCenterX = (minX + maxX) / 2.0
           val tilingCenterY = (minY + maxY) / 2.0
 
-          val tilingCenterOnCanvasX = tilingCenterX + 400
-          val tilingCenterOnCanvasY = tilingCenterY + 300
+          val tilingCenterOnCanvasX = tilingCenterX + canvasCenterX
+          val tilingCenterOnCanvasY = tilingCenterY + canvasCenterY
 
           val newPanX = canvasWidth / 2.0 - tilingCenterOnCanvasX * newScale
           val newPanY = canvasHeight / 2.0 - tilingCenterOnCanvasY * newScale
@@ -69,8 +71,8 @@ object ViewOperations:
     val panY = currentTransform.panY
     val rotationRad = currentTransform.rotationDegrees * Math.PI / 180
 
-    val viewCenterX = 400.0
-    val viewCenterY = 300.0
+    val viewCenterX = canvasCenterX
+    val viewCenterY = canvasCenterY
 
     // Inverse transform of view center to get world point
     val p_after_inv_pan_x = viewCenterX - panX

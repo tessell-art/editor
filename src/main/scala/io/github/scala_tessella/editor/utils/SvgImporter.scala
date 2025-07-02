@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
-
+import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import io.github.scala_tessella.tessella.Topology.{Edge, Node}
@@ -94,7 +93,7 @@ object SvgImporter:
       if tilingPolygons.isEmpty && perimeterNodes.isEmpty then
         throw new Exception("No valid polygons found in SVG.")
 
-      val scale = 50.0
+      val scale = EditorConfig.canvasScale
 
       val minSvgX = if (svgCoords.isEmpty) 0.0 else svgCoords.values.map(_._1).min
       val minSvgY = if (svgCoords.isEmpty) 0.0 else svgCoords.values.map(_._2).min

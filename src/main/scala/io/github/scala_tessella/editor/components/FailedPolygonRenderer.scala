@@ -1,11 +1,12 @@
-
 package io.github.scala_tessella.editor.components
+
+import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.models.EditorConfig.*
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
-import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.tessella.IncrementalTiling
 
 import scala.math.*
@@ -21,8 +22,8 @@ object FailedPolygonRenderer:
       val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
       val vertex1 = tiling.coordinates(edge.lesserNode)
       val vertex2 = tiling.coordinates(edge.greaterNode)
-      val attachmentX = (vertex1.x + vertex2.x) / 2 * 50 + 400
-      val attachmentY = (vertex1.y + vertex2.y) / 2 * 50 + 300
+      val attachmentX = (vertex1.x + vertex2.x) / 2 * canvasScale + canvasCenterX
+      val attachmentY = (vertex1.y + vertex2.y) / 2 * canvasScale + canvasCenterY
 
       // Get flip info for animation direction
       val (_, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
@@ -59,17 +60,13 @@ object FailedPolygonRenderer:
 
       // Calculate polygon points in canvas coordinates
       val center = Point(0, 0)
-      val canvasCenter = Point(center.x * 50 + 400, center.y * 50 + 300)
+      val canvasCenter = Point(center.x * canvasScale + canvasCenterX, center.y * canvasScale + 300)
 
       val points = polygonNodes.map(coordinates).map { vertex =>
-        val x = canvasCenter.x + vertex.x * 50
-        val y = canvasCenter.y + vertex.y * 50
+        val x = canvasCenter.x + vertex.x * canvasScale
+        val y = canvasCenter.y + vertex.y * canvasScale
         s"$x,$y"
       }.mkString(" ")
-
-      // Calculate polygon center for animation origin
-      val centerX = polygonNodes.map(coordinates).map(_.x).sum / polygonNodes.length * 50 + 400
-      val centerY = polygonNodes.map(coordinates).map(_.y).sum / polygonNodes.length * 50 + 300
 
       svg.g(
         svg.polygon(
@@ -80,15 +77,6 @@ object FailedPolygonRenderer:
           svg.strokeDashArray := "8,4",
           svg.opacity := "0.9",
           svg.className := "failed-deletion-wireframe",
-//          // Pulsing animation to indicate deletion attempt
-//          svg.animateTransform(
-//            svg.attributeName := "transform",
-//            svg.attributeType := "XML",
-//            svg.typ := "scale",
-//            svg.values := "1;0.9;1",
-//            svg.dur := "1.5s",
-//            svg.repeatCount := "indefinite"
-//          )
         )
       )
     } catch {
@@ -139,8 +127,8 @@ object FailedPolygonRenderer:
       val angle = startAngle + winding * i * angleStep
       val x = centerX + radius * cos(angle)
       val y = centerY + radius * sin(angle)
-      val canvasX = x * 50 + 400
-      val canvasY = y * 50 + 300
+      val canvasX = x * canvasScale + canvasCenterX
+      val canvasY = y * canvasScale + canvasCenterY
       (canvasX, canvasY)
     }.toVector
 
