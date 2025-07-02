@@ -1,6 +1,6 @@
 /* Responsive design */
 /* This breakpoint handles the switch to a stacked, mobile-friendly layout */
-@media (max-width: 992px) { /* Changed from 1200px to apply stacking later */
+@media (max-width: 1200px) { /* Changed from 1200px to apply stacking later */
   .editor-layout {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -18,6 +18,11 @@
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
     max-width: none;
   }
+
+  .responsive-control {
+    display: none;
+  }
+
 }
 
 @media (max-width: 768px) {

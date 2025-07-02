@@ -142,18 +142,18 @@ object CanvasControlComponent:
           //        className := "visualization-controls",
           button(
             child.text <-- EditorState.showNodeLabels.signal.map(show =>
-              if show then "Hide Labels" else "Show Labels"
+              if show then "Labels: ON" else "Labels: OFF"
             ),
             className <-- EditorState.showNodeLabels.signal.map(show =>
-              if show then "toggle-btn active" else "toggle-btn"
+              if show then "toggle-btn active responsive-control" else "toggle-btn responsive-control"
             ),
             onClick --> { _ => AppState.toggleNodeLabels() }
           ),
           button(
             child.text <-- EditorState.strictness.signal.map(s => s"Validation: ${if s == Strictness.STRICT then "ON" else "OFF"}"),
             className <-- EditorState.strictness.signal.map {
-              case Strictness.STRICT => "toggle-btn"
-              case _                 => "toggle-btn active"
+              case Strictness.STRICT => "toggle-btn active responsive-control"
+              case _                 => "toggle-btn responsive-control"
             },
             onClick --> { _ => AppState.toggleStrictness() },
             title <-- EditorState.strictness.signal.map {
