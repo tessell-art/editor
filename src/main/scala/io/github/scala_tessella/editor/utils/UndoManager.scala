@@ -34,16 +34,13 @@ object UndoManager:
       // A new action clears the redo history
       redoStack.clear()
 
-      // Limit the stack size to MAX_UNDO_DEPTH
+      // Limit the stack size by removing the oldest elements
       if undoStack.size > MAX_UNDO_DEPTH then
-        val tempStack = mutable.Stack[AppStateSnapshot]()
-        for (_ <- 0 until MAX_UNDO_DEPTH) {
-          if undoStack.nonEmpty then
-            tempStack.push(undoStack.pop())
-        }
+        val toRemove = undoStack.size - MAX_UNDO_DEPTH
+        // Convert to a temporary list to efficiently remove from the bottom (oldest entries)
+        val tempBuffer = undoStack.toList
         undoStack.clear()
-        while tempStack.nonEmpty do
-          undoStack.push(tempStack.pop())
+        undoStack.pushAll(tempBuffer.take(MAX_UNDO_DEPTH))
 
       updateUndoRedoSignals()
 
