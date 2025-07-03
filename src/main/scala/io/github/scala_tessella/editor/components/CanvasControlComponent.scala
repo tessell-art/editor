@@ -120,7 +120,7 @@ object CanvasControlComponent:
                 case _ => Some(Tool.Measurement)
               }
             },
-            title := "Activate measure mode"
+            title := "Activate measure mode to calculate the distance between two points"
           ),
           button(
             child.text <-- EditorState.editorMode.signal.map {
@@ -147,7 +147,10 @@ object CanvasControlComponent:
             className <-- EditorState.showNodeLabels.signal.map(show =>
               if show then "toggle-btn active responsive-control" else "toggle-btn responsive-control"
             ),
-            onClick --> { _ => AppState.toggleNodeLabels() }
+            onClick --> { _ => AppState.toggleNodeLabels() },
+            title <-- EditorState.showNodeLabels.signal.map { show =>
+              if show then "Click to hide the node labels" else "Click to show the node labels"
+            }
           ),
           button(
             child.text <-- EditorState.strictness.signal.map(s => s"Validation: ${if s == Strictness.STRICT then "ON" else "OFF"}"),
@@ -157,8 +160,8 @@ object CanvasControlComponent:
             },
             onClick --> { _ => AppState.toggleStrictness() },
             title <-- EditorState.strictness.signal.map {
-              case Strictness.STRICT => "Current mode is STRICT: prevents adding a polygon that would invalidate the tessellation. Click to switch to CROSSING."
-              case _                 => "Current mode is CROSSING: allows adding a polygon touching and crossing the edges of the perimeter. Click to switch to STRICT."
+              case Strictness.STRICT => "Validation ON: adding a polygon touching and crossing the edges of the perimeter is not allowed. Click to switch OFF."
+              case _                 => "Validation OFF: without validation it is possible to add a polygon that would invalidate the tessellation. Click to switch ON."
             }
           ),
           UndoComponent.element
