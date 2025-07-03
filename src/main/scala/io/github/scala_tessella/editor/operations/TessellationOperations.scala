@@ -142,7 +142,7 @@ object TessellationOperations:
                 val idx = errMsg.indexOf("See SVG")
                 if idx >= 0 then errMsg.substring(0, idx)
                 else errMsg
-              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF if you want to proceed. $truncated", Some(placement))
+              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated", Some(placement))
             else
               ErrorOperations.showError(errMsg)
         }
