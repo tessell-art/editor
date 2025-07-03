@@ -4,7 +4,9 @@ import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.tessella.IncrementalTiling
 import munit.FunSuite
 
-class UndoManagerSpec extends FunSuite {
+class UndoManagerSpec extends FunSuite:
+
+  private val MAX_UNDO_DEPTH = 10
 
   override def beforeEach(context: BeforeEach): Unit = {
     UndoManager.clearHistory()
@@ -80,4 +82,41 @@ class UndoManagerSpec extends FunSuite {
     assertEquals(UndoManager.canUndo.now(), false)
     assertEquals(UndoManager.canRedo.now(), false)
   }
-}
+
+  test("undo stack size should not exceed MAX_UNDO_DEPTH") {
+    for (i <- 1 to MAX_UNDO_DEPTH + 5) {
+      UndoManager.saveState()
+      EditorState.selectedPolygon.set(Some(i))
+    }
+    assertEquals(UndoManager.undoCount.now(), MAX_UNDO_DEPTH)
+  }
+
+  test("oldest state should be discarded when MAX_UNDO_DEPTH is exceeded") {
+    // This state will be pushed out of the stack
+    val discardedTiling = TilingGenerator.createTilingFromPolygon(3).get
+    UndoManager.saveState()
+    EditorState.currentTiling.set(discardedTiling)
+
+    // This is the first state that should be kept
+    val firstKeptTiling = TilingGenerator.createTilingFromPolygon(4).get
+    UndoManager.saveState()
+    EditorState.currentTiling.set(firstKeptTiling)
+
+    // Fill the undo stack up to MAX_UNDO_DEPTH
+    for (i <- 1 to MAX_UNDO_DEPTH) {
+      UndoManager.saveState()
+      EditorState.currentTiling.set(TilingGenerator.createTilingFromPolygon(i + 5).get)
+    }
+
+    assertEquals(UndoManager.undoCount.now(), MAX_UNDO_DEPTH)
+
+    // Undo all operations
+    for (_ <- 1 to MAX_UNDO_DEPTH) {
+      UndoManager.undo()
+    }
+
+    // The current state should be the first one that was kept
+    assertEquals(EditorState.currentTiling.now(), firstKeptTiling)
+    // The discarded state is not restored
+    assertNotEquals(EditorState.currentTiling.now(), discardedTiling)
+  }
