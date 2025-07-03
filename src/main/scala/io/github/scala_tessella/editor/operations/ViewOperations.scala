@@ -5,6 +5,7 @@ import io.github.scala_tessella.editor.models.EditorConfig.*
 import io.github.scala_tessella.editor.utils.TessellationGeometry.maybeBounds
 
 import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.tessella.Geometry.Radian.TAU
 
 object ViewOperations:
 
@@ -22,7 +23,7 @@ object ViewOperations:
       val currentTransform = EditorState.viewTransform.now()
 
       if canvasWidth > 0 && canvasHeight > 0 then
-        val rad = currentTransform.rotationDegrees * Math.PI / 180
+        val rad = currentTransform.rotationDegrees * TAU.toDouble / 360
         val cosRad = Math.cos(rad)
         val sinRad = Math.sin(rad)
 
@@ -68,7 +69,7 @@ object ViewOperations:
     val scale = currentTransform.scale
     val panX = currentTransform.panX
     val panY = currentTransform.panY
-    val rotationRad = currentTransform.rotationDegrees * Math.PI / 180
+    val rotationRad = currentTransform.rotationDegrees * TAU.toDouble / 360
 
     val viewCenterX = canvasCenterX
     val viewCenterY = canvasCenterY
@@ -91,7 +92,7 @@ object ViewOperations:
 
     // Calculate new pan with new rotation
     val newRotationDegrees = currentTransform.rotationDegrees + delta
-    val newRotationRad = newRotationDegrees * Math.PI / 180
+    val newRotationRad = newRotationDegrees * TAU.toDouble / 360
 
     // Forward transform the world point with new rotation
     val cos_new_rot = Math.cos(newRotationRad)

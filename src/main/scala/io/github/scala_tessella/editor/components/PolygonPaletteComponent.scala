@@ -6,8 +6,9 @@ import io.github.scala_tessella.editor.operations.TessellationOperations.selectP
 
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
+import io.github.scala_tessella.tessella.Geometry.Radian.{TAU, TAU_2}
 
-import scala.math.{Pi, cos, sin}
+import scala.math.{cos, sin}
 
 object PolygonPaletteComponent:
   def element: Element =
@@ -100,9 +101,9 @@ object PolygonPaletteComponent:
     val radius = size * 0.35
 
     val points = (0 until sides).map { i =>
-      val angle = (2 * Pi * i / sides) - (Pi / 2) // Start from top
-      val x = centerX + radius * cos(angle)
-      val y = centerY + radius * sin(angle)
+      val angle = (TAU * i / sides) - TAU_2 // Start from top
+      val x = centerX + radius * cos(angle.toDouble)
+      val y = centerY + radius * sin(angle.toDouble)
       s"$x,$y"
     }.mkString(" ")
 

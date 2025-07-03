@@ -6,6 +6,7 @@ import io.github.scala_tessella.editor.utils.TessellationGeometry.tilingPointToC
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.tessella.Geometry.Radian.{TAU, TAU_2}
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import io.github.scala_tessella.tessella.IncrementalTiling
 
@@ -82,22 +83,22 @@ object FailedPolygonRenderer:
 
     // Calculate the center of the failed polygon
     val sideLength = edgeLength
-    val apothem = sideLength / (2 * tan(Pi / polygonSides))
+    val apothem = sideLength / (2 * tan(TAU_2.toDouble / polygonSides))
 
     val centerX = (vertex1.x + vertex2.x) / 2 + perpX * apothem
     val centerY = (vertex1.y + vertex2.y) / 2 + perpY * apothem
 
     // Generate polygon vertices around the calculated center
-    val angleStep = 2 * Pi / polygonSides
-    val radius = sideLength / (2 * sin(Pi / polygonSides))
+    val angleStep = TAU.toDouble / polygonSides
+    val radius = sideLength / (2 * sin(TAU_2.toDouble / polygonSides))
     val winding = if wasFlipped then -1 else 1
     val edgeAngle = atan2(edgeUnitY, edgeUnitX)
     val isOdd = polygonSides % 2 == 1
 
-    val baseOffset = -Math.PI / polygonSides
+    val baseOffset = -TAU_2.toDouble / polygonSides
     val oddHalfStep = if isOdd && !wasFlipped then angleStep / 2 else 0.0
 
-    val startAngle = edgeAngle + Math.PI / 2 + baseOffset + oddHalfStep
+    val startAngle = edgeAngle + TAU_2.toDouble / 2 + baseOffset + oddHalfStep
 
     (0 until polygonSides).map { i =>
       val angle = startAngle + winding * i * angleStep
