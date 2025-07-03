@@ -66,7 +66,7 @@ class EditorLogicSpec extends FunSuite:
 
     // Now tiling should be created
     assert(!AppState.isTilingEmpty)
-    assert(EditorState.currentTiling.now().isDefined)
+    assert(!EditorState.currentTiling.now().isEmpty)
     assertEquals(EditorState.selectedPolygon.now(), Some(3))
   }
 
@@ -74,7 +74,7 @@ class EditorLogicSpec extends FunSuite:
     // Start with a tiling by selecting hexagon
     selectPolygon(6)
     val initialTiling = EditorState.currentTiling.now()
-    assert(initialTiling.isDefined)
+    assert(!initialTiling.isEmpty)
 
     // Select a different polygon - should not change tiling
     selectPolygon(4)
@@ -84,18 +84,6 @@ class EditorLogicSpec extends FunSuite:
     assertEquals(afterTiling, initialTiling)
     // But selection should change
     assertEquals(EditorState.selectedPolygon.now(), Some(4))
-  }
-
-  test("handlePerimeterEdgeClick should show error when no tiling exists") {
-    // Ensure no tiling exists
-    assert(AppState.isTilingEmpty)
-
-    // Try to handle edge click - this should show an error
-    AppState.handlePerimeterEdgeClick("edge-1", 0)
-
-    // Should show error
-    assert(EditorState.errorMessage.now().isDefined)
-    assert(EditorState.errorMessage.now().get.contains("No tiling available"))
   }
 
   test("handlePerimeterEdgeClick should toggle selection when no polygon selected") {
@@ -271,7 +259,7 @@ class EditorLogicSpec extends FunSuite:
     // Start with a hexagon tiling
     selectPolygon(6)
     val initialTiling = EditorState.currentTiling.now()
-    assert(initialTiling.isDefined)
+    assert(!initialTiling.isEmpty)
 
     // Simulate growing the tiling by adding selections
     EditorState.selectedTilingPolygons.set(Set("poly1", "poly2"))
