@@ -9,6 +9,9 @@ import io.github.scala_tessella.tessella.Geometry.Radian.TAU
 
 object ViewOperations:
 
+  private def radFromDegrees(degrees: Double): Double =
+    degrees * TAU.toDouble / 360
+
   def fitTilingToCanvas(): Unit =
     val tiling = EditorState.currentTiling.now()
     if tiling.isEmpty then return
@@ -23,9 +26,9 @@ object ViewOperations:
       val currentTransform = EditorState.viewTransform.now()
 
       if canvasWidth > 0 && canvasHeight > 0 then
-        val rad = currentTransform.rotationDegrees * TAU.toDouble / 360
-        val cosRad = Math.cos(rad)
-        val sinRad = Math.sin(rad)
+        val rotationRad = radFromDegrees(currentTransform.rotationDegrees)
+        val cosRad = Math.cos(rotationRad)
+        val sinRad = Math.sin(rotationRad)
 
         val rotatedCoords = coords.map { case (x, y) =>
           Point(x * cosRad - y * sinRad, x * sinRad + y * cosRad)
@@ -69,7 +72,7 @@ object ViewOperations:
     val scale = currentTransform.scale
     val panX = currentTransform.panX
     val panY = currentTransform.panY
-    val rotationRad = currentTransform.rotationDegrees * TAU.toDouble / 360
+    val rotationRad = radFromDegrees(currentTransform.rotationDegrees)
 
     val viewCenterX = canvasCenterX
     val viewCenterY = canvasCenterY
@@ -92,7 +95,7 @@ object ViewOperations:
 
     // Calculate new pan with new rotation
     val newRotationDegrees = currentTransform.rotationDegrees + delta
-    val newRotationRad = newRotationDegrees * TAU.toDouble / 360
+    val newRotationRad = radFromDegrees(newRotationDegrees)
 
     // Forward transform the world point with new rotation
     val cos_new_rot = Math.cos(newRotationRad)
