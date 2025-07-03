@@ -11,7 +11,6 @@ object EditorCanvasComponent:
       className := "canvas-container",
       //      h2("Canvas"),
       CanvasControlComponent.element,
-      ErrorMessageComponent.element,
       // Loading indicator
       loadingIndicator(),
       div(
@@ -31,6 +30,7 @@ object EditorCanvasComponent:
         // A new wrapper for the SVG and its overlays
       div(
         className := "editor-canvas-wrapper",
+        ErrorMessageComponent.element,
         svg.svg(
           svg.className := "editor-canvas",
           // The fixed width and height have been removed to allow CSS to control the size
