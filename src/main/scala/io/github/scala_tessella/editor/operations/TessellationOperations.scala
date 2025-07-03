@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strictness}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.ErrorOperations.showError
-import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager, AsyncUtils}
+import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
+import io.github.scala_tessella.editor.utils.{AsyncUtils, TilingGenerator, UndoManager}
 
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
@@ -141,7 +142,7 @@ object TessellationOperations:
                 val idx = errMsg.indexOf("See SVG")
                 if idx >= 0 then errMsg.substring(0, idx)
                 else errMsg
-              ErrorOperations.showError(s"Cannot grow edge with $polygonSides-sided polygon: $truncated", Some(placement))
+              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF if you want to proceed. $truncated", Some(placement))
             else
               ErrorOperations.showError(errMsg)
         }

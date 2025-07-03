@@ -7,15 +7,27 @@ import scala.util.Try
 
 object ErrorOperations:
 
+  private var messageTimeoutId: Option[Int] = None
+
   def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
+    // Cancel any existing timeout for the error message
+    messageTimeoutId.foreach(id => dom.window.clearTimeout(id))
+
     EditorState.errorMessage.set(Some(message))
     EditorState.failedPlacement.set(placement)
     EditorState.failedDeletion.set(deletion)
 
     Try {
       if (js.typeOf(js.Dynamic.global.window) != "undefined") {
-        dom.window.setTimeout(() => {
+        // Timeout for the error message (10 seconds)
+        val newTimeoutId = dom.window.setTimeout(() => {
           EditorState.errorMessage.set(None)
+          messageTimeoutId = None
+        }, 10000)
+        messageTimeoutId = Some(newTimeoutId)
+
+        // Timeout for the visual feedback (3 seconds)
+        dom.window.setTimeout(() => {
           EditorState.failedPlacement.set(None)
           EditorState.failedDeletion.set(None)
         }, 3000)
@@ -25,6 +37,8 @@ object ErrorOperations:
     }
 
   def clearError(): Unit =
+    messageTimeoutId.foreach(id => dom.window.clearTimeout(id))
+    messageTimeoutId = None
     EditorState.errorMessage.set(None)
     EditorState.failedPlacement.set(None)
     EditorState.failedDeletion.set(None)
