@@ -1,6 +1,8 @@
 package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
+import io.github.scala_tessella.editor.utils.TessellationGeometry.maybeBounds
+
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 import org.scalajs.dom
@@ -34,21 +36,17 @@ object SvgExporter:
 
   private def generateSvgContent(tiling: IncrementalTiling): String =
     val coordinates = tiling.coordinates
-    if (coordinates.isEmpty) return ""
+    if coordinates.isEmpty then return ""
 
-    val allPoints = coordinates.values.toList
-    val minX = allPoints.map(_.x).min
-    val maxX = allPoints.map(_.x).max
-    val minY = allPoints.map(_.y).min
-    val maxY = allPoints.map(_.y).max
+    val bounds = coordinates.values.toList.maybeBounds.get
 
     val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
     val padding = 20.0
 
-    val width = (maxX - minX) * scale + 2 * padding
-    val height = (maxY - minY) * scale + 2 * padding
-    val offsetX = -minX * scale + padding
-    val offsetY = -minY * scale + padding
+    val width = (bounds.maxX - bounds.minX) * scale + 2 * padding
+    val height = (bounds.maxY - bounds.minY) * scale + 2 * padding
+    val offsetX = -bounds.minX * scale + padding
+    val offsetY = -bounds.minY * scale + padding
 
     val polygonsXml = tiling.orientedPolygons.map { nodes =>
       val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")

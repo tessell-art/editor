@@ -2,7 +2,9 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.models.EditorConfig.*
+import io.github.scala_tessella.editor.utils.TessellationGeometry.maybeBounds
 
+import io.github.scala_tessella.tessella.Geometry.Point
 
 object ViewOperations:
 
@@ -25,16 +27,13 @@ object ViewOperations:
         val sinRad = Math.sin(rad)
 
         val rotatedCoords = coords.map { case (x, y) =>
-          (x * cosRad - y * sinRad, x * sinRad + y * cosRad)
+          Point(x * cosRad - y * sinRad, x * sinRad + y * cosRad)
         }
 
-        val minX = rotatedCoords.map(_._1).min
-        val maxX = rotatedCoords.map(_._1).max
-        val minY = rotatedCoords.map(_._2).min
-        val maxY = rotatedCoords.map(_._2).max
+        val bounds = rotatedCoords.toList.maybeBounds.get
 
-        val tilingWidth = maxX - minX
-        val tilingHeight = maxY - minY
+        val tilingWidth = bounds.maxX - bounds.minX
+        val tilingHeight = bounds.maxY - bounds.minY
 
         if tilingWidth > 0 || tilingHeight > 0 then
           val padding = 40.0
@@ -46,8 +45,8 @@ object ViewOperations:
           val scaleY = (canvasHeight - padding * 2) / safeTilingHeight
           val newScale = Math.min(scaleX, scaleY)
 
-          val tilingCenterX = (minX + maxX) / 2.0
-          val tilingCenterY = (minY + maxY) / 2.0
+          val tilingCenterX = (bounds.minX + bounds.maxX) / 2.0
+          val tilingCenterY = (bounds.minY + bounds.maxY) / 2.0
 
           val tilingCenterOnCanvasX = tilingCenterX + canvasCenterX
           val tilingCenterOnCanvasY = tilingCenterY + canvasCenterY

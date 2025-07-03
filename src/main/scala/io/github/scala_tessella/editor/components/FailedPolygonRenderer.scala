@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
-import io.github.scala_tessella.editor.models.EditorConfig.*
+import io.github.scala_tessella.editor.utils.TessellationGeometry.tilingPointToCanvasView
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
+import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import io.github.scala_tessella.tessella.IncrementalTiling
@@ -18,17 +18,6 @@ object FailedPolygonRenderer:
       val wireframePoints = calculateWireframePoints(placement)
       val points = wireframePoints.map { case (x, y) => s"$x,$y" }.mkString(" ")
 
-      // Find transform origin at the edge midpoint in canvas coordinates
-      val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
-      val vertex1 = tiling.coordinates(edge.lesserNode)
-      val vertex2 = tiling.coordinates(edge.greaterNode)
-      val attachmentX = (vertex1.x + vertex2.x) / 2 * canvasScale + canvasCenterX
-      val attachmentY = (vertex1.y + vertex2.y) / 2 * canvasScale + canvasCenterY
-
-      // Get flip info for animation direction
-      val (_, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
-      val scaleValues = if wasFlipped then "1;0.95;1" else "1;1.05;1"
-
       svg.g(
         // Use CSS for transform origin so animation will scale from edge
         //        svg.style := s"transform-origin: $attachmentX $attachmentY;",
@@ -40,14 +29,6 @@ object FailedPolygonRenderer:
           svg.strokeDashArray := "5,5",
           svg.opacity := "0.8",
           svg.className := "failed-polygon-wireframe",
-          //          svg.animateTransform(
-          //            svg.attributeName := "transform",
-          //            svg.attributeType := "XML",
-          //            svg.typ := "scale",
-          //            svg.values := scaleValues,
-          //            svg.dur := "1s",
-          //            svg.repeatCount := "indefinite"
-          //          )
         )
       )
     } catch {
@@ -56,15 +37,10 @@ object FailedPolygonRenderer:
 
   def renderFailedDeletion(deletion: FailedPolygonDeletion, coordinates: Coords): Element =
     try {
-      val FailedPolygonDeletion(polygonId, polygonNodes) = deletion
-
-      // Calculate polygon points in canvas coordinates
-      val center = Point(0, 0)
-      val canvasCenter = Point(center.x * canvasScale + canvasCenterX, center.y * canvasScale + 300)
+      val FailedPolygonDeletion(_, polygonNodes) = deletion
 
       val points = polygonNodes.map(coordinates).map { vertex =>
-        val x = canvasCenter.x + vertex.x * canvasScale
-        val y = canvasCenter.y + vertex.y * canvasScale
+        val (x, y) = tilingPointToCanvasView(vertex)
         s"$x,$y"
       }.mkString(" ")
 
@@ -127,9 +103,7 @@ object FailedPolygonRenderer:
       val angle = startAngle + winding * i * angleStep
       val x = centerX + radius * cos(angle)
       val y = centerY + radius * sin(angle)
-      val canvasX = x * canvasScale + canvasCenterX
-      val canvasY = y * canvasScale + canvasCenterY
-      (canvasX, canvasY)
+      tilingPointToCanvasView(Point(x, y))
     }.toVector
 
   private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: IncrementalTiling): ((Double, Double), Boolean) =
