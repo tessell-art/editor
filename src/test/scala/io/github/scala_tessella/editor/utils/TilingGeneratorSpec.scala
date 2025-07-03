@@ -27,3 +27,16 @@ class TilingGeneratorSpec extends FunSuite:
     val largePolygon = TilingGenerator.createTilingFromPolygon(42)
     assert(largePolygon.isDefined || largePolygon.isEmpty)
   }
+
+  test("createTilingFromPolygon should return None for invalid polygon sides") {
+    // Test with less than 3 sides
+    val invalidTiling = TilingGenerator.createTilingFromPolygon(2)
+    assert(invalidTiling.isEmpty)
+
+    val zeroSideTiling = TilingGenerator.createTilingFromPolygon(0)
+    assert(zeroSideTiling.isEmpty)
+
+    val negativeSideTiling = TilingGenerator.createTilingFromPolygon(-1)
+    assert(negativeSideTiling.isEmpty)
+  }
+
