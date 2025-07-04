@@ -39,13 +39,13 @@
 
 .polygon-btn.selected {
   border-color: #042A79;
-  background-color: #042A79;
+  background-color: #20A4BE;
   color: #fff;
   box-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
 }
 
 .polygon-btn.selected:hover {
-  background-color: #00007F;
+  background-color: #18788C;
   border-color: #00007F;
 }
 
