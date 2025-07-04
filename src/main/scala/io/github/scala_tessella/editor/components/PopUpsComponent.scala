@@ -175,6 +175,10 @@ object PopUpsComponent:
         ),
 
         h1("Tessella"),
+        p(
+          className := "about-version",
+          "Editor v0.1.0"
+        ),
         h2("Regular polygon tessellation editor"),
         p(
           className := "popup-text",

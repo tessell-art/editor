@@ -59,3 +59,9 @@
 .shortcuts-table > tbody > tr > td {
     padding: 0 5px;
 }
+
+.about-version {
+    font-size: 0.8em;
+    color: white;
+    margin-top: -50px;
+}
