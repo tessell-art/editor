@@ -221,7 +221,10 @@ object MenuBarComponent:
             li("Delete Mode: click on any perimeter polygon to remove it."),
             li("Use ", kbd("Esc"), " to deselect everything."),
             li("Use the Select button at the bottom of the palette to select all the polygons with the same shape."),
-            li("Use the Select by color tool to select all the polygons with the same color.")
+            li(
+              "Use the ",
+              IconsSVG.selectByColorIcon,
+              " ", i("Select by color"), " tool to select all the polygons with the same color.")
           ),
           h3("Navigating the Canvas"),
           ul(
@@ -235,12 +238,19 @@ object MenuBarComponent:
           ul(
             li("To change the color of polygons, select one or more polygons, then go to 'Edit' -> 'Fill Color...' to open the color picker."),
             li("The new color will be applied to all currently selected polygons and will be used for any new polygons you add."),
-            li("Use the Color picker tool to select a fill color from an existing polygon.")
+            li(
+              "Use the ",
+              IconsSVG.eyeDropperIcon,
+              " ", i("Color picker"), " tool to select a fill color from an existing polygon.")
           ),
           h3("Measurement"),
           ul(
             li("By constraint, each regular polygon side in the tiling has unit length, that lenght equal to 1."),
-            li("Use the Mesurement tool to calculate the distance between two key points (vertex, mid-side, center) of the polygons."),
+            li(
+              "Use the ",
+              IconsSVG.rulerIcon,
+              " ", i("Measurement"), " tool to calculate the unit distance between two key points (vertex, mid-side, center) of the polygons."
+            ),
             li(
               "When you click on a polygon the key points will be highlighted, ",
               "click one to choose the (green) start and repeat to choose the (red) end. ",
