@@ -70,7 +70,7 @@ object MenuBarComponent:
     )
 
   // A helper for creating a dropdown link with dynamic text
-  private def dropdownLinkDynamic[T](title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true), shortcut: Option[String] = None): Element =
+  private def dropdownLinkDynamic(title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true), shortcut: Option[String] = None): Element =
     a(
       href := "#",
       onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
@@ -245,7 +245,7 @@ object MenuBarComponent:
           ),
           h3("Measurement"),
           ul(
-            li("By constraint, each regular polygon side in the tiling has unit length, that lenght equal to 1."),
+            li("By constraint, each regular polygon side in the tiling has unit length, that is length equal to 1."),
             li(
               "Use the ",
               IconsSVG.rulerIcon,

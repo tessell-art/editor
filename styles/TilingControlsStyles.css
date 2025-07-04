@@ -35,9 +35,9 @@
 
 .toggle-btn {
   padding: 8px 16px;
-  border: 2px solid #646cff;
+  border: 2px solid #20A4BE;
   background: transparent;
-  color: #646cff;
+  color: #20A4BE;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -48,13 +48,14 @@
 }
 
 .toggle-btn.active {
-  background: #646cff;
+  background: #20A4BE;
   color: white;
 }
 
 .toggle-btn.mode-select {
   background-color: #4CAF50;
   border-color: #45a049;
+  color: white;
 }
 
 .toggle-btn.mode-delete {
