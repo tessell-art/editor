@@ -47,6 +47,11 @@
     color: #666;
     text-align: center;
 }
-.popup-text {
+.popup-text, .popup-text-scrollable {
     color: #CCC;
+}
+
+.popup-text-scrollable {
+    overflow-y: scroll;
+    max-height: 400px;
 }

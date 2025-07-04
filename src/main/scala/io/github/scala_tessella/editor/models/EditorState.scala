@@ -53,6 +53,8 @@ object EditorState:
 
   // About popup state
   val showAboutPopup: Var[Boolean] = Var(false)
+  val showGuidePopup: Var[Boolean] = Var(false)
+  val showShortcutsPopup: Var[Boolean] = Var(false)
 
   // Measurement tool state
   val measurementStartPoint: Var[Option[ClickablePoint]] = Var(None)
