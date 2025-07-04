@@ -1,8 +1,8 @@
-
 package io.github.scala_tessella.editor.components
 
+import io.github.scala_tessella.editor.models.EditorState
+
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
 object LoadingIndicatorComponent:
   def element: Element =

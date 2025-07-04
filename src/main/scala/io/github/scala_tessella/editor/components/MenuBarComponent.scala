@@ -123,7 +123,7 @@ object MenuBarComponent:
       dropdownLink("↶ Undo", () => AppState.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
       dropdownLink("↷ Redo", () => AppState.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
-      dropdownLink("Clear tiling", () => AppState.clearTiling()),
+      dropdownLink("Clear Tiling", () => AppState.clearTiling()),
       div(className := "menu-separator"),
       dropdownLinkDynamic(
         EditorState.editorMode.signal.map {
@@ -163,7 +163,7 @@ object MenuBarComponent:
         () => AppState.toggleNodeLabels()
       ),
       div(className := "menu-separator"),
-      dropdownLink("Fit to canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
+      dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
       div(className := "menu-separator"),
       dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))), shortcut = Some("+")),
@@ -175,7 +175,7 @@ object MenuBarComponent:
   private def helpMenu(): Element =
     menuItem("Help",
       dropdownLink("Guide...", () => { EditorState.showGuidePopup.set(true) }),
-      dropdownLink("Keyboard shortcuts...", () => { EditorState.showShortcutsPopup.set(true) }),
+      dropdownLink("Keyboard Shortcuts...", () => { EditorState.showShortcutsPopup.set(true) }),
       div(className := "menu-separator"),
       dropdownLink("About...", () => { EditorState.showAboutPopup.set(true) }),
     )

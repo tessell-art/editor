@@ -29,12 +29,12 @@ object PopUpsComponent:
           h3("Validation"),
           ul(
             li(
-              "If Validation is ON, the editor will check that the added polygon ",
+              "If ", b("Validation: ON"), " the editor will check that the added polygon ",
               "is not touching or crossing the perimeter (boundary), ",
               "ensuring you are building a proper finite tessellation."
             ),
             li(
-              "You can switch Validation OFF for more freedom of expression.",
+              "You can switch ", b("Validation: OFF"), " for more freedom of expression.",
             ),
             li(
               "In any case, when removing a polygon, the editor will always check that the resulting tiling ",
@@ -43,10 +43,10 @@ object PopUpsComponent:
           ),
           h3("Selecting & Deleting"),
           ul(
-            li("Select Mode (default): click on any polygon to select it."),
-            li("Delete Mode: click on any perimeter polygon to remove it."),
+            li(b("Mode: Select"), " (default): click on any polygon to select it."),
+            li(b("Mode: Delete"), ": click on any perimeter polygon to remove it."),
             li("Use ", kbd("Esc"), " to deselect everything."),
-            li("Use the Select button at the bottom of the palette to select all the polygons with the same shape."),
+            li("Use the ", i("Select"), " button at the bottom of the palette to select all the polygons with the same shape."),
             li(
               "Use the ",
               IconsSVG.selectByColorIcon,
@@ -57,12 +57,12 @@ object PopUpsComponent:
             li("Pan: click and drag the canvas background to move the view."),
             li("Zoom: use the mouse wheel, or the ", kbd('+'), " and ", kbd('-'), " keys."),
             li("Rotate: use the ", kbd('E'), " (left) and ", kbd('R'), " (right) keys."),
-            li("Fit: use the 'View' -> 'Fit to canvas' menu option to automatically adjust the view to see the entire tiling."),
-            li("Reset: use 'View' -> 'Reset View' to return to the default position, zoom, and rotation.")
+            li("Fit: use the ", b("View → Fit to Canvas"), " menu option to automatically adjust the view to see the entire tiling."),
+            li("Reset: use ", b("View → Reset View"), " to return to the default position, zoom, and rotation.")
           ),
           h3("Styling"),
           ul(
-            li("To change the color of polygons, select one or more polygons, then go to 'Edit' -> 'Fill Color...' to open the color picker."),
+            li("To change the color of polygons, select one or more polygons, then go to ", b("Edit → Fill Color..."), " to open the color picker."),
             li("The new color will be applied to all currently selected polygons and will be used for any new polygons you add."),
             li(
               "Use the ",
@@ -85,7 +85,7 @@ object PopUpsComponent:
           ),
           h3("Saving & Loading"),
           ul(
-            li("Use the 'File' menu to save your work as an SVG file ('Save SVG' or 'Save SVG as...')."),
+            li("Use the ", b("File"), " menu to save your work as an SVG file (", b("Save SVG"), " or ", b("Save SVG as..."), ")."),
             li("You can also load a previously saved SVG tiling."),
             li("The tiling's graph structure can be exported to a .DOT file, which is compatible with Graphviz.")
 
