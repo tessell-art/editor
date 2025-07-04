@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.{*, given}
 
 object IconsSVG:
 
-  def selectByColorIcon: Element =
+  private [components] def selectByColorIcon: Element =
     svg.svg(
       svg.width := "1em",
       svg.height := "1em",
@@ -28,7 +28,7 @@ object IconsSVG:
       )
     )
 
-  def rulerIcon: Element =
+  private [components] def rulerIcon: Element =
     svg.svg(
       svg.width := "1em",
       svg.height := "1em",
@@ -38,8 +38,8 @@ object IconsSVG:
         svg.d := "M-871,1185.5l199.2,199.7l56.8-56.7l-199.2-199.7L-871,1185.5z M-627,1328.5l-36.3,36.3l-187.3-187.7l36.4-36.2l25.4,25.4 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2L-627,1328.5z M-820.3,1165.2c3.1,3,3.2,8,0.2,11.2c-3,3.1-8,3.2-11.2,0.2c-3.1-3-3.2-8-0.2-11.2 C-828.5,1162.3-823.5,1162.2-820.3,1165.2z"
       )
     )
-    
-  def eyeDropperIcon: Element =
+
+  private [components] def eyeDropperIcon: Element =
     svg.svg(
       svg.width := "1em",
       svg.height := "1em",
