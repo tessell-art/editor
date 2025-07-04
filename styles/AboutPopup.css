@@ -55,3 +55,7 @@
     overflow-y: scroll;
     max-height: 400px;
 }
+
+.shortcuts-table > tbody > tr > td {
+    padding: 0 5px;
+}

@@ -280,10 +280,9 @@ object MenuBarComponent:
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
-        h2("Editor Commands & Guide"),
+        h2("Keyboard Shortcuts"),
         div(
           className := "popup-text-scrollable",
-          h3("Keyboard Shortcuts"),
           table(
             className := "shortcuts-table",
             thead(
