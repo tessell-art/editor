@@ -46,7 +46,9 @@ object CanvasControlComponent:
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.ColorPicker) => None
-                case _                      => Some(Tool.ColorPicker)
+                case _ =>
+                  AppState.clearMeasurements()
+                  Some(Tool.ColorPicker)
               }
             },
             title := "Activate color picker to select a color from an existing polygon"
@@ -62,7 +64,9 @@ object CanvasControlComponent:
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.SelectByColor) => None
-                case _                        => Some(Tool.SelectByColor)
+                case _ =>
+                  AppState.clearMeasurements()
+                  Some(Tool.SelectByColor)
               }
             },
             title := "Activate selector to select all polygons with the same color"
