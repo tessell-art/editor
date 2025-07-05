@@ -176,3 +176,16 @@
         background-color: #555;
     }
 }
+
+/* Make menu buttons dark in light mode, as requested */
+/* We use more specific selectors to ensure they override the light theme styles. */
+.light-mode .menu-item > .menu-button,
+.light-mode nav.menu-bar .theme-toggle-button {
+    background-color: #333;
+    color: white;
+}
+
+.light-mode .menu-item > .menu-button:hover,
+.light-mode nav.menu-bar .theme-toggle-button:hover {
+    background-color: #555;
+}

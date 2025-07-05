@@ -33,7 +33,7 @@ object CanvasControlComponent:
               EditorState.tempColor.set(EditorState.fillColor.now())
               EditorState.showColorPicker.set(true)
             },
-            styleAttr := "margin-left: 8px; border: 1px solid #888; background: #222; color: white; display: inline-flex; align-items: center; gap: 0.3em; padding: 0.3em 0.9em; border-radius: 5px"
+            className := "fill-color-btn"
           ),
           button(
             IconsSVG.eyeDropperIcon,

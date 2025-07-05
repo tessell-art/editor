@@ -9,6 +9,14 @@ import org.scalajs.dom
 
 @main
 def Editor(): Unit =
+  // This observer will update the body's class list whenever the theme changes.
+  // We use unsafeWindowOwner because this is a global setting for the app's lifetime.
+  val _ = EditorApp.effectiveTheme.foreach { theme =>
+    dom.document.body.classList.remove("light-mode")
+    dom.document.body.classList.remove("dark-mode")
+    dom.document.body.classList.add(s"$theme-mode")
+  }(unsafeWindowOwner)
+
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
     EditorApp.element
@@ -36,7 +44,6 @@ object EditorApp:
 
   def element: Element =
     div(
-      className <-- effectiveTheme.map(theme => s"$theme-mode"),
       //      h1("Polygon Shape Editor"),
       // Add the Menu Bar at the top, passing the theme signal and the state Var to update
       MenuBarComponent.element(effectiveTheme, EditorState.userThemePreference),

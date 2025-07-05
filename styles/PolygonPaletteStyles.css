@@ -40,7 +40,7 @@
 .polygon-btn.selected {
   border-color: #042A79;
   background-color: #20A4BE;
-  color: #fff;
+  color: #000;
   box-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
 }
 
@@ -96,4 +96,15 @@
     padding-left: 0.2rem;
   }
 
+}
+
+.light-mode .polygon-btn.selected {
+  border-color: #042A79;
+  background-color: #20A4BE;
+  color: #fff;
+}
+
+.light-mode .polygon-btn.selected:hover {
+  background-color: #18788C;
+  color: #fff;
 }
