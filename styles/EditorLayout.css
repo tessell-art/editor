@@ -23,6 +23,10 @@
   color: #ccc;
 }
 
+.light-mode .file-name {
+  color: #1a1a1a;
+}
+
 .measurement-result {
   text-align: right;
   font-family: Arial, sans-serif;
