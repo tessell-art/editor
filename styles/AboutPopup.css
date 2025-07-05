@@ -12,6 +12,7 @@
 }
 
 .popup-content {
+    position: relative; /* Needed for absolute positioning of the child button */
     background: #fff;
     padding: 15px 25px;
     border-radius: 8px;
@@ -64,4 +65,26 @@
     font-size: 0.8em;
     color: white;
     margin-top: -50px;
+}
+
+.popup-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    font-size: 1.5rem; /* Adjust size as needed */
+    color: #888; /* A neutral color */
+    z-index: 10; /* Ensure it's above other content */
+}
+
+.popup-close-btn:hover {
+    color: #BBB; /* Lighter on hover */
+}
+
+.light-mode .popup-close-btn {
+    background-color: #333;
 }

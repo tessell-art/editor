@@ -7,6 +7,21 @@ import com.raquo.laminar.api.features.unitArrows
 
 object PopUpsComponent:
 
+  // Helper method to create a simple 'X' close icon
+  private def closeIcon: Element =
+    svg.svg(
+      svg.width := "24",
+      svg.height := "24",
+      svg.viewBox := "0 0 24 24",
+      svg.fill := "none",
+      svg.stroke := "currentColor",
+      svg.strokeWidth := "2",
+//      svg.strokeLinecap := "round",
+//      svg.strokeLinejoin := "round",
+      svg.path(svg.d := "M 18 6 L 6 18"),
+      svg.path(svg.d := "M 6 6 L 18 18")
+    )
+
   private [components] def guidePopup(): Element =
     div(
       className := "popup-overlay",
@@ -15,6 +30,11 @@ object PopUpsComponent:
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
+        button(
+          className := "popup-close-btn",
+          onClick --> (_ => EditorState.showGuidePopup.set(false)),
+          closeIcon
+        ),
         h2("Guide"),
         div(
           className := "popup-text-scrollable",
@@ -90,10 +110,6 @@ object PopUpsComponent:
             li("The tiling's graph structure can be exported to a .DOT file, which is compatible with Graphviz.")
 
           )
-        ),
-        p(
-          className := "popup-close-hint",
-          "Click outside of this popup to close it."
         )
       )
     )
@@ -106,6 +122,11 @@ object PopUpsComponent:
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
+        button(
+          className := "popup-close-btn",
+          onClick --> (_ => EditorState.showShortcutsPopup.set(false)),
+          closeIcon
+        ),
         h2("Keyboard Shortcuts"),
         div(
           className := "popup-text-scrollable",
@@ -152,10 +173,6 @@ object PopUpsComponent:
               )
             )
           )
-        ),
-        p(
-          className := "popup-close-hint",
-          "Click outside of this popup to close it."
         )
       )
     )
@@ -168,6 +185,11 @@ object PopUpsComponent:
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
+        button(
+          className := "popup-close-btn",
+          onClick --> (_ => EditorState.showAboutPopup.set(false)),
+          closeIcon
+        ),
         img(
           src := "tessella-logo.svg",
           alt := "Tessella Logo",
@@ -194,10 +216,6 @@ object PopUpsComponent:
             ),
             "."
           )
-        ),
-        p(
-          className := "popup-close-hint",
-          "Click outside of this popup to close it."
         )
       )
     )
