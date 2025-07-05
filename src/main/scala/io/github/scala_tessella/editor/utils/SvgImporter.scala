@@ -9,7 +9,7 @@ import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent, SVGElement}
 
 import scala.scalajs.js.RegExp
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object SvgImporter:
 
@@ -24,8 +24,7 @@ object SvgImporter:
         // The onload event for FileReader provides a ProgressEvent, not a UIEvent
         reader.onload = (_: ProgressEvent) => {
           val content = reader.result.toString
-          importTilingFromSVG(content)
-          EditorState.currentFileName.set(Some(file.name))
+          importTilingFromSVG(content, file.name)
         }
         reader.readAsText(file)
     }
@@ -49,7 +48,7 @@ object SvgImporter:
       else None
     }
 
-  def importTilingFromSVG(svgContent: String): Unit =
+  def importTilingFromSVG(svgContent: String, filename: String): Unit =
     Try {
       val parser = new dom.DOMParser()
       // The second parameter to parseFromString requires a specific MIMEType.
@@ -111,9 +110,11 @@ object SvgImporter:
         finalCoords
       ) match
         case Left(message) => throw new Error(message)
-        case Right(tiling) => EditorState.currentTiling.set(tiling)
-      AppState.fitTilingToCanvas()
-      UndoManager.clearHistory()
+        case Right(tiling) =>
+          EditorState.currentTiling.set(tiling)
+          EditorState.currentFileName.set(Some(filename))
+          AppState.fitTilingToCanvas()
+          UndoManager.clearHistory()
     }.recover { case e: Throwable =>
       val explanation: String =
         "Only SVG saved by this editor with dedicated metadata can be loaded."
