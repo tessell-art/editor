@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{EditorMode, EditorState}
-import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, MouseEventHandler}
+import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, MouseEventHandler, TouchEventHandler}
 
 import com.raquo.laminar.api.L.{*, given}
 
@@ -62,7 +62,13 @@ object EditorCanvasComponent:
           onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
           onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
           onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
-          onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel
+          onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel,
+
+          // Touch events for mobile support
+          onTouchStart.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchStart,
+          onTouchMove.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchMove,
+          onTouchEnd.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchEnd,
+          onTouchCancel.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchCancel
         ),
         // HTML placeholder text is now inside the wrapper
         div(
