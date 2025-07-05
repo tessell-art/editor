@@ -173,27 +173,27 @@ object PopUpsComponent:
           alt := "Tessella Logo",
           className := "popup-logo"
         ),
-
         h1("Tessella"),
         p(
           className := "about-version",
           "Editor v0.1.0"
         ),
         h2("Regular polygon tessellation editor"),
-        p(
-          className := "popup-text",
-          "Allows you to interactively create, view, and manipulate edge-to-edge regular polygon tessellations of the plane.",
-        ),
-        p(
-          className := "popup-text",
-          "The editor it's built on top of the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
-          a(
-            href := "https://github.com/scala-tessella/tessella",
-            target := "_blank", // Opens in a new tab
-            rel := "noopener noreferrer",
-            "GitHub repository"
+        div(
+          className := "popup-text-scrollable",
+          p(
+            "Allows you to interactively create, view, and manipulate edge-to-edge regular polygon tessellations of the plane.",
           ),
-          "."
+          p(
+            "The editor it's built on top of the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
+            a(
+              href := "https://github.com/scala-tessella/tessella",
+              target := "_blank", // Opens in a new tab
+              rel := "noopener noreferrer",
+              "GitHub repository"
+            ),
+            "."
+          )
         ),
         p(
           className := "popup-close-hint",
