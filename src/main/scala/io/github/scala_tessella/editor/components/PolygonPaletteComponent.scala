@@ -37,22 +37,35 @@ object PolygonPaletteComponent:
       )
     )
 
-  private def customPolygonSelector(): Element =
-    val customSides = Var(11) // Local state for the input field, default to 11
+  private def customPolygonSelector(): Element = {
+    val customSides = Var(11) // This remains the "source of truth" for the integer value.
+    val inputValue = Var(customSides.now().toString) // A separate Var for the input's string value.
 
-    // Signal to check if the custom polygon is currently selected
+    // This observer will sync the input field if `customSides` is ever changed programmatically.
+    val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
+
+    // Signal to check if the custom polygon is currently selected. Uses the validated `customSides`.
     val isSelected = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
       (maybeSelected, currentCustom) => maybeSelected.contains(currentCustom)
     }
 
-    // Create a combined signal for the CSS class to handle selection and disabled states
+    // Create a combined signal for the CSS class to handle selection and disabled states.
     val cssClass = isSelected.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
       val baseClass = if (selected) "polygon-btn selected" else "polygon-btn"
       val customClass = s"$baseClass custom-polygon-creator"
       if (processing) s"$customClass disabled" else customClass
     }
 
+    // An observer that validates the input and updates the "source of truth" (`customSides`).
+    val validateAndUpdateObserver = Observer[Any] { _ =>
+      val clampedValue = inputValue.now().toIntOption.getOrElse(3)
+      val finalValue = Math.max(3, Math.min(clampedValue, 100))
+      customSides.set(finalValue) // Update the integer state
+      inputValue.set(finalValue.toString) // And sync the input field to the validated value
+    }
+
     div(
+      syncInputToSource, // The observer needs to be owned by the element
       className <-- cssClass,
       title <-- customSides.signal.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
       // The whole div is clickable to select the polygon with the current number of sides
@@ -69,16 +82,20 @@ object PolygonPaletteComponent:
         className := "polygon-label-input",
         minAttr := "3",
         maxAttr := "100",
-        // Two-way binding between the input field and the `customSides` variable
+        // Control the input with our local string Var for a fluid typing experience
         controlled(
-          value <-- customSides.signal.map(_.toString),
-          onInput.mapToValue.map(_.toIntOption.getOrElse(3)).map(s => Math.max(3, Math.min(s, 100))) --> customSides
+          value <-- inputValue,
+          onInput.mapToValue --> inputValue
         ),
+        // Validate when the user finishes editing (leaves the field or presses Enter)
+        onBlur --> validateAndUpdateObserver,
+        onKeyPress.filter(_.key == "Enter").preventDefault --> validateAndUpdateObserver,
         // Prevent clicks on the input from triggering the container's onClick handler
         onClick.stopPropagation --> {},
         disabled <-- EditorState.isProcessing.signal
       )
     )
+  }
 
   private def polygonButton(sides: Int): Element =
     button(
