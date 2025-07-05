@@ -108,3 +108,9 @@
   background-color: #18788C;
   color: #fff;
 }
+
+.light-mode .polygon-label-input {
+  background-color: #FFF;
+  border: 1px solid #666;
+  color: #000;
+}
