@@ -99,8 +99,8 @@ object TessellationRenderer:
       val (x, y) = tilingPointToCanvasView(vertex)
 
       // Offset the label slightly from the vertex to avoid overlap
-      val offsetX = x + 8
-      val offsetY = y - 8
+      val offsetX = x + 4
+      val offsetY = y - 4
 
       svg.text(
         svg.x := offsetX.toString,
