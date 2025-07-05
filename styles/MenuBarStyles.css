@@ -18,7 +18,7 @@
 }
 
 .menu-bar-logo {
-    height: 32px;
+    height: 30px;
     margin-right: 10px;
 }
 
@@ -103,7 +103,7 @@
 
 /* Theme toggle button */
 .theme-toggle-button {
-    background: none;
+    background: #333;
     border: none;
     color: white;
     cursor: pointer;
@@ -115,7 +115,7 @@
 }
 
 .theme-toggle-button:hover {
-    background-color: #555;
+    /*background-color: #555;*/
 }
 
 /* Responsive styles for small screens */
@@ -188,5 +188,5 @@
 
 .light-mode .menu-item > .menu-button:hover,
 .light-mode nav.menu-bar .theme-toggle-button:hover {
-    background-color: #555;
+    /*background-color: #555;*/
 }

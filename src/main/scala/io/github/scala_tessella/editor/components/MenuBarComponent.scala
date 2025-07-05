@@ -201,7 +201,7 @@ object MenuBarComponent:
         userThemePreference.set(Some(nextTheme))
       },
       child <-- effectiveTheme.map {
-        case "dark"  => "☼" // Sun icon for dark mode, to switch to light
-        case "light" => "☽" // Moon icon for light mode, to switch to dark
+        case "dark"  => IconsSVG.sunIcon // Sun icon for dark mode, to switch to light
+        case "light" => IconsSVG.moonIcon // Moon icon for light mode, to switch to dark
       }
     )

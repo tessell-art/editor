@@ -41,10 +41,10 @@ object PopUpsComponent:
           h3("Creating a Tiling"),
           ul(
             li(
-              "To start a new tiling, select a polygon shape from the palette on the left. ",
+              "To start a new tiling, select a polygon shape from the palette. ",
               "It will be placed on the canvas."
             ),
-            li("To add new polygons, first select the desired shape, then click on any highlighted perimeter edge.")
+            li("To add new polygons, first select the desired shape, then click on any perimeter edge.")
           ),
           h3("Validation"),
           ul(
@@ -66,11 +66,11 @@ object PopUpsComponent:
             li(b("Mode: Select"), " (default): click on any polygon to select it."),
             li(b("Mode: Delete"), ": click on any perimeter polygon to remove it."),
             li("Use ", kbd("Esc"), " to deselect everything."),
-            li("Use the ", i("Select"), " button at the bottom of the palette to select all the polygons with the same shape."),
+            li("Use the ", i("Select"), " button at the bottom of the palette to select all polygons with the same shape."),
             li(
               "Use the ",
               IconsSVG.selectByColorIcon,
-              " ", i("Select by color"), " tool to select all the polygons with the same color.")
+              " ", i("Select by color"), " tool to select all polygons with the same color.")
           ),
           h3("Navigating the Canvas"),
           ul(
@@ -82,8 +82,8 @@ object PopUpsComponent:
           ),
           h3("Styling"),
           ul(
-            li("To change the color of polygons, select one or more polygons, then go to ", b("Edit → Fill Color..."), " to open the color picker."),
-            li("The new color will be applied to all currently selected polygons and will be used for any new polygons you add."),
+            li("To change polygons' color, select one or more polygons, then go to ", b("Edit → Fill Color..."), " to open the color picker."),
+            li("The new color will be applied to all currently selected polygons and will be used for any new polygon you add."),
             li(
               "Use the ",
               IconsSVG.eyeDropperIcon,
@@ -204,10 +204,10 @@ object PopUpsComponent:
         div(
           className := "popup-text-scrollable",
           p(
-            "Allows you to interactively create, view, and manipulate edge-to-edge regular polygon tessellations of the plane.",
+            "Interactively create, view, and manipulate edge-to-edge regular polygon tessellations of the plane.",
           ),
           p(
-            "The editor it's built on top of the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
+            "The editor depends on the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
             a(
               href := "https://github.com/scala-tessella/tessella",
               target := "_blank", // Opens in a new tab
@@ -215,6 +215,9 @@ object PopUpsComponent:
               "GitHub repository"
             ),
             "."
+          ),
+          p(
+            "Built with Scala.js and Laminar.",
           )
         )
       )
