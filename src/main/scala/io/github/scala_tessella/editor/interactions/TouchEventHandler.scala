@@ -112,10 +112,9 @@ object TouchEventHandler:
 
             EditorState.viewTransform.update(_.copy(
               scale = newScale,
-              rotationDegrees = newRotation,
               panX = newPanX,
               panY = newPanY
-            ))
+            ).withRotation(newRotation))
           }
         case _ => // State wasn't correctly initialized
 
