@@ -14,30 +14,37 @@ object MenuBarComponent:
   // This state is for the mobile view, to toggle the hamburger menu
   private val isMenuOpen = Var(false)
 
-  def element: Element =
+  // The signature is updated to accept the theme preference Var directly
+  def element(effectiveTheme: Signal[String], userThemePreference: Var[Option[String]]): Element =
     div(
       navTag(
         className := "menu-bar",
-        img(
-          src := "tessella-logo.svg",
-          alt := "Tessella Logo",
-          className := "menu-bar-logo"
-        ),
-        // Hamburger button for small screens
-        button(
-          className := "menu-toggle",
-          onClick --> { _ => isMenuOpen.update(!_) },
-          aria.label := "Toggle navigation menu",
-          "☰"
-        ),
-        // The menu itself
+        // Group logo, hamburger, and menu items on the left
         div(
-          className <-- isMenuOpen.signal.map(open => if (open) "menu-items-container open" else "menu-items-container"),
-          fileMenu(),
-          editMenu(),
-          viewMenu(),
-          helpMenu()
-        )
+          className := "menu-left-section",
+          img(
+            src := "tessella-logo.svg",
+            alt := "Tessella Logo",
+            className := "menu-bar-logo"
+          ),
+          // Hamburger button for small screens
+          button(
+            className := "menu-toggle",
+            onClick --> { _ => isMenuOpen.update(!_) },
+            aria.label := "Toggle navigation menu",
+            "☰"
+          ),
+          // The menu itself
+          div(
+            className <-- isMenuOpen.signal.map(open => if (open) "menu-items-container open" else "menu-items-container"),
+            fileMenu(),
+            editMenu(),
+            viewMenu(),
+            helpMenu()
+          )
+        ),
+        // Pass both the signal and the Var to the switcher
+        themeSwitcher(effectiveTheme, userThemePreference)
       ),
       PopUpsComponent.guidePopup(),
       PopUpsComponent.shortcutsPopup(),
@@ -180,3 +187,21 @@ object MenuBarComponent:
       dropdownLink("About...", () => { EditorState.showAboutPopup.set(true) }),
     )
 
+  // This now handles the theme update logic directly
+  private def themeSwitcher(effectiveTheme: Signal[String], userThemePreference: Var[Option[String]]): Element =
+    button(
+      className := "theme-toggle-button",
+      title <-- effectiveTheme.map {
+        case "dark" => "Switch to Light Mode"
+        case "light" => "Switch to Dark Mode"
+      },
+      // Safely get the current theme on click and update the state
+      onClick.compose(_.withCurrentValueOf(effectiveTheme)) --> { case (_, currentTheme) =>
+        val nextTheme = if (currentTheme == "light") "dark" else "light"
+        userThemePreference.set(Some(nextTheme))
+      },
+      child <-- effectiveTheme.map {
+        case "dark"  => "☼" // Sun icon for dark mode, to switch to light
+        case "light" => "☽" // Moon icon for light mode, to switch to dark
+      }
+    )

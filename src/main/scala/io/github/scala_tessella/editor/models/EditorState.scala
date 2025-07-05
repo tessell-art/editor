@@ -62,3 +62,6 @@ object EditorState:
   val highlightedPolygonId: Var[Option[String]] = Var(None)
   val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
   val measurementResult: Var[Option[Double]] = Var(None)
+
+  // Theme state: None means follow system preference, Some("light") or Some("dark") is a user override
+  val userThemePreference: Var[Option[String]] = Var(None)

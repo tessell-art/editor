@@ -3,7 +3,7 @@
     background-color: #333;
     color: white;
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between; /* Aligns children to left and right */
     padding: 0 10px;
     position: relative;
     z-index: 1000;
@@ -12,8 +12,14 @@
     align-items: center;
 }
 
+.menu-left-section {
+    display: flex;
+    align-items: center;
+}
+
 .menu-bar-logo {
     height: 32px;
+    margin-right: 10px;
 }
 
 .menu-toggle {
@@ -95,8 +101,29 @@
     margin: 5px 0;
 }
 
+/* Theme toggle button */
+.theme-toggle-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 22px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.theme-toggle-button:hover {
+    background-color: #555;
+}
+
 /* Responsive styles for small screens */
 @media (max-width: 768px) {
+    .menu-left-section {
+        flex-grow: 1;
+    }
+
     .menu-toggle {
         display: block; /* Show hamburger */
     }

@@ -1,41 +1,41 @@
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.light-mode {
+  color: #213547;
+  background-color: #ffffff;
+}
 
-  h3 {
-    color: #666;
-  }
+.light-mode a:hover {
+  color: #747bff;
+}
 
-  .polygon-palette, .canvas-container {
-    background-color: #f9f9f9;
-    border-color: #ddd;
-  }
+.light-mode button {
+  background-color: #f9f9f9;
+}
 
-  .polygon-btn {
-    background-color: #fff;
-    border-color: #ddd;
-    color: #333;
-  }
+.light-mode h3 {
+  color: #666;
+}
 
-  .polygon-btn:hover {
-    background-color: #f0f0f0;
-    color: #000;
-  }
+.light-mode .polygon-palette, .light-mode .canvas-container {
+  background-color: #f9f9f9;
+  border-color: #ddd;
+}
 
-  .selected-info, .canvas-controls, .tiling-controls {
-    background-color: #f0f0f0;
-  }
+.light-mode .polygon-btn {
+  background-color: #fff;
+  border-color: #ddd;
+  color: #333;
+}
 
-  .editor-canvas {
-    background-color: #fafafa;
-    border-color: #ccc;
-  }
+.light-mode .polygon-btn:hover {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.light-mode .selected-info, .light-mode .canvas-controls, .light-mode .tiling-controls {
+  background-color: #f0f0f0;
+}
+
+.light-mode .editor-canvas {
+  background-color: #fafafa;
+  border-color: #ccc;
 }
