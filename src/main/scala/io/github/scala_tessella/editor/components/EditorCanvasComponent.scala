@@ -125,7 +125,7 @@ object EditorCanvasComponent:
   private def canvasMessage(title: String, subTitle: String): Element =
     svg.g(
       svg.text(
-        svg.x := "400",
+        svg.x := "425",
         svg.y := "250",
         svg.fontSize := "18",
         svg.fill := "#888",
@@ -134,7 +134,7 @@ object EditorCanvasComponent:
         title
       ),
       svg.text(
-        svg.x := "400",
+        svg.x := "425",
         svg.y := "280",
         svg.fontSize := "14",
         svg.fill := "#666",

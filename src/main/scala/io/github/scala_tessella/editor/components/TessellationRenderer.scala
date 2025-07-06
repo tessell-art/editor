@@ -9,6 +9,7 @@ import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.{IncrementalTiling, TilingCoordinates}
 import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
+import org.scalajs.dom.EndingType.transparent
 
 object TessellationRenderer:
 
@@ -148,35 +149,25 @@ object TessellationRenderer:
       svg.pointerEvents := "visible"
     )
 
-  private def renderMeasurementStartPoint(p: ClickablePoint): Element =
+  private def renderMeasurementPoint(p: ClickablePoint, isStartPoint: Boolean = true): Element =
     val (x, y) = tilingPointToCanvasView(p.point)
 
     svg.circle(
       svg.cx := x.toString,
       svg.cy := y.toString,
       svg.r := "5",
-      svg.fill := "#00C853",
+      svg.fill := (if isStartPoint then "#00C853" else "#D50000"),
       svg.stroke := "black",
       svg.strokeWidth := "1",
-      svg.className := "measurement-start-point",
+      svg.className := s"measurement-${if isStartPoint then "start" else "end"}-point",
       onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
     )
+
+  private def renderMeasurementStartPoint(p: ClickablePoint): Element =
+    renderMeasurementPoint(p, isStartPoint = true)
 
   private def renderMeasurementEndPoint(p: ClickablePoint): Element =
-    val canvasCenter = Point(canvasCenterX, canvasCenterY)
-    val x = canvasCenter.x + p.point.x * canvasScale
-    val y = canvasCenter.y + p.point.y * canvasScale
-
-    svg.circle(
-      svg.cx := x.toString,
-      svg.cy := y.toString,
-      svg.r := "5",
-      svg.fill := "#D50000",
-      svg.stroke := "black",
-      svg.strokeWidth := "1",
-      svg.className := "measurement-end-point",
-      onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
-    )
+    renderMeasurementPoint(p, isStartPoint = false)
 
   private def renderMeasurementLine(start: ClickablePoint, end: ClickablePoint): Element =
     val (x1, y1) = tilingPointToCanvasView(start.point)
@@ -281,19 +272,18 @@ object TessellationRenderer:
     val (x1, y1) = tilingPointToCanvasView(vertex1)
     val (x2, y2) = tilingPointToCanvasView(vertex2)
 
-    svg.line(
+    // A wider, transparent line for easier interaction, especially on touch devices
+    val interactionArea = svg.line(
       svg.x1 := x1.toString,
       svg.y1 := y1.toString,
       svg.x2 := x2.toString,
       svg.y2 := y2.toString,
-      svg.stroke <-- isSelected.map(selected =>
-        if (selected) "#ff6b6b" else "#ff9500"
-      ),
-      svg.strokeWidth <-- isSelected.map(selected => if (selected) "4" else "3"),
-      svg.strokeLineCap := "round", // Rounded line caps for better appearance
-      svg.className := "perimeter-edge",
+      svg.stroke := transparent,
+      svg.strokeWidth := "12", // Increased width for a larger touch target
+      svg.strokeLineCap := "round",
+      svg.className := "perimeter-edge-transparent",
       svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ => "none")),
-      // Enhanced visual feedback
+      // Enhanced visual feedback and click handling
       onMouseEnter --> { _ =>
         // Optional: Could trigger additional state changes here
       },
@@ -301,4 +291,23 @@ object TessellationRenderer:
         // Optional: Could trigger additional state changes here
       },
       onClick --> { _ => AppState.handlePerimeterEdgeClick(id, edgeIndex) }
+    )
+
+    // The visible line that the user sees
+    val visibleLine = svg.line(
+      svg.x1 := x1.toString,
+      svg.y1 := y1.toString,
+      svg.x2 := x2.toString,
+      svg.y2 := y2.toString,
+      svg.stroke := "#ff9500",
+      svg.strokeWidth := "4",
+      svg.strokeLineCap := "round",
+      svg.className := "perimeter-edge",
+      svg.pointerEvents := "none" // This part does not need to capture pointer events
+    )
+
+    // Grouping the visible line and its interaction area
+    svg.g(
+      visibleLine,
+      interactionArea
     )
