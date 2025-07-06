@@ -116,28 +116,36 @@ object EditorCanvasComponent:
 
       // Show message when no tessellation is available
       child.maybe <-- EditorState.currentTiling.signal.map { tiling =>
-        if (tiling.isEmpty) Some(noTessellationMessage()) else None
+        if tiling.isEmpty then Some(noTessellationMessage())
+        else if tiling.orientedPolygons.size == 1 then Some(onePolygonMessage())
+        else  None
       }
     )
 
-  private def noTessellationMessage(): Element =
+  private def canvasMessage(title: String, subTitle: String): Element =
     svg.g(
       svg.text(
         svg.x := "400",
-        svg.y := "280",
+        svg.y := "250",
         svg.fontSize := "18",
         svg.fill := "#888",
         svg.textAnchor := "middle",
         svg.fontFamily := "Arial, sans-serif",
-        "Empty tessellation"
+        title
       ),
       svg.text(
         svg.x := "400",
-        svg.y := "310",
+        svg.y := "280",
         svg.fontSize := "14",
         svg.fill := "#666",
         svg.textAnchor := "middle",
         svg.fontFamily := "Arial, sans-serif",
-        "Select a polygon to start a tessellation"
+        subTitle
       )
     )
+
+  private def noTessellationMessage(): Element =
+    canvasMessage("Empty tessellation", "Select a polygon to start a tessellation")
+
+  private def onePolygonMessage(): Element =
+    canvasMessage("Add the next polygon", "Click on any perimeter edge to grow the tessellation")
