@@ -80,7 +80,7 @@ svg:hover .node-label {
 
 .perimeter-edge-transparent:hover {
   filter: drop-shadow(0 0 8px rgba(255, 61, 0, 0.6));
-  stroke: #00C853 !important; /* Bright red-orange for hover */
+  stroke: #00C853 !important; /* Bright green for hover */
 }
 
 /* Grid pattern styling */
