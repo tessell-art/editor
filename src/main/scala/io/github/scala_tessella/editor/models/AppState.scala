@@ -30,7 +30,7 @@ enum EditorMode:
 
 // Tool enumeration
 enum Tool:
-  case ColorPicker, SelectByColor, Measurement
+  case ColorPicker, ShapeAndColorPicker, SelectByColor, Measurement
 
 object AppState:
   // Expose state for components to read

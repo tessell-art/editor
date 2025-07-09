@@ -42,7 +42,6 @@ object CanvasControlComponent:
               case Some(Tool.ColorPicker) => "toggle-btn active"
               case _                      => "toggle-btn"
             },
-            styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.ColorPicker) => None
@@ -54,13 +53,29 @@ object CanvasControlComponent:
             title := "Activate color picker to select a color from an existing polygon"
           ),
           button(
+            IconsSVG.eyeDropperIcon,
+            //            "Pick Color",
+            className <-- EditorState.activeTool.signal.map {
+              case Some(Tool.ShapeAndColorPicker) => "toggle-btn active"
+              case _                      => "toggle-btn"
+            },
+            onClick --> { _ =>
+              EditorState.activeTool.update {
+                case Some(Tool.ShapeAndColorPicker) => None
+                case _ =>
+                  AppState.clearMeasurements()
+                  Some(Tool.ShapeAndColorPicker)
+              }
+            },
+            title := "Activate shape and color picker to select the shape and color from an existing polygon"
+          ),
+          button(
             IconsSVG.selectByColorIcon,
 //            "Select By Color",
             className <-- EditorState.activeTool.signal.map {
               case Some(Tool.SelectByColor) => "toggle-btn active"
               case _                        => "toggle-btn"
             },
-            styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.SelectByColor) => None
@@ -78,7 +93,6 @@ object CanvasControlComponent:
               case Some(Tool.Measurement) => "toggle-btn active"
               case _                      => "toggle-btn"
             },
-            styleAttr := "display: inline-flex; align-items: center; gap: 0.3em;",
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.Measurement) =>

@@ -94,6 +94,14 @@ object SelectionOperations:
           EditorState.fillColor.set(color)
           EditorState.activeTool.set(None) // Deactivate after picking
         }
+      case Some(Tool.ShapeAndColorPicker) =>
+        val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+        EditorState.polygonColors.now().get(polyTag).foreach { color =>
+          EditorState.fillColor.set(color)
+          val sides = polyTag.count(_ == '-') + 1
+          EditorState.selectedPolygon.set(Some(sides))
+          EditorState.activeTool.set(None) // Deactivate after picking
+        }
       case Some(Tool.SelectByColor) =>
         selectPolygonsByColor(polygonId)
       case Some(Tool.Measurement) =>
