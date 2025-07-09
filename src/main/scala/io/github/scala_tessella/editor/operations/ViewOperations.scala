@@ -2,21 +2,18 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.models.EditorConfig.*
-import io.github.scala_tessella.editor.utils.TessellationGeometry.maybeBounds
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 
+import io.github.scala_tessella.tessella.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.Geometry.Radian.TAU
 
 object ViewOperations:
-
-  private def radFromDegrees(degrees: Double): Double =
-    degrees * TAU.toDouble / 360
 
   def fitTilingToCanvas(): Unit =
     val tiling = EditorState.currentTiling.now()
     if tiling.isEmpty then return
 
-    val coords = tiling.coordinates.values.map(p => (p.x * canvasScale, p.y * canvasScale))
+    val coords = tiling.coordinates.values.map(_.toPoint).map(_.scale(canvasScale))
     if coords.isEmpty then return
 
     EditorState.canvasElementRef.now().foreach { canvasElement =>
@@ -26,15 +23,10 @@ object ViewOperations:
       val currentTransform = EditorState.viewTransform.now()
 
       if canvasWidth > 0 && canvasHeight > 0 then
-        val rotationRad = radFromDegrees(currentTransform.rotationDegrees)
-        val cosRad = Math.cos(rotationRad)
-        val sinRad = Math.sin(rotationRad)
+        val rotationRad = AngleDegree(currentTransform.rotationDegrees).toRadian
+        val rotatedCoords: List[Point] = coords.map(_.rotate(rotationRad)).toList
 
-        val rotatedCoords = coords.map { case (x, y) =>
-          Point(x * cosRad - y * sinRad, x * sinRad + y * cosRad)
-        }
-
-        val bounds = rotatedCoords.toList.maybeBounds.get
+        val bounds = rotatedCoords.maybeBounds.get
 
         val tilingWidth = bounds.maxX - bounds.minX
         val tilingHeight = bounds.maxY - bounds.minY
@@ -67,12 +59,12 @@ object ViewOperations:
           )
     }
 
-  def rotateView(delta: Double): Unit =
+  def rotateView(delta: Int): Unit =
     val currentTransform = EditorState.viewTransform.now()
     val scale = currentTransform.scale
     val panX = currentTransform.panX
     val panY = currentTransform.panY
-    val rotationRad = radFromDegrees(currentTransform.rotationDegrees)
+    val rotationRad = AngleDegree(currentTransform.rotationDegrees).toRadian.toDouble
 
     val viewCenterX = canvasCenterX
     val viewCenterY = canvasCenterY
@@ -95,7 +87,7 @@ object ViewOperations:
 
     // Calculate new pan with new rotation
     val newRotationDegrees = currentTransform.rotationDegrees + delta
-    val newRotationRad = radFromDegrees(newRotationDegrees)
+    val newRotationRad = AngleDegree(newRotationDegrees).toRadian.toDouble
 
     // Forward transform the world point with new rotation
     val cos_new_rot = Math.cos(newRotationRad)

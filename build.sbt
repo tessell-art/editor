@@ -3,8 +3,8 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
-    scalaVersion := "3.3.3",
-    version := "0.1.0",
+    scalaVersion := "3.7.1",
+    version := "0.2.0",
     name := "Tessella Editor",
 
     // Tell Scala.js that this is an application with a main method
@@ -29,7 +29,8 @@ lazy val editor = project.in(file("."))
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
     libraryDependencies += "be.doeraene" %%% "web-components-ui5" % "2.1.0",
     libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
-    libraryDependencies += "io.github.scala-tessella" %%% "tessella" % "0.3.0+95-6c550464+20250703-2243",
+    libraryDependencies += "org.typelevel" %%% "spire" % "0.18.0",
+    libraryDependencies += "io.github.scala-tessella" %%% "tessella" % "0.3.0+103-64bfeaf8+20250708-1501",
 
     // Test dependencies
     libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,

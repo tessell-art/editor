@@ -1,6 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+
 import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
@@ -29,7 +31,7 @@ object SelectionOperations:
           // Start point is set, so set this as the end point
           EditorState.measurementEndPoint.set(Some(point))
           val distance = point.point.distanceTo(start.point)
-          EditorState.measurementResult.set(Some(distance))
+          EditorState.measurementResult.set(Some(distance.toDouble))
 
   def clearAllSelections(): Unit =
     if !EditorState.isProcessing.now() then
@@ -41,7 +43,7 @@ object SelectionOperations:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
         val allPolygonIds = tiling.orientedPolygons.map { nodes =>
-          val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+          val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
           s"tiling-poly-$polyTag"
         }.toSet
         EditorState.selectedTilingPolygons.set(allPolygonIds)
@@ -53,7 +55,7 @@ object SelectionOperations:
       if !tiling.isEmpty then
         val polygonIdsToAdd = tiling.orientedPolygons.collect {
           case nodes if nodes.length == sides =>
-            val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+            val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
             s"tiling-poly-$polyTag"
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
@@ -109,14 +111,14 @@ object SelectionOperations:
         val polyTag = polygonId.stripPrefix("tiling-poly-")
 
         tiling.orientedPolygons.find { nodes =>
-          val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+          val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
           tag == polyTag
         } match
           case Some(polygonNodes) =>
             EditorState.highlightedPolygonId.set(Some(polygonId))
 
             val coords = tiling.coordinates
-            val vertices = polygonNodes.map(coords)
+            val vertices = polygonNodes.map(coords).map(_.toPoint)
 
             val vertexPoints = polygonNodes.zip(vertices).map { case (node, point) =>
               ClickablePoint(point, Anchor.Vertex(node))
@@ -128,8 +130,8 @@ object SelectionOperations:
 
             val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
             val midPoints = edges.map { case (node1, node2) =>
-              val p1 = coords(node1)
-              val p2 = coords(node2)
+              val p1 = coords(node1).toPoint
+              val p2 = coords(node2).toPoint
               ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
             }
 

@@ -1,14 +1,13 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
-import io.github.scala_tessella.editor.utils.TessellationGeometry.tilingPointToCanvasView
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.Geometry.Radian.{TAU, TAU_2}
-import io.github.scala_tessella.tessella.TilingCoordinates.Coords
 import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.tessella.BigDecimalGeometry.{AngleDegree, BigCoords}
 
 import scala.math.*
 
@@ -36,12 +35,12 @@ object FailedPolygonRenderer:
       case _: Exception => svg.g()
     }
 
-  def renderFailedDeletion(deletion: FailedPolygonDeletion, coordinates: Coords): Element =
+  def renderFailedDeletion(deletion: FailedPolygonDeletion, coordinates: BigCoords): Element =
     try {
       val FailedPolygonDeletion(_, polygonNodes) = deletion
 
       val points = polygonNodes.map(coordinates).map { vertex =>
-        val (x, y) = tilingPointToCanvasView(vertex)
+        val (x, y) = tilingPointToCanvasView(vertex.toPoint)
         s"$x,$y"
       }.mkString(" ")
 
@@ -65,8 +64,8 @@ object FailedPolygonRenderer:
     val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
 
     // Get the edge coordinates
-    val vertex1 = tiling.coordinates(edge.lesserNode)
-    val vertex2 = tiling.coordinates(edge.greaterNode)
+    val vertex1 = tiling.coordinates(edge.lesserNode).toPoint
+    val vertex2 = tiling.coordinates(edge.greaterNode).toPoint
 
     // Calculate edge vector and length
     val edgeVectorX = vertex2.x - vertex1.x
@@ -81,27 +80,29 @@ object FailedPolygonRenderer:
     val (outwardDirection, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
     val (perpX, perpY) = outwardDirection
 
+    val halfAngleStep: AngleDegree = AngleDegree(180) / polygonSides
+
     // Calculate the center of the failed polygon
     val sideLength = edgeLength
-    val apothem = sideLength / (2 * tan(TAU_2.toDouble / polygonSides))
+    val apothem = sideLength / (2 * tan(halfAngleStep.toBigRadian.toBigDecimal.toDouble))
 
     val centerX = (vertex1.x + vertex2.x) / 2 + perpX * apothem
     val centerY = (vertex1.y + vertex2.y) / 2 + perpY * apothem
 
     // Generate polygon vertices around the calculated center
-    val angleStep = TAU.toDouble / polygonSides
-    val radius = sideLength / (2 * sin(TAU_2.toDouble / polygonSides))
+    val angleStep: AngleDegree = halfAngleStep * 2
+    val radius = sideLength / (2 * sin(halfAngleStep.toBigRadian.toBigDecimal.toDouble))
     val winding = if wasFlipped then -1 else 1
     val edgeAngle = atan2(edgeUnitY, edgeUnitX)
     val isOdd = polygonSides % 2 == 1
 
-    val baseOffset = -TAU_2.toDouble / polygonSides
-    val oddHalfStep = if isOdd && !wasFlipped then angleStep / 2 else 0.0
+    val baseOffset: AngleDegree = AngleDegree(90) - halfAngleStep
+    val oddHalfStep = if isOdd && !wasFlipped then halfAngleStep else AngleDegree(0)
 
-    val startAngle = edgeAngle + TAU_2.toDouble / 2 + baseOffset + oddHalfStep
+    val startAngle = edgeAngle + (baseOffset + oddHalfStep).toBigRadian.toBigDecimal.toDouble
 
     (0 until polygonSides).map { i =>
-      val angle = startAngle + winding * i * angleStep
+      val angle = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
       val x = centerX + radius * cos(angle)
       val y = centerY + radius * sin(angle)
       tilingPointToCanvasView(Point(x, y))
@@ -109,8 +110,8 @@ object FailedPolygonRenderer:
 
   private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: IncrementalTiling): ((Double, Double), Boolean) =
     try
-      val vertex1 = tiling.coordinates(edge.lesserNode)
-      val vertex2 = tiling.coordinates(edge.greaterNode)
+      val vertex1 = tiling.coordinates(edge.lesserNode).toPoint
+      val vertex2 = tiling.coordinates(edge.greaterNode).toPoint
 
       // Calculate edge vector
       val edgeVectorX = vertex2.x - vertex1.x
@@ -142,7 +143,7 @@ object FailedPolygonRenderer:
 
       containingPolygon match
         case Some(polyNodes) =>
-          val polyVertices: Vector[Point] = polyNodes.map(tiling.coordinates)
+          val polyVertices: Vector[Point] = polyNodes.map(tiling.coordinates).map(_.toPoint)
 
           // Check which test point is inside the containing polygon
           val point1Inside = isPointInPolygon(testPoint1X, testPoint1Y, polyVertices)
@@ -165,8 +166,8 @@ object FailedPolygonRenderer:
     catch
       case e: Exception =>
         // Fallback to simple perpendicular if calculation fails
-        val vertex1 = tiling.coordinates(edge.lesserNode)
-        val vertex2 = tiling.coordinates(edge.greaterNode)
+        val vertex1 = tiling.coordinates(edge.lesserNode).toPoint
+        val vertex2 = tiling.coordinates(edge.greaterNode).toPoint
         val edgeVectorX = vertex2.x - vertex1.x
         val edgeVectorY = vertex2.y - vertex1.y
         val length = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)

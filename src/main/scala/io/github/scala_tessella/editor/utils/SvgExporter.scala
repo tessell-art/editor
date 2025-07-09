@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
-import io.github.scala_tessella.editor.utils.TessellationGeometry.maybeBounds
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 
+import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.NodeOrdering
 import org.scalajs.dom
@@ -38,7 +39,7 @@ object SvgExporter:
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then return ""
 
-    val bounds = coordinates.values.toList.maybeBounds.get
+    val bounds = coordinates.values.toList.map(_.toPoint).maybeBounds.get
 
     val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
     val padding = 20.0
@@ -49,7 +50,7 @@ object SvgExporter:
     val offsetY = -bounds.minY * scale + padding
 
     val polygonsXml = tiling.orientedPolygons.map { nodes =>
-      val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+      val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
       val (r, g, b): (Int, Int, Int) = AppState.getOrAssignPolygonColor(polyTag)
       val color = s"rgb($r, $g, $b)"
 
@@ -90,6 +91,19 @@ object SvgExporter:
           s"""  <text x="$labelX" y="$labelY" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">${node.toString}</text>"""
         }.mkString("\n")
 
+    val tilingCoordinatesMetadata =
+      if coordinates.isEmpty then ""
+      else
+        val items = coordinates
+          .map { (node, vertex) =>
+            s"""        <coord node="${node.toString}" x="${vertex.x.toString}" y="${vertex.y.toString}" />"""
+          }
+          .mkString("\n")
+        s"""
+           |    <tilingCoordinates>
+           |$items
+           |    </tilingCoordinates>"""
+
     s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
        |$perimeterXml
@@ -101,6 +115,6 @@ object SvgExporter:
        |        <dc:source rdf:resource="https://github.com/scala-tessella/tessella">Tessella</dc:source>
        |        <cc:license rdf:resource="https://www.apache.org/licenses/LICENSE-2.0"/>
        |      </cc:Work>
-       |    </rdf:RDF>
+       |    </rdf:RDF>$tilingCoordinatesMetadata
        |  </metadata>
        |</svg>""".stripMargin

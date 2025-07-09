@@ -114,7 +114,7 @@ object TouchEventHandler:
               scale = newScale,
               panX = newPanX,
               panY = newPanY
-            ).withRotation(newRotation))
+            ).withRotation(newRotation.toInt))
           }
         case _ => // State wasn't correctly initialized
 

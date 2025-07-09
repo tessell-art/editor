@@ -3,11 +3,11 @@ package io.github.scala_tessella.editor.components
 import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.models.EditorConfig.*
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.editor.utils.TessellationGeometry.tilingPointToCanvasView
-import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.{IncrementalTiling, TilingCoordinates}
-import io.github.scala_tessella.tessella.TilingCoordinates.Coords
+import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
+import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import org.scalajs.dom.EndingType.transparent
 
@@ -35,7 +35,7 @@ object TessellationRenderer:
   def renderTiling(tiling: IncrementalTiling): Element =
 
     val tilingPolygons = tiling.orientedPolygons.map { nodes =>
-      val polyTag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+      val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
       getOrAssignPolygonColor(polyTag)
       renderTilingPolygon(tiling.coordinates, nodes, polygonId, polyTag)
@@ -89,12 +89,12 @@ object TessellationRenderer:
       measurementLineDisplay
     )
 
-  private def renderNodeLabels(coordinates: Coords): List[Element] =
+  private def renderNodeLabels(coordinates: BigCoords): List[Element] =
     // Get all unique nodes from the tiling
     val allNodes = coordinates.keys.toList
 
     allNodes.map { node =>
-      val vertex = coordinates(node)
+      val vertex = coordinates(node).toPoint
 
       // Convert tessella coordinates to canvas coordinates
       val (x, y) = tilingPointToCanvasView(vertex)
@@ -185,11 +185,11 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-  private def renderTilingPolygon(coordinates: Coords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
+  private def renderTilingPolygon(coordinates: BigCoords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
 
     val points = nodes.map(coordinates).map { vertex =>
-      val (x, y) = tilingPointToCanvasView(vertex)
+      val (x, y) = tilingPointToCanvasView(vertex.toPoint)
       s"$x,$y"
     }.mkString(" ")
 
@@ -263,9 +263,9 @@ object TessellationRenderer:
       }
     )
 
-  private def renderPerimeterEdge(coordinates: Coords, edge: Edge, edgeIndex: Int, id: String): Element =
-    val vertex1 = coordinates(edge.lesserNode)
-    val vertex2 = coordinates(edge.greaterNode)
+  private def renderPerimeterEdge(coordinates: BigCoords, edge: Edge, edgeIndex: Int, id: String): Element =
+    val vertex1 = coordinates(edge.lesserNode).toPoint
+    val vertex2 = coordinates(edge.greaterNode).toPoint
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates

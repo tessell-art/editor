@@ -51,7 +51,7 @@ object TessellationOperations:
 
             // Find the specific polygon in the tiling
             val targetPolygon = tiling.orientedPolygons.find { nodes =>
-              val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
               tag == polyTag
             }
 
@@ -91,7 +91,7 @@ object TessellationOperations:
               polygonId
 
             tiling.orientedPolygons.find { nodes =>
-              val tag = nodes.sorted(NodeOrdering).map(_.toString).mkString("-")
+              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
               tag == polyTag
             }.getOrElse(Vector.empty)
           case _ => Vector.empty

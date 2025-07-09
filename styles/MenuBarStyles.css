@@ -191,3 +191,7 @@
 .light-mode nav.menu-bar .theme-toggle-button:hover {
     /*background-color: #555;*/
 }
+
+.light-mode .dropdown-content a:hover {
+    color: black;
+}

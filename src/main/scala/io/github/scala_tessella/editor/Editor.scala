@@ -15,7 +15,7 @@ def Editor(): Unit =
     dom.document.body.classList.remove("light-mode")
     dom.document.body.classList.remove("dark-mode")
     dom.document.body.classList.add(s"$theme-mode")
-  }(unsafeWindowOwner)
+  }(using unsafeWindowOwner)
 
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
