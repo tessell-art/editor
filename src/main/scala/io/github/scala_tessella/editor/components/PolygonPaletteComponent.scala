@@ -41,14 +41,23 @@ object PolygonPaletteComponent:
     val customSides = Var(11) // This remains the "source of truth" for the integer value.
     val inputValue = Var(customSides.now().toString) // A separate Var for the input's string value.
 
+    // Helper function to validate and clamp the input value
+    def validateSides(input: String): Int = {
+      val parsed = input.toIntOption.getOrElse(3)
+      Math.max(3, Math.min(parsed, 100))
+    }
+
+    // Helper function to update both customSides and inputValue
+    def updateSides(sides: Int): Unit = {
+      customSides.set(sides)
+      inputValue.set(sides.toString)
+    }
+
     // This observer will sync the input field if `customSides` is ever changed programmatically.
     val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
 
     // Create a signal that parses the input value to determine the shape to display
-    val displaySides = inputValue.signal.map { value =>
-      val parsed = value.toIntOption.getOrElse(3)
-      Math.max(3, Math.min(parsed, 100))
-    }
+    val displaySides = inputValue.signal.map(validateSides)
 
     // Signal to check if the custom polygon is currently selected. Uses the validated `customSides`.
     val isSelected = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
@@ -64,10 +73,8 @@ object PolygonPaletteComponent:
 
     // An observer that validates the input and updates the "source of truth" (`customSides`).
     val validateAndUpdateObserver = Observer[Any] { _ =>
-      val clampedValue = inputValue.now().toIntOption.getOrElse(3)
-      val finalValue = Math.max(3, Math.min(clampedValue, 100))
-      customSides.set(finalValue) // Update the integer state
-      inputValue.set(finalValue.toString) // And sync the input field to the validated value
+      val validatedSides = validateSides(inputValue.now())
+      updateSides(validatedSides)
     }
 
     div(
@@ -77,11 +84,9 @@ object PolygonPaletteComponent:
       // The whole div is clickable to select the polygon with the current number of sides
       onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
         // Validate the input first, then select the polygon
-        val clampedValue = inputValue.now().toIntOption.getOrElse(3)
-        val finalValue = Math.max(3, Math.min(clampedValue, 100))
-        customSides.set(finalValue) // Update the integer state
-        inputValue.set(finalValue.toString) // And sync the input field to the validated value
-        selectPolygon(finalValue)
+        val validatedSides = validateSides(inputValue.now())
+        updateSides(validatedSides)
+        selectPolygon(validatedSides)
       },
       // Dynamic SVG preview, which updates as the user types
       child <-- displaySides.map(sides => polygonSvg(sides)),
