@@ -44,6 +44,12 @@ object PolygonPaletteComponent:
     // This observer will sync the input field if `customSides` is ever changed programmatically.
     val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
 
+    // Create a signal that parses the input value to determine the shape to display
+    val displaySides = inputValue.signal.map { value =>
+      val parsed = value.toIntOption.getOrElse(3)
+      Math.max(3, Math.min(parsed, 100))
+    }
+
     // Signal to check if the custom polygon is currently selected. Uses the validated `customSides`.
     val isSelected = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
       (maybeSelected, currentCustom) => maybeSelected.contains(currentCustom)
@@ -67,15 +73,18 @@ object PolygonPaletteComponent:
     div(
       syncInputToSource, // The observer needs to be owned by the element
       className <-- cssClass,
-      title <-- customSides.signal.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
+      title <-- displaySides.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
       // The whole div is clickable to select the polygon with the current number of sides
       onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
-        selectPolygon(customSides.now())
+        // Validate the input first, then select the polygon
+        val clampedValue = inputValue.now().toIntOption.getOrElse(3)
+        val finalValue = Math.max(3, Math.min(clampedValue, 100))
+        customSides.set(finalValue) // Update the integer state
+        inputValue.set(finalValue.toString) // And sync the input field to the validated value
+        selectPolygon(finalValue)
       },
-      // Dynamic SVG preview, which updates as the number of sides changes
-      child <-- customSides.signal.map(sides =>
-        if (sides >= 3 && sides <= 100) polygonSvg(sides) else div() // Render svg only if sides are valid
-      ),
+      // Dynamic SVG preview, which updates as the user types
+      child <-- displaySides.map(sides => polygonSvg(sides)),
       // Number input, which acts as the label
       input(
         tpe := "number",
