@@ -87,7 +87,13 @@ object PopUpsComponent:
             li(
               "Use the ",
               IconsSVG.eyeDropperIcon,
-              " ", i("Color picker"), " tool to select a fill color from an existing polygon.")
+              " ", i("Color picker"), " tool to select the fill color from an existing polygon."
+            ),
+            li(
+              "Use the ",
+              IconsSVG.eyeDropperPentagonIcon,
+              " ", i("Shape and color picker"), " tool to select both the shape and the fill color from an existing polygon."
+            )
           ),
           h3("Measurement"),
           ul(

@@ -53,7 +53,7 @@ object CanvasControlComponent:
             title := "Activate color picker to select a color from an existing polygon"
           ),
           button(
-            IconsSVG.eyeDropperIcon,
+            IconsSVG.eyeDropperPentagonIcon,
             //            "Pick Color",
             className <-- EditorState.activeTool.signal.map {
               case Some(Tool.ShapeAndColorPicker) => "toggle-btn active"
