@@ -15,6 +15,15 @@ object CanvasControlComponent:
         Some(tool) // Activate the new tool
     }
 
+  private def createToolButton(tool: Tool, titleText: String, icon: Element): Element =
+    button(
+      icon,
+      className := "toggle-btn",
+      cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(tool)),
+      onClick --> { _ => toggleTool(tool) },
+      title := titleText
+    )
+
   def element: Element =
     div(
       div(
@@ -41,36 +50,25 @@ object CanvasControlComponent:
             },
             className := "fill-color-btn"
           ),
-          button(
-            IconsSVG.eyeDropperIcon,
-//            "Pick Color",
-            className := "toggle-btn",
-            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.ColorPicker)),
-            onClick --> { _ => toggleTool(Tool.ColorPicker) },
-            title := "Activate color picker to select a color from an existing polygon"
+          createToolButton(
+            Tool.ColorPicker,
+            "Activate color picker to select a color from an existing polygon",
+            IconsSVG.eyeDropperIcon
           ),
-          button(
-            IconsSVG.eyeDropperPentagonIcon,
-            //            "Pick Color",
-            className := "toggle-btn",
-            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.ShapeAndColorPicker)),
-            onClick --> { _ => toggleTool(Tool.ShapeAndColorPicker) },
-            title := "Activate shape and color picker to select the shape and color from an existing polygon"
+          createToolButton(
+            Tool.ShapeAndColorPicker,
+            "Activate shape and color picker to select the shape and color from an existing polygon",
+            IconsSVG.eyeDropperPentagonIcon
           ),
-          button(
-            IconsSVG.selectByColorIcon,
-//            "Select By Color",
-            className := "toggle-btn",
-            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.SelectByColor)),
-            onClick --> { _ => toggleTool(Tool.SelectByColor) },
-            title := "Activate selector to select all polygons with the same color"
+          createToolButton(
+            Tool.SelectByColor,
+            "Activate selector to select all polygons with the same color",
+            IconsSVG.selectByColorIcon
           ),
-          button(
-            IconsSVG.rulerIcon,
-            className := "toggle-btn",
-            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.Measurement)),
-            onClick --> { _ => toggleTool(Tool.Measurement) },
-            title := "Activate measure mode to calculate the distance between two points"
+          createToolButton(
+            Tool.Measurement,
+            "Activate measure mode to calculate the distance between two points",
+            IconsSVG.rulerIcon
           ),
           button(
             child.text <-- EditorState.editorMode.signal.map {
