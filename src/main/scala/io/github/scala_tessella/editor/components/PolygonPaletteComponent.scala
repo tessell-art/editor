@@ -11,6 +11,11 @@ import io.github.scala_tessella.tessella.Geometry.Radian.{TAU, TAU_2}
 import scala.math.{cos, sin}
 
 object PolygonPaletteComponent:
+
+  extension (i: Int)
+    private def clamp(min: Int, max: Int): Int =
+      Math.max(min, Math.min(i, max))
+
   def element: Element =
     div(
       className := "polygon-palette",
@@ -37,21 +42,18 @@ object PolygonPaletteComponent:
       )
     )
 
-  private def customPolygonSelector(): Element = {
+  private def customPolygonSelector(): Element =
     val customSides = Var(11) // This remains the "source of truth" for the integer value.
     val inputValue = Var(customSides.now().toString) // A separate Var for the input's string value.
 
     // Helper function to validate and clamp the input value
-    def validateSides(input: String): Int = {
-      val parsed = input.toIntOption.getOrElse(3)
-      Math.max(3, Math.min(parsed, 100))
-    }
+    def validateSides(input: String): Int =
+      input.toIntOption.getOrElse(3).clamp(3, 100)
 
     // Helper function to update both customSides and inputValue
-    def updateSides(sides: Int): Unit = {
+    def updateSides(sides: Int): Unit =
       customSides.set(sides)
       inputValue.set(sides.toString)
-    }
 
     // This observer will sync the input field if `customSides` is ever changed programmatically.
     val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
@@ -109,7 +111,6 @@ object PolygonPaletteComponent:
         disabled <-- EditorState.isProcessing.signal
       )
     )
-  }
 
   private def polygonButton(sides: Int): Element =
     button(
