@@ -33,7 +33,7 @@ object ColorPickerPopupComponent:
                 shadowRoot <- Option(ctx.thisNode.ref.shadowRoot)
                 alphaSlider <- Option(shadowRoot.querySelector("ui5-slider.ui5-color-picker-alpha-slider"))
                 parentNode <- Option(alphaSlider.parentNode)
-              yield
+              do
                 parentNode.removeChild(alphaSlider)
           )
         ),
