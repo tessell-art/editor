@@ -1,12 +1,13 @@
 package io.github.scala_tessella.editor.operations
 
+import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.UndoManager
 
 object ColorOperations:
 
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
-    if !EditorState.isProcessing.now() then
+    ifNotProcessing:
       val selectedIds = EditorState.selectedTilingPolygons.now()
       if selectedIds.nonEmpty then
         UndoManager.saveState()

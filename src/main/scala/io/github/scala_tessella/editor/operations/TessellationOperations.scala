@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
+import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strictness}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
-import io.github.scala_tessella.editor.operations.ErrorOperations.showError
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.{AsyncUtils, TilingGenerator, UndoManager}
 
@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object TessellationOperations:
 
   def selectPolygon(sides: Int): Unit =
-    if !EditorState.isProcessing.now() then
+    ifNotProcessing:
       EditorState.selectedPolygon.set(Some(sides))
 
       if currentTiling.now().isEmpty then
@@ -28,7 +28,7 @@ object TessellationOperations:
             ErrorOperations.showError(s"Failed to create tiling from $sides-sided polygon")
 
   def clearTiling(): Unit =
-    if !EditorState.isProcessing.now() then
+    ifNotProcessing:
       if !currentTiling.now().isEmpty then
         UndoManager.saveState()
 
