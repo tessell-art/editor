@@ -7,6 +7,14 @@ import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 object CanvasControlComponent:
 
+  private def toggleTool(tool: Tool): Unit =
+    EditorState.activeTool.update {
+      case Some(t) if t == tool => None // Deactivate if it's the current tool
+      case _ =>
+        AppState.clearMeasurements() // Clear measurements when switching
+        Some(tool) // Activate the new tool
+    }
+
   def element: Element =
     div(
       div(
@@ -38,14 +46,7 @@ object CanvasControlComponent:
 //            "Pick Color",
             className := "toggle-btn",
             cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.ColorPicker)),
-            onClick --> { _ =>
-              EditorState.activeTool.update {
-                case Some(Tool.ColorPicker) => None
-                case _ =>
-                  AppState.clearMeasurements()
-                  Some(Tool.ColorPicker)
-              }
-            },
+            onClick --> { _ => toggleTool(Tool.ColorPicker) },
             title := "Activate color picker to select a color from an existing polygon"
           ),
           button(
@@ -53,14 +54,7 @@ object CanvasControlComponent:
             //            "Pick Color",
             className := "toggle-btn",
             cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.ShapeAndColorPicker)),
-            onClick --> { _ =>
-              EditorState.activeTool.update {
-                case Some(Tool.ShapeAndColorPicker) => None
-                case _ =>
-                  AppState.clearMeasurements()
-                  Some(Tool.ShapeAndColorPicker)
-              }
-            },
+            onClick --> { _ => toggleTool(Tool.ShapeAndColorPicker) },
             title := "Activate shape and color picker to select the shape and color from an existing polygon"
           ),
           button(
@@ -68,28 +62,14 @@ object CanvasControlComponent:
 //            "Select By Color",
             className := "toggle-btn",
             cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.SelectByColor)),
-            onClick --> { _ =>
-              EditorState.activeTool.update {
-                case Some(Tool.SelectByColor) => None
-                case _ =>
-                  AppState.clearMeasurements()
-                  Some(Tool.SelectByColor)
-              }
-            },
+            onClick --> { _ => toggleTool(Tool.SelectByColor) },
             title := "Activate selector to select all polygons with the same color"
           ),
           button(
             IconsSVG.rulerIcon,
             className := "toggle-btn",
             cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.Measurement)),
-            onClick --> { _ =>
-              EditorState.activeTool.update {
-                case Some(Tool.Measurement) =>
-                  AppState.clearMeasurements()
-                  None
-                case _ => Some(Tool.Measurement)
-              }
-            },
+            onClick --> { _ => toggleTool(Tool.Measurement) },
             title := "Activate measure mode to calculate the distance between two points"
           ),
           button(
