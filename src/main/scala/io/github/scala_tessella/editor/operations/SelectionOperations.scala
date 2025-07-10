@@ -4,9 +4,13 @@ import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 
 import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
-import io.github.scala_tessella.tessella.Topology.NodeOrdering
+import io.github.scala_tessella.tessella.Topology.{Node as TilingNode, NodeOrdering}
 
 object SelectionOperations:
+
+  private def polygonId(nodes: Seq[TilingNode]): String =
+    val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
+    s"tiling-poly-$polyTag"
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
@@ -42,10 +46,7 @@ object SelectionOperations:
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
-        val allPolygonIds = tiling.orientedPolygons.map { nodes =>
-          val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-          s"tiling-poly-$polyTag"
-        }.toSet
+        val allPolygonIds = tiling.orientedPolygons.map(polygonId).toSet
         EditorState.selectedTilingPolygons.set(allPolygonIds)
         EditorState.selectedPerimeterEdges.set(Set.empty)
 
@@ -54,9 +55,7 @@ object SelectionOperations:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
         val polygonIdsToAdd = tiling.orientedPolygons.collect {
-          case nodes if nodes.length == sides =>
-            val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-            s"tiling-poly-$polyTag"
+          case nodes if nodes.length == sides => polygonId(nodes)
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 //        EditorState.selectedTilingPolygons.update(_ ++ polygonIdsToAdd)
