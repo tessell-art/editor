@@ -16,6 +16,12 @@ object PolygonPaletteComponent:
     private def clamp(min: Int, max: Int): Int =
       Math.max(min, Math.min(i, max))
 
+  private def polygonButtonClass(baseClasses: String, isSelectedSignal: Signal[Boolean]): Signal[String] =
+    isSelectedSignal.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
+      val fullBaseClasses = if selected then s"$baseClasses selected" else baseClasses
+      if processing then s"$fullBaseClasses disabled" else fullBaseClasses
+    }
+
   def element: Element =
     div(
       className := "polygon-palette",
@@ -66,13 +72,6 @@ object PolygonPaletteComponent:
       (maybeSelected, currentCustom) => maybeSelected.contains(currentCustom)
     }
 
-    // Create a combined signal for the CSS class to handle selection and disabled states.
-    val cssClass = isSelected.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
-      val baseClass = if (selected) "polygon-btn selected" else "polygon-btn"
-      val customClass = s"$baseClass custom-polygon-creator"
-      if (processing) s"$customClass disabled" else customClass
-    }
-
     // An observer that validates the input and updates the "source of truth" (`customSides`).
     val validateAndUpdateObserver = Observer[Any] { _ =>
       val validatedSides = validateSides(inputValue.now())
@@ -81,7 +80,7 @@ object PolygonPaletteComponent:
 
     div(
       syncInputToSource, // The observer needs to be owned by the element
-      className <-- cssClass,
+      className <-- polygonButtonClass("polygon-btn custom-polygon-creator", isSelected),
       title <-- displaySides.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
       // The whole div is clickable to select the polygon with the current number of sides
       onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
@@ -113,11 +112,9 @@ object PolygonPaletteComponent:
     )
 
   private def polygonButton(sides: Int): Element =
+    val isSelected = EditorState.selectedPolygon.signal.map(_.contains(sides))
     button(
-      className <-- EditorState.selectedPolygon.signal.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
-        val baseClass = if (selected.contains(sides)) "polygon-btn selected" else "polygon-btn"
-        if processing then s"$baseClass disabled" else baseClass
-      },
+      className <-- polygonButtonClass("polygon-btn", isSelected),
       tpe := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
       disabled <-- EditorState.isProcessing.signal,
