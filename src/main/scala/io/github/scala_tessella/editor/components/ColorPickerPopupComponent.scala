@@ -27,17 +27,15 @@ object ColorPickerPopupComponent:
             (color.red, color.green, color.blue)
           } --> tempColor.writer,
           // After the component mounts, find and remove the alpha slider from its shadow DOM
-          onMountCallback(ctx => {
-            setTimeout(0) { // Wait a tick for the shadow DOM to be ready
-              val shadowRoot = ctx.thisNode.ref.shadowRoot
-              if (shadowRoot != null) {
-                val alphaSlider = shadowRoot.querySelector("ui5-slider.ui5-color-picker-alpha-slider")
-                if (alphaSlider != null) {
-                  alphaSlider.parentNode.removeChild(alphaSlider)
-                }
-              }
-            }
-          })
+          onMountCallback(ctx =>
+            setTimeout(0): // Wait a tick for the shadow DOM to be ready
+              for
+                shadowRoot <- Option(ctx.thisNode.ref.shadowRoot)
+                alphaSlider <- Option(shadowRoot.querySelector("ui5-slider.ui5-color-picker-alpha-slider"))
+                parentNode <- Option(alphaSlider.parentNode)
+              yield
+                parentNode.removeChild(alphaSlider)
+          )
         ),
         div(
           className := "popup-actions",
