@@ -1,11 +1,9 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool, ViewTransform}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool}
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
-
-import scala.math.{max, min}
 
 object CanvasControlComponent:
 
@@ -38,10 +36,8 @@ object CanvasControlComponent:
           button(
             IconsSVG.eyeDropperIcon,
 //            "Pick Color",
-            className <-- EditorState.activeTool.signal.map {
-              case Some(Tool.ColorPicker) => "toggle-btn active"
-              case _                      => "toggle-btn"
-            },
+            className := "toggle-btn",
+            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.ColorPicker)),
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.ColorPicker) => None
@@ -55,10 +51,8 @@ object CanvasControlComponent:
           button(
             IconsSVG.eyeDropperPentagonIcon,
             //            "Pick Color",
-            className <-- EditorState.activeTool.signal.map {
-              case Some(Tool.ShapeAndColorPicker) => "toggle-btn active"
-              case _                      => "toggle-btn"
-            },
+            className := "toggle-btn",
+            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.ShapeAndColorPicker)),
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.ShapeAndColorPicker) => None
@@ -72,10 +66,8 @@ object CanvasControlComponent:
           button(
             IconsSVG.selectByColorIcon,
 //            "Select By Color",
-            className <-- EditorState.activeTool.signal.map {
-              case Some(Tool.SelectByColor) => "toggle-btn active"
-              case _                        => "toggle-btn"
-            },
+            className := "toggle-btn",
+            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.SelectByColor)),
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.SelectByColor) => None
@@ -89,10 +81,7 @@ object CanvasControlComponent:
           button(
             IconsSVG.rulerIcon,
             className := "toggle-btn",
-            className <-- EditorState.activeTool.signal.map {
-              case Some(Tool.Measurement) => "toggle-btn active"
-              case _                      => "toggle-btn"
-            },
+            cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(Tool.Measurement)),
             onClick --> { _ =>
               EditorState.activeTool.update {
                 case Some(Tool.Measurement) =>
@@ -125,9 +114,8 @@ object CanvasControlComponent:
             child.text <-- EditorState.showNodeLabels.signal.map(show =>
               if show then "Labels: ON" else "Labels: OFF"
             ),
-            className <-- EditorState.showNodeLabels.signal.map(show =>
-              if show then "toggle-btn active responsive-control" else "toggle-btn responsive-control"
-            ),
+            className := "toggle-btn responsive-control",
+            cls.toggle("active") <-- EditorState.showNodeLabels.signal.map(identity),
             onClick --> { _ => AppState.toggleNodeLabels() },
             title <-- EditorState.showNodeLabels.signal.map { show =>
               if show then "Click to hide the node labels" else "Click to show the node labels"
@@ -135,10 +123,8 @@ object CanvasControlComponent:
           ),
           button(
             child.text <-- EditorState.strictness.signal.map(s => s"Validation: ${if s == Strictness.STRICT then "ON" else "OFF"}"),
-            className <-- EditorState.strictness.signal.map {
-              case Strictness.STRICT => "toggle-btn active responsive-control"
-              case _                 => "toggle-btn responsive-control"
-            },
+            className := "toggle-btn responsive-control",
+            cls.toggle("active") <-- EditorState.strictness.signal.map(_ == Strictness.STRICT),
             onClick --> { _ => AppState.toggleStrictness() },
             title <-- EditorState.strictness.signal.map {
               case Strictness.STRICT => "Validation ON: adding a polygon touching and crossing the edges of the perimeter is not allowed. Click to switch OFF."
