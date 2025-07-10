@@ -75,19 +75,16 @@ object CanvasControlComponent:
               case EditorMode.Select => "Mode: Select"
               case EditorMode.Delete => "Mode: Delete"
             },
-            className <-- EditorState.editorMode.signal.map {
-              case EditorMode.Select => "toggle-btn mode-select"
-              case EditorMode.Delete => "toggle-btn mode-delete active"
-            },
+            className := "toggle-btn",
+            cls.toggle("mode-select") <-- EditorState.editorMode.signal.map(_ == EditorMode.Select),
+            cls.toggle("mode-delete") <-- EditorState.editorMode.signal.map(_ == EditorMode.Delete),
+            cls.toggle("active") <-- EditorState.editorMode.signal.map(_ == EditorMode.Delete),
             onClick --> { _ => AppState.toggleEditorMode() },
             title <-- EditorState.editorMode.signal.map {
               case EditorMode.Select => "Click to switch to Delete mode"
               case EditorMode.Delete => "Click to switch to Select mode"
             }
           ),
-          //      ),
-          //      div(
-          //        className := "visualization-controls",
           button(
             child.text <-- EditorState.showNodeLabels.signal.map(show =>
               if show then "Labels: ON" else "Labels: OFF"
