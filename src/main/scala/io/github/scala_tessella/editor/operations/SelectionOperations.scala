@@ -17,25 +17,25 @@ object SelectionOperations:
       val startOpt = EditorState.measurementStartPoint.now()
       val endOpt = EditorState.measurementEndPoint.now()
 
-      (startOpt, endOpt) match
-        case (None, _) =>
-          // No start point, so set this as the start point
-          EditorState.measurementStartPoint.set(Some(point))
-          EditorState.measurementResult.set(None)
-        case (Some(start), _) if start == point =>
-          // Clicked on the start point, clear both start and end points
-          EditorState.measurementStartPoint.set(None)
-          EditorState.measurementEndPoint.set(None)
-          EditorState.measurementResult.set(None)
-        case (Some(_), Some(end)) if end == point =>
-          // Clicked on the end point, clear only the end point
-          EditorState.measurementEndPoint.set(None)
-          EditorState.measurementResult.set(None)
-        case (Some(start), _) =>
-          // Start point is set, so set this as the end point
-          EditorState.measurementEndPoint.set(Some(point))
-          val distance = point.point.distanceTo(start.point)
-          EditorState.measurementResult.set(Some(distance.toDouble))
+      if startOpt.isEmpty then
+        // No start point, so set this as the start point
+        EditorState.measurementStartPoint.set(Some(point))
+        EditorState.measurementResult.set(None)
+      else if startOpt.contains(point) then
+        // Clicked on the start point, clear both start and end points
+        EditorState.measurementStartPoint.set(None)
+        EditorState.measurementEndPoint.set(None)
+        EditorState.measurementResult.set(None)
+      else if endOpt.contains(point) then
+        // Clicked on the end point, clear only the end point
+        EditorState.measurementEndPoint.set(None)
+        EditorState.measurementResult.set(None)
+      else
+        // Start point is set, so set this as the end point
+        val start = startOpt.get // Safe due to the first check
+        EditorState.measurementEndPoint.set(Some(point))
+        val distance = point.point.distanceTo(start.point)
+        EditorState.measurementResult.set(Some(distance))
 
   def clearAllSelections(): Unit =
     ifNotProcessing:
