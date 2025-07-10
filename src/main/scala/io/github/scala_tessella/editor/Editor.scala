@@ -35,10 +35,10 @@ object EditorApp:
   })
 
   // 3. The effective theme is the user's preference, or the system theme if none is set.
-  val effectiveTheme: Signal[String] = EditorState.userThemePreference.signal.combineWith(systemTheme.signal).map {
-    case (Some(userChoice), _) => userChoice // User's choice takes precedence
-    case (None, systemPref)    => systemPref   // Otherwise, follow system
-  }
+  val effectiveTheme: Signal[String] =
+    EditorState.userThemePreference.signal
+      .combineWith(systemTheme.signal)
+      .map((userChoiceOpt, systemPref) => userChoiceOpt.getOrElse(systemPref))
 
   // 4. The toggleTheme function is no longer needed here; the logic is moved into the component.
 
