@@ -1,19 +1,23 @@
 package io.github.scala_tessella.editor.utils
 
 object PolygonNameGenerator:
-  def polygonName(sides: Int): String = sides match
-    case 3 => "Triangle"
-    case 4 => "Square"
-    case 5 => "Pentagon"
-    case 6 => "Hexagon"
-    case 7 => "Heptagon"
-    case 8 => "Octagon"
-    case 9 => "Enneagon"
-    case 10 => "Decagon"
-    case 11 => "Hendecagon"
-    case 12 => "Dodecagon"
-    case 15 => "Pentadecagon"
-    case 18 => "Octadecagon"
-    case 20 => "Icosagon"
-    case 24 => "Icositetragon"
-    case _ => s"$sides-gon"
+
+  private val names: Map[Int, String] = Map(
+    3 -> "Triangle",
+    4 -> "Square",
+    5 -> "Pentagon",
+    6 -> "Hexagon",
+    7 -> "Heptagon",
+    8 -> "Octagon",
+    9 -> "Enneagon",
+    10 -> "Decagon",
+    11 -> "Hendecagon",
+    12 -> "Dodecagon",
+    15 -> "Pentadecagon",
+    18 -> "Octadecagon",
+    20 -> "Icosagon",
+    24 -> "Icositetragon"
+  )
+
+  def polygonName(sides: Int): String =
+    names.getOrElse(sides, s"$sides-gon")
