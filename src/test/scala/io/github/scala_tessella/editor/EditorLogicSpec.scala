@@ -140,8 +140,8 @@ class EditorLogicSpec extends FunSuite:
     assertEquals(EditorState.viewTransform.now().scale, 2.0)
 
     // Test rotation update
-    EditorState.viewTransform.update(t => t.withRotation(45.0))
-    assertEquals(EditorState.viewTransform.now().rotationDegrees, 45.0)
+    EditorState.viewTransform.update(t => t.withRotation(45))
+    assertEquals(EditorState.viewTransform.now().rotationDegrees, 45)
   }
 
   test("Tiling polygon selection logic should work") {
