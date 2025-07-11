@@ -107,6 +107,11 @@ object PopUpsComponent:
               "When you click on a polygon the key points will be highlighted, ",
               "click one to choose the (green) start and repeat to choose the (red) end. ",
               "The unit distance will be displayed above the top right corner of the canvas."
+            ),
+            li(
+              "When you click on another key point to choose a different (red) end, ",
+              "the angle between the current and the previous end points will be shown as an arc. ",
+              "The angle measure in rad will be displayed too."
             )
           ),
           h3("Saving & Loading"),

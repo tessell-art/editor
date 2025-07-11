@@ -17,7 +17,11 @@ object EditorCanvasComponent:
         className := "file-and-measurement-container",
         div(
           className := "file-name",
-          child.text <-- EditorState.currentFileName.signal.map(_.getOrElse("untitled"))
+          child.text <-- EditorState.currentFileName.signal.combineWith(EditorState.measurementResult.signal).map { (maybeName, maybeDistance) =>
+            maybeDistance match
+              case Some(_) => ""
+              case None => maybeName.getOrElse("untitled")
+          }
         ),
         div(
           className := "measurement-result",
