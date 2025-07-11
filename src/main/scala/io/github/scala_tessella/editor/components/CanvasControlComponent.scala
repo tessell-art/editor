@@ -9,7 +9,9 @@ object CanvasControlComponent:
 
   private def toggleTool(tool: Tool): Unit =
     EditorState.activeTool.update {
-      case Some(t) if t == tool => None // Deactivate if it's the current tool
+      case Some(t) if t == tool =>
+        if t == Tool.Measurement then AppState.clearMeasurements()
+        None // Deactivate if it's the current tool
       case _ =>
         AppState.clearMeasurements() // Clear measurements when switching
         Some(tool) // Activate the new tool
