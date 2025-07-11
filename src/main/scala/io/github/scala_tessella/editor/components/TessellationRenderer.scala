@@ -1,12 +1,12 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
-import io.github.scala_tessella.editor.models.EditorConfig.*
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
+import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import org.scalajs.dom.EndingType.transparent
@@ -75,6 +75,13 @@ object TessellationRenderer:
         case _                        => None
       }
 
+    val previousMeasurementLineDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
+      .combineWith(EditorState.measurementPreviousEndPoint.signal)
+      .map {
+        case (Some(start), Some(previousEnd)) => Some(renderPreviousMeasurementLine(start, previousEnd))
+        case _ => None
+      }
+
     svg.g(
       svg.className := "tessellation",
       selectionPattern,
@@ -86,7 +93,8 @@ object TessellationRenderer:
       clickablePointsDisplay,
       measurementStartPointDisplay,
       measurementEndPointDisplay,
-      measurementLineDisplay
+      measurementLineDisplay,
+      previousMeasurementLineDisplay
     )
 
   private def renderNodeLabels(coordinates: BigCoords): List[Element] =
@@ -168,6 +176,21 @@ object TessellationRenderer:
 
   private def renderMeasurementEndPoint(p: ClickablePoint): Element =
     renderMeasurementPoint(p, isStartPoint = false)
+
+  private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point): Element =
+    val (x1, y1) = tilingPointToCanvasView(start.point)
+    val (x2, y2) = tilingPointToCanvasView(end)
+
+    svg.line(
+      svg.x1 := x1.toString,
+      svg.y1 := y1.toString,
+      svg.x2 := x2.toString,
+      svg.y2 := y2.toString,
+      svg.stroke := "#ffffff",
+      svg.strokeWidth := "1",
+      svg.className := "previous-measurement-line",
+      svg.pointerEvents := "none"
+    )
 
   private def renderMeasurementLine(start: ClickablePoint, end: ClickablePoint): Element =
     val (x1, y1) = tilingPointToCanvasView(start.point)
