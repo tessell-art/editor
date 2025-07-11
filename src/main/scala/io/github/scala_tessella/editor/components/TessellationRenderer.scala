@@ -82,6 +82,14 @@ object TessellationRenderer:
         case _ => None
       }
 
+    val measurementAngleArcDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
+      .combineWith(EditorState.measurementPreviousEndPoint.signal, EditorState.measurementEndPoint.signal)
+      .map {
+        case (Some(start), Some(previousEnd), Some(end)) =>
+          Some(renderMeasurementAngleArc(start, previousEnd, end))
+        case _ => None
+      }
+
     svg.g(
       svg.className := "tessellation",
       selectionPattern,
@@ -94,7 +102,8 @@ object TessellationRenderer:
       measurementStartPointDisplay,
       measurementEndPointDisplay,
       measurementLineDisplay,
-      previousMeasurementLineDisplay
+      previousMeasurementLineDisplay,
+      measurementAngleArcDisplay
     )
 
   private def renderNodeLabels(coordinates: BigCoords): List[Element] =
@@ -176,6 +185,39 @@ object TessellationRenderer:
 
   private def renderMeasurementEndPoint(p: ClickablePoint): Element =
     renderMeasurementPoint(p, isStartPoint = false)
+
+  private def renderMeasurementAngleArc(start: ClickablePoint, previousEnd: Point, end: ClickablePoint): Element =
+    val (cx, cy) = tilingPointToCanvasView(start.point)
+    val radius = 25.0
+
+    val p1 = previousEnd
+    val p2 = end.point
+
+    val angle1 = Math.atan2(p1.y - start.point.y, p1.x - start.point.x)
+    val angle2 = Math.atan2(p2.y - start.point.y, p2.x - start.point.x)
+
+    val startArcX = cx + radius * Math.cos(angle1)
+    val startArcY = cy + radius * Math.sin(angle1)
+    val endArcX = cx + radius * Math.cos(angle2)
+    val endArcY = cy + radius * Math.sin(angle2)
+
+    var deltaAngle = angle2 - angle1
+    if (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI
+    if (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI
+
+    val largeArcFlag = 0
+    val sweepFlag = if (deltaAngle > 0) 1 else 0
+
+    val dAttribute = s"M $startArcX $startArcY A $radius $radius 0 $largeArcFlag $sweepFlag $endArcX $endArcY"
+
+    svg.path(
+      svg.d := dAttribute,
+      svg.fill := "none",
+      svg.stroke := "white",
+      svg.strokeWidth := "1",
+      svg.className := "measurement-angle-arc",
+      svg.pointerEvents := "none"
+    )
 
   private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point): Element =
     val (x1, y1) = tilingPointToCanvasView(start.point)
