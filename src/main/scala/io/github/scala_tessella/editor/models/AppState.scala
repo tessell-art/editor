@@ -125,5 +125,7 @@ object AppState:
     clickablePoints.set(Nil)
     measurementStartPoint.set(None)
     measurementEndPoint.set(None)
+    measurementPreviousEndPoint.set(None)
     highlightedPolygonId.set(None)
     measurementResult.set(None)
+    measurementAngle.set(None)

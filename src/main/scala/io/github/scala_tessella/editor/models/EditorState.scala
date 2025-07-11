@@ -59,9 +59,11 @@ object EditorState:
   // Measurement tool state
   val measurementStartPoint: Var[Option[ClickablePoint]] = Var(None)
   val measurementEndPoint: Var[Option[ClickablePoint]] = Var(None)
+  val measurementPreviousEndPoint: Var[Option[Point]] = Var(None)
   val highlightedPolygonId: Var[Option[String]] = Var(None)
   val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
   val measurementResult: Var[Option[Double]] = Var(None)
+  val measurementAngle: Var[Option[Double]] = Var(None)
 
   // Theme state: None means follow system preference, Some("light") or Some("dark") is a user override
   val userThemePreference: Var[Option[String]] = Var(None)

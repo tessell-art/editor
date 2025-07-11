@@ -4,7 +4,7 @@ import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 
 import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
-import io.github.scala_tessella.tessella.Topology.{Node as TilingNode, NodeOrdering}
+import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
 
 object SelectionOperations:
 
@@ -25,17 +25,32 @@ object SelectionOperations:
         // Clicked on the start point, clear both start and end points
         EditorState.measurementStartPoint.set(None)
         EditorState.measurementEndPoint.set(None)
+        EditorState.measurementPreviousEndPoint.set(None)
         EditorState.measurementResult.set(None)
       else if endOpt.contains(point) then
         // Clicked on the end point, clear only the end point
         EditorState.measurementEndPoint.set(None)
+        EditorState.measurementPreviousEndPoint.set(None)
         EditorState.measurementResult.set(None)
       else
         // Start point is set, so set this as the end point
         val start = startOpt.get // Safe due to the first check
+        // If there was an endpoint before this click, save its position.
+        EditorState.measurementPreviousEndPoint.set(endOpt.map(_.point))
         EditorState.measurementEndPoint.set(Some(point))
         val distance = point.point.distanceTo(start.point)
         EditorState.measurementResult.set(Some(distance))
+        val maybeAngle: Option[Double] = endOpt.map(clickable =>
+          val angle1 = LineSegment(start.point, clickable.point).horizontalAngle
+          val angle2 = LineSegment(start.point, point.point).horizontalAngle
+          val diffRad: Double = (angle2 - angle1).toDouble
+          // Normalize the difference to be within the [0, 2*PI) range
+          val TAU = 2 * Math.PI
+          val normalizedAngle = (diffRad % TAU + TAU) % TAU
+          // The angle is the smaller of the two conjugate angles, which is in [0, PI]
+          Math.min(normalizedAngle, TAU - normalizedAngle)
+        )
+        EditorState.measurementAngle.set(maybeAngle)
 
   def clearAllSelections(): Unit =
     ifNotProcessing:

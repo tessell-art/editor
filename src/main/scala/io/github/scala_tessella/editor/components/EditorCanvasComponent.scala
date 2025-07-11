@@ -21,9 +21,14 @@ object EditorCanvasComponent:
         ),
         div(
           className := "measurement-result",
-          child.text <-- EditorState.measurementResult.signal.map {
-            case Some(result) => f"Distance: $result%.6f units"
-            case None => ""
+          child.text <-- EditorState.measurementResult.signal.combineWith(EditorState.measurementAngle.signal).map { (maybeDistance, maybeAngle) =>
+            maybeDistance match
+              case None => ""
+              case Some(distance) => f"Distance: $distance%.6f units" + {
+                maybeAngle match
+                  case None => ""
+                  case Some(angle) => f" · Angle: $angle%.6f rad"
+              }
           }
         )
       ),
