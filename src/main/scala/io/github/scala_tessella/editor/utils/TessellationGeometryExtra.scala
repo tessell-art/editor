@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.EditorConfig.*
 
-import io.github.scala_tessella.tessella.Geometry.{Point, Radian}
+import io.github.scala_tessella.tessella.Geometry.Point
 
 case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double)
 
