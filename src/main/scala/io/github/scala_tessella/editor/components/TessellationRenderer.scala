@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.components
 import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.ColorUtils.*
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
@@ -258,10 +259,7 @@ object TessellationRenderer:
       s"$x,$y"
     }.mkString(" ")
 
-    val rgbSignal = EditorState.polygonColors.signal.map { colors =>
-      val (r, g, b) = colors.getOrElse(polyTag, (200, 200, 200))
-      s"rgb($r, $g, $b)"
-    }
+    val rgbSignal = EditorState.polygonColors.signal.map { _.getOrElse(polyTag, (200, 200, 200)).toRgbString }
 
     // Check if this polygon should be hidden due to failed deletion
     val shouldHideForDeletion = EditorState.failedDeletion.signal.map {

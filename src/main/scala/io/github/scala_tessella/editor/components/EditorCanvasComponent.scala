@@ -6,6 +6,10 @@ import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, Mouse
 import com.raquo.laminar.api.L.{*, given}
 
 object EditorCanvasComponent:
+  
+  private def distanceString(distance: Double): String =
+    f"Distance: $distance%.6f units"
+
   def element: Element =
     div(
       className := "canvas-container",
@@ -25,15 +29,11 @@ object EditorCanvasComponent:
         ),
         div(
           className := "measurement-result",
-          child.text <-- EditorState.measurementResult.signal.combineWith(EditorState.measurementAngle.signal).map { (maybeDistance, maybeAngle) =>
-            maybeDistance match
-              case None => ""
-              case Some(distance) => f"Distance: $distance%.6f units" + {
-                maybeAngle match
-                  case None => ""
-                  case Some(angle) => f" · Angle: $angle%.6f rad"
-              }
-          }
+          child.text <-- EditorState.measurementResult.signal.combineWith(EditorState.measurementAngle.signal).map {
+            case (None, _) => ""
+            case (Some(distance), None) => distanceString(distance)
+            case (Some(distance), Some(angle)) => f"Angle: $angle%.6f rad · ${distanceString(distance)}"
+          },
         )
       ),
         // A new wrapper for the SVG and its overlays

@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.ColorUtils.*
 
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
@@ -51,8 +52,7 @@ object SvgExporter:
 
     val polygonsXml = tiling.orientedPolygons.map { nodes =>
       val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-      val (r, g, b): (Int, Int, Int) = AppState.getOrAssignPolygonColor(polyTag)
-      val color = s"rgb($r, $g, $b)"
+      val color = AppState.getOrAssignPolygonColor(polyTag).toRgbString
 
       val points = nodes.map(coordinates).map { vertex =>
         val x = vertex.x * scale + offsetX
