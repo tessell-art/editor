@@ -6,7 +6,7 @@ import io.github.scala_tessella.editor.interactions.{KeyboardEventHandler, Mouse
 import com.raquo.laminar.api.L.{*, given}
 
 object EditorCanvasComponent:
-  
+
   private def distanceString(distance: Double): String =
     f"Distance: $distance%.6f units"
 
@@ -131,26 +131,21 @@ object EditorCanvasComponent:
       }
     )
 
+  private def createSvgText(x: String, y: String, fontSize: String, fill: String, content: String): Element =
+    svg.text(
+      svg.x := x,
+      svg.y := y,
+      svg.fontSize := fontSize,
+      svg.fill := fill,
+      svg.textAnchor := "middle",
+      svg.fontFamily := "Arial, sans-serif",
+      content
+    )
+
   private def canvasMessage(title: String, subTitle: String): Element =
     svg.g(
-      svg.text(
-        svg.x := "425",
-        svg.y := "250",
-        svg.fontSize := "18",
-        svg.fill := "#888",
-        svg.textAnchor := "middle",
-        svg.fontFamily := "Arial, sans-serif",
-        title
-      ),
-      svg.text(
-        svg.x := "425",
-        svg.y := "280",
-        svg.fontSize := "14",
-        svg.fill := "#666",
-        svg.textAnchor := "middle",
-        svg.fontFamily := "Arial, sans-serif",
-        subTitle
-      )
+      createSvgText("425", "250", "18", "#888", title),
+      createSvgText("425", "280", "14", "#666", subTitle)
     )
 
   private def noTessellationMessage(): Element =
