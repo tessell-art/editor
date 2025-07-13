@@ -300,6 +300,7 @@ object TessellationRenderer:
           case (hidden, mode, tool) =>
             val cursor = tool match
               case Some(Tool.ColorPicker)   => s"cursor: $colorPickerCursor;"
+              case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
               case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
               case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
               case _ => mode match
