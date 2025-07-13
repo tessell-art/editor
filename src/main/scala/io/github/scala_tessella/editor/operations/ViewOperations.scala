@@ -23,8 +23,8 @@ object ViewOperations:
     (safeTilingWidth, safeTilingHeight)
 
   // Pure function to calculate new scale based on canvas and tiling dimensions
-  private [operations] def calculateNewScale(canvasWidth: Double, canvasHeight: Double, 
-                               tilingWidth: Double, tilingHeight: Double, padding: Double): Double =
+  private [operations] def calculateNewScale(canvasWidth: Double, canvasHeight: Double,
+                                             tilingWidth: Double, tilingHeight: Double, padding: Double): Double =
     val (safeTilingWidth, safeTilingHeight) = calculateSafeDimensions(tilingWidth, tilingHeight)
     val scaleX = (canvasWidth - padding * 2) / safeTilingWidth
     val scaleY = (canvasHeight - padding * 2) / safeTilingHeight
@@ -37,8 +37,8 @@ object ViewOperations:
     (tilingCenterX, tilingCenterY)
 
   // Pure function to calculate new pan values to center the tiling
-  private [operations] def calculateNewPan(canvasWidth: Double, canvasHeight: Double, 
-                             tilingCenterX: Double, tilingCenterY: Double, newScale: Double): (Double, Double) =
+  private [operations] def calculateNewPan(canvasWidth: Double, canvasHeight: Double,
+                                           tilingCenterX: Double, tilingCenterY: Double, newScale: Double): (Double, Double) =
     val tilingCenterOnCanvasX = tilingCenterX + canvasCenterX
     val tilingCenterOnCanvasY = tilingCenterY + canvasCenterY
 
@@ -48,13 +48,36 @@ object ViewOperations:
     (newPanX, newPanY)
 
   // Pure function to create a new ViewTransform with updated values
-  private [operations] def createUpdatedViewTransform(currentTransform: ViewTransform, 
-                                        newScale: Double, newPanX: Double, newPanY: Double): ViewTransform =
+  private [operations] def createUpdatedViewTransform(currentTransform: ViewTransform,
+                                                      newScale: Double, newPanX: Double, newPanY: Double): ViewTransform =
     currentTransform.copy(
       scale = newScale,
       panX = newPanX,
       panY = newPanY
     )
+
+  // Pure function to calculate the new view transform to fit the tiling to the canvas
+  private[operations] def calculateFitToCanvasTransform(
+                                                         coords: Iterable[Point],
+                                                         canvasWidth: Double,
+                                                         canvasHeight: Double,
+                                                         currentTransform: ViewTransform,
+                                                         padding: Double
+                                                       ): Option[ViewTransform] =
+    if canvasWidth <= 0 || canvasHeight <= 0 then return None
+
+    val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
+    rotatedCoords.maybeBounds.flatMap { bounds =>
+      val tilingWidth = bounds.maxX - bounds.minX
+      val tilingHeight = bounds.maxY - bounds.minY
+
+      if tilingWidth <= 0 && tilingHeight <= 0 then None
+      else
+        val newScale = calculateNewScale(canvasWidth, canvasHeight, tilingWidth, tilingHeight, padding)
+        val (tilingCenterX, tilingCenterY) = calculateTilingCenter(bounds)
+        val (newPanX, newPanY) = calculateNewPan(canvasWidth, canvasHeight, tilingCenterX, tilingCenterY, newScale)
+        Some(createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY))
+    }
 
   def fitTilingToCanvas(): Unit =
     val tiling = EditorState.currentTiling.now()
@@ -65,32 +88,20 @@ object ViewOperations:
 
     EditorState.canvasElementRef.now().foreach { canvasElement =>
       val canvasRect = canvasElement.getBoundingClientRect()
-      val canvasWidth = canvasRect.width
-      val canvasHeight = canvasRect.height
       val currentTransform = EditorState.viewTransform.now()
 
-      if canvasWidth > 0 && canvasHeight > 0 then
-        val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
-
-        rotatedCoords.maybeBounds.foreach { bounds =>
-          val tilingWidth = bounds.maxX - bounds.minX
-          val tilingHeight = bounds.maxY - bounds.minY
-
-          if tilingWidth > 0 || tilingHeight > 0 then
-            val padding = 40.0
-
-            val newScale = calculateNewScale(canvasWidth, canvasHeight, tilingWidth, tilingHeight, padding)
-            val (tilingCenterX, tilingCenterY) = calculateTilingCenter(bounds)
-            val (newPanX, newPanY) = calculateNewPan(canvasWidth, canvasHeight, tilingCenterX, tilingCenterY, newScale)
-
-            val updatedTransform = createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY)
-            EditorState.viewTransform.set(updatedTransform)
-        }
+      calculateFitToCanvasTransform(
+        coords,
+        canvasRect.width,
+        canvasRect.height,
+        currentTransform,
+        padding = 40.0
+      ).foreach(EditorState.viewTransform.set)
     }
 
   // Pure function to perform inverse transformation (screen to world)
-  private [operations] def inverseTransform(viewCenterX: Double, viewCenterY: Double, 
-                              panX: Double, panY: Double, scale: Double, rotationRad: Double): (Double, Double) =
+  private [operations] def inverseTransform(viewCenterX: Double, viewCenterY: Double,
+                                            panX: Double, panY: Double, scale: Double, rotationRad: Double): (Double, Double) =
     // Inverse pan
     val afterInvPanX = viewCenterX - panX
     val afterInvPanY = viewCenterY - panY
@@ -112,9 +123,9 @@ object ViewOperations:
     (worldX, worldY)
 
   // Pure function to perform forward transformation (world to screen)
-  private [operations] def forwardTransform(worldX: Double, worldY: Double, 
-                              viewCenterX: Double, viewCenterY: Double, 
-                              scale: Double, rotationRad: Double): (Double, Double) =
+  private [operations] def forwardTransform(worldX: Double, worldY: Double,
+                                            viewCenterX: Double, viewCenterY: Double,
+                                            scale: Double, rotationRad: Double): (Double, Double) =
     // Forward rotation
     val cosRot = Math.cos(rotationRad)
     val sinRot = Math.sin(rotationRad)
@@ -132,9 +143,9 @@ object ViewOperations:
     (afterScaleX, afterScaleY)
 
   // Pure function to calculate new pan values after rotation
-  private [operations] def calculateRotatedPan(worldX: Double, worldY: Double, 
-                                 viewCenterX: Double, viewCenterY: Double, 
-                                 scale: Double, newRotationRad: Double): (Double, Double) =
+  private [operations] def calculateRotatedPan(worldX: Double, worldY: Double,
+                                               viewCenterX: Double, viewCenterY: Double,
+                                               scale: Double, newRotationRad: Double): (Double, Double) =
     val (afterScaleX, afterScaleY) = forwardTransform(
       worldX, worldY, viewCenterX, viewCenterY, scale, newRotationRad
     )
@@ -162,7 +173,6 @@ object ViewOperations:
     // Calculate new rotation
     val newRotationDegrees = currentTransform.rotationDegrees + delta
     val newRotationRad = AngleDegree(newRotationDegrees).toRadian.toDouble
-//    val newRotationRad = Math.toRadians(newRotationDegrees.toDouble)
 
     // Calculate new pan values
     val (newPanX, newPanY) = calculateRotatedPan(
