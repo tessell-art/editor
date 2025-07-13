@@ -2,13 +2,14 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.ViewTransform
 import io.github.scala_tessella.editor.utils.Bounds
+
 import io.github.scala_tessella.tessella.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.tessella.Geometry.Point
 import munit.FunSuite
 
 import scala.math.Pi
 
-class ViewOperationsSpec extends FunSuite {
+class ViewOperationsSpec extends FunSuite:
 
   private val delta = 1E-9
 
@@ -113,11 +114,11 @@ class ViewOperationsSpec extends FunSuite {
     //                          y' = -125*sin(90) + 225*cos(90) = -125*1 + 225*0 = -125
     //    After rotation point: (400 + (-225), 300 + (-125)) = (175, 175)
     // 2. Forward Scale: (175*2, 175*2) = (350, 350)
-    
+
     assertEquals(screenX, 350.0, delta)
     assertEquals(screenY, 350.0, delta)
   }
-  
+
   test("calculateRotatedPan should compute pan to keep a point stationary during rotation") {
     val (worldX, worldY) = (275.0, 525.0)
     val (viewCenterX, viewCenterY) = (400.0, 300.0)
@@ -133,5 +134,94 @@ class ViewOperationsSpec extends FunSuite {
     assertEquals(panX, 50.0, delta)
     assertEquals(panY, -50.0, delta)
   }
+  
+  val initialTransform: ViewTransform = ViewTransform(1.0, 0, 0.0, 0)
+  val testCanvasWidth = 800.0
+  val testCanvasHeight = 600.0
+  val padding = 50.0
+  val coords: List[Point] = List(Point(10, 20), Point(110, 70)) // width=100, height=50
 
-}
+  test("should return a new transform when fitting a tiling to the canvas") {
+    val result = ViewOperations.calculateFitToCanvasTransform(
+      coords,
+      testCanvasWidth,
+      testCanvasHeight,
+      initialTransform,
+      padding
+    )
+
+    assert(result.isDefined)
+    val transform = result.get
+
+    // Manually calculate expected values
+    // bounds: minX=10, minY=20, maxX=110, maxY=70
+    // tilingWidth=100, tilingHeight=50
+    // scaleX = (800 - 100) / 100 = 7.0
+    // scaleY = (600 - 100) / 50 = 10.0
+    // newScale = 7.0
+    assertEquals(transform.scale, 7.0, delta)
+
+    // tilingCenterX = (10+110)/2 = 60, tilingCenterY = (20+70)/2 = 45
+    // EditorConfig.canvasCenterX = 400, EditorConfig.canvasCenterY = 300
+    // tilingCenterOnCanvasX = 60 + 400 = 460
+    // tilingCenterOnCanvasY = 45 + 300 = 345
+    // newPanX = 400 - 460 * 7.0 = 400 - 3220 = -2820
+    // newPanY = 300 - 345 * 7.0 = 300 - 2415 = -2115
+    assertEquals(transform.panX, -2820.0, delta)
+    assertEquals(transform.panY, -2115.0, delta)
+    assertEquals(transform.rotationDegrees, 0)
+  }
+
+  test("should return None if canvas dimensions are invalid") {
+    val result1 = ViewOperations.calculateFitToCanvasTransform(coords, 0, testCanvasHeight, initialTransform, padding)
+    assertEquals(result1, None)
+    val result2 = ViewOperations.calculateFitToCanvasTransform(coords, testCanvasWidth, -10, initialTransform, padding)
+    assertEquals(result2, None)
+  }
+
+  test("should return None if coords are empty") {
+    val result = ViewOperations.calculateFitToCanvasTransform(Nil, testCanvasWidth, testCanvasHeight, initialTransform, padding)
+    assertEquals(result, None)
+  }
+
+  test("should return None if tiling has no width or height") {
+    val singlePointCoords = List(Point(10, 20))
+    val result = ViewOperations.calculateFitToCanvasTransform(singlePointCoords, testCanvasWidth, testCanvasHeight, initialTransform, padding)
+    assertEquals(result, None)
+  }
+
+  test("should correctly calculate transform with rotation") {
+    val rotatedTransform = initialTransform.copy(rotationDegrees = 90)
+    // coords: List(Point(10, 20), Point(110, 70))
+    // after 90 deg rotation -> List(Point(-20, 10), Point(-70, 110))
+    // rotated bounds: minX=-70, minY=10, maxX=-20, maxY=110
+    // tilingWidth=50, tilingHeight=100
+    val result = ViewOperations.calculateFitToCanvasTransform(
+      coords,
+      testCanvasWidth,
+      testCanvasHeight,
+      rotatedTransform,
+      padding
+    )
+
+    assert(result.isDefined)
+    val transform = result.get
+
+    // scaleX = (800 - 100) / 50 = 14
+    // scaleY = (600 - 100) / 100 = 5
+    // newScale = 5.0
+    assertEquals(transform.scale, 5.0, delta)
+
+    // After rotation:
+    // rotatedCoords: List(Point(-20, 10), Point(-70, 110)) approx.
+    // bounds: minX=-70, minY=10, maxX=-20, maxY=110
+    // tilingCenterX = (-70-20)/2 = -45
+    // tilingCenterY = (10+110)/2 = 60
+    // tilingCenterOnCanvasX = -45 + 400 = 355
+    // tilingCenterOnCanvasY = 60 + 300 = 360
+    // newPanX = 400 - 355 * 5.0 = 400 - 1775 = -1375
+    // newPanY = 300 - 360 * 5.0 = 300 - 1800 = -1500
+    assertEquals(transform.panX, -1375.0, delta)
+    assertEquals(transform.panY, -1500.0, delta)
+    assertEquals(transform.rotationDegrees, 90)
+  }
