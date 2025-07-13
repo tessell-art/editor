@@ -227,34 +227,6 @@ class EditorLogicSpec extends FunSuite:
     assert(EditorState.errorMessage.now().isEmpty)
   }
 
-  test("Delete selected elements should show appropriate error") {
-    // Create a tiling and select some polygons
-    selectPolygon(6)
-    EditorState.selectedTilingPolygons.set(Set("poly1"))
-
-    // Try to delete - should show error since deletion is not supported
-    AppState.deleteSelectedElements()
-
-    // Should show error about deletion not being supported
-    assert(EditorState.errorMessage.now().isDefined)
-    assert(EditorState.errorMessage.now().get.contains("deletion not supported"))
-  }
-
-  test("Delete selected elements should do nothing when no selections") {
-    // Create a tiling but don't select anything
-    selectPolygon(6)
-    assert(EditorState.selectedTilingPolygons.now().isEmpty)
-
-    // Clear any existing errors
-    clearError()
-
-    // Try to delete - should do nothing
-    AppState.deleteSelectedElements()
-
-    // Should not show any error
-    assert(EditorState.errorMessage.now().isEmpty)
-  }
-
   test("Polygon selection preserves existing tiling complexity") {
     // Start with a hexagon tiling
     selectPolygon(6)

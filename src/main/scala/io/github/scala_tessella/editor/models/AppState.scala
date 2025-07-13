@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.editor.models.EditorState.*
 import io.github.scala_tessella.editor.operations.*
+import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.UndoManager
 
 import com.raquo.laminar.api.L.*
@@ -32,95 +32,184 @@ enum EditorMode:
 enum Tool:
   case ColorPicker, ShapeAndColorPicker, SelectByColor, Measurement
 
+/**
+ * AppState object provides a higher-level interface to the editor state.
+ * It exports all members of EditorState and provides methods to manipulate the state.
+ */
 object AppState:
   // Expose state for components to read
   export EditorState.*
 
   // Expose undo/redo capabilities for UI components
+  /** Signal indicating whether undo operation is available */
   val canUndo: Signal[Boolean] = UndoManager.canUndo.signal
+
+  /** Signal indicating whether redo operation is available */
   val canRedo: Signal[Boolean] = UndoManager.canRedo.signal
 
   // Simple UI operations
+
+  /**
+   * Toggles between Select and Delete editor modes.
+   * Does nothing if the editor is currently processing an operation.
+   */
   def toggleEditorMode(): Unit =
-    if !isProcessing.now() then
+    ifNotProcessing:
       editorMode.update {
         case EditorMode.Select => EditorMode.Delete
         case EditorMode.Delete => EditorMode.Select
       }
 
+  /**
+   * Toggles between STRICT and CROSSING strictness modes for the tiling.
+   * Does nothing if the editor is currently processing an operation.
+   */
   def toggleStrictness(): Unit =
-    if !isProcessing.now() then
+    ifNotProcessing:
       strictness.update {
         case Strictness.STRICT => Strictness.CROSSING
         case _                 => Strictness.STRICT
       }
 
+  /**
+   * Toggles the visibility of node labels.
+   * Does nothing if the editor is currently processing an operation.
+   */
   def toggleNodeLabels(): Unit =
-    if !isProcessing.now() then
+    ifNotProcessing:
       showNodeLabels.update(!_)
 
+  /**
+   * Checks if the current tiling is empty.
+   * @return true if the tiling is empty, false otherwise
+   */
   def isTilingEmpty: Boolean = currentTiling.now().isEmpty
 
   // Delegate to operation objects
+
+  /**
+   * Selects a polygon with the specified number of sides.
+   * @param sides The number of sides of the polygon to select
+   */
   def selectPolygon(sides: Int): Unit =
     TessellationOperations.selectPolygon(sides)
 
+  /**
+   * Clears the current tiling and all measurements.
+   */
   def clearTiling(): Unit =
     clearMeasurements()
     TessellationOperations.clearTiling()
 
+  /**
+   * Handles a click on a tiling polygon.
+   * The behavior depends on the current editor mode and active tool.
+   * @param polygonId The ID of the clicked polygon
+   */
   def handleTilingPolygonClick(polygonId: String): Unit =
     SelectionOperations.handleTilingPolygonClick(polygonId)
 
+  /**
+   * Handles a click on a perimeter edge.
+   * @param edgeId The ID of the clicked edge
+   * @param edgeIndex The index of the clicked edge
+   */
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     SelectionOperations.handlePerimeterEdgeClick(edgeId, edgeIndex)
 
+  /**
+   * Handles a click on a point for measurement.
+   * @param point The clicked point
+   */
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForMeasurement(point)
 
+  /**
+   * Applies the specified color to all selected polygons.
+   * @param color The color to apply (RGB tuple)
+   */
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
     ColorOperations.applyColorToSelectedPolygons(color)
 
+  /**
+   * Gets the color for a polygon, or assigns a new one if it doesn't have one.
+   * @param polyTag The tag of the polygon
+   * @return The color of the polygon (RGB tuple)
+   */
   def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =
     ColorOperations.getOrAssignPolygonColor(polyTag)
 
+  /**
+   * Shows an error message with optional details about failed operations.
+   * @param message The error message to display
+   * @param placement Optional details about a failed polygon placement
+   * @param deletion Optional details about a failed polygon deletion
+   */
   def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
     ErrorOperations.showError(message, placement, deletion)
 
+  /**
+   * Clears the current error message and details.
+   */
   def clearError(): Unit =
     ErrorOperations.clearError()
 
-  def deleteSelectedElements(): Unit =
-    if !isProcessing.now() then
-      if selectedTilingPolygons.now().nonEmpty then
-        ErrorOperations.showError("Tessellation polygon deletion not supported yet")
-
+  /**
+   * Selects all polygons with the specified number of sides.
+   * Does nothing if the editor is processing or if the tiling is empty.
+   * @param sides The number of sides of the polygons to select
+   */
   def selectPolygonsBySides(sides: Int): Unit =
-    if !isProcessing.now() && !isTilingEmpty then
-      UndoManager.saveState()
-      SelectionOperations.selectPolygonsBySides(sides)
+    ifNotProcessing:
+      if !isTilingEmpty then
+        UndoManager.saveState()
+        SelectionOperations.selectPolygonsBySides(sides)
 
+  /**
+   * Selects all polygons in the tiling.
+   * Does nothing if the editor is processing or if the tiling is empty.
+   */
   def selectAll(): Unit =
-    if !isProcessing.now() && !isTilingEmpty then
-      UndoManager.saveState()
-      SelectionOperations.selectAllPolygons()
+    ifNotProcessing:
+      if !isTilingEmpty then
+        UndoManager.saveState()
+        SelectionOperations.selectAllPolygons()
 
+  /**
+   * Deselects all selected polygons and edges.
+   * Does nothing if the editor is processing or if nothing is selected.
+   */
   def deselectAll(): Unit =
-    if !isProcessing.now() && (selectedTilingPolygons.now().nonEmpty || selectedPerimeterEdges.now().nonEmpty) then
-      UndoManager.saveState()
-      SelectionOperations.clearAllSelections()
+    ifNotProcessing:
+      if selectedTilingPolygons.now().nonEmpty || selectedPerimeterEdges.now().nonEmpty then
+        UndoManager.saveState()
+        SelectionOperations.clearAllSelections()
 
+  /**
+   * Undoes the last operation.
+   * Does nothing if the editor is processing or if there's nothing to undo.
+   */
   def undo(): Unit =
-    if !isProcessing.now() then
+    ifNotProcessing:
       UndoManager.undo()
 
+  /**
+   * Redoes the last undone operation.
+   * Does nothing if the editor is processing or if there's nothing to redo.
+   */
   def redo(): Unit =
-    if !isProcessing.now() then
+    ifNotProcessing:
       UndoManager.redo()
 
+  /**
+   * Adjusts the view to fit the entire tiling in the canvas.
+   */
   def fitTilingToCanvas(): Unit =
     ViewOperations.fitTilingToCanvas()
-    
+
+  /**
+   * Clears all measurement-related state.
+   */
   def clearMeasurements(): Unit =
     clickablePoints.set(Nil)
     measurementStartPoint.set(None)

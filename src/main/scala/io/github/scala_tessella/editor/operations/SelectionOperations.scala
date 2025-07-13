@@ -12,6 +12,10 @@ object SelectionOperations:
     val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
     s"tiling-poly-$polyTag"
 
+  // Extract polygon tag from polygon ID
+  private def extractPolyTag(polygonId: String): String =
+    if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
       val startOpt = EditorState.measurementStartPoint.now()
@@ -73,11 +77,10 @@ object SelectionOperations:
           case nodes if nodes.length == sides => polygonId(nodes)
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
-//        EditorState.selectedTilingPolygons.update(_ ++ polygonIdsToAdd)
 
   def selectPolygonsByColor(polygonId: String): Unit =
     ifNotProcessing:
-      val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+      val polyTag = extractPolyTag(polygonId)
       EditorState.polygonColors.now().get(polyTag).foreach { color =>
         val polygonIdsToAdd = EditorState.polygonColors.now().collect {
           case (tag, c) if c == color => s"tiling-poly-$tag"
@@ -103,13 +106,13 @@ object SelectionOperations:
   def handleTilingPolygonClick(polygonId: String): Unit =
     EditorState.activeTool.now() match
       case Some(Tool.ColorPicker) =>
-        val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+        val polyTag = extractPolyTag(polygonId)
         EditorState.polygonColors.now().get(polyTag).foreach { color =>
           EditorState.fillColor.set(color)
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.ShapeAndColorPicker) =>
-        val polyTag = if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+        val polyTag = extractPolyTag(polygonId)
         EditorState.polygonColors.now().get(polyTag).foreach { color =>
           EditorState.fillColor.set(color)
           val sides = polyTag.count(_ == '-') + 1
@@ -130,7 +133,7 @@ object SelectionOperations:
   private def handlePolygonClickForMeasurement(polygonId: String): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
-        val polyTag = polygonId.stripPrefix("tiling-poly-")
+        val polyTag = extractPolyTag(polygonId)
 
         tiling.orientedPolygons.find { nodes =>
           val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
