@@ -104,7 +104,7 @@ object SvgExporter:
       else
         val items = coordinates
           .map { (node, vertex) =>
-            s"""        <coord node="${node.toString}" x="${vertex.x.toString}" y="${vertex.y.toString}" />"""
+            s"""      <coord node="${node.toString}" x="${vertex.x.toString}" y="${vertex.y.toString}" />"""
           }
           .mkString("\n")
         s"""
