@@ -52,7 +52,7 @@ object SvgExporter:
     val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
     val metadataXml = generateMetadataXml(coordinates)
 
-    s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
+    s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tessella="https://github.com/scala-tessella/tessella" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
        |$perimeterXml
        |$polygonsXml
@@ -104,13 +104,13 @@ object SvgExporter:
       else
         val items = coordinates
           .map { (node, vertex) =>
-            s"""      <coord node="${node.toString}" x="${vertex.x.toString}" y="${vertex.y.toString}" />"""
+            s"""      <tessella:coord node="${node.toString}" x="${vertex.x.toString}" y="${vertex.y.toString}" />"""
           }
           .mkString("\n")
         s"""
-           |    <tilingCoordinates>
+           |    <tessella:tilingCoordinates>
            |$items
-           |    </tilingCoordinates>"""
+           |    </tessella:tilingCoordinates>"""
     s"""  <metadata>
        |    <rdf:RDF>
        |      <cc:Work>
