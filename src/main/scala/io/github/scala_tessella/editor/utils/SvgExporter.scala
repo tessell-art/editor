@@ -6,7 +6,7 @@ import io.github.scala_tessella.editor.utils.ColorUtils.*
 
 import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
 import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.Topology.NodeOrdering
+import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
 import org.scalajs.dom
 
 object SvgExporter:
@@ -60,17 +60,18 @@ object SvgExporter:
        |$metadataXml
        |</svg>""".stripMargin
 
+  private def pointsString(nodes: Seq[TilingNode], coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
+    nodes.map(coordinates).map { vertex =>
+      val x = vertex.x * scale + offsetX
+      val y = vertex.y * scale + offsetY
+      s"$x,$y"
+    }.mkString(" ")
+
   private [utils] def generatePolygonsXml(tiling: IncrementalTiling, coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double, strokeWidth: Double): String =
     val polygonsXml = tiling.orientedPolygons.map { nodes =>
       val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
       val color = AppState.getOrAssignPolygonColor(polyTag).toRgbString
-
-      val points = nodes.map(coordinates).map { vertex =>
-        val x = vertex.x * scale + offsetX
-        val y = vertex.y * scale + offsetY
-        s"$x,$y"
-      }.mkString(" ")
-
+      val points = pointsString(nodes, coordinates, scale, offsetX, offsetY)
       val nodesStr = nodes.map(_.toString).mkString(",")
 
       s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
@@ -83,11 +84,7 @@ object SvgExporter:
     val perimeterNodes = tiling.perimeter
     if perimeterNodes.isEmpty then ""
     else
-      val points = perimeterNodes.map(coordinates).map { vertex =>
-        val x = vertex.x * scale + offsetX
-        val y = vertex.y * scale + offsetY
-        s"$x,$y"
-      }.mkString(" ")
+      val points = pointsString(perimeterNodes, coordinates, scale, offsetX, offsetY)
       val nodesStr = perimeterNodes.map(_.toString).mkString(",")
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
