@@ -60,7 +60,7 @@ object SvgExporter:
        |$metadataXml
        |</svg>""".stripMargin
 
-  private def pointsString(nodes: Seq[TilingNode], coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
+  private [utils] def pointsString(nodes: Seq[TilingNode], coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
     nodes.map(coordinates).map { vertex =>
       val x = vertex.x * scale + offsetX
       val y = vertex.y * scale + offsetY
