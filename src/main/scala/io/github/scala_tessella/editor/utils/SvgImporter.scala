@@ -1,18 +1,15 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
-import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.TilingCoordinates.Coords
-import io.github.scala_tessella.tessella.Topology.{Edge, Node}
-import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
-
+import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.tessella.Topology.Node
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent, SVGElement}
 
 import scala.scalajs.js.RegExp
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object SvgImporter:
 
@@ -27,7 +24,8 @@ object SvgImporter:
         // The onload event for FileReader provides a ProgressEvent, not a UIEvent
         reader.onload = (_: ProgressEvent) => {
           val content = reader.result.toString
-          importTilingFromSVG(content, file.name)
+          // Wrap the import logic in withLoadingState to manage the isProcessing flag
+          AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name))
         }
         reader.readAsText(file)
     }
@@ -88,49 +86,6 @@ object SvgImporter:
                 EditorState.polygonColors.update(_ + (polyTag -> rgb))
               }
           case _ =>
-
-      /*
-      // The old method for extracting coordinates from polygon `points` and `data-nodes` attributes
-      // is now replaced by reading the `<tilingCoordinates>` metadata.
-      var svgCoords = Map.empty[Int, (BigDecimal, BigDecimal)]
-
-      for (i <- 0 until polygons.length)
-        val poly = polygons(i).asInstanceOf[SVGElement]
-        val nodesStr: Option[String] = Option(poly.getAttribute("data-nodes"))
-        val pointsStr: Option[String] = Option(poly.getAttribute("points"))
-        val fill = poly.getAttribute("fill")
-
-        (nodesStr, pointsStr) match
-          case (Some(ns), Some(ps)) if ns.nonEmpty && ps.nonEmpty =>
-            val nodes = ns.split(',').map(_.toInt).toList
-            val points = ps.split(' ').filter(_.nonEmpty).map { p =>
-              val coords: Array[String] = p.split(',')
-              (BigDecimal(coords(0)), BigDecimal(coords(1)))
-            }
-
-            if nodes.length == points.length then
-              if fill == "none" then
-                perimeterNodes = nodes
-              else
-                tilingPolygons = tilingPolygons :+ nodes
-                parseColor(fill).foreach { rgb =>
-                  val polyTag = nodes.sorted.map(_.toString).mkString("-")
-                  EditorState.polygonColors.update(_ + (polyTag -> rgb))
-                }
-              nodes.zip(points).foreach { case (node, point) =>
-                svgCoords += node -> point
-              }
-          case _ =>
-
-      val scale = EditorConfig.canvasScale
-
-      val minSvgX = if svgCoords.isEmpty then BigDecimal(0) else svgCoords.values.map(_._1).min
-      val minSvgY = if svgCoords.isEmpty then BigDecimal(0) else svgCoords.values.map(_._2).min
-
-      svgCoords.map { case (id, (x, y)) =>
-        Node(id) -> BigPoint((x - minSvgX) / scale, (y - minSvgY) / scale)
-      }
-      */
 
       if tilingPolygons.isEmpty && perimeterNodes.isEmpty then
         throw new Exception("No valid polygons found in SVG.")
