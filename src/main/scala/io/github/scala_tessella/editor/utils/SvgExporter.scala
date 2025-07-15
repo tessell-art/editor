@@ -9,6 +9,8 @@ import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
 import org.scalajs.dom
 
+import scala.math.BigDecimal.RoundingMode
+
 object SvgExporter:
 
   // "Save As..." functionality
@@ -52,7 +54,10 @@ object SvgExporter:
     val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
     val metadataXml = generateMetadataXml(coordinates)
 
-    s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tess="https://github.com/scala-tessella/tessella" width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">
+    val sWidth = f"$width%1.4f"
+    val sHeight = f"$height%1.4f"
+
+    s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tess="https://github.com/scala-tessella/tessella" width="$sWidth" height="$sHeight" viewBox="0 0 $sWidth $sHeight" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
        |$perimeterXml
        |$polygonsXml
@@ -62,8 +67,8 @@ object SvgExporter:
 
   private [utils] def pointsString(nodes: Seq[TilingNode], coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
     nodes.map(coordinates).map { vertex =>
-      val x = vertex.x * scale + offsetX
-      val y = vertex.y * scale + offsetY
+      val x = (vertex.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+      val y = (vertex.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
       s"$x,$y"
     }.mkString(" ")
 
@@ -90,8 +95,8 @@ object SvgExporter:
 
   private [utils] def generateLabelsXml(coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
     coordinates.map { (node, vertex) =>
-      val labelX = vertex.x * scale + offsetX + 4
-      val labelY = vertex.y * scale + offsetY - 4
+      val labelX = (vertex.x * scale + offsetX + 4).setScale(4, RoundingMode.HALF_UP)
+      val labelY = (vertex.y * scale + offsetY - 4).setScale(4, RoundingMode.HALF_UP)
       s"""  <text x="$labelX" y="$labelY" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">${node.toString}</text>"""
     }.mkString("\n")
 
