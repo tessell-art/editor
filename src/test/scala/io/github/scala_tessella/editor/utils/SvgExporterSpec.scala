@@ -30,7 +30,7 @@ class SvgExporterSpec extends FunSuite:
     val result = SvgExporter.pointsString(nodes, testCoordinates, scale, offsetX, offsetY)
 
     // node1: (0*2+5, 0*2+10) = (5, 10)
-    val expected = "5,10 7,10 7,12"
+    val expected = "5.000000,10.000000 7.000000,10.000000 7.000000,12.000000"
     assertEquals(result, expected)
   }
 
@@ -41,7 +41,7 @@ class SvgExporterSpec extends FunSuite:
 
   test("should handle single node") {
     val result = SvgExporter.pointsString(List(node1), testCoordinates, 1.0, 0.0, 0.0)
-    assertEquals(result, "0,0")
+    assertEquals(result, "0.000000,0.000000")
   }
 
   test("should generate polygons XML with correct structure") {
@@ -60,7 +60,7 @@ class SvgExporterSpec extends FunSuite:
   test("should include correct points in polygon") {
     val result = SvgExporter.generatePolygonsXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0, 1.5)
     // Should contain the points from our test coordinates
-    assert(result.contains("points=\"0,0 1,0 1,1 0,1\""))
+    assert(result.contains("points=\"0.000000,0.000000 1.000000,0.000000 1.000000,1.000000 0.000000,1.000000\""))
   }
 
   test("should include node data attribute") {
@@ -104,8 +104,8 @@ class SvgExporterSpec extends FunSuite:
     val result = SvgExporter.generateLabelsXml(testCoordinates, 2.0, 5.0, 10.0)
 
     // For node1 at (0,0): labelX = 0*2+5+4 = 9, labelY = 0*2+10-4 = 6
-    assert(result.contains("x=\"9\" y=\"6\""))
-    assert(result.contains("x=\"11\" y=\"6\""))
+    assert(result.contains("x=\"9.0000\" y=\"6.0000\""))
+    assert(result.contains("x=\"11.0000\" y=\"6.0000\""))
   }
 
   test("should include node text content") {
