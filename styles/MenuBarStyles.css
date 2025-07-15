@@ -119,8 +119,76 @@
     /*background-color: #555;*/
 }
 
-/* Responsive styles for small screens */
+/* --- Sub-menu Styling --- */
+
+.submenu-item {
+    position: relative;
+}
+
+/* The trigger link for the submenu, e.g., "New from Template..." */
+.submenu-item > a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* The arrow character on the sub-menu trigger */
+.submenu-arrow {
+    margin-left: auto;
+    padding-left: 1rem;
+}
+
+/* The container for the submenu dropdown content */
+.submenu-content {
+    display: none;
+    position: absolute;
+    left: 100%; /* Position to the right of the parent */
+    top: -1px; /* Align vertically with the trigger link */
+    background-color: var(--menu-bg-color);
+    min-width: 250px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    border: 1px solid var(--menu-border-color);
+    border-radius: var(--border-radius);
+}
+
+/* Show the submenu on hover of its parent item */
+.submenu-item:hover > .submenu-content {
+    display: block;
+}
+
+/* --- Mobile / Hamburger Menu Specifics --- */
 @media (max-width: 768px) {
+    /* When the hamburger menu is open... */
+    .menu-items-container.open .submenu-item > a {
+        /* Style the trigger to look like a category header */
+        font-weight: bold;
+    }
+
+    .menu-items-container.open .submenu-arrow {
+        display: none; /* Hide arrow, it's not a fly-out on mobile */
+    }
+
+    .menu-items-container.open .submenu-content {
+        /* On mobile, sub-menus are not fly-outs. They are just nested lists. */
+        display: block; /* Make it visible */
+        position: static; /* Not absolute */
+        box-shadow: none;
+        border: none;
+        background-color: transparent;
+        padding-left: 16px; /* Indent the template links */
+        min-width: auto;
+    }
+
+    /* Disable the hover effect for the submenu on touch devices */
+    .submenu-item:hover > .submenu-content {
+        display: none;
+    }
+
+    .menu-items-container.open .submenu-item:hover > .submenu-content {
+        display: block;
+    }
+
     .menu-left-section {
         flex-grow: 1;
     }

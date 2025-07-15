@@ -85,8 +85,24 @@ object MenuBarComponent:
       shortcut.map(s => span(className := "shortcut", s))
     )
 
+  // Helper for a menu item that opens a submenu
+  private def subMenuItem(title: String, children: Mod[HtmlElement]*): Element =
+    div(
+      className := "submenu-item",
+      a(
+        href := "#",
+        onClick.preventDefault --> { _ => () }, // Prevent navigation, allows hover/focus
+        span(title),
+        span(className := "submenu-arrow", "▸")
+      ),
+      div(
+        className := "submenu-content",
+        children
+      )
+    )
+
   private def templatesMenu(): Element =
-    menuItem("New from Template",
+    subMenuItem("New from Template...",
       // Regular tilings
       dropdownLink("Triangular (3.3.3.3.3.3)", () => TemplateLoader.loadTemplate("regular_3-3-3-3-3-3.svg")),
       dropdownLink("Square (4.4.4.4)", () => TemplateLoader.loadTemplate("regular_4-4-4-4.svg")),
@@ -128,10 +144,6 @@ object MenuBarComponent:
         enabled = isTilingEmpty.map(!_)
       ),
       div(className := "menu-separator"),
-//      dropdownLink("Import from .DOT...", () => {
-//        // Placeholder for Import functionality
-//        println("Import from .DOT... clicked")
-//      }),
       dropdownLink(
         "Export to .DOT...",
         () => DotExporter.exportTilingToDOT(),
