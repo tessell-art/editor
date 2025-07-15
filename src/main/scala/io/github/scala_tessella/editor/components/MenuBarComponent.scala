@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.components
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.operations.{TessellationOperations, ViewOperations}
 import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImporter, TemplateLoader, UndoManager}
+import io.github.scala_tessella.editor.utils.PolygonNameGenerator.{regularNames, semiRegularNames, Template}
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
@@ -101,22 +102,18 @@ object MenuBarComponent:
       )
     )
 
+  private def dropdownLinks(templates: List[Template]): List[Element] =
+    templates.map(template =>
+      dropdownLink(s"${template.name} ${template.pattern}", () => TemplateLoader.loadTemplate(template.filename))
+    )
+
   private def templatesMenu(): Element =
     subMenuItem("New from Template...",
       // Regular tilings
-      dropdownLink("Triangular (3.3.3.3.3.3)", () => TemplateLoader.loadTemplate("regular_3-3-3-3-3-3.svg")),
-      dropdownLink("Square (4.4.4.4)", () => TemplateLoader.loadTemplate("regular_4-4-4-4.svg")),
-      dropdownLink("Hexagonal (6.6.6)", () => TemplateLoader.loadTemplate("regular_6-6-6.svg")),
+      dropdownLinks(regularNames),
       div(className := "menu-separator"),
       // Semiregular tilings
-      dropdownLink("Snub square (3.3.4.3.4)", () => TemplateLoader.loadTemplate("semiregular_3-3-4-3-4.svg")),
-      dropdownLink("Elongated triangular (3.3.3.4.4)", () => TemplateLoader.loadTemplate("semiregular_3-3-3-4-4.svg")),
-      dropdownLink("Snub hexagonal (3.3.3.3.6)", () => TemplateLoader.loadTemplate("semiregular_3-3-3-3-6.svg")),
-      dropdownLink("Truncated triangular (3.6.3.6)", () => TemplateLoader.loadTemplate("semiregular_3-6-3-6.svg")),
-      dropdownLink("Great rhombitrihexagonal (3.4.6.4)", () => TemplateLoader.loadTemplate("semiregular_3-4-6-4.svg")),
-      dropdownLink("Truncated square (4.8.8)", () => TemplateLoader.loadTemplate("semiregular_4-8-8.svg")),
-      dropdownLink("Truncated trihexagonal (4.6.12)", () => TemplateLoader.loadTemplate("semiregular_4-6-12.svg")),
-      dropdownLink("Truncated hexagonal (3.12.12)", () => TemplateLoader.loadTemplate("semiregular_3-12-12.svg"))
+      dropdownLinks(semiRegularNames),
     )
 
   private def fileMenu(): Element =
