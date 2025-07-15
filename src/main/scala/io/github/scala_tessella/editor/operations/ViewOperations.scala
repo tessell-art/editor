@@ -64,7 +64,12 @@ object ViewOperations:
                                                          currentTransform: ViewTransform,
                                                          padding: Double
                                                        ): Option[ViewTransform] =
-    if canvasWidth <= 0 || canvasHeight <= 0 then return None
+    // Use the viewBox dimensions for calculation, not the canvas element's actual dimensions,
+    // because the pan and scale are applied within the SVG's viewBox coordinate system.
+    val viewBoxWidth = canvasCenterX * 2.0
+    val viewBoxHeight = canvasCenterY * 2.0
+
+    if (viewBoxWidth <= 0 || viewBoxHeight <= 0) return None
 
     val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
     rotatedCoords.maybeBounds.flatMap { bounds =>
@@ -73,9 +78,9 @@ object ViewOperations:
 
       if tilingWidth <= 0 && tilingHeight <= 0 then None
       else
-        val newScale = calculateNewScale(canvasWidth, canvasHeight, tilingWidth, tilingHeight, padding)
+        val newScale = calculateNewScale(viewBoxWidth, viewBoxHeight, tilingWidth, tilingHeight, padding)
         val (tilingCenterX, tilingCenterY) = calculateTilingCenter(bounds)
-        val (newPanX, newPanY) = calculateNewPan(canvasWidth, canvasHeight, tilingCenterX, tilingCenterY, newScale)
+        val (newPanX, newPanY) = calculateNewPan(viewBoxWidth, viewBoxHeight, tilingCenterX, tilingCenterY, newScale)
         Some(createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY))
     }
 
