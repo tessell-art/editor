@@ -35,7 +35,7 @@ object PolygonNameGenerator:
     List(
       ("Snub square", "(3.3.4.3.4)", "semiregular_3-3-4-3-4.svg"),
       ("Elongated triangular", "(3.3.3.4.4)", "semiregular_3-3-3-4-4.svg"),
-      ("Snub hexagonal", "(3.3.3.3.6)", "semiregular_3-3-3-4-4.svg"),
+      ("Snub hexagonal", "(3.3.3.3.6)", "semiregular_3-3-3-3-6.svg"),
       ("Truncated triangular", "(3.6.3.6)", "semiregular_3-6-3-6.svg"),
       ("Rhombitrihexagonal", "(3.4.6.4)", "semiregular_3-4-6-4.svg"),
       ("Truncated square", "(4.8.8)", "semiregular_4-8-8.svg"),
