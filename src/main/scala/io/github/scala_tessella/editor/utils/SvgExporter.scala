@@ -20,20 +20,24 @@ object SvgExporter:
       val currentName = EditorState.currentFileName.now().getOrElse("tessellation.svg")
       Option(dom.window.prompt("Enter file name for the SVG:", currentName)).foreach { newName =>
         if newName.nonEmpty then
-          val finalName = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
-          val svgContent = generateSvgContent(tiling, EditorState.showNodeLabels.now())
-          FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
-          EditorState.currentFileName.set(Some(finalName))
+          AsyncUtils.withLoadingState(() => {
+            val finalName = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
+            val svgContent = generateSvgContent(tiling, EditorState.showNodeLabels.now())
+            FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
+            EditorState.currentFileName.set(Some(finalName))
+          })
       }
 
   // "Save" functionality
   def saveTilingToSVG(): Unit =
-    EditorState.currentFileName.now().foreach { fileName =>
-      val tiling = EditorState.currentTiling.now()
-      if !tiling.isEmpty then
-        val svgContent = generateSvgContent(tiling, EditorState.showNodeLabels.now())
-        FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
-    }
+    AsyncUtils.withLoadingState(() => {
+      EditorState.currentFileName.now().foreach { fileName =>
+        val tiling = EditorState.currentTiling.now()
+        if !tiling.isEmpty then
+          val svgContent = generateSvgContent(tiling, EditorState.showNodeLabels.now())
+          FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
+      }
+    })
 
   private [utils] def generateSvgContent(tiling: IncrementalTiling, showNodeLabels: Boolean): String =
     val coordinates = tiling.coordinates
