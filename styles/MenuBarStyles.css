@@ -144,12 +144,12 @@
     position: absolute;
     left: 100%; /* Position to the right of the parent */
     top: -1px; /* Align vertically with the trigger link */
-    background-color: var(--menu-bg-color);
+    background-color: #f9f9f9; /* Corrected: Use a solid color */
     min-width: 250px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 1;
-    border: 1px solid var(--menu-border-color);
-    border-radius: var(--border-radius);
+    border: 1px solid #e0e0e0; /* Corrected: Use a solid color */
+    /*border-radius: 4px; !* Corrected: Use a specific value *!*/
 }
 
 /* Show the submenu on hover of its parent item */
