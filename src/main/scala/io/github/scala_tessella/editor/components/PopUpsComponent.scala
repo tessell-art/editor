@@ -80,6 +80,15 @@ object PopUpsComponent:
             li("Fit: use the ", b("View → Fit to Canvas"), " menu option to automatically adjust the view to see the entire tiling."),
             li("Reset: use ", b("View → Reset View"), " to return to the default position, zoom, and rotation.")
           ),
+          h3("Visual options"),
+          ul(
+            li(
+              "You can switch ", b("Labels: ON"), " to show the node labels (numbers) of the underlying graph, each node a vertex."
+            ),
+            li(
+              "Dual: use ", b("View → Show Dual"), " to show the dual of the tessellation."
+            )
+          ),
           h3("Styling"),
           ul(
             li("To change polygons' color, select one or more polygons, then go to ", b("Edit → Fill Color..."), " to open the color picker."),
