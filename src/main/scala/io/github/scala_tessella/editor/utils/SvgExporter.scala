@@ -4,6 +4,8 @@ import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLab
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
+import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
+
 import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
@@ -100,30 +102,20 @@ object SvgExporter:
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
   private[utils] def generateDualTessellationXml(tiling: IncrementalTiling, coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
-    val dualLinesXml = tiling.orientedPolygons.flatMap { nodes =>
-      val points = nodes.map(coordinates).toSeq
-      if points.size < 2 then List.empty
-      else
-        val center = BigPoint(
-          points.map(_.x).sum / points.size,
-          points.map(_.y).sum / points.size
-        )
-        val edges = (points :+ points.head).sliding(2)
+    val dualLines = generateDualLines(tiling)
+    if dualLines.isEmpty then ""
+    else
+      val dualLinesXml = dualLines.map { case (midPoint, center) =>
+        val x1 = (midPoint.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+        val y1 = (midPoint.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
+        val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+        val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
 
-        edges.map { case Seq(p1, p2) =>
-          val midPoint = BigPoint((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
-
-          val x1 = (midPoint.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-          val y1 = (midPoint.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-          val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-          val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-
-          s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" stroke="red" stroke-width="1" />"""
-        }
-    }.mkString("\n")
-    s"""  <g id="dual-tessellation">
-       |$dualLinesXml
-       |  </g>""".stripMargin
+        s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" stroke="red" stroke-width="1" />"""
+      }.mkString("\n")
+      s"""  <g id="dual-tessellation">
+         |$dualLinesXml
+         |  </g>""".stripMargin
 
   private [utils] def generateLabelsXml(coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
     coordinates.map { (node, vertex) =>

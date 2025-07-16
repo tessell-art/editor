@@ -4,6 +4,7 @@ import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorM
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
+import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
@@ -34,32 +35,19 @@ object TessellationRenderer:
   )
 
   private def renderDualTessellation(tiling: IncrementalTiling): List[Element] =
-    tiling.orientedPolygons.flatMap { nodes =>
-      val points = nodes.map(tiling.coordinates).map(_.toPoint)
-      if points.size < 2 then List.empty
-      else 
-        val center = Point(
-          points.map(_.x).sum / points.size,
-          points.map(_.y).sum / points.size
-        )
-        val edges = (points :+ points.head).sliding(2)
-
-        edges.map { case Seq(p1, p2) =>
-          val midPoint = Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
-          val (x1, y1) = tilingPointToCanvasView(midPoint)
-          val (x2, y2) = tilingPointToCanvasView(center)
-          svg.line(
-            svg.x1 := x1.toString,
-            svg.y1 := y1.toString,
-            svg.x2 := x2.toString,
-            svg.y2 := y2.toString,
-            svg.stroke := "red",
-            svg.strokeWidth := "1",
-            svg.pointerEvents := "none"
-          )
-        }.toList
-      }
-
+    generateDualLines(tiling).map { case (midPoint, center) =>
+      val (x1, y1) = tilingPointToCanvasView(midPoint.toPoint)
+      val (x2, y2) = tilingPointToCanvasView(center.toPoint)
+      svg.line(
+        svg.x1 := x1.toString,
+        svg.y1 := y1.toString,
+        svg.x2 := x2.toString,
+        svg.y2 := y2.toString,
+        svg.stroke := "red",
+        svg.strokeWidth := "1",
+        svg.pointerEvents := "none"
+      )
+    }
 
   def renderTiling(tiling: IncrementalTiling): Element =
 
