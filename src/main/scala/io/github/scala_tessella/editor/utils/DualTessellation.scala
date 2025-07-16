@@ -25,9 +25,9 @@ object DualTessellation:
         )
         val edges = (points :+ points.head).sliding(2)
 
-        edges.map {
+        edges.collect {
           case Seq(p1, p2) =>
             val midPoint = BigPoint((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
             (midPoint, center)
         }.toList
-      }
+    }
