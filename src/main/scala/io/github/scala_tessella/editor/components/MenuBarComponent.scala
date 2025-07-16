@@ -197,6 +197,10 @@ object MenuBarComponent:
         EditorState.showNodeLabels.signal.map(show => if (show) "Hide Node Labels" else "Show Node Labels"),
         () => AppState.toggleNodeLabels()
       ),
+      dropdownLinkDynamic(
+        EditorState.showDual.signal.map(if (_) "Hide Dual" else "Show Dual"),
+        () => AppState.toggleShowDual()
+      ),
       div(className := "menu-separator"),
       dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),

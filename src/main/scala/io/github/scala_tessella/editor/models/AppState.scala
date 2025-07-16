@@ -80,6 +80,14 @@ object AppState:
       showNodeLabels.update(!_)
 
   /**
+   * Toggles the visibility of the dual tessellation.
+   * Does nothing if the editor is currently processing an operation.
+   */
+  def toggleShowDual(): Unit =
+    ifNotProcessing:
+      showDual.update(!_)
+
+  /**
    * Checks if the current tiling is empty.
    * @return true if the tiling is empty, false otherwise
    */

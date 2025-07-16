@@ -33,6 +33,34 @@ object TessellationRenderer:
     )
   )
 
+  private def renderDualTessellation(tiling: IncrementalTiling): List[Element] =
+    tiling.orientedPolygons.flatMap { nodes =>
+      val points = nodes.map(tiling.coordinates).map(_.toPoint)
+      if points.size < 2 then List.empty
+      else 
+        val center = Point(
+          points.map(_.x).sum / points.size,
+          points.map(_.y).sum / points.size
+        )
+        val edges = (points :+ points.head).sliding(2)
+
+        edges.map { case Seq(p1, p2) =>
+          val midPoint = Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
+          val (x1, y1) = tilingPointToCanvasView(midPoint)
+          val (x2, y2) = tilingPointToCanvasView(center)
+          svg.line(
+            svg.x1 := x1.toString,
+            svg.y1 := y1.toString,
+            svg.x2 := x2.toString,
+            svg.y2 := y2.toString,
+            svg.stroke := "red",
+            svg.strokeWidth := "1",
+            svg.pointerEvents := "none"
+          )
+        }.toList
+      }
+
+
   def renderTiling(tiling: IncrementalTiling): Element =
 
     val tilingPolygons = tiling.orientedPolygons.map { nodes =>
@@ -45,6 +73,11 @@ object TessellationRenderer:
     val perimeterEdges = tiling.perimeter.toEdgesO.zipWithIndex.map {
       case (edge, index) => renderPerimeterEdge(tiling.coordinates, edge, index, s"perimeter-edge-$index")
     }.toList
+
+    val dualDisplay = children <-- EditorState.showDual.signal.map { isVisible =>
+      if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
+      else List.empty
+    }
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
       if showLabels then renderNodeLabels(tiling.coordinates)
@@ -96,6 +129,7 @@ object TessellationRenderer:
       selectionPattern,
       tilingPolygons,
       perimeterEdges,
+      dualDisplay,
       nodeLabels,
       failedPolygonWireframe,
       failedDeletionWireframe,
