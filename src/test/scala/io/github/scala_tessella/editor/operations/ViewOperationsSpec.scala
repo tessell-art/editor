@@ -172,11 +172,21 @@ class ViewOperationsSpec extends FunSuite:
     assertEquals(transform.rotationDegrees, 0)
   }
 
-  test("should return None if canvas dimensions are invalid") {
-    val result1 = ViewOperations.calculateFitToCanvasTransform(coords, 0, testCanvasHeight, initialTransform, padding)
-    assertEquals(result1, None)
-    val result2 = ViewOperations.calculateFitToCanvasTransform(coords, testCanvasWidth, -10, initialTransform, padding)
-    assertEquals(result2, None)
+  test("should calculate transform based on viewBox, ignoring canvas dimensions") {
+    // Since the transform is based on the SVG's viewBox, not the canvas element's size,
+    // the function should return a valid transform even with invalid canvas dimensions.
+    val resultWithInvalidCanvas = ViewOperations.calculateFitToCanvasTransform(coords, 0, -10, initialTransform, padding)
+
+    val expectedResult = ViewOperations.calculateFitToCanvasTransform(
+      coords,
+      testCanvasWidth,
+      testCanvasHeight,
+      initialTransform,
+      padding
+    )
+
+    assert(resultWithInvalidCanvas.isDefined, "A transform should be returned even for invalid canvas dimensions")
+    assertEquals(resultWithInvalidCanvas, expectedResult, "The result should be the same regardless of canvas dimensions")
   }
 
   test("should return None if coords are empty") {
