@@ -67,9 +67,7 @@ object SvgExporter:
     s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tess="https://github.com/scala-tessella/tessella" width="$sWidth" height="$sHeight" viewBox="0 0 $sWidth $sHeight" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
        |$perimeterXml
-       |$polygonsXml
-       |$dualXml
-       |$labelsXml
+       |$polygonsXml${if showDual then s"\n$dualXml" else ""}${if showNodeLabels then s"\n$labelsXml" else ""}
        |$metadataXml
        |</svg>""".stripMargin
 
