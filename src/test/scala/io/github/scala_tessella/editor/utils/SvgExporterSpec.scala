@@ -89,6 +89,19 @@ class SvgExporterSpec extends FunSuite:
     assertEquals(result, "")
   }
 
+  test("should generate dual tessellation XML for a valid tiling") {
+    val result = SvgExporter.generateDualTessellationXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0)
+    assert(result.contains("<g id=\"dual-tessellation\""))
+    assert(result.contains("<line"))
+    assert(result.contains("stroke=\"red\""))
+    assert(result.contains("stroke-width=\"1\""))
+  }
+
+  test("should return empty string for dual tessellation on empty tiling") {
+    val result = SvgExporter.generateDualTessellationXml(IncrementalTiling.empty, testCoordinates, 1.0, 0.0, 0.0)
+    assertEquals(result, "")
+  }
+
   test("should generate labels XML for all coordinates") {
     val result = SvgExporter.generateLabelsXml(testCoordinates, 1.0, 0.0, 0.0)
 
@@ -196,6 +209,18 @@ class SvgExporterSpec extends FunSuite:
     val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
     EditorState.showNodeLabels.set(false)
     assert(!result.contains("<text"))
+  }
+
+  test("should include dual tessellation when showDual is true") {
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = true)
+    EditorState.showDual.set(true)
+    assert(result.contains("<g id=\"dual-tessellation\""))
+  }
+
+  test("should not include dual tessellation when showDual is false") {
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    EditorState.showDual.set(false)
+    assert(!result.contains("<g id=\"dual-tessellation\""))
   }
 
   test("should calculate correct dimensions and offsets") {
