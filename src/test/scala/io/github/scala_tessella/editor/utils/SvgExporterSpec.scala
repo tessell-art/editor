@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
 import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.Topology.{Node => TilingNode}
+import io.github.scala_tessella.tessella.Topology.Node as TilingNode
 import munit.FunSuite
 
 class SvgExporterSpec extends FunSuite:
@@ -47,7 +48,7 @@ class SvgExporterSpec extends FunSuite:
   test("should generate polygons XML with correct structure") {
     val result = SvgExporter.generatePolygonsXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0, 1.5)
 
-    assert(result.contains("<g id=\"tiling-polygons\">"))
+    assert(result.contains("<g id=\"tiling-polygons\""))
     assert(result.contains("</g>"))
     assert(result.contains("polygon"))
     assert(result.contains("data-nodes="))
@@ -119,6 +120,7 @@ class SvgExporterSpec extends FunSuite:
 
   test("should handle empty coordinates") {
     val result = SvgExporter.generateLabelsXml(Map.empty, 1.0, 0.0, 0.0)
+    println(result)
     assertEquals(result, "")
   }
 
@@ -162,12 +164,12 @@ class SvgExporterSpec extends FunSuite:
   test("should return empty string for empty tiling") {
     val emptyTiling = IncrementalTiling.empty
 
-    val result = SvgExporter.generateSvgContent(emptyTiling, showNodeLabels = false)
+    val result = SvgExporter.generateSvgContent(emptyTiling, showNodeLabels = false, showDual = false)
     assertEquals(result, "")
   }
 
   test("should generate complete SVG structure") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
 
     assert(result.contains("<svg"))
     assert(result.contains("</svg>"))
@@ -178,26 +180,26 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should include white background") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
 
     assert(result.contains("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>"))
   }
 
   test("should include labels when showNodeLabels is true") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = true)
-
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = true, showDual = false)
+    EditorState.showNodeLabels.set(true)
     assert(result.contains("<text"))
     assert(result.contains(">1<"))
   }
 
   test("should not include labels when showNodeLabels is false") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false)
-
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    EditorState.showNodeLabels.set(false)
     assert(!result.contains("<text"))
   }
 
   test("should calculate correct dimensions and offsets") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
     assert(result.contains("width=\"90.0"))
     assert(result.contains("height=\"90.0"))
   }

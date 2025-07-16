@@ -24,7 +24,7 @@ object SvgExporter:
         if newName.nonEmpty then
           AsyncUtils.withLoadingState(() => {
             val finalName = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
-            val svgContent = generateSvgContent(tiling)
+            val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showDual.now())
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.currentFileName.set(Some(finalName))
           })
@@ -36,12 +36,12 @@ object SvgExporter:
       EditorState.currentFileName.now().foreach { fileName =>
         val tiling = EditorState.currentTiling.now()
         if !tiling.isEmpty then
-          val svgContent = generateSvgContent(tiling)
+          val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showDual.now())
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
       }
     })
 
-  private [utils] def generateSvgContent(tiling: IncrementalTiling): String =
+  private [utils] def generateSvgContent(tiling: IncrementalTiling, showNodeLabels: Boolean, showDual: Boolean): String =
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then return ""
 
@@ -57,8 +57,8 @@ object SvgExporter:
 
     val polygonsXml = generatePolygonsXml(tiling, coordinates, scale, offsetX, offsetY, strokeWidth)
     val perimeterXml = generatePerimeterXml(tiling, coordinates, scale, offsetX, offsetY, strokeWidthPeri)
-    val dualXml = if showDual.now() then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
-    val labelsXml = if showNodeLabels.now() then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
+    val dualXml = if showDual then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
+    val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
     val metadataXml = generateMetadataXml(coordinates)
 
     val sWidth = f"$width%1.4f"
@@ -118,15 +118,16 @@ object SvgExporter:
          |  </g>""".stripMargin
 
   private [utils] def generateLabelsXml(coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
-    val nodesXml = coordinates.map { (node, vertex) =>
-      val labelX = (vertex.x * scale + offsetX + 4).setScale(4, RoundingMode.HALF_UP)
-      val labelY = (vertex.y * scale + offsetY - 4).setScale(4, RoundingMode.HALF_UP)
-      s"""    <text x="$labelX" y="$labelY" >${node.toString}</text>"""
-    }.mkString("\n")
-    s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
-       |$nodesXml
-       |  </g>""".stripMargin
-
+    if coordinates.isEmpty then ""
+    else
+      val nodesXml = coordinates.map { (node, vertex) =>
+        val labelX = (vertex.x * scale + offsetX + 4).setScale(4, RoundingMode.HALF_UP)
+        val labelY = (vertex.y * scale + offsetY - 4).setScale(4, RoundingMode.HALF_UP)
+        s"""    <text x="$labelX" y="$labelY" >${node.toString}</text>"""
+      }.mkString("\n")
+      s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
+         |$nodesXml
+         |  </g>""".stripMargin
 
   private [utils] def generateMetadataXml(coordinates: BigCoords): String =
     val tilingCoordinatesMetadata =
