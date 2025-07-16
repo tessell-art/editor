@@ -27,7 +27,7 @@ lazy val editor = project.in(file("."))
      * It provides static types for the browser DOM APIs.
      */
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
-    libraryDependencies += "be.doeraene" %%% "web-components-ui5" % "2.1.0",
+    libraryDependencies += "io.github.nguyenyou" %%% "ui5-webcomponents-laminar" % "2.10.0",
     libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
     libraryDependencies += "org.typelevel" %%% "spire" % "0.18.0",
     libraryDependencies += "io.github.scala-tessella" %%% "tessella" % "0.3.0+108-3c7c12c6+20250713-1610",

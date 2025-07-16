@@ -1,12 +1,11 @@
 package io.github.scala_tessella.editor.components
 
-import be.doeraene.webcomponents.ui5.ColourPicker
-import be.doeraene.webcomponents.ui5.scaladsl.colour.Colour
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
+import io.github.scala_tessella.editor.utils.ColorUtils.toRgbaString
 
-import scala.scalajs.js.timers.setTimeout
+import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
+import com.raquo.laminar.api.L.{*, given}
 
 object ColorPickerPopupComponent:
   def element(isOpen: Var[Boolean], tempColor: Var[(Int, Int, Int)]): Element =
@@ -19,24 +18,14 @@ object ColorPickerPopupComponent:
         className := "popup-content",
         onClick.map(_.stopPropagation()) --> Observer.empty,
         h3("Select Color"),
-        // The laminar-ui5 color-picker:
-        ColourPicker(
-          _.value <-- tempColor.signal.map { case (r, g, b) => Colour(r, g, b) },
-          _.events.onChange.map { event =>
-            val color = event.target.value
-            (color.red, color.green, color.blue)
-          } --> tempColor.writer,
-          // After the component mounts, find and remove the alpha slider from its shadow DOM
-          onMountCallback(ctx =>
-            setTimeout(0): // Wait a tick for the shadow DOM to be ready
-              for
-                shadowRoot <- Option(ctx.thisNode.ref.shadowRoot)
-                alphaSlider <- Option(shadowRoot.querySelector("ui5-slider.ui5-color-picker-alpha-slider"))
-                parentNode <- Option(alphaSlider.parentNode)
-              do
-                parentNode.removeChild(alphaSlider)
-          )
-        ),
+        ColorPicker(
+          _.simplified := true,
+          _.value <-- tempColor.signal.map(_.toRgbaString),
+          _.onChange.map { event =>
+            val color = event.target._colorValue._rgb
+            (color.r.toInt, color.g.toInt, color.b.toInt)
+          } --> tempColor.writer
+        )(),
         div(
           className := "popup-actions",
           button("Cancel", onClick --> { _ => isOpen.set(false) }),
