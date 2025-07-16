@@ -87,9 +87,9 @@ object SvgExporter:
       val points = pointsString(nodes, coordinates, scale, offsetX, offsetY)
       val nodesStr = nodes.map(_.toString).mkString(",")
 
-      s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" stroke="#333" stroke-width="$strokeWidth" />"""
+      s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" />"""
     }.mkString("\n")
-    s"""  <g id="tiling-polygons">
+    s"""  <g id="tiling-polygons" stroke="#333" stroke-width="$strokeWidth">
        |$polygonsXml
        |  </g>""".stripMargin
 
@@ -111,18 +111,22 @@ object SvgExporter:
         val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
         val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
 
-        s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" stroke="red" stroke-width="1" />"""
+        s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" />"""
       }.mkString("\n")
-      s"""  <g id="dual-tessellation">
+      s"""  <g id="dual-tessellation" stroke="red" stroke-width="1">
          |$dualLinesXml
          |  </g>""".stripMargin
 
   private [utils] def generateLabelsXml(coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
-    coordinates.map { (node, vertex) =>
+    val nodesXml = coordinates.map { (node, vertex) =>
       val labelX = (vertex.x * scale + offsetX + 4).setScale(4, RoundingMode.HALF_UP)
       val labelY = (vertex.y * scale + offsetY - 4).setScale(4, RoundingMode.HALF_UP)
-      s"""  <text x="$labelX" y="$labelY" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">${node.toString}</text>"""
+      s"""    <text x="$labelX" y="$labelY" >${node.toString}</text>"""
     }.mkString("\n")
+    s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
+       |$nodesXml
+       |  </g>""".stripMargin
+
 
   private [utils] def generateMetadataXml(coordinates: BigCoords): String =
     val tilingCoordinatesMetadata =
