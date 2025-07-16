@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.utils
 
+import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
-
-import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
+import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
 import org.scalajs.dom
@@ -22,7 +22,7 @@ object SvgExporter:
         if newName.nonEmpty then
           AsyncUtils.withLoadingState(() => {
             val finalName = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
-            val svgContent = generateSvgContent(tiling, EditorState.showNodeLabels.now())
+            val svgContent = generateSvgContent(tiling)
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.currentFileName.set(Some(finalName))
           })
@@ -34,12 +34,12 @@ object SvgExporter:
       EditorState.currentFileName.now().foreach { fileName =>
         val tiling = EditorState.currentTiling.now()
         if !tiling.isEmpty then
-          val svgContent = generateSvgContent(tiling, EditorState.showNodeLabels.now())
+          val svgContent = generateSvgContent(tiling)
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
       }
     })
 
-  private [utils] def generateSvgContent(tiling: IncrementalTiling, showNodeLabels: Boolean): String =
+  private [utils] def generateSvgContent(tiling: IncrementalTiling): String =
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then return ""
 
@@ -55,7 +55,8 @@ object SvgExporter:
 
     val polygonsXml = generatePolygonsXml(tiling, coordinates, scale, offsetX, offsetY, strokeWidth)
     val perimeterXml = generatePerimeterXml(tiling, coordinates, scale, offsetX, offsetY, strokeWidthPeri)
-    val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
+    val dualXml = if showDual.now() then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
+    val labelsXml = if showNodeLabels.now() then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
     val metadataXml = generateMetadataXml(coordinates)
 
     val sWidth = f"$width%1.4f"
@@ -65,6 +66,7 @@ object SvgExporter:
        |  <rect width="100%" height="100%" fill="white"/>
        |$perimeterXml
        |$polygonsXml
+       |$dualXml
        |$labelsXml
        |$metadataXml
        |</svg>""".stripMargin
@@ -96,6 +98,32 @@ object SvgExporter:
       val points = pointsString(perimeterNodes, coordinates, scale, offsetX, offsetY)
       val nodesStr = perimeterNodes.map(_.toString).mkString(",")
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
+
+  private[utils] def generateDualTessellationXml(tiling: IncrementalTiling, coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
+    val dualLinesXml = tiling.orientedPolygons.flatMap { nodes =>
+      val points = nodes.map(coordinates).toSeq
+      if points.size < 2 then List.empty
+      else
+        val center = BigPoint(
+          points.map(_.x).sum / points.size,
+          points.map(_.y).sum / points.size
+        )
+        val edges = (points :+ points.head).sliding(2)
+
+        edges.map { case Seq(p1, p2) =>
+          val midPoint = BigPoint((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
+
+          val x1 = (midPoint.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+          val y1 = (midPoint.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
+          val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+          val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
+
+          s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" stroke="red" stroke-width="1" />"""
+        }
+    }.mkString("\n")
+    s"""  <g id="dual-tessellation">
+       |$dualLinesXml
+       |  </g>""".stripMargin
 
   private [utils] def generateLabelsXml(coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
     coordinates.map { (node, vertex) =>
