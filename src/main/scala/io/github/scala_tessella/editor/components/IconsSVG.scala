@@ -57,9 +57,17 @@ object IconsSVG:
 
   private def pentagonPath: Element =
     svg.path(
-      svg.style := "opacity:1;fill:none;fill-rule:evenodd;stroke:currentColor;stroke-width:3.03576;stroke-linejoin:round;stroke-miterlimit:16;stroke-dasharray:none;stroke-opacity:1",
       svg.d := "M 26.825174,2.5454546 43.692134,26.323083 26.290443,49.712206 -1.3313534,40.389851 -1.000871,11.239195 Z",
       svg.transform := "matrix(1.0313471,0,0,1.025013,7.6870211,-0.9863272)",
+      svg.opacity := "1",
+      svg.fill := "none",
+      svg.fillRule := "evenodd",
+      svg.stroke := "currentColor",
+      svg.strokeWidth := "3.03576",
+      svg.strokeLineJoin := "round",
+      svg.strokeMiterLimit := "16",
+      svg.strokeDashArray := "none",
+      svg.strokeOpacity := "1"
     )
 
   private[components] def eyeDropperPentagonIcon: Element =
