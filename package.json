@@ -11,8 +11,8 @@
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.0.0",
     "vite": "^7.0.4",
-    "@ui5/webcomponents": "2.12.0",
-    "@ui5/webcomponents-fiori": "2.12.0",
-    "@ui5/webcomponents-icons": "2.12.0"
+    "@ui5/webcomponents": "2.14.0",
+    "@ui5/webcomponents-fiori": "2.14.0",
+    "@ui5/webcomponents-icons": "2.14.0"
   }
 }
