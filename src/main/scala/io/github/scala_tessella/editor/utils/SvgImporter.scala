@@ -103,7 +103,7 @@ object SvgImporter:
       ) match
         case Left(message) => throw new Error(message)
         case Right(tiling) =>
-          EditorState.currentTiling.set(tiling)
+//          EditorState.currentTiling.set(tiling)
           EditorState.currentFileName.set(Some(filename))
           AppState.fitTilingToCanvas()
           UndoManager.clearHistory()

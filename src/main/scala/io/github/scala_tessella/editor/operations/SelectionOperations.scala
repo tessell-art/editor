@@ -64,19 +64,19 @@ object SelectionOperations:
   def selectAllPolygons(): Unit =
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
-      if !tiling.isEmpty then
-        val allPolygonIds = tiling.orientedPolygons.map(polygonId).toSet
-        EditorState.selectedTilingPolygons.set(allPolygonIds)
-        EditorState.selectedPerimeterEdges.set(Set.empty)
+//      if !tiling.isEmpty then
+//        val allPolygonIds = tiling.orientedPolygons.map(polygonId).toSet
+//        EditorState.selectedTilingPolygons.set(allPolygonIds)
+//        EditorState.selectedPerimeterEdges.set(Set.empty)
 
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
-      if !tiling.isEmpty then
-        val polygonIdsToAdd = tiling.orientedPolygons.collect {
-          case nodes if nodes.length == sides => polygonId(nodes)
-        }.toSet
-        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+//      if !tiling.isEmpty then
+//        val polygonIdsToAdd = tiling.orientedPolygons.collect {
+//          case nodes if nodes.length == sides => polygonId(nodes)
+//        }.toSet
+//        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
   def selectPolygonsByColor(polygonId: String): Unit =
     ifNotProcessing:
@@ -135,34 +135,34 @@ object SelectionOperations:
       case tiling if !tiling.isEmpty =>
         val polyTag = extractPolyTag(polygonId)
 
-        tiling.orientedPolygons.find { nodes =>
-          val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-          tag == polyTag
-        } match
-          case Some(polygonNodes) =>
-            EditorState.highlightedPolygonId.set(Some(polygonId))
-
-            val coords = tiling.coordinates
-            val vertices = polygonNodes.map(coords).map(_.toPoint)
-
-            val vertexPoints = polygonNodes.zip(vertices).map { case (node, point) =>
-              ClickablePoint(point, Anchor.Vertex(node))
-            }
-
-            val centerX = vertices.map(_.x).sum / vertices.size
-            val centerY = vertices.map(_.y).sum / vertices.size
-            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center)
-
-            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
-            val midPoints = edges.map { case (node1, node2) =>
-              val p1 = coords(node1).toPoint
-              val p2 = coords(node2).toPoint
-              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
-            }
-
-            EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)
-
-          case None => ()
+//        tiling.orientedPolygons.find { nodes =>
+//          val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
+//          tag == polyTag
+//        } match
+//          case Some(polygonNodes) =>
+//            EditorState.highlightedPolygonId.set(Some(polygonId))
+//
+//            val coords = tiling.coordinates
+//            val vertices = polygonNodes.map(coords).map(_.toPoint)
+//
+//            val vertexPoints = polygonNodes.zip(vertices).map { case (node, point) =>
+//              ClickablePoint(point, Anchor.Vertex(node))
+//            }
+//
+//            val centerX = vertices.map(_.x).sum / vertices.size
+//            val centerY = vertices.map(_.y).sum / vertices.size
+//            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center)
+//
+//            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
+//            val midPoints = edges.map { case (node1, node2) =>
+//              val p1 = coords(node1).toPoint
+//              val p2 = coords(node2).toPoint
+//              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
+//            }
+//
+//            EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)
+//
+//          case None => ()
       case _ => ()
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =

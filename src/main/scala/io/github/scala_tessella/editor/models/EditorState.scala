@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.IncrementalTiling
+//import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import io.github.scala_tessella.tessella.Topology.{Node => TilingNode}
 import org.scalajs.dom
@@ -53,7 +54,7 @@ object EditorState:
   //
 
   /** Current tiling being edited */
-  val currentTiling: Var[IncrementalTiling] = Var(IncrementalTiling.empty)
+  val currentTiling: Var[TilingDCEL] = Var(TilingDCEL.empty)
 
   /** Set of selected perimeter edge IDs */
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)

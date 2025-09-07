@@ -126,7 +126,7 @@ object EditorCanvasComponent:
       // Show message when no tessellation is available
       child.maybe <-- EditorState.currentTiling.signal.map { tiling =>
         if tiling.isEmpty then Some(noTessellationMessage())
-        else if tiling.orientedPolygons.size == 1 then Some(onePolygonMessage())
+        else if tiling.innerFaces.size == 1 then Some(onePolygonMessage())
         else  None
       }
     )

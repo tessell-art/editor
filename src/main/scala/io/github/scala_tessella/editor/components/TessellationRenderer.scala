@@ -7,6 +7,9 @@ import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
@@ -49,27 +52,40 @@ object TessellationRenderer:
       )
     }
 
-  def renderTiling(tiling: IncrementalTiling): Element =
+  def renderTiling(tiling: TilingDCEL): Element =
 
-    val tilingPolygons = tiling.orientedPolygons.map { nodes =>
-      val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
+    val tilingPolygons = tiling.innerFaces.map { face =>
+      val vertices = face.getVertices.toOption.get
+      val ids = vertices.map(_.id).toVector
+      val polyTag = ids.map(_.value).sorted.mkString("-")
       val polygonId = s"tiling-poly-$polyTag"
       getOrAssignPolygonColor(polyTag)
-      renderTilingPolygon(tiling.coordinates, nodes, polygonId, polyTag)
+      renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
     }
+//    val tilingPolygons = tiling.orientedPolygons.map { nodes =>
+//      val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
+//      val polygonId = s"tiling-poly-$polyTag"
+//      getOrAssignPolygonColor(polyTag)
+//      renderTilingPolygon(tiling.coordinates, nodes, polygonId, polyTag)
+//    }
 
-    val perimeterEdges = tiling.perimeter.toEdgesO.zipWithIndex.map {
-      case (edge, index) => renderPerimeterEdge(tiling.coordinates, edge, index, s"perimeter-edge-$index")
-    }.toList
+    val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList.zipWithIndex.map {
+      (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
+    }
+//    val perimeterEdges = tiling.perimeter.toEdgesO.zipWithIndex.map {
+//      case (edge, index) => renderPerimeterEdge(tiling.coordinates, edge, index, s"perimeter-edge-$index")
+//    }.toList
 
     val dualDisplay = children <-- EditorState.showDual.signal.map { isVisible =>
-      if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
-      else List.empty
+//      if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
+//      else
+        List.empty
     }
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
-      if showLabels then renderNodeLabels(tiling.coordinates)
-      else List.empty
+//      if showLabels then renderNodeLabels(tiling.coordinates)
+//      else 
+        List.empty
     }
 
     // Failed polygon wireframe overlay for placement
@@ -79,7 +95,8 @@ object TessellationRenderer:
 
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map { deletion =>
-      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
+//      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
+      None
     }
 
     val clickablePointsDisplay = children <-- EditorState.clickablePoints.signal
@@ -273,7 +290,12 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-  private def renderTilingPolygon(coordinates: BigCoords, nodes: Vector[TilingNode], id: String, polyTag: String): Element =
+  extension (bigPoint: BigPoint)
+
+    def toPoint: Point =
+      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
+
+  private def renderTilingPolygon(coordinates: Map[VertexId, BigPoint], nodes: Vector[VertexId], id: String, polyTag: String): Element =
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
 
     val points = nodes.map(coordinates).map { vertex =>
@@ -349,9 +371,9 @@ object TessellationRenderer:
       }
     )
 
-  private def renderPerimeterEdge(coordinates: BigCoords, edge: Edge, edgeIndex: Int, id: String): Element =
-    val vertex1 = coordinates(edge.lesserNode).toPoint
-    val vertex2 = coordinates(edge.greaterNode).toPoint
+  private def renderPerimeterEdge(coordinates: Map[VertexId, BigPoint], edge: (VertexId, VertexId), edgeIndex: Int, id: String): Element =
+    val vertex1 = coordinates(edge._1).toPoint
+    val vertex2 = coordinates(edge._2).toPoint
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates

@@ -30,7 +30,9 @@ lazy val editor = project.in(file("."))
     libraryDependencies += "io.github.nguyenyou" %%% "ui5-webcomponents-laminar" % "2.14.0",
     libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
     libraryDependencies += "org.typelevel" %%% "spire" % "0.18.0",
+    libraryDependencies += "io.github.scala-tessella" %%% "ring-seq" % "0.6.2",
     libraryDependencies += "io.github.scala-tessella" %%% "tessella" % "0.3.0+108-3c7c12c6+20250713-1610",
+    libraryDependencies += "io.github.scala-tessella" %%% "dcel" % "0.1.0-SNAPSHOT",
 
     // Test dependencies
     libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,
