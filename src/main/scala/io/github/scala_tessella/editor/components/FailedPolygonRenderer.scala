@@ -5,9 +5,8 @@ import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
-import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
+import io.github.scala_tessella.tessella.Topology.{Node as TilingNode}
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.BigDecimalGeometry.{AngleDegree, BigCoords}
 
 import scala.math.*

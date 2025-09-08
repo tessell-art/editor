@@ -7,8 +7,6 @@ import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.{AsyncUtils, TilingGenerator, UndoManager}
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingError, ValidationError}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
-//import io.github.scala_tessella.tessella.IncrementalTiling
-//import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
