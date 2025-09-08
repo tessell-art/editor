@@ -5,13 +5,14 @@ import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.UndoManager
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
-import io.github.scala_tessella.tessella.Topology.{Edge, Node => TilingNode}
+import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 
 // Case class to represent a failed polygon placement
-case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: Edge, tiling: IncrementalTiling)
+case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL)
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode])

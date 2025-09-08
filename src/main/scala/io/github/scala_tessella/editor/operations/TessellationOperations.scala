@@ -5,8 +5,8 @@ import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strict
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.{AsyncUtils, TilingGenerator, UndoManager}
-
-import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.{TilingDCEL, TilingError, ValidationError}
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 //import io.github.scala_tessella.tessella.IncrementalTiling
 //import io.github.scala_tessella.tessella.Topology.NodeOrdering
 
@@ -113,40 +113,40 @@ object TessellationOperations:
         ErrorOperations.showError("No tiling available to grow")
       case (tiling, Some(polygonSides)) =>
         // Try to grow the edge with the selected polygon
-//        AsyncUtils.withLoadingState { () =>
-//          try
-//            import io.github.scala_tessella.tessella.RegularPolygon.Polygon
-//            val polygon = Polygon(polygonSides)
-//            val perimeterEdges = tiling.perimeter.toEdgesO.toVector
-//
-//            if edgeIndex < perimeterEdges.length then
-//              val selectedEdge = perimeterEdges(edgeIndex)
-//              tiling.addPolygon(polygon, selectedEdge, strictness.now())
-//            else
-//              Left("Invalid edge index")
-//          catch
-//            case e: Exception => Left(s"Error growing edge: ${e.getMessage}")
-//        }.foreach {
-//          case Right(newTiling) =>
-//            // Success: save state before change, then update tiling
-//            UndoManager.saveState()
-//            currentTiling.set(newTiling)
-//            EditorState.selectedPerimeterEdges.set(Set.empty)
-//            ErrorOperations.clearError()
-//          case Left(errMsg) =>
-//            // Failure: show error message with wireframe (no state to undo)
-//            val perimeterEdges = tiling.perimeter.toEdgesO.toVector
-//            if edgeIndex < perimeterEdges.length then
-//              val selectedEdge = perimeterEdges(edgeIndex)
-//              val placement = FailedPolygonPlacement(edgeIndex, polygonSides, selectedEdge, tiling)
-//              val truncated =
+        AsyncUtils.withLoadingState { () =>
+          try
+            import io.github.scala_tessella.tessella.RegularPolygon.Polygon
+            val polygon = Polygon(polygonSides)
+            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
+
+            if edgeIndex < perimeterEdges.length then
+              val selectedEdge = perimeterEdges(edgeIndex)
+              tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, polygonSides)
+            else
+              Left(ValidationError("Invalid edge index"))
+          catch
+            case e: Exception => Left(ValidationError(s"Error growing edge: ${e.getMessage}"))
+        }.foreach {
+          case Right(newTiling) =>
+            // Success: save state before change, then update tiling
+            UndoManager.saveState()
+            currentTiling.set(newTiling)
+            EditorState.selectedPerimeterEdges.set(Set.empty)
+            ErrorOperations.clearError()
+          case Left(errMsg) =>
+            // Failure: show error message with wireframe (no state to undo)
+            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
+            if edgeIndex < perimeterEdges.length then
+              val selectedEdge = perimeterEdges(edgeIndex)
+              val placement = FailedPolygonPlacement(edgeIndex, polygonSides, (selectedEdge(0), selectedEdge(1)), tiling)
+              val truncated = errMsg.message
 //                val idx = errMsg.indexOf("See SVG")
 //                if idx >= 0 then errMsg.substring(0, idx)
 //                else errMsg
-//              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated", Some(placement))
-//            else
-//              ErrorOperations.showError(errMsg)
-//        }
+              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated", Some(placement))
+            else
+              ErrorOperations.showError(errMsg.message)
+        }
       case (_, None) =>
         // This case should be handled by the caller
         ()

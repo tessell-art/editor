@@ -2,8 +2,9 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
-
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
@@ -59,13 +60,18 @@ object FailedPolygonRenderer:
       case _: Exception => svg.g()
     }
 
+  extension (bigPoint: BigPoint)
+
+    def toPoint: Point =
+      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
+
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
 
     val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
 
     // Get the edge coordinates
-    val vertex1 = tiling.coordinates(edge.lesserNode).toPoint
-    val vertex2 = tiling.coordinates(edge.greaterNode).toPoint
+    val vertex1 = tiling.coordinates(edge._1).toPoint
+    val vertex2 = tiling.coordinates(edge._2).toPoint
 
     // Calculate edge vector and length
     val edgeVectorX = vertex2.x - vertex1.x
@@ -108,10 +114,10 @@ object FailedPolygonRenderer:
       tilingPointToCanvasView(Point(x, y))
     }.toVector
 
-  private def calculateOutwardDirectionWithFlipInfo(edge: Edge, tiling: IncrementalTiling): ((Double, Double), Boolean) =
+  private def calculateOutwardDirectionWithFlipInfo(edge: (VertexId, VertexId), tiling: TilingDCEL): ((Double, Double), Boolean) =
     try
-      val vertex1 = tiling.coordinates(edge.lesserNode).toPoint
-      val vertex2 = tiling.coordinates(edge.greaterNode).toPoint
+      val vertex1 = tiling.coordinates(edge._1).toPoint
+      val vertex2 = tiling.coordinates(edge._2).toPoint
 
       // Calculate edge vector
       val edgeVectorX = vertex2.x - vertex1.x
@@ -135,29 +141,29 @@ object FailedPolygonRenderer:
       val testPoint2Y = midY + perp2Y * 0.5
 
       // Find the polygon that contains this perimeter edge
-      val containingPolygon: Option[Vector[TilingNode]] = 
-        tiling.orientedPolygons.find { polyNodes =>
-          val polyEdges = polyNodes.zip(polyNodes.tail :+ polyNodes.head).map { case (n1, n2) => Edge(n2, n1) }
-          polyEdges.contains(edge)
-        }
+      val containingPolygon: Option[Vector[TilingNode]] = None
+//        tiling.orientedPolygons.find { polyNodes =>
+//          val polyEdges = polyNodes.zip(polyNodes.tail :+ polyNodes.head).map { case (n1, n2) => Edge(n2, n1) }
+//          polyEdges.contains(edge)
+//        }
 
       containingPolygon match
         case Some(polyNodes) =>
-          val polyVertices: Vector[Point] = polyNodes.map(tiling.coordinates).map(_.toPoint)
-
-          // Check which test point is inside the containing polygon
-          val point1Inside = isPointInPolygon(testPoint1X, testPoint1Y, polyVertices)
-          val point2Inside = isPointInPolygon(testPoint2X, testPoint2Y, polyVertices)
-
-          // Return the direction that points OUTWARD and whether we used the flipped direction
-          if point1Inside then
-            // perp1 points inward, so use perp2 (outward) - this is a flip
-            ((perp2X, perp2Y), true)
-          else if point2Inside then
-            // perp2 points inward, so use perp1 (outward) - this is not a flip
-            ((perp1X, perp1Y), false)
-          else
-            // Fallback: neither point is clearly inside, use perp1 without flip
+//          val polyVertices: Vector[Point] = polyNodes.map(tiling.coordinates).map(_.toPoint)
+//
+//          // Check which test point is inside the containing polygon
+//          val point1Inside = isPointInPolygon(testPoint1X, testPoint1Y, polyVertices)
+//          val point2Inside = isPointInPolygon(testPoint2X, testPoint2Y, polyVertices)
+//
+//          // Return the direction that points OUTWARD and whether we used the flipped direction
+//          if point1Inside then
+//            // perp1 points inward, so use perp2 (outward) - this is a flip
+//            ((perp2X, perp2Y), true)
+//          else if point2Inside then
+//            // perp2 points inward, so use perp1 (outward) - this is not a flip
+//            ((perp1X, perp1Y), false)
+//          else
+//            // Fallback: neither point is clearly inside, use perp1 without flip
             ((perp1X, perp1Y), false)
 
         case None =>
@@ -166,8 +172,8 @@ object FailedPolygonRenderer:
     catch
       case e: Exception =>
         // Fallback to simple perpendicular if calculation fails
-        val vertex1 = tiling.coordinates(edge.lesserNode).toPoint
-        val vertex2 = tiling.coordinates(edge.greaterNode).toPoint
+        val vertex1 = tiling.coordinates(edge._1).toPoint
+        val vertex2 = tiling.coordinates(edge._2).toPoint
         val edgeVectorX = vertex2.x - vertex1.x
         val edgeVectorY = vertex2.y - vertex1.y
         val length = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)
