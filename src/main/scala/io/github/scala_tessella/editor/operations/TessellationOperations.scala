@@ -47,28 +47,31 @@ object TessellationOperations:
               polygonId.substring("tiling-poly-".length)
             else
               polygonId
-            Right(tiling)
-//            // Find the specific polygon in the tiling
+            // Find the specific polygon in the tiling
 //            val targetPolygon = tiling.orientedPolygons.find { nodes =>
 //              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
 //              tag == polyTag
 //            }
-//
-//            targetPolygon match
-//              case Some(polygonNodes) =>
-//                // All checks passed - try actual deletion
-//                val result: Either[String, IncrementalTiling] =
-//                  tiling.removePolygon(polygonNodes)
-//                result match
-//                  case Right(newTiling) =>
-//                    // Success: return the new tiling
-//                    Right(newTiling)
-//                  case Left(errMsg) =>
-//                    // Failure: return error with wireframe info
-//                    Left(s"Cannot remove polygon: $errMsg")
-//
-//              case None =>
-//                Left(s"Could not find polygon with tag: $polyTag")
+            val targetPolygon = tiling.innerFaces.find { face =>
+              val tag = face.id.value
+              tag == polyTag
+            }
+
+            targetPolygon match
+              case Some(face) =>
+                // All checks passed - try actual deletion
+                val result: Either[TilingError, TilingDCEL] =
+                  tiling.maybeDeleteFace(face.id)
+                result match
+                  case Right(newTiling) =>
+                    // Success: return the new tiling
+                    Right(newTiling)
+                  case Left(errMsg) =>
+                    // Failure: return error with wireframe info
+                    Left(s"Cannot remove polygon: ${errMsg.message}")
+
+              case None =>
+                Left(s"Could not find polygon with tag: $polyTag")
 
           case _ =>
             Left("No tessellation available to modify")
@@ -78,7 +81,7 @@ object TessellationOperations:
       case Right(newTiling) =>
         // Success: save state before change, then update tiling
         UndoManager.saveState()
-//        currentTiling.set(newTiling)
+        currentTiling.set(newTiling)
         ErrorOperations.clearError()
       case Left(errMsg) =>
         // Failure: show error with wireframe info

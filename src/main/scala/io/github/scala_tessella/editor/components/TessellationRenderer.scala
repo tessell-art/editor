@@ -57,7 +57,8 @@ object TessellationRenderer:
     val tilingPolygons = tiling.innerFaces.map { face =>
       val vertices = face.getVertices.toOption.get
       val ids = vertices.map(_.id).toVector
-      val polyTag = ids.map(_.value).sorted.mkString("-")
+//      val polyTag = ids.map(_.value).sorted.mkString("-")
+      val polyTag = face.id.value
       val polygonId = s"tiling-poly-$polyTag"
       getOrAssignPolygonColor(polyTag)
       renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
