@@ -1,11 +1,11 @@
 package io.github.scala_tessella.editor.components
 
+import com.raquo.airstream.state.{DerivedVar, LazyDerivedVar, LazyDerivedVar2, SourceVar}
 import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
@@ -200,13 +200,19 @@ object TessellationRenderer:
       svg.stroke := "black",
       svg.strokeWidth := "1",
       svg.className := "clickable-point",
-      onClick.preventDefault.mapTo(p) --> (point =>
-        if EditorState.activeTool == Some(Tool.Measurement) then
-          AppState.handlePointClickForMeasurement(point)
-        else
-          AppState.handlePointClickForDeletion(point)
-      ),
+      onMountCallback { ctx =>
+        ctx.thisNode.events(onClick.preventDefault.mapTo(p))
+          .withCurrentValueOf(EditorState.activeTool.signal)
+          .foreach {
+            case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
+            case (point, _)                      => AppState.handlePointClickForDeletion(point)
+          }(using ctx.owner)
+      },
       svg.style := "cursor: crosshair;",
+      svg.style <-- EditorState.activeTool.signal.map {
+        case Some(Tool.Measurement) => s"cursor: crosshair;"
+        case _ => s"cursor: $deleteCursor;"
+      },
       svg.pointerEvents := "visible"
     )
 
