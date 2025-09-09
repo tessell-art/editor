@@ -19,7 +19,7 @@ case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingN
 
 enum Anchor:
 
-  case Vertex(node: TilingNode)
+  case Vertex(node: VertexId)
   case Center
   case MidPoint
 

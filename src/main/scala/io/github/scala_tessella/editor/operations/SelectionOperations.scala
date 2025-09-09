@@ -3,6 +3,8 @@ package io.github.scala_tessella.editor.operations
 import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
 import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
 
@@ -130,39 +132,46 @@ object SelectionOperations:
           case EditorMode.Delete =>
             TessellationOperations.attemptPolygonDeletion(polygonId)
 
+  extension (bigPoint: BigPoint)
+
+    def toPoint: Point =
+      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
+
   private def handlePolygonClickForMeasurement(polygonId: String): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
         val polyTag = extractPolyTag(polygonId)
 
-//        tiling.orientedPolygons.find { nodes =>
-//          val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-//          tag == polyTag
-//        } match
-//          case Some(polygonNodes) =>
-//            EditorState.highlightedPolygonId.set(Some(polygonId))
-//
-//            val coords = tiling.coordinates
-//            val vertices = polygonNodes.map(coords).map(_.toPoint)
-//
-//            val vertexPoints = polygonNodes.zip(vertices).map { case (node, point) =>
-//              ClickablePoint(point, Anchor.Vertex(node))
-//            }
-//
-//            val centerX = vertices.map(_.x).sum / vertices.size
-//            val centerY = vertices.map(_.y).sum / vertices.size
-//            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center)
-//
+        tiling.innerFaces.find { face =>
+          val tag = face.id.value
+          tag == polyTag
+        } match
+          case Some(face) =>
+            EditorState.highlightedPolygonId.set(Some(polygonId))
+
+            val coords = tiling.coordinates
+            val vs = face.getVertices.toOption.get
+            val vertices = vs.map(_.coords).map(_.toPoint)
+
+            val vertexPoints = vs.map(_.id).zip(vertices).map { case (node, point) =>
+              ClickablePoint(point, Anchor.Vertex(node))
+            }
+
+            val centerX = vertices.map(_.x).sum / vertices.size
+            val centerY = vertices.map(_.y).sum / vertices.size
+            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center)
+
+            val edges = vertices.toVector.slidingO(2).toList
 //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
-//            val midPoints = edges.map { case (node1, node2) =>
-//              val p1 = coords(node1).toPoint
-//              val p2 = coords(node2).toPoint
-//              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
-//            }
-//
-//            EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)
-//
-//          case None => ()
+            val midPoints = edges.map { edge =>
+              val p1 = edge(0)
+              val p2 = edge(1)
+              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
+            }
+
+            EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)
+
+          case None => ()
       case _ => ()
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
