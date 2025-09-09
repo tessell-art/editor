@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
+
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strictness}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
@@ -110,7 +111,7 @@ object TessellationOperations:
   // Handle perimeter edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
     (currentTiling.now(), EditorState.selectedPolygon.now()) match
-      case (tiling, _) if tiling.isEmpty=>
+      case (tiling, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available to grow")
       case (tiling, Some(polygonSides)) =>
         // Try to grow the edge with the selected polygon
