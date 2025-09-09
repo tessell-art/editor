@@ -19,6 +19,7 @@ object TessellationRenderer:
   private val colorPickerCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 56 56'%3E%3Cpath fill='white' stroke='black' stroke-width='2' d='M39.6 28.9L40.3 28.1c1.1-1.2 1.1-2.6-.1-3.8L39.5 23.6c3.5-3.2 7.5-3.6 9.9-6.1 3.5-3.5 2.3-8.4-.1-10.9s-7.4-3.6-10.9-.1c-2.5 2.4-2.9 6.4-6.1 10l-.7-.7c-1.2-1.2-2.6-1.1-3.8.1l-.7.6c-1.4 1.4-1.2 2.6 0 3.8l1 1L10.6 39C3.3 46.2 6.8 45.1 2.9 50.7l2.1 2.2c5.4-3.9 4.7-0 12-7.3L34.8 27.8l1 1c1.2 1.2 2.4 1.5 3.8.1zM10.1 46.1c-.9-.9-.7-1.8.2-2.7L30.3 23.3l2.5 2.5L12.8 45.9c-.8.8-1.8 1-2.7.2z'/%3E%3C/svg%3E\") 2 24, auto"
   private val selectByColorCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='31' viewBox='0 0 37.643265 44.674143'%3E%3Cg fill='white' stroke='black' stroke-width='1'%3E%3Cpath d='M 15.302,0 C 6.85,0 0,6.309 0,14.09 c 0,7.781 6.85,14.092 15.302,14.092 1.519,-8.259 4.996,-9.012 8.362,-9.012 0.751,0 1.497,0.038 2.214,0.038 2.521,0 4.687,-0.463 5.502,-4.646 C 32.744,7.586 23.752,0 15.302,0 Z m 14.335958,14.790305 c -0.744518,2.094393 -0.955291,2.261786 -3.024775,2.620009 -0.933269,0.161547 -0.832255,0.05748 -1.541035,-0.01983 -0.399,-0.01 -1.037565,-0.119539 -1.441565,-0.119539 -3.879,0 -7.639278,1.034464 -9.861278,8.777464 C 6.2285932,24.929856 1.9315932,19.753102 1.9315932,14.357102 c 0,-6.1150003 4.4505932,-12.4255088 13.5039578,-12.5590596 4.028562,-0.059427 9.877508,3.1268559 12.564508,6.3888559 0.901,1.0939997 2.079899,4.3374067 1.637899,6.6034067 z'/%3E%3Cpath d='m 10.26,15.943 c -1.565,0 -2.839,1.273 -2.839,2.839 0,1.566 1.273,2.839 2.839,2.839 1.564,0 2.838,-1.273 2.838,-2.839 0,-1.566 -1.273,-2.839 -2.838,-2.839 z m 0,4.178 c -0.738,0 -1.339,-0.602 -1.339,-1.339 0,-0.738 0.601,-1.339 1.339,-1.339 0.737,0 1.338,0.602 1.338,1.339 0,0.737 -0.6,1.339 -1.338,1.339 z'/%3E%3Ccircle cx='8.467' cy='11.012' r='2.0880001'/%3E%3Ccircle cx='13.296' cy='7.2950001' r='2.089'/%3E%3Ccircle cx='19.381001' cy='8.7869997' r='2.089'/%3E%3Ccircle cx='24.089001' cy='12.497' r='2.089'/%3E%3Cg transform='matrix(0.09071207,0,0,0.09071207,11.351823,13.156144)'%3E%3Cpolygon points='57.617,303.138 123.48,224.061 181.017,347.451 244.459,317.867 186.921,194.478 289.834,194.854 57.617,0'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\") 11 9, auto"
   private val eraserCursor = s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='${IconsSVG.eraserViewBox}'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='${IconsSVG.eraserPathD}'/%3E%3C/svg%3E\") 5 20, auto"
+  private val inserterCursor = s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='27' height='27' viewBox='${IconsSVG.inserterViewBox}'%3E%3Cpath fill='none' stroke='black' stroke-width='2' d='${IconsSVG.inserterPathD}'/%3E%3C/svg%3E\") 13 0, auto"
   private val measurementCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-871 1129 256 256'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='M-871,1185.5l199.2,199.7l56.8-56.7l-199.2-199.7L-871,1185.5z M-627,1328.5l-36.3,36.3l-187.3-187.7l36.4-36.2l25.4,25.4 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2L-627,1328.5z M-820.3,1165.2c3.1,3,3.2,8,0.2,11.2c-3,3.1-8,3.2-11.2,0.2c-3.1-3-3.2-8-0.2-11.2 C-828.5,1162.3-823.5,1162.2-820.3,1165.2z'/%3E%3C/svg%3E\") 4 4, auto"
   private val deleteCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='21' viewBox='0 0 32 32'%3E%3Cpath stroke='white' stroke-width='6' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3Cpath stroke='red' stroke-width='3' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3C/svg%3E\") 10 10, auto"
 
@@ -206,12 +207,14 @@ object TessellationRenderer:
           .withCurrentValueOf(EditorState.activeTool.signal)
           .foreach {
             case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
+            case (point, Some(Tool.Inserter)) => AppState.handlePointClickForInsertion(point)
             case (point, _)                      => AppState.handlePointClickForDeletion(point)
           }(using ctx.owner)
       },
       svg.style := "cursor: crosshair;",
       svg.style <-- EditorState.activeTool.signal.map {
         case Some(Tool.Measurement) => s"cursor: crosshair;"
+        case Some(Tool.Inserter) => s"cursor: pointer;"
         case _ => s"cursor: $deleteCursor;"
       },
       svg.pointerEvents := "visible"
@@ -359,6 +362,7 @@ object TessellationRenderer:
               case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
               case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
               case Some(Tool.Eraser) => s"cursor: $eraserCursor;"
+              case Some(Tool.Inserter) => s"cursor: $inserterCursor;"
               case _ => mode match
                 case EditorMode.Select => "cursor: pointer;"
                 case EditorMode.Delete => s"cursor: $deleteCursor;"

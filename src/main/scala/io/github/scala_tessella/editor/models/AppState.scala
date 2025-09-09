@@ -31,7 +31,7 @@ enum EditorMode:
 
 // Tool enumeration
 enum Tool:
-  case ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement
+  case ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Inserter, Measurement
 
 /**
  * AppState object provides a higher-level interface to the editor state.
@@ -140,6 +140,15 @@ object AppState:
    */
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForDeletion(point)
+
+
+  /**
+   * Handles a click on an edge point for insertion.
+   *
+   * @param point The clicked edge point
+   */
+  def handlePointClickForInsertion(point: ClickablePoint): Unit =
+    SelectionOperations.handlePointClickForInsertion(point)
 
   /**
    * Applies the specified color to all selected polygons.

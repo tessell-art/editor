@@ -10,7 +10,7 @@ object CanvasControlComponent:
   private def toggleTool(tool: Tool): Unit =
     EditorState.activeTool.update {
       case Some(t) if t == tool =>
-        if t == Tool.Measurement || t == Tool.Eraser then AppState.clearMeasurements()
+        if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter then AppState.clearMeasurements()
         None // Deactivate if it's the current tool
       case _ =>
         AppState.clearMeasurements() // Clear measurements when switching
@@ -71,6 +71,11 @@ object CanvasControlComponent:
             Tool.Eraser,
             "Activate deletion mode to delete polygons",
             IconsSVG.eraserIcon
+          ),
+          createToolButton(
+            Tool.Inserter,
+            "Activate insertion mode to add interior polygons",
+            IconsSVG.inserterIcon
           ),
           createToolButton(
             Tool.Measurement,

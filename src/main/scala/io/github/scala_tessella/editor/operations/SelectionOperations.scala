@@ -69,6 +69,14 @@ object SelectionOperations:
         case Anchor.MidPoint(startVertexId, endVertexId) =>
           TessellationOperations.attemptEdgeDeletion(startVertexId, endVertexId)
 
+  def handlePointClickForInsertion(point: ClickablePoint): Unit =
+    ifNotProcessing:
+      EditorState.clickablePoints.set(Nil)
+      point.anchor match
+        case Anchor.MidPoint(startVertexId, endVertexId) =>
+          TessellationOperations.attemptPolygonInsertion(startVertexId, endVertexId)
+        case _ => ()
+
   def clearAllSelections(): Unit =
     ifNotProcessing:
       EditorState.selectedTilingPolygons.set(Set.empty)
@@ -138,6 +146,8 @@ object SelectionOperations:
         handlePolygonClickForMeasurement(polygonId)
       case Some(Tool.Eraser) =>
         handlePolygonClickForMeasurement(polygonId)
+      case Some(Tool.Inserter) =>
+        handlePolygonClickForMeasurement(polygonId, edgesOnly = true)
       case _ =>
         EditorState.editorMode.now() match
           case EditorMode.Select =>
@@ -150,7 +160,7 @@ object SelectionOperations:
     def toPoint: Point =
       Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
 
-  private def handlePolygonClickForMeasurement(polygonId: String): Unit =
+  private def handlePolygonClickForMeasurement(polygonId: String, edgesOnly: Boolean = false): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
         val polyTag = extractPolyTag(polygonId)
@@ -182,7 +192,10 @@ object SelectionOperations:
               ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
             }
 
-            EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)
+            EditorState.clickablePoints.set(
+              if edgesOnly then midPoints
+              else centerPoint :: vertexPoints ++ midPoints
+            )
 
           case None => ()
       case _ => ()

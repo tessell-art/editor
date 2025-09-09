@@ -303,3 +303,39 @@ object TessellationOperations:
       case (_, None) =>
         // This case should be handled by the caller
         ()
+
+  def attemptPolygonInsertion(startVertexId: VertexId, endVertexId: VertexId): Unit =
+    (currentTiling.now(), EditorState.selectedPolygon.now()) match
+      case (tiling, _) if tiling.isEmpty =>
+        ErrorOperations.showError("No tiling available for insertion")
+      case (tiling, Some(polygonSides)) =>
+        // Try to grow the edge with the selected polygon
+        AsyncUtils.withLoadingState { () =>
+          try
+            tiling.maybeAddRegularPolygon(startVertexId, endVertexId, polygonSides)
+          catch
+            case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
+        }.foreach {
+          case Right(newTiling) =>
+            // Success: save state before change, then update tiling
+            UndoManager.saveState()
+            currentTiling.set(newTiling)
+            EditorState.selectedPerimeterEdges.set(Set.empty)
+            ErrorOperations.clearError()
+          case Left(errMsg) =>
+//            // Failure: show error message with wireframe (no state to undo)
+//            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
+//            if edgeIndex < perimeterEdges.length then
+//              val selectedEdge = perimeterEdges(edgeIndex)
+//              val placement = FailedPolygonPlacement(edgeIndex, polygonSides, (selectedEdge(0), selectedEdge(1)), tiling)
+//              val truncated = errMsg.message
+//              //                val idx = errMsg.indexOf("See SVG")
+//              //                if idx >= 0 then errMsg.substring(0, idx)
+//              //                else errMsg
+//              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated", Some(placement))
+//            else
+//              ErrorOperations.showError(errMsg.message)
+        }
+      case (_, None) =>
+        // This case should be handled by the caller
+        ()
