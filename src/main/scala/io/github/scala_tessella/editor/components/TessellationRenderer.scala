@@ -12,8 +12,6 @@ import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.Topology.{Edge, NodeOrdering, Node as TilingNode}
 import org.scalajs.dom.EndingType.transparent
 
 object TessellationRenderer:
@@ -37,7 +35,7 @@ object TessellationRenderer:
     )
   )
 
-  private def renderDualTessellation(tiling: IncrementalTiling): List[Element] =
+  private def renderDualTessellation(tiling: TilingDCEL): List[Element] =
     generateDualLines(tiling).map { case (midPoint, center) =>
       val (x1, y1) = tilingPointToCanvasView(midPoint.toPoint)
       val (x2, y2) = tilingPointToCanvasView(center.toPoint)
@@ -78,8 +76,8 @@ object TessellationRenderer:
 //    }.toList
 
     val dualDisplay = children <-- EditorState.showDual.signal.map { isVisible =>
-//      if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
-//      else
+      if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
+      else
         List.empty
     }
 

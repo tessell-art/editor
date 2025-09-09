@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.tessella.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 
 object DualTessellation:
 
@@ -14,9 +14,9 @@ object DualTessellation:
    * @param tiling The tiling for which to generate dual lines.
    * @return A sequence of pairs of `BigPoint`, where each pair represents a line segment (midpoint, center).
    */
-  def generateDualLines(tiling: IncrementalTiling): List[(BigPoint, BigPoint)] =
-    tiling.orientedPolygons.flatMap { nodes =>
-      val points = nodes.map(tiling.coordinates)
+  def generateDualLines(tiling: TilingDCEL): List[(BigPoint, BigPoint)] =
+    tiling.innerFaces.flatMap { face =>
+      val points = face.getVertices.toOption.get.map(_.coords)
       if points.size < 2 then List.empty
       else
         val center = BigPoint(

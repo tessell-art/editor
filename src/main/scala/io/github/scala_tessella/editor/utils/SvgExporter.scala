@@ -1,11 +1,11 @@
 package io.github.scala_tessella.editor.utils
 
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-
 import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
@@ -57,7 +57,8 @@ object SvgExporter:
 
     val polygonsXml = generatePolygonsXml(tiling, coordinates, scale, offsetX, offsetY, strokeWidth)
     val perimeterXml = generatePerimeterXml(tiling, coordinates, scale, offsetX, offsetY, strokeWidthPeri)
-    val dualXml = if showDual then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
+//    val dualXml = if showDual then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
+    val dualXml = ""
     val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
     val metadataXml = generateMetadataXml(coordinates)
 
@@ -99,7 +100,7 @@ object SvgExporter:
       val nodesStr = perimeterNodes.map(_.toString).mkString(",")
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
-  private[utils] def generateDualTessellationXml(tiling: IncrementalTiling, coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
+  private[utils] def generateDualTessellationXml(tiling: TilingDCEL, coordinates: BigCoords, scale: Double, offsetX: Double, offsetY: Double): String =
     val dualLines = generateDualLines(tiling)
     if dualLines.isEmpty then ""
     else
