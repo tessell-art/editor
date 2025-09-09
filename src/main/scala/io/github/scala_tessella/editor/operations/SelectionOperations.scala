@@ -60,12 +60,14 @@ object SelectionOperations:
 
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     ifNotProcessing:
+      EditorState.clickablePoints.set(Nil)
       point.anchor match
         case Anchor.Vertex(vertexId) =>
-          EditorState.clickablePoints.set(Nil)
           TessellationOperations.attemptVertexDeletion(vertexId)
-        case Anchor.Center => ???
-        case Anchor.MidPoint => ???
+        case Anchor.Center(faceId) =>
+          TessellationOperations.attemptFaceDeletion(faceId)
+        case Anchor.MidPoint(startVertexId, endVertexId) =>
+          TessellationOperations.attemptEdgeDeletion(startVertexId, endVertexId)
 
   def clearAllSelections(): Unit =
     ifNotProcessing:
@@ -163,21 +165,21 @@ object SelectionOperations:
             val coords = tiling.coordinates
             val vs = face.getVertices.toOption.get
             val vertices = vs.map(_.coords).map(_.toPoint)
-
-            val vertexPoints = vs.map(_.id).zip(vertices).map { case (node, point) =>
-              ClickablePoint(point, Anchor.Vertex(node))
+            val vertexIdsAndPoints = vs.map(_.id).zip(vertices)
+            val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
+              ClickablePoint(point, Anchor.Vertex(vertexId))
             }
 
             val centerX = vertices.map(_.x).sum / vertices.size
             val centerY = vertices.map(_.y).sum / vertices.size
-            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center)
+            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
-            val edges = vertices.toVector.slidingO(2).toList
+            val edges = vertexIdsAndPoints.toVector.slidingO(2).toList
 //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
             val midPoints = edges.map { edge =>
-              val p1 = edge(0)
-              val p2 = edge(1)
-              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint)
+              val p1 = edge(0)._2
+              val p2 = edge(1)._2
+              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
             }
 
             EditorState.clickablePoints.set(centerPoint :: vertexPoints.toList ++ midPoints.toList)

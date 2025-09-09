@@ -5,8 +5,7 @@ import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strict
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.{AsyncUtils, TilingGenerator, UndoManager}
-
-import io.github.scala_tessella.dcel.{TilingDCEL, TilingError, ValidationError, VertexId}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, TilingError, ValidationError, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -109,6 +108,56 @@ object TessellationOperations:
     }
 
   // Attempt to delete a polygon from the tessellation
+  def attemptFaceDeletion(faceId: FaceId): Unit =
+    val future =
+      AsyncUtils.withLoadingState { () =>
+        currentTiling.now() match
+          case tiling if !tiling.isEmpty =>
+            // All checks passed - try actual deletion
+            val result: Either[TilingError, TilingDCEL] =
+              tiling.maybeDeleteFace(faceId)
+            result match
+              case Right(newTiling) =>
+                // Success: return the new tiling
+                Right(newTiling)
+              case Left(errMsg) =>
+                // Failure: return error with wireframe info
+                Left(s"Cannot remove polygon: ${errMsg.message}")
+          case _ =>
+            Left("No tessellation available to modify")
+      }
+
+    future.foreach {
+      case Right(newTiling) =>
+        // Success: save state before change, then update tiling
+        UndoManager.saveState()
+        currentTiling.set(newTiling)
+        ErrorOperations.clearError()
+      case Left(errMsg) =>
+        // Failure: show error with wireframe info
+        val polygonNodes = currentTiling.now() match
+          case tiling if !tiling.isEmpty =>
+//            val polyTag = if polygonId.startsWith("tiling-poly-") then
+//              polygonId.substring("tiling-poly-".length)
+//            else
+//              polygonId
+
+          //            tiling.orientedPolygons.find { nodes =>
+          //              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
+          //              tag == polyTag
+          //            }.getOrElse(Vector.empty)
+          case _ => Vector.empty
+
+      //        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
+      //        ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
+    }
+
+    future.recover {
+      case ex: Exception =>
+        ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
+    }
+
+  // Attempt to delete a polygon from the tessellation
   def attemptVertexDeletion(vertexId: VertexId): Unit =
     val future =
       AsyncUtils.withLoadingState { () =>
@@ -124,7 +173,6 @@ object TessellationOperations:
                   case Left(errMsg) =>
                     // Failure: return error with wireframe info
                     Left(s"Cannot remove vertex: ${errMsg.message}")
-
 
           case _ =>
             Left("No tessellation available to modify")
@@ -160,6 +208,56 @@ object TessellationOperations:
         ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
     }
 
+  // Attempt to delete a polygon from the tessellation
+  def attemptEdgeDeletion(startVertexId: VertexId, endVertexId: VertexId): Unit =
+    val future =
+      AsyncUtils.withLoadingState { () =>
+        currentTiling.now() match
+          case tiling if !tiling.isEmpty =>
+            // All checks passed - try actual deletion
+            val result: Either[TilingError, TilingDCEL] =
+              tiling.maybeDeleteEdge(startVertexId, endVertexId)
+            result match
+              case Right(newTiling) =>
+                // Success: return the new tiling
+                Right(newTiling)
+              case Left(errMsg) =>
+                // Failure: return error with wireframe info
+                Left(s"Cannot remove edge: ${errMsg.message}")
+
+          case _ =>
+            Left("No tessellation available to modify")
+      }
+
+    future.foreach {
+      case Right(newTiling) =>
+        // Success: save state before change, then update tiling
+        UndoManager.saveState()
+        currentTiling.set(newTiling)
+        ErrorOperations.clearError()
+      case Left(errMsg) =>
+      // Failure: show error with wireframe info
+      //        val polygonNodes = currentTiling.now() match
+      //          case tiling if !tiling.isEmpty =>
+      //            val polyTag = if polygonId.startsWith("tiling-poly-") then
+      //              polygonId.substring("tiling-poly-".length)
+      //            else
+      //              polygonId
+      //
+      //          //            tiling.orientedPolygons.find { nodes =>
+      //          //              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
+      //          //              tag == polyTag
+      //          //            }.getOrElse(Vector.empty)
+      //          case _ => Vector.empty
+
+      //        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
+      //        ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
+    }
+
+    future.recover {
+      case ex: Exception =>
+        ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
+    }
 
   // Handle perimeter edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =

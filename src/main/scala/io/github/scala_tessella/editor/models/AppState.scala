@@ -5,7 +5,7 @@ import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.UndoManager
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
@@ -19,9 +19,9 @@ case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingN
 
 enum Anchor:
 
-  case Vertex(node: VertexId)
-  case Center
-  case MidPoint
+  case Vertex(vertexId: VertexId)
+  case Center(faceId: FaceId)
+  case MidPoint(startVertexId: VertexId, endVertexId: VertexId)
 
 case class ClickablePoint(point: Point, anchor: Anchor)
 
@@ -140,7 +140,7 @@ object AppState:
    */
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForDeletion(point)
-  
+
   /**
    * Applies the specified color to all selected polygons.
    * @param color The color to apply (RGB tuple)
