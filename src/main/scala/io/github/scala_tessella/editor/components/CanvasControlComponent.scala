@@ -10,7 +10,7 @@ object CanvasControlComponent:
   private def toggleTool(tool: Tool): Unit =
     EditorState.activeTool.update {
       case Some(t) if t == tool =>
-        if t == Tool.Measurement then AppState.clearMeasurements()
+        if t == Tool.Measurement || t == Tool.Eraser then AppState.clearMeasurements()
         None // Deactivate if it's the current tool
       case _ =>
         AppState.clearMeasurements() // Clear measurements when switching
@@ -66,6 +66,11 @@ object CanvasControlComponent:
             Tool.SelectByColor,
             "Activate selector to select all polygons with the same color",
             IconsSVG.selectByColorIcon
+          ),
+          createToolButton(
+            Tool.Eraser,
+            "Activate deletion mode to delete polygons",
+            IconsSVG.rulerIcon
           ),
           createToolButton(
             Tool.Measurement,

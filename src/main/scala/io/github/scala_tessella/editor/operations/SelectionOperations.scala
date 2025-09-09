@@ -58,6 +58,15 @@ object SelectionOperations:
         )
         EditorState.measurementAngle.set(maybeAngle)
 
+  def handlePointClickForDeletion(point: ClickablePoint): Unit =
+    ifNotProcessing:
+      point.anchor match
+        case Anchor.Vertex(vertexId) =>
+          EditorState.clickablePoints.set(Nil)
+          TessellationOperations.attemptVertexDeletion(vertexId)
+        case Anchor.Center => ???
+        case Anchor.MidPoint => ???
+
   def clearAllSelections(): Unit =
     ifNotProcessing:
       EditorState.selectedTilingPolygons.set(Set.empty)
@@ -124,6 +133,8 @@ object SelectionOperations:
       case Some(Tool.SelectByColor) =>
         selectPolygonsByColor(polygonId)
       case Some(Tool.Measurement) =>
+        handlePolygonClickForMeasurement(polygonId)
+      case Some(Tool.Eraser) =>
         handlePolygonClickForMeasurement(polygonId)
       case _ =>
         EditorState.editorMode.now() match

@@ -200,7 +200,12 @@ object TessellationRenderer:
       svg.stroke := "black",
       svg.strokeWidth := "1",
       svg.className := "clickable-point",
-      onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point)),
+      onClick.preventDefault.mapTo(p) --> (point =>
+        if EditorState.activeTool == Some(Tool.Measurement) then
+          AppState.handlePointClickForMeasurement(point)
+        else
+          AppState.handlePointClickForDeletion(point)
+      ),
       svg.style := "cursor: crosshair;",
       svg.pointerEvents := "visible"
     )
