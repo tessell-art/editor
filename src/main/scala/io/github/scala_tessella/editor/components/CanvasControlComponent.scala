@@ -70,7 +70,7 @@ object CanvasControlComponent:
           createToolButton(
             Tool.Eraser,
             "Activate deletion mode to delete polygons",
-            IconsSVG.rulerIcon
+            IconsSVG.eraserIcon
           ),
           createToolButton(
             Tool.Measurement,
