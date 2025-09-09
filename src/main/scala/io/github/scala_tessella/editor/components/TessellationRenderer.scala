@@ -1,6 +1,5 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.airstream.state.{DerivedVar, LazyDerivedVar, LazyDerivedVar2, SourceVar}
 import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
