@@ -44,21 +44,18 @@ object PopUpsComponent:
               "To start a new tiling, select a polygon shape from the palette. ",
               "It will be placed on the canvas."
             ),
-            li("To add new polygons, first select the desired shape, then click on any perimeter edge.")
+            li("To add new polygons, first select the desired shape, then click on any boundary edge.")
           ),
           h3("Validation"),
           ul(
             li(
-              "If ", b("Validation: ON"), " the editor will check that the added polygon ",
-              "is not touching or crossing the perimeter (boundary), ",
-              "ensuring you are building a proper finite tessellation."
+              "The editor will check that an added polygon ",
+              "is not crossing the boundary or another polygon, ",
+              "ensuring you are building a proper edge-to-edge finite tessellation."
             ),
             li(
-              "You can switch ", b("Validation: OFF"), " for more freedom of expression.",
-            ),
-            li(
-              "In any case, when removing a polygon, the editor will always check that the resulting tiling ",
-              "has one perimeter (boundary) only, made of one graph cycle only."
+              "And when removing a polygon, the editor will always check that the resulting tiling ",
+              "has one boundary only, made of one graph cycle only."
             )
           ),
           h3("Selecting & Deleting"),
