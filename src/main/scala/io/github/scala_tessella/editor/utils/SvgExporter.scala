@@ -5,9 +5,9 @@ import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorSta
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.TilingSVG.toMetadata
+import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG, VertexId}
 import io.github.scala_tessella.tessella.Geometry.Point
 import org.scalajs.dom
 
@@ -65,7 +65,7 @@ object SvgExporter:
 //    val dualXml = if showDual then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
     val dualXml = ""
     val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
-    val metadataXml = generateMetadataXml(Map.empty)
+    val metadataXml = generateMetadataXml(tiling)
 
     val sWidth = f"$width%1.4f"
     val sHeight = f"$height%1.4f"
@@ -146,24 +146,15 @@ object SvgExporter:
          |$nodesXml
          |  </g>""".stripMargin
 
-  private [utils] def generateMetadataXml(coordinates: Map[VertexId, BigPoint]): String =
-    val tilingCoordinatesMetadata =
-      if coordinates.isEmpty then ""
-      else
-        val items = coordinates
-          .map { (node, vertex) =>
-            s"""      <tess:coord node="${node.toString}" x="${vertex.x.toString}" y="${vertex.y.toString}" />"""
-          }
-          .mkString("\n")
-        s"""
-           |    <tess:tilingCoordinates>
-           |$items
-           |    </tess:tilingCoordinates>"""
+  private [utils] def generateMetadataXml(tiling: TilingDCEL): String =
+    val tessellaMetadata =
+      tiling.toMetadata
     s"""  <metadata>
+       |    $tessellaMetadata
        |    <rdf:RDF>
        |      <cc:Work>
        |        <dc:source rdf:resource="https://github.com/scala-tessella/tessella">Tessella</dc:source>
        |        <cc:license rdf:resource="https://www.apache.org/licenses/LICENSE-2.0"/>
        |      </cc:Work>
-       |    </rdf:RDF>$tilingCoordinatesMetadata
+       |    </rdf:RDF>
        |  </metadata>"""
