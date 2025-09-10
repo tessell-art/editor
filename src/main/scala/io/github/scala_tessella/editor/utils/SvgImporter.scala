@@ -2,9 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
-import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
-import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.Topology.Node
+import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent, SVGElement}
 
@@ -54,62 +52,36 @@ object SvgImporter:
       val parser = new dom.DOMParser()
       val doc = parser.parseFromString(svgContent, MIMEType.`image/svg+xml`)
 
-      val coordElements = doc.querySelectorAll("metadata tilingCoordinates coord")
-      val finalCoords: BigCoords =
-        (0 until coordElements.length).flatMap { i =>
-          val coordElement = coordElements(i).asInstanceOf[dom.Element]
-          for {
-            nodeStr <- Option(coordElement.getAttribute("node"))
-            xStr    <- Option(coordElement.getAttribute("x"))
-            yStr    <- Option(coordElement.getAttribute("y"))
-          } yield Node(nodeStr.toInt) -> BigPoint(BigDecimal(xStr), BigDecimal(yStr))
-        }.toMap
+      // Prefer namespace-aware selection for the tessella DCEL metadata
+      val ns = "https://github.com/scala-tessella/tessella"
+      val tessElems = doc.getElementsByTagNameNS(ns, "tessella-dcel")
 
-      val polygons = doc.querySelectorAll("polygon[data-nodes]")
-      var perimeterNodes: List[Int] = Nil
-      var tilingPolygons: List[List[Int]] = Nil
+      // Fallback for cases where namespace lookups might fail (e.g., missing prefix binding)
+      val tessElem =
+        if tessElems != null && tessElems.length > 0 then
+          tessElems(0)
+        else
+          // Escape the colon in the CSS selector for namespaced elements
+          Option(doc.querySelector("metadata tessella\\:tessella-dcel")).getOrElse(
+            throw new Exception("No Tessella DCEL metadata found in the SVG.")
+          )
 
-      for (i <- 0 until polygons.length)
-        val poly = polygons(i).asInstanceOf[SVGElement]
-        val nodesStr: Option[String] = Option(poly.getAttribute("data-nodes"))
-        val fill = poly.getAttribute("fill")
+      val metadataStr = tessElem.asInstanceOf[dom.Element].outerHTML
 
-        nodesStr match
-          case Some(ns) if ns.nonEmpty =>
-            val nodes = ns.split(',').map(_.toInt).toList
-            if fill == "none" then
-              perimeterNodes = nodes
-            else
-              tilingPolygons = tilingPolygons :+ nodes
-              parseColor(fill).foreach { rgb =>
-                val polyTag = nodes.sorted.map(_.toString).mkString("-")
-                EditorState.polygonColors.update(_ + (polyTag -> rgb))
-              }
-          case _ =>
-
-      if tilingPolygons.isEmpty && perimeterNodes.isEmpty then
-        throw new Exception("No valid polygons found in SVG.")
-
-      if finalCoords.isEmpty && (tilingPolygons.nonEmpty || perimeterNodes.nonEmpty) then
-        throw new Exception("No coordinate metadata found in SVG. This might be an old SVG format which is no longer supported.")
-
-      val polygonsAsNodes = tilingPolygons.map(_.map(Node(_)))
-      val perimeterAsNodes = perimeterNodes.map(Node(_))
-
-      IncrementalTiling.maybe(
-        polygonsAsNodes.map(_.toVector),
-        perimeterAsNodes.toVector,
-        finalCoords
-      ) match
-        case Left(message) => throw new Error(message)
-        case Right(tiling) =>
-//          EditorState.currentTiling.set(tiling)
+      TilingSVG.fromMetadata(metadataStr) match
+        case Left(err) =>
+          throw new Error(s"Failed to parse Tessella DCEL metadata: ${err.message}")
+        case Right(tiling: TilingDCEL) =>
+          // Load the tiling into the editor
+          EditorState.currentTiling.set(tiling)
+          // Reset polygon colors so they will be assigned consistently on render
+          EditorState.polygonColors.set(Map.empty)
           EditorState.currentFileName.set(Some(filename))
           AppState.fitTilingToCanvas()
           UndoManager.clearHistory()
     }.recover { case e: Throwable =>
       val explanation: String =
-        "Only SVG saved by this editor with dedicated metadata can be loaded."
+        "Only SVG saved by this editor with Tessella DCEL metadata can be loaded."
       dom.window.alert(s"Failed to import SVG: ${e.getMessage}\n$explanation")
       e.printStackTrace()
     }

@@ -87,7 +87,7 @@ object SvgExporter:
   private [utils] def generatePolygonsXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double, strokeWidth: Double): String =
     val polygonsXml = tiling.innerFaces.map { face =>
       val vertices = face.getVertices.toOption.get
-      val polyTag = vertices.map(_.id.value).mkString("-")
+      val polyTag = face.id.value
       val color = AppState.getOrAssignPolygonColor(polyTag).toRgbString
       val points = // pointsString(nodes, coordinates, scale, offsetX, offsetY)
         vertices.map { vertex =>
