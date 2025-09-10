@@ -4,7 +4,7 @@ import io.github.scala_tessella.editor.models.{AppState, EditorState}
 
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
 import org.scalajs.dom
-import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent, SVGElement}
+import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
 
 import scala.scalajs.js.RegExp
 import scala.util.Try
@@ -66,6 +66,14 @@ object SvgImporter:
             throw new Exception("No Tessella DCEL metadata found in the SVG.")
           )
 
+      // Collect polygon fills (in order) to restore colors
+      val svgPolys = doc.querySelectorAll("#tiling-polygons polygon")
+      val polyFills: List[(Int, Int, Int)] =
+        (0 until svgPolys.length).flatMap { i =>
+          val el = svgPolys(i).asInstanceOf[dom.Element]
+          parseColor(Option(el.getAttribute("fill")).getOrElse(""))
+        }.toList
+
       val metadataStr = tessElem.asInstanceOf[dom.Element].outerHTML
 
       TilingSVG.fromMetadata(metadataStr) match
@@ -74,8 +82,16 @@ object SvgImporter:
         case Right(tiling: TilingDCEL) =>
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
-          // Reset polygon colors so they will be assigned consistently on render
-          EditorState.polygonColors.set(Map.empty)
+
+          // Map SVG polygon colors to faces by order (export preserves this order)
+          val faces = tiling.innerFaces.toList
+          val colorMap =
+            faces
+              .zip(polyFills) // zip truncates safely if lengths differ
+              .map { case (face, rgb) => face.id.value -> rgb }
+              .toMap
+          EditorState.polygonColors.set(colorMap)
+
           EditorState.currentFileName.set(Some(filename))
           AppState.fitTilingToCanvas()
           UndoManager.clearHistory()
