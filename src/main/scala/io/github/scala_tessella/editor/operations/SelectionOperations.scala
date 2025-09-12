@@ -85,10 +85,10 @@ object SelectionOperations:
   def selectAllPolygons(): Unit =
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
-//      if !tiling.isEmpty then
-//        val allPolygonIds = tiling.orientedPolygons.map(polygonId).toSet
-//        EditorState.selectedTilingPolygons.set(allPolygonIds)
-//        EditorState.selectedPerimeterEdges.set(Set.empty)
+      if !tiling.isEmpty then
+        val allPolygonIds = tiling.innerFaces.map("tiling-poly-" + _.id.value).toSet
+        EditorState.selectedTilingPolygons.set(allPolygonIds)
+        EditorState.selectedPerimeterEdges.set(Set.empty)
 
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
