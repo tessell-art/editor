@@ -159,14 +159,14 @@ object MenuBarComponent:
       dropdownLink("↷ Redo", () => AppState.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
       dropdownLink("Clear Tiling", () => AppState.clearTiling()),
-      div(className := "menu-separator"),
-      dropdownLinkDynamic(
-        EditorState.editorMode.signal.map {
-          case EditorMode.Select => "Switch to Delete Mode"
-          case EditorMode.Delete => "Switch to Select Mode"
-        },
-        () => AppState.toggleEditorMode()
-      ),
+//      div(className := "menu-separator"),
+//      dropdownLinkDynamic(
+//        EditorState.editorMode.signal.map {
+//          case EditorMode.Select => "Switch to Delete Mode"
+//          case EditorMode.Delete => "Switch to Select Mode"
+//        },
+//        () => AppState.toggleEditorMode()
+//      ),
       div(className := "menu-separator"),
       dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
       dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
@@ -180,14 +180,14 @@ object MenuBarComponent:
           isMenuOpen.set(false)
         }
       ),
-      div(className := "menu-separator"),
-      dropdownLinkDynamic(
-        EditorState.strictness.signal.map {
-          case Strictness.STRICT   => "Switch Validation OFF"
-          case _                   => "Switch Validation ON"
-        },
-        () => AppState.toggleStrictness()
-      )
+//      div(className := "menu-separator"),
+//      dropdownLinkDynamic(
+//        EditorState.strictness.signal.map {
+//          case Strictness.STRICT   => "Switch Validation OFF"
+//          case _                   => "Switch Validation ON"
+//        },
+//        () => AppState.toggleStrictness()
+//      )
     )
 
   private def viewMenu(): Element =
