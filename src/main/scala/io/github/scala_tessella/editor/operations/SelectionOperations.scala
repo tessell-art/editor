@@ -93,11 +93,12 @@ object SelectionOperations:
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
-//      if !tiling.isEmpty then
-//        val polygonIdsToAdd = tiling.orientedPolygons.collect {
-//          case nodes if nodes.length == sides => polygonId(nodes)
-//        }.toSet
-//        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+      if !tiling.isEmpty then
+        val polygonIdsToAdd = tiling.innerFaces.collect {
+          // @todo two traversals
+          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => "tiling-poly-" + face.id.value
+        }.toSet
+        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
   def selectPolygonsByColor(polygonId: String): Unit =
     ifNotProcessing:
