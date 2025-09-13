@@ -5,12 +5,10 @@ import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPol
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
-import io.github.scala_tessella.tessella.BigDecimalGeometry.BigCoords
 import io.github.scala_tessella.tessella.Geometry.Point
 import org.scalajs.dom.EndingType.transparent
 
@@ -84,8 +82,8 @@ object TessellationRenderer:
     }
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
-//      if showLabels then renderNodeLabels(tiling.coordinates)
-//      else 
+      if showLabels then renderNodeLabels(tiling.coordinates)
+      else
         List.empty
     }
 
@@ -147,12 +145,9 @@ object TessellationRenderer:
       measurementAngleArcDisplay
     )
 
-  private def renderNodeLabels(coordinates: BigCoords): List[Element] =
-    // Get all unique nodes from the tiling
-    val allNodes = coordinates.keys.toList
-
-    allNodes.map { node =>
-      val vertex = coordinates(node).toPoint
+  private def renderNodeLabels(coordinates: Map[VertexId, BigPoint]): List[Element] =
+    coordinates.toList.map { (vertexId, bigPoint) =>
+      val vertex = bigPoint.toPoint
 
       // Convert tessella coordinates to canvas coordinates
       val (x, y) = tilingPointToCanvasView(vertex)
@@ -165,7 +160,7 @@ object TessellationRenderer:
         svg.x := offsetX.toString,
         svg.y := offsetY.toString,
         svg.fontSize <-- EditorState.viewTransform.signal.map(transform =>
-          // Scale font size with zoom but keep it readable
+          // Scale the font size with zoom but keep it readable
           val baseFontSize = 12
           val scaledSize = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
@@ -187,7 +182,7 @@ object TessellationRenderer:
           (0.5 / transform.scale).max(0.2).min(1.0).toString
         ),
         svg.paintOrder := "stroke fill",
-        node.toString
+        vertexId.value
       )
     }
 
