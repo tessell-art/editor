@@ -142,7 +142,7 @@ object MenuBarComponent:
       ),
       div(className := "menu-separator"),
       dropdownLink(
-        "Export to .DOT...",
+        "Export to DOT...",
         () => DotExporter.exportTilingToDOT(),
         enabled = isTilingEmpty.map(!_)
       )
