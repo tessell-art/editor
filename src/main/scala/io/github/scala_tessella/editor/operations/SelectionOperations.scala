@@ -176,14 +176,6 @@ object SelectionOperations:
             val vs = face.getVertices.toOption.get
             val vertices = vs.map(_.coords).map(_.toPoint)
             val vertexIdsAndPoints = vs.map(_.id).zip(vertices)
-            val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
-              ClickablePoint(point, Anchor.Vertex(vertexId))
-            }
-
-            val centerX = vertices.map(_.x).sum / vertices.size
-            val centerY = vertices.map(_.y).sum / vertices.size
-            val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
-
             val edges = vertexIdsAndPoints.toVector.slidingO(2).toList
 //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
             val midPoints = edges.map { edge =>
@@ -191,11 +183,17 @@ object SelectionOperations:
               val p2 = edge(1)._2
               ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
             }
+            if edgesOnly then
+              EditorState.clickablePoints.set(midPoints)
+            else
+              val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
+                ClickablePoint(point, Anchor.Vertex(vertexId))
+              }
+              val centerX = vertices.map(_.x).sum / vertices.size
+              val centerY = vertices.map(_.y).sum / vertices.size
+              val centerPoint = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
-            EditorState.clickablePoints.set(
-              if edgesOnly then midPoints
-              else centerPoint :: vertexPoints ++ midPoints
-            )
+              EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
 
           case None => ()
       case _ => ()
