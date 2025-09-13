@@ -2,8 +2,8 @@ package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
-
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
 import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
@@ -95,7 +95,7 @@ object SelectionOperations:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
         val polygonIdsToAdd = tiling.innerFaces.collect {
-          // @todo two traversals
+          // @todo two traversals, one for the number of sides, one for the angles
           case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => "tiling-poly-" + face.id.value
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
@@ -135,10 +135,15 @@ object SelectionOperations:
         }
       case Some(Tool.ShapeAndColorPicker) =>
         val polyTag = extractPolyTag(polygonId)
+        val tiling = EditorState.currentTiling.now()
         EditorState.polygonColors.now().get(polyTag).foreach { color =>
           EditorState.fillColor.set(color)
-          val sides = polyTag.count(_ == '-') + 1
-          EditorState.selectedPolygon.set(Some(sides))
+          val face = tiling.findInnerFace(FaceId(polyTag)).toOption.get
+          if face.hasEqualAngles then
+            val sides = face.halfEdges.toOption.get.size
+            EditorState.selectedPolygon.set(Some(sides))
+          else
+            EditorState.selectedPolygon.set(None)
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.SelectByColor) =>
