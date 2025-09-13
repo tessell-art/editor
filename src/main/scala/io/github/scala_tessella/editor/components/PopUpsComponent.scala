@@ -217,11 +217,11 @@ object PopUpsComponent:
           className := "about-version",
           "Editor v0.2.2"
         ),
-        h2("Regular polygon tessellation editor"),
+        h2("Unit-side polygon tessellation editor"),
         div(
           className := "popup-text-scrollable",
           p(
-            "Interactively create, view, and manipulate edge-to-edge regular polygon tessellations of the plane.",
+            "Interactively create, view, and manipulate edge-to-edge unit-side polygon tessellations of the plane.",
           ),
           p(
             "The editor depends on the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
