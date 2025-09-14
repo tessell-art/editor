@@ -103,7 +103,7 @@ object PopUpsComponent:
           ),
           h3("Measurement"),
           ul(
-            li("By constraint, each regular polygon side in the tiling has unit length, that is length equal to 1."),
+            li("By constraint, each polygon side in the tiling has unit length, that is length equal to 1, or an integer multiple of it."),
             li(
               "Use the ",
               IconsSVG.rulerIcon,
@@ -124,7 +124,7 @@ object PopUpsComponent:
           ul(
             li("Use the ", b("File"), " menu to save your work as an SVG file (", b("Save SVG"), " or ", b("Save SVG as..."), ")."),
             li("You can also load a previously saved SVG tiling."),
-            li("The tiling's graph structure can be exported to a .DOT file, which is compatible with Graphviz.")
+            li("The tiling's topological structure can be exported as a DOT graph, in the Graphviz .gv file format.")
 
           )
         )
@@ -217,11 +217,11 @@ object PopUpsComponent:
           className := "about-version",
           "Editor v0.2.2"
         ),
-        h2("Unit-side polygon tessellation editor"),
+        h2("Simple polygon tessellation editor"),
         div(
           className := "popup-text-scrollable",
           p(
-            "Interactively create, view, and manipulate edge-to-edge unit-side polygon tessellations of the plane.",
+            "Interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons.",
           ),
           p(
             "The editor depends on the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
