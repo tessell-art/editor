@@ -127,7 +127,7 @@ object EditorCanvasComponent:
       child.maybe <-- EditorState.currentTiling.signal.map { tiling =>
         if tiling.isEmpty then Some(noTessellationMessage())
         else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles then Some(onePolygonMessage())
-        else  None
+        else None
       }
     )
 
