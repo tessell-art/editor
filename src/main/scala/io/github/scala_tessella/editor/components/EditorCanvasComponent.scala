@@ -49,13 +49,16 @@ object EditorCanvasComponent:
           // Store reference to the canvas element
           onMountCallback(ctx => EditorState.canvasElementRef.set(Some(ctx.thisNode.ref))),
 
-          // Dynamic cursor based on loading state and editor mode
-          svg.style <-- EditorState.isProcessing.signal.combineWith(EditorState.editorMode.signal).map {
-            case (isProcessing, mode) =>
-              if isProcessing then
-                "cursor: wait; pointer-events: none;"
-              else
-                "cursor: default;"
+          // Dynamic cursor and interactivity derived as a Signal
+          {
+            val canvasInteractivityStyle: Signal[String] =
+              EditorState.isProcessing.signal.map { isProcessing =>
+                if isProcessing then
+                  "cursor: wait; pointer-events: none;"
+                else
+                  "cursor: default;"
+              }
+            svg.style <-- canvasInteractivityStyle
           },
 
           // Add grid pattern definition here

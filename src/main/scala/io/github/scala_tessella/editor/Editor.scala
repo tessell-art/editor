@@ -24,23 +24,26 @@ def Editor(): Unit =
 
 object EditorApp:
 
-  // 1. Create a reactive variable for the system's theme preference.
+  // 1. Create a reactive signal for the system's theme preference (no Var needed).
   private val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
-  private val systemTheme = Var(if (lightMediaQuery.matches) "light" else "dark")
 
-  // 2. Listen for changes in the system theme preference.
-  // We use lightMediaQuery.matches directly to avoid the problematic cast.
+  // Use an EventBus to bridge the JS event into Airstream
+  private val systemThemeBus = new EventBus[String]
+  private val systemTheme: Signal[String] =
+    systemThemeBus.events.startWith(if (lightMediaQuery.matches) "light" else "dark")
+
+  // Attach the listener once to push updates into the bus
   lightMediaQuery.addEventListener("change", (_: dom.Event) => {
-    systemTheme.set(if (lightMediaQuery.matches) "light" else "dark")
+    systemThemeBus.writer.onNext(if (lightMediaQuery.matches) "light" else "dark")
   })
 
-  // 3. The effective theme is the user's preference, or the system theme if none is set.
+  // 2. The effective theme is the user's preference, or the system theme if none is set.
   val effectiveTheme: Signal[String] =
     EditorState.userThemePreference.signal
-      .combineWith(systemTheme.signal)
+      .combineWith(systemTheme)
       .map((userChoiceOpt, systemPref) => userChoiceOpt.getOrElse(systemPref))
 
-  // 4. The toggleTheme function is no longer needed here; the logic is moved into the component.
+  // 3. The toggleTheme function is no longer needed here; the logic is moved into the component.
 
   def element: Element =
     div(
