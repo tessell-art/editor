@@ -62,60 +62,48 @@ object TessellationRenderer:
     val tilingPolygons = tiling.innerFaces.map { face =>
       val vertices = face.getVertices.toOption.get
       val ids = vertices.map(_.id).toVector
-//      val polyTag = ids.map(_.value).sorted.mkString("-")
       val polyTag = face.id.value
       val polygonId = s"tiling-poly-$polyTag"
       getOrAssignPolygonColor(polyTag)
       renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
     }
-//    val tilingPolygons = tiling.orientedPolygons.map { nodes =>
-//      val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-//      val polygonId = s"tiling-poly-$polyTag"
-//      getOrAssignPolygonColor(polyTag)
-//      renderTilingPolygon(tiling.coordinates, nodes, polygonId, polyTag)
-//    }
 
     val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList.zipWithIndex.map {
       (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
     }
 
     // Interior edges overlay only when Inserter tool is active AND a polygon is highlighted
-    val interiorEdgesOverlay = children <-- EditorState.activeTool.signal
-      .combineWith(EditorState.highlightedPolygonId.signal)
-      .map { (toolOpt, highlightedOpt) =>
-        (toolOpt, highlightedOpt.flatMap(polygonIdToFaceId)) match
-          case (Some(Tool.Inserter), Some(fid)) => renderInteriorEdgesForFace(tiling, fid)
-          case _                                => List.empty
-      }
-
-//    val perimeterEdges = tiling.perimeter.toEdgesO.zipWithIndex.map {
-//      case (edge, index) => renderPerimeterEdge(tiling.coordinates, edge, index, s"perimeter-edge-$index")
-//    }.toList
+    val interiorEdgesOverlay = children <--
+      EditorState.isInserterActive
+        .combineWith(EditorState.selectedFaceForInsertion)
+        .map { (isInserter, faceIdOpt) =>
+          (isInserter, faceIdOpt) match
+            case (true, Some(fid)) => renderInteriorEdgesForFace(tiling, fid)
+            case _ => List.empty
+        }
 
     val dualDisplay = children <-- EditorState.showDual.signal.map { isVisible =>
       if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
-      else
-        List.empty
+      else List.empty
     }
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
-      if showLabels then renderNodeLabels(tiling.coordinates)
-      else
-        List.empty
+      if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
     }
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
-    val failedPolygonWireframe = child.maybe <-- EditorState.failedPlacement.signal
-      .combineWith(EditorState.activeTool.signal, EditorState.highlightedPolygonId.signal)
-      .map { (placementOpt, toolOpt, highlightedOpt) =>
-        placementOpt.map { p =>
-          val adjusted =
-            (toolOpt, highlightedOpt.flatMap(polygonIdToFaceId)) match
-              case (Some(Tool.Inserter), Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
-              case _                                                       => p
-          FailedPolygonRenderer.renderFailedPlacement(adjusted)
+    val failedPolygonWireframe = child.maybe <--
+      EditorState.failedPlacement.signal
+        .combineWith(EditorState.isInserterActive, EditorState.selectedFaceForInsertion)
+        .map { (placementOpt, isInserter, faceIdOpt) =>
+          placementOpt.map { p =>
+            val adjusted =
+              (isInserter, faceIdOpt) match
+                case (true, Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
+                case _ => p
+            FailedPolygonRenderer.renderFailedPlacement(adjusted)
+          }
         }
-      }
 
     // Hover preview wireframe for insertion
     val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map { placement =>

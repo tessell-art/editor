@@ -5,6 +5,7 @@ import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import org.scalajs.dom
+import io.github.scala_tessella.dcel.FaceId
 
 /**
  * EditorState object contains all the state variables for the editor.
@@ -141,10 +142,10 @@ object EditorState:
   /** Previous ending point for measurement (for angle calculation) */
   val measurementPreviousEndPoint: Var[Option[Point]] = Var(None)
 
-  /** ID of the highlighted polygon during measurement */
+  /** ID of the highlighted polygon during measurement/insertion */
   val highlightedPolygonId: Var[Option[String]] = Var(None)
 
-  /** List of clickable points for the measurement tool */
+  /** List of clickable points for the measurement/eraser tools */
   val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
 
   /** Measurement result (distance) */
@@ -152,3 +153,42 @@ object EditorState:
 
   /** Measurement result (angle) */
   val measurementAngle: Var[Option[Double]] = Var(None)
+
+  // -------------------------
+  // Derived Signals (no Vars)
+  // -------------------------
+
+  /** Is Inserter tool active */
+  val isInserterActive: Signal[Boolean] =
+    activeTool.signal.map(_.contains(Tool.Inserter))
+
+  /** Selected face for insertion, derived from highlighted polygon id */
+  val selectedFaceForInsertion: Signal[Option[FaceId]] =
+    highlightedPolygonId.signal.map {
+      case Some(id) if id.startsWith("tiling-poly-") =>
+        Some(FaceId(id.stripPrefix("tiling-poly-")))
+      case _ => None
+    }
+
+  /** System theme as a Signal (uses media query, no Var) */
+  private val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
+  private val systemThemeBus = new EventBus[String]
+  val systemTheme: Signal[String] =
+    systemThemeBus.events.startWith(if (lightMediaQuery.matches) "light" else "dark")
+  lightMediaQuery.addEventListener("change", (_: dom.Event) =>
+    systemThemeBus.writer.onNext(if (lightMediaQuery.matches) "light" else "dark")
+  )
+
+  /** Effective theme: user's preference or system */
+  val effectiveTheme: Signal[String] =
+    userThemePreference.signal.combineWith(systemTheme).map {
+      case (Some(user), _) => user
+      case (None, sys)     => sys
+    }
+
+  /** Theme-aware overlay preview stroke color */
+  val overlayPreviewStrokeColor: Signal[String] =
+    effectiveTheme.map {
+      case "light" => "#222222" // dark grey for light mode
+      case _       => "#ffffff" // white for dark mode
+    }

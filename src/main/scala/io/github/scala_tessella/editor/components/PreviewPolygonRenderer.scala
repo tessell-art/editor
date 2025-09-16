@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.FailedPolygonPlacement
+import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonPlacementGeometry
 import com.raquo.laminar.api.L.{*, given}
 
@@ -18,8 +18,7 @@ object PreviewPolygonRenderer:
       svg.polygon(
         svg.points := pointsStr,
         svg.fill := "none",
-        // Use currentColor so CSS can theme it for light/dark modes
-        svg.stroke := "currentColor",
+        svg.stroke <-- EditorState.overlayPreviewStrokeColor, // theme-aware
         svg.strokeWidth := "2",
         svg.strokeDashArray := "5,5",
         svg.opacity := "0.9",
