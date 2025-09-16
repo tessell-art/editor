@@ -60,14 +60,37 @@ object PopUpsComponent:
           ),
           h3("Selecting & Deleting"),
           ul(
-            li(b("Mode: Select"), " (default): click on any polygon to select it."),
-            li(b("Mode: Delete"), ": click on any perimeter polygon to remove it."),
+            li("Click on any polygon to select it."),
             li("Use ", kbd("Esc"), " to deselect everything."),
-            li("Use the ", i("Select"), " button at the bottom of the palette to select all polygons with the same shape."),
+            li("Use the ", i("Select"), " button at the bottom of the palette to select all regular polygons with the same shape."),
             li(
               "Use the ",
               IconsSVG.selectByColorIcon,
               " ", i("Select by color"), " tool to select all polygons with the same color.")
+          ),
+          h3("Adding interior polygons"),
+          ul(
+            li(
+              "Use the ",
+              IconsSVG.inserterIcon,
+              " ", i("Insertion"), " tool to add a regular polygon to the interior of an existing one."
+            ),
+            li(
+              "When you click on a polygon its edges will be highlighted, ",
+              "click one to add the selected regular polygon."
+            ),
+          ),
+          h3("Deleting"),
+          ul(
+            li(
+              "Use the ",
+              IconsSVG.eraserIcon,
+              " ", i("Eraser"), " tool to delete a vertex, and edge or a whole polygon from the tiling."
+            ),
+            li(
+              "When you click on a polygon the vertices, edges (at midpoint) and face (at center) will be highlighted, ",
+              "click one to delete the selected item."
+            ),
           ),
           h3("Navigating the Canvas"),
           ul(
@@ -82,9 +105,9 @@ object PopUpsComponent:
             li(
               "You can switch ", b("Labels: ON"), " to show the node labels (numbers) of the underlying graph, each node a vertex."
             ),
-            li(
-              "Dual: use ", b("View → Show Dual"), " to show the dual of the tessellation."
-            )
+//            li(
+//              "Dual: use ", b("View → Show Dual"), " to show the dual of the tessellation."
+//            )
           ),
           h3("Styling"),
           ul(
@@ -98,7 +121,7 @@ object PopUpsComponent:
             li(
               "Use the ",
               IconsSVG.eyeDropperPentagonIcon,
-              " ", i("Shape and color picker"), " tool to select both the shape and the fill color from an existing polygon."
+              " ", i("Shape and color picker"), " tool to select both the shape and the fill color from an existing regular polygon."
             )
           ),
           h3("Measurement"),
