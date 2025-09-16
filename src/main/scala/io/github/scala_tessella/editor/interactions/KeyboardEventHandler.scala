@@ -1,22 +1,31 @@
 package io.github.scala_tessella.editor.interactions
 
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.components.{EditorCanvasComponent, MenuBarComponent}
+import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
-import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.SvgExporter
+
+import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 
 import scala.math.{max, min}
 
 object KeyboardEventHandler:
+
   def keyboardEventHandlers: Binder[HtmlElement] =
+    // Gate the stream using the processing signal without calling .now() per keydown
     windowEvents(_.onKeyDown)
-      .filter(_ => !EditorState.isProcessing.now())
+      .withCurrentValueOf(EditorState.isProcessing.signal)
+      .collect { case (event, false) => event }
       --> handleKeyDown
 
   def handleKeyDown(event: KeyboardEvent): Unit =
+    // Snapshot small pieces of state once per key event
+    val currentTiling = EditorState.currentTiling.now()
+    val hasFileName = EditorState.currentFileName.now().isDefined
+
     val targetIsInput = Option(event.target).exists {
       case _: dom.html.Input => true
       case _: dom.html.TextArea => true
@@ -40,9 +49,8 @@ object KeyboardEventHandler:
           event.preventDefault()
           AppState.undo()
         case "s" if event.ctrlKey =>
-          val isTilingEmpty = EditorState.currentTiling.now().isEmpty
-          val hasFileName = EditorState.currentFileName.now().isDefined
-          if hasFileName && !isTilingEmpty then
+          // Use the snapshots captured above
+          if hasFileName && !currentTiling.isEmpty then
             SvgExporter.saveTilingToSVG()
         case "+" | "=" =>
           event.preventDefault()

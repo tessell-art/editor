@@ -36,7 +36,7 @@ object EditorCanvasComponent:
           },
         )
       ),
-        // A new wrapper for the SVG and its overlays
+      // A new wrapper for the SVG and its overlays
       div(
         className := "editor-canvas-wrapper",
         ErrorMessageComponent.element,
@@ -65,22 +65,46 @@ object EditorCanvasComponent:
           GridRenderer.patternDef,
 
           // Background
-//          background(),
+          //          background(),
 
           // Main content group with transforms
           contentGroup(),
 
-          // Disable mouse events when processing
-          onMouseDown.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseDown,
-          onMouseMove.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseMove,
-          onMouseUp.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleMouseUp,
-          onWheel.filter(_ => !EditorState.isProcessing.now()) --> MouseEventHandler.handleWheel,
+          // Disable mouse events when processing, without using .now()
+          onMouseDown.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> MouseEventHandler.handleMouseDown,
+          onMouseMove.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> MouseEventHandler.handleMouseMove,
+          onMouseUp.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> MouseEventHandler.handleMouseUp,
+          onWheel.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> MouseEventHandler.handleWheel,
 
-          // Touch events for mobile support
-          onTouchStart.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchStart,
-          onTouchMove.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchMove,
-          onTouchEnd.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchEnd,
-          onTouchCancel.filter(_ => !EditorState.isProcessing.now()) --> TouchEventHandler.handleTouchCancel
+          // Touch events for mobile support (also gated)
+          onTouchStart.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> TouchEventHandler.handleTouchStart,
+          onTouchMove.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> TouchEventHandler.handleTouchMove,
+          onTouchEnd.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> TouchEventHandler.handleTouchEnd,
+          onTouchCancel.compose(
+            _.withCurrentValueOf(EditorState.isProcessing.signal)
+              .collect { case (e, false) => e }
+          ) --> TouchEventHandler.handleTouchCancel
         ),
         // HTML placeholder text is now inside the wrapper
         div(

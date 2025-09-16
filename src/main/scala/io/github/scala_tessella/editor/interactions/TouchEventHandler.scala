@@ -1,9 +1,10 @@
 package io.github.scala_tessella.editor.interactions
 
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
+
 import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
-import org.scalajs.dom.TouchEvent
+import org.scalajs.dom.{Touch, TouchEvent}
 
 object TouchEventHandler:
 
@@ -26,8 +27,9 @@ object TouchEventHandler:
     val touches = event.touches
     if touches.length == 1 then
       val touch = touches(0)
-      touchStartPoint.set(Some((touch.clientX, touch.clientY)))
-      lastPanPoint.set(Some((touch.clientX, touch.clientY)))
+      val p = (touch.clientX, touch.clientY)
+      touchStartPoint.set(Some(p))
+      lastPanPoint.set(Some(p))
       isDragging.set(false)
     else if touches.length == 2 then
       event.preventDefault()
@@ -47,8 +49,8 @@ object TouchEventHandler:
         val canvasRect = canvasElement.getBoundingClientRect()
         val gestureCenterX = (touch1.clientX + touch2.clientX) / 2
         val gestureCenterY = (touch1.clientY + touch2.clientY) / 2
-        val pointerX = (gestureCenterX - canvasRect.left) * (800 / canvasRect.width)
-        val pointerY = (gestureCenterY - canvasRect.top) * (600 / canvasRect.height)
+        val pointerX = (gestureCenterX - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
+        val pointerY = (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
 
         val worldPoint = screenToWorld(pointerX, pointerY, currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
@@ -61,9 +63,13 @@ object TouchEventHandler:
     val touches = event.touches
 
     if touches.length == 1 then
-      touchStartPoint.now().foreach { startPoint =>
+      val startPointOpt = touchStartPoint.now()
+      val dragging = isDragging.now()
+      val lastPanOpt = lastPanPoint.now()
+
+      startPointOpt.foreach { startPoint =>
         val touch = touches(0)
-        if !isDragging.now() then
+        if !dragging then
           val dx = touch.clientX - startPoint._1
           val dy = touch.clientY - startPoint._2
           if dx * dx + dy * dy > DRAG_THRESHOLD_SQUARED then
@@ -71,7 +77,7 @@ object TouchEventHandler:
 
         if isDragging.now() then
           event.preventDefault()
-          lastPanPoint.now().foreach { lastPoint =>
+          lastPanOpt.foreach { lastPoint =>
             val panDx = touch.clientX - lastPoint._1
             val panDy = touch.clientY - lastPoint._2
             EditorState.viewTransform.update(t => t.copy(
@@ -82,7 +88,13 @@ object TouchEventHandler:
           }
       }
     else if touches.length == 2 then
-      (initialTouchDistance.now(), initialScale.now(), initialAngle.now(), initialRotation.now(), pinchAnchorPoint.now()) match
+      val initDistOpt = initialTouchDistance.now()
+      val initScaleOpt = initialScale.now()
+      val initAngleOpt = initialAngle.now()
+      val initRotationOpt = initialRotation.now()
+      val anchorOpt = pinchAnchorPoint.now()
+
+      (initDistOpt, initScaleOpt, initAngleOpt, initRotationOpt, anchorOpt) match
         case (Some(initialDist), Some(initScale), Some(initAngle), Some(initRotation), Some(anchorPoint)) =>
           event.preventDefault()
           val touch1 = touches(0)
