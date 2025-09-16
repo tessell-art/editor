@@ -8,6 +8,7 @@ import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.Geometry.Point
 import org.scalajs.dom.EndingType.transparent
@@ -456,6 +457,14 @@ object TessellationRenderer:
       },
       onMouseLeave --> { _ =>
         EditorState.previewPlacement.set(None)
+      },
+      // Trigger insertion directly when clicking the highlighted interior edge
+      onClick.preventDefault --> { _ =>
+        EditorState.activeTool.now() match
+          case Some(Tool.Inserter) =>
+            TessellationOperations.attemptPolygonInsertion(edge._1, edge._2)
+            EditorState.previewPlacement.set(None)
+          case _ => ()
       }
     )
 
