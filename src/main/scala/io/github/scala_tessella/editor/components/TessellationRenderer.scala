@@ -104,10 +104,18 @@ object TessellationRenderer:
         List.empty
     }
 
-    // Failed polygon wireframe overlay for placement
-    val failedPolygonWireframe = child.maybe <-- EditorState.failedPlacement.signal.map { placement =>
-      placement.map(FailedPolygonRenderer.renderFailedPlacement)
-    }
+    // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
+    val failedPolygonWireframe = child.maybe <-- EditorState.failedPlacement.signal
+      .combineWith(EditorState.activeTool.signal, EditorState.highlightedPolygonId.signal)
+      .map { (placementOpt, toolOpt, highlightedOpt) =>
+        placementOpt.map { p =>
+          val adjusted =
+            (toolOpt, highlightedOpt.flatMap(polygonIdToFaceId)) match
+              case (Some(Tool.Inserter), Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
+              case _                                                       => p
+          FailedPolygonRenderer.renderFailedPlacement(adjusted)
+        }
+      }
 
     // Hover preview wireframe for insertion
     val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map { placement =>
@@ -481,6 +489,7 @@ object TessellationRenderer:
     )
 
     svg.g(
+      svg.className := "interior-edge-group",
       visibleLine,
       interactionArea
     )

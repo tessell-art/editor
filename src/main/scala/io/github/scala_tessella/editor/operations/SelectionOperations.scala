@@ -178,20 +178,21 @@ object SelectionOperations:
           case Some(face) =>
             EditorState.highlightedPolygonId.set(Some(polygonId))
 
-            val coords = tiling.coordinates
-            val vs = face.getVertices.toOption.get
-            val vertices = vs.map(_.coords).map(_.toPoint)
-            val vertexIdsAndPoints = vs.map(_.id).zip(vertices)
-            val edges = vertexIdsAndPoints.toVector.slidingO(2).toList
-//            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
-            val midPoints = edges.map { edge =>
-              val p1 = edge(0)._2
-              val p2 = edge(1)._2
-              ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
-            }
             if edgesOnly then
-              EditorState.clickablePoints.set(midPoints)
+              EditorState.clickablePoints.set(Nil)
             else
+              val coords = tiling.coordinates
+              val vs = face.getVertices.toOption.get
+              val vertices = vs.map(_.coords).map(_.toPoint)
+              val vertexIdsAndPoints = vs.map(_.id).zip(vertices)
+              val edges = vertexIdsAndPoints.toVector.slidingO(2).toList
+              //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
+              val midPoints = edges.map { edge =>
+                val p1 = edge(0)._2
+                val p2 = edge(1)._2
+                ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
+              }
+
               val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
                 ClickablePoint(point, Anchor.Vertex(vertexId))
               }
