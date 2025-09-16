@@ -304,6 +304,15 @@ object TessellationOperations:
         // This case should be handled by the caller
         ()
 
+  // Helper: try to find the inner face that contains this directed edge; if not found, None
+  private def findFaceContainingEdge(tiling: TilingDCEL, v1: VertexId, v2: VertexId): Option[FaceId] =
+    // We look for a face whose boundary contains the directed edge (v1 -> v2).
+    // If DCEL provides halfEdges on face with next pointers, prefer that; here we rely on vertex order on the face.
+    tiling.innerFaces.find { face =>
+      val ids = face.getVertices.toOption.get.map(_.id).toVector
+      ids.slidingO(2).exists(pair => pair(0) == v1 && pair(1) == v2)
+    }.map(_.id)
+
   def attemptPolygonInsertion(startVertexId: VertexId, endVertexId: VertexId): Unit =
     (currentTiling.now(), EditorState.selectedPolygon.now()) match
       case (tiling, _) if tiling.isEmpty =>
@@ -322,7 +331,21 @@ object TessellationOperations:
             currentTiling.set(newTiling)
             EditorState.selectedPerimeterEdges.set(Set.empty)
             ErrorOperations.clearError()
-          case Left(errMsg) =>
+          case Left(error) =>
+            val tiling = currentTiling.now()
+            val maybeFaceId = findFaceContainingEdge(tiling, startVertexId, endVertexId)
+            val maybeSides = EditorState.selectedPolygon.now()
+            val placementOpt =
+              for
+                sides <- maybeSides
+              yield FailedPolygonPlacement(
+                edgeIndex = 0, // not needed for interior wireframe
+                polygonSides = sides,
+                edge = (startVertexId, endVertexId),
+                tiling = tiling,
+                intoFace = maybeFaceId
+              )
+            ErrorOperations.showError(s"Cannot insert polygon: ${error.message}", placement = placementOpt)
 //            // Failure: show error message with wireframe (no state to undo)
 //            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
 //            if edgeIndex < perimeterEdges.length then
