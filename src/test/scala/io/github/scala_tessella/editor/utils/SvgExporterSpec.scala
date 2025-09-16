@@ -1,27 +1,27 @@
 package io.github.scala_tessella.editor.utils
 
+import io.github.scala_tessella.dcel.VertexId
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.tessella.BigDecimalGeometry.{BigCoords, BigPoint}
-import io.github.scala_tessella.tessella.IncrementalTiling
-import io.github.scala_tessella.tessella.Topology.Node as TilingNode
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.TilingDCEL
 import munit.FunSuite
 
 class SvgExporterSpec extends FunSuite:
 
   // Test data setup
-  private val node1 = TilingNode(1)
-  private val node2 = TilingNode(2)
-  private val node3 = TilingNode(3)
-  private val node4 = TilingNode(4)
+  private val node1 = VertexId("V1")
+  private val node2 = VertexId("V2")
+  private val node3 = VertexId("V3")
+  private val node4 = VertexId("V4")
 
-  private val testCoordinates: BigCoords = Map(
+  private val testCoordinates: Map[VertexId, BigPoint] = Map(
     node1 -> BigPoint(0, 0),
     node2 -> BigPoint(1, 0),
     node3 -> BigPoint(1, 1),
     node4 -> BigPoint(0, 1)
   )
 
-  private val squareTiling = IncrementalTiling.fromPolygon(4)
+  private val squareTiling = TilingDCEL.createRegularPolygon(4).toOption.get
 
   test("should convert nodes to SVG points string") {
     val nodes = List(node1, node2, node3)
@@ -46,7 +46,7 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should generate polygons XML with correct structure") {
-    val result = SvgExporter.generatePolygonsXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0, 1.5)
+    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, 0.0, 0.0, 1.5)
 
     assert(result.contains("<g id=\"tiling-polygons\""))
     assert(result.contains("</g>"))
@@ -59,20 +59,20 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should include correct points in polygon") {
-    val result = SvgExporter.generatePolygonsXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0, 1.5)
+    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, 0.0, 0.0, 1.5)
     // Should contain the points from our test coordinates
     assert(result.contains("points=\"0.000000,0.000000 1.000000,0.000000 1.000000,1.000000 0.000000,1.000000\""))
   }
 
   test("should include node data attribute") {
-    val result = SvgExporter.generatePolygonsXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0, 1.5)
+    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, 0.0, 0.0, 1.5)
 
     // Should contain nodes in the data attribute
     assert(result.contains("data-nodes=\"1,2,3,4\""))
   }
 
   test("should generate perimeter XML when perimeter exists") {
-    val result = SvgExporter.generatePerimeterXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0, 10.5)
+    val result = SvgExporter.generatePerimeterXml(squareTiling, 1.0, 0.0, 0.0, 10.5)
 
     assert(result.contains("polygon"))
     assert(result.contains("data-nodes="))
@@ -83,14 +83,14 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should return empty string when no perimeter") {
-    val emptyTiling = IncrementalTiling.empty
+    val emptyTiling = TilingDCEL.empty
 
-    val result = SvgExporter.generatePerimeterXml(emptyTiling, testCoordinates, 1.0, 0.0, 0.0, 10.5)
+    val result = SvgExporter.generatePerimeterXml(emptyTiling, 1.0, 0.0, 0.0, 10.5)
     assertEquals(result, "")
   }
 
   test("should generate dual tessellation XML for a valid tiling") {
-    val result = SvgExporter.generateDualTessellationXml(squareTiling, testCoordinates, 1.0, 0.0, 0.0)
+    val result = SvgExporter.generateDualTessellationXml(squareTiling, 1.0, 0.0, 0.0)
     assert(result.contains("<g id=\"dual-tessellation\""))
     assert(result.contains("<line"))
     assert(result.contains("stroke=\"red\""))
@@ -98,7 +98,7 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should return empty string for dual tessellation on empty tiling") {
-    val result = SvgExporter.generateDualTessellationXml(IncrementalTiling.empty, testCoordinates, 1.0, 0.0, 0.0)
+    val result = SvgExporter.generateDualTessellationXml(TilingDCEL.empty, 1.0, 0.0, 0.0)
     assertEquals(result, "")
   }
 
@@ -138,7 +138,7 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should generate metadata XML with RDF structure") {
-    val result = SvgExporter.generateMetadataXml(testCoordinates)
+    val result = SvgExporter.generateMetadataXml(squareTiling)
 
     assert(result.contains("<metadata>"))
     assert(result.contains("</metadata>"))
@@ -149,14 +149,14 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should include Tessella source and license") {
-    val result = SvgExporter.generateMetadataXml(testCoordinates)
+    val result = SvgExporter.generateMetadataXml(squareTiling)
 
     assert(result.contains("https://github.com/scala-tessella/tessella"))
     assert(result.contains("https://www.apache.org/licenses/LICENSE-2.0"))
   }
 
   test("should include tiling coordinates in metadata") {
-    val result = SvgExporter.generateMetadataXml(testCoordinates)
+    val result = SvgExporter.generateMetadataXml(squareTiling)
 
     assert(result.contains("<tess:tilingCoordinates>"))
     assert(result.contains("</tess:tilingCoordinates>"))
@@ -167,7 +167,7 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should handle empty coordinates") {
-    val result = SvgExporter.generateMetadataXml(Map.empty)
+    val result = SvgExporter.generateMetadataXml(TilingDCEL.empty)
 
     assert(result.contains("<metadata>"))
     assert(result.contains("</metadata>"))
@@ -175,7 +175,7 @@ class SvgExporterSpec extends FunSuite:
   }
 
   test("should return empty string for empty tiling") {
-    val emptyTiling = IncrementalTiling.empty
+    val emptyTiling = TilingDCEL.empty
 
     val result = SvgExporter.generateSvgContent(emptyTiling, showNodeLabels = false, showDual = false)
     assertEquals(result, "")
