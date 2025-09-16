@@ -18,7 +18,8 @@ object PreviewPolygonRenderer:
       svg.polygon(
         svg.points := pointsStr,
         svg.fill := "none",
-        svg.stroke := "#ffffff",
+        // Use currentColor so CSS can theme it for light/dark modes
+        svg.stroke := "currentColor",
         svg.strokeWidth := "2",
         svg.strokeDashArray := "5,5",
         svg.opacity := "0.9",
