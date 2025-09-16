@@ -83,6 +83,11 @@ svg:hover .node-label {
   stroke: #00C853 !important; /* Bright green for hover */
 }
 
+/* Interior edge styling for inserter tool */
+.interior-edge-transparent {
+    cursor: pointer;
+}
+
 /* Wireframe overlays */
 svg .failed-polygon-wireframe,
 svg .inserter-preview-wireframe {

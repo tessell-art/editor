@@ -12,7 +12,7 @@ import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 
 // Case class to represent a failed polygon placement
-case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL)
+case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None)
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode])

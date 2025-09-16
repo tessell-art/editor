@@ -67,11 +67,9 @@ object FailedPolygonRenderer:
       Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
 
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
+    PolygonPlacementGeometry.computeWireframePoints(placement.polygonSides, placement.edge, placement.tiling, placement.intoFace)
 
-    val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
-    PolygonPlacementGeometry.computeWireframePoints(polygonSides, edge, tiling)
-
-//    // Get the edge coordinates
+  //    // Get the edge coordinates
 //    val vertex1 = tiling.coordinates(edge._1).toPoint
 //    val vertex2 = tiling.coordinates(edge._2).toPoint
 //

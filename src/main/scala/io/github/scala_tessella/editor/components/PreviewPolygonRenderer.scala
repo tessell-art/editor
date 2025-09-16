@@ -10,7 +10,7 @@ object PreviewPolygonRenderer:
   def renderPreview(placement: FailedPolygonPlacement): Element =
     val pointsStr =
       PolygonPlacementGeometry
-        .computeWireframePoints(placement.polygonSides, placement.edge, placement.tiling)
+        .computeWireframePoints(placement.polygonSides, placement.edge, placement.tiling, placement.intoFace)
         .map { case (x, y) => s"$x,$y" }
         .mkString(" ")
 

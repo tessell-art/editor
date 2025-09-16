@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.Geometry.Point
 import org.scalajs.dom.EndingType.transparent
@@ -50,6 +50,12 @@ object TessellationRenderer:
       )
     }
 
+  // Helper: extract FaceId from "tiling-poly-<faceId>"
+  private def polygonIdToFaceId(polygonId: String): Option[FaceId] =
+    val prefix = "tiling-poly-"
+    if polygonId.startsWith(prefix) then Some(FaceId(polygonId.drop(prefix.length)))
+    else None
+
   def renderTiling(tiling: TilingDCEL): Element =
 
     val tilingPolygons = tiling.innerFaces.map { face =>
@@ -71,6 +77,16 @@ object TessellationRenderer:
     val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList.zipWithIndex.map {
       (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
     }
+
+    // Interior edges overlay only when Inserter tool is active AND a polygon is highlighted
+    val interiorEdgesOverlay = children <-- EditorState.activeTool.signal
+      .combineWith(EditorState.highlightedPolygonId.signal)
+      .map { (toolOpt, highlightedOpt) =>
+        (toolOpt, highlightedOpt.flatMap(polygonIdToFaceId)) match
+          case (Some(Tool.Inserter), Some(fid)) => renderInteriorEdgesForFace(tiling, fid)
+          case _                                => List.empty
+      }
+
 //    val perimeterEdges = tiling.perimeter.toEdgesO.zipWithIndex.map {
 //      case (edge, index) => renderPerimeterEdge(tiling.coordinates, edge, index, s"perimeter-edge-$index")
 //    }.toList
@@ -138,6 +154,7 @@ object TessellationRenderer:
       selectionPattern,
       tilingPolygons,
       perimeterEdges,
+      interiorEdgesOverlay,
       dualDisplay,
       nodeLabels,
       failedPolygonWireframe,
@@ -386,6 +403,77 @@ object TessellationRenderer:
       child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map {
         case (selected, hidden) => if (selected && !hidden) Some(patternOverlay) else None
       }
+    )
+
+  // New: render interactive interior edges for inserter tool
+  private def renderInteriorEdges(tiling: TilingDCEL): List[Element] =
+    if tiling.isEmpty then Nil
+    else
+      tiling.innerFaces.toList.flatMap { face =>
+        val vs = face.getVertices.toOption.get.map(_.id).toVector
+        val edges = vs.slidingO(2).toList
+        edges.zipWithIndex.map { case (pair, idx) =>
+          renderInteriorEdge(tiling.coordinates, (pair(0), pair(1)), face.id, s"interior-edge-${face.id.value}-$idx")
+        }
+      }
+
+  // New: render interactive interior edges for one selected face (Inserter mode)
+  private def renderInteriorEdgesForFace(tiling: TilingDCEL, faceId: FaceId): List[Element] =
+    if tiling.isEmpty then Nil
+    else
+      tiling.findInnerFace(faceId).toOption.toList.flatMap { face =>
+        val vs = face.getVertices.toOption.get.map(_.id).toVector
+        val edges = vs.slidingO(2).toList
+        edges.zipWithIndex.map { case (pair, idx) =>
+          renderInteriorEdge(tiling.coordinates, (pair(0), pair(1)), face.id, s"interior-edge-${face.id.value}-$idx")
+        }
+      }
+
+  private def renderInteriorEdge(coordinates: Map[VertexId, BigPoint], edge: (VertexId, VertexId), faceId: FaceId, id: String): Element =
+    val v1 = coordinates(edge._1).toPoint
+    val v2 = coordinates(edge._2).toPoint
+    val (x1, y1) = tilingPointToCanvasView(v1)
+    val (x2, y2) = tilingPointToCanvasView(v2)
+
+    val interactionArea = svg.line(
+      svg.x1 := x1.toString,
+      svg.y1 := y1.toString,
+      svg.x2 := x2.toString,
+      svg.y2 := y2.toString,
+      svg.stroke := transparent,
+      svg.strokeWidth := "10",
+      svg.strokeLineCap := "round",
+      svg.className := "interior-edge-transparent",
+      // Show inner preview oriented into this face
+      onMouseEnter --> { _ =>
+        EditorState.selectedPolygon.now() match
+          case Some(sides) =>
+            val tiling = EditorState.currentTiling.now()
+            EditorState.previewPlacement.set(
+              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, sides, edge, tiling, intoFace = Some(faceId)))
+            )
+          case None => ()
+      },
+      onMouseLeave --> { _ =>
+        EditorState.previewPlacement.set(None)
+      }
+    )
+
+    val visibleLine = svg.line(
+      svg.x1 := x1.toString,
+      svg.y1 := y1.toString,
+      svg.x2 := x2.toString,
+      svg.y2 := y2.toString,
+      svg.stroke := "#20A4BE",
+      svg.strokeWidth := "3",
+      svg.strokeLineCap := "round",
+      svg.className := "interior-edge",
+      svg.pointerEvents := "none"
+    )
+
+    svg.g(
+      visibleLine,
+      interactionArea
     )
 
   private def renderPerimeterEdge(coordinates: Map[VertexId, BigPoint], edge: (VertexId, VertexId), edgeIndex: Int, id: String): Element =
