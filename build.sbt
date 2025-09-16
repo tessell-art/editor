@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.ModuleSplitStyle
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
-    scalaVersion := "3.7.2",
+    scalaVersion := "3.7.3",
     version := "0.2.2",
     name := "Tessella Editor",
 
