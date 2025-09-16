@@ -2,6 +2,8 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.PolygonPlacementGeometry
+
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
@@ -67,51 +69,52 @@ object FailedPolygonRenderer:
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
 
     val FailedPolygonPlacement(_, polygonSides, edge, tiling) = placement
+    PolygonPlacementGeometry.computeWireframePoints(polygonSides, edge, tiling)
 
-    // Get the edge coordinates
-    val vertex1 = tiling.coordinates(edge._1).toPoint
-    val vertex2 = tiling.coordinates(edge._2).toPoint
-
-    // Calculate edge vector and length
-    val edgeVectorX = vertex2.x - vertex1.x
-    val edgeVectorY = vertex2.y - vertex1.y
-    val edgeLength = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)
-
-    // Normalize edge vector
-    val edgeUnitX = edgeVectorX / edgeLength
-    val edgeUnitY = edgeVectorY / edgeLength
-
-    // Calculate the correct outward direction and whether we flipped
-    val (outwardDirection, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
-    val (perpX, perpY) = outwardDirection
-
-    val halfAngleStep: AngleDegree = AngleDegree(180) / polygonSides
-
-    // Calculate the center of the failed polygon
-    val sideLength = edgeLength
-    val apothem = sideLength / (2 * tan(halfAngleStep.toBigRadian.toBigDecimal.toDouble))
-
-    val centerX = (vertex1.x + vertex2.x) / 2 + perpX * apothem
-    val centerY = (vertex1.y + vertex2.y) / 2 + perpY * apothem
-
-    // Generate polygon vertices around the calculated center
-    val angleStep: AngleDegree = halfAngleStep * 2
-    val radius = sideLength / (2 * sin(halfAngleStep.toBigRadian.toBigDecimal.toDouble))
-    val winding = if wasFlipped then -1 else 1
-    val edgeAngle = atan2(edgeUnitY, edgeUnitX)
-    val isOdd = polygonSides % 2 == 1
-
-    val baseOffset: AngleDegree = AngleDegree(90) - halfAngleStep
-    val oddHalfStep = if isOdd && !wasFlipped then halfAngleStep else AngleDegree(0)
-
-    val startAngle = edgeAngle + (baseOffset + oddHalfStep).toBigRadian.toBigDecimal.toDouble
-
-    (0 until polygonSides).map { i =>
-      val angle = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
-      val x = centerX + radius * cos(angle)
-      val y = centerY + radius * sin(angle)
-      tilingPointToCanvasView(Point(x, y))
-    }.toVector
+//    // Get the edge coordinates
+//    val vertex1 = tiling.coordinates(edge._1).toPoint
+//    val vertex2 = tiling.coordinates(edge._2).toPoint
+//
+//    // Calculate edge vector and length
+//    val edgeVectorX = vertex2.x - vertex1.x
+//    val edgeVectorY = vertex2.y - vertex1.y
+//    val edgeLength = sqrt(edgeVectorX * edgeVectorX + edgeVectorY * edgeVectorY)
+//
+//    // Normalize edge vector
+//    val edgeUnitX = edgeVectorX / edgeLength
+//    val edgeUnitY = edgeVectorY / edgeLength
+//
+//    // Calculate the correct outward direction and whether we flipped
+//    val (outwardDirection, wasFlipped) = calculateOutwardDirectionWithFlipInfo(edge, tiling)
+//    val (perpX, perpY) = outwardDirection
+//
+//    val halfAngleStep: AngleDegree = AngleDegree(180) / polygonSides
+//
+//    // Calculate the center of the failed polygon
+//    val sideLength = edgeLength
+//    val apothem = sideLength / (2 * tan(halfAngleStep.toBigRadian.toBigDecimal.toDouble))
+//
+//    val centerX = (vertex1.x + vertex2.x) / 2 + perpX * apothem
+//    val centerY = (vertex1.y + vertex2.y) / 2 + perpY * apothem
+//
+//    // Generate polygon vertices around the calculated center
+//    val angleStep: AngleDegree = halfAngleStep * 2
+//    val radius = sideLength / (2 * sin(halfAngleStep.toBigRadian.toBigDecimal.toDouble))
+//    val winding = if wasFlipped then -1 else 1
+//    val edgeAngle = atan2(edgeUnitY, edgeUnitX)
+//    val isOdd = polygonSides % 2 == 1
+//
+//    val baseOffset: AngleDegree = AngleDegree(90) - halfAngleStep
+//    val oddHalfStep = if isOdd && !wasFlipped then halfAngleStep else AngleDegree(0)
+//
+//    val startAngle = edgeAngle + (baseOffset + oddHalfStep).toBigRadian.toBigDecimal.toDouble
+//
+//    (0 until polygonSides).map { i =>
+//      val angle = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
+//      val x = centerX + radius * cos(angle)
+//      val y = centerY + radius * sin(angle)
+//      tilingPointToCanvasView(Point(x, y))
+//    }.toVector
 
   private def calculateOutwardDirectionWithFlipInfo(edge: (VertexId, VertexId), tiling: TilingDCEL): ((Double, Double), Boolean) =
     try

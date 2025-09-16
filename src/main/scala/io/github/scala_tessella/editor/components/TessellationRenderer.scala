@@ -92,6 +92,11 @@ object TessellationRenderer:
       placement.map(FailedPolygonRenderer.renderFailedPlacement)
     }
 
+    // Hover preview wireframe for insertion
+    val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map { placement =>
+      placement.map(PreviewPolygonRenderer.renderPreview)
+    }
+
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map { deletion =>
 //      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
@@ -136,6 +141,7 @@ object TessellationRenderer:
       dualDisplay,
       nodeLabels,
       failedPolygonWireframe,
+      previewPolygonWireframe,
       failedDeletionWireframe,
       clickablePointsDisplay,
       measurementStartPointDisplay,
@@ -404,10 +410,15 @@ object TessellationRenderer:
       svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ => "none")),
       // Enhanced visual feedback and click handling
       onMouseEnter --> { _ =>
-        // Optional: Could trigger additional state changes here
+        (EditorState.activeTool.now(), EditorState.selectedPolygon.now()) match
+          case (_, Some(sides)) =>
+            val tiling = EditorState.currentTiling.now()
+            EditorState.previewPlacement.set(Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(edgeIndex, sides, edge, tiling)))
+          case _ =>
+            ()
       },
       onMouseLeave --> { _ =>
-        // Optional: Could trigger additional state changes here
+        EditorState.previewPlacement.set(None)
       },
       onClick --> { _ => AppState.handlePerimeterEdgeClick(id, edgeIndex) }
     )

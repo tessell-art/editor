@@ -122,6 +122,13 @@ object EditorState:
   val failedDeletion: Var[Option[FailedPolygonDeletion]] = Var(None)
 
   //
+  // HOVER PREVIEW
+  //
+
+  /** Hover preview of a polygon placement along a perimeter edge, if any */
+  val previewPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
+
+  //
   // MEASUREMENT TOOL
   //
 
