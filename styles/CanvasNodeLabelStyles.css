@@ -83,6 +83,26 @@ svg:hover .node-label {
   stroke: #00C853 !important; /* Bright green for hover */
 }
 
+/* Wireframe overlays */
+svg .failed-polygon-wireframe,
+svg .inserter-preview-wireframe {
+    pointer-events: none; /* Never block interactions */
+}
+
+/* Ensure consistent, readable strokes at any zoom and polished joins/caps */
+svg .failed-polygon-wireframe polygon,
+svg .inserter-preview-wireframe polygon {
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+/* Subtle glow and clarity for preview */
+svg .inserter-preview-wireframe polygon {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+    opacity: 0.9;
+}
+
 /* Grid pattern styling */
 .grid-pattern line {
   pointer-events: none;
