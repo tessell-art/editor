@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.models
 
+import io.github.scala_tessella.dcel.VertexId
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import io.github.scala_tessella.tessella.Topology.Node
@@ -48,7 +49,7 @@ class AppStateSpec extends FunSuite {
 
   test("clearMeasurements should reset all measurement-related state") {
     // Given: some measurement state is set
-    val point = ClickablePoint(Point(1, 1), Anchor.Vertex(Node(1)))
+    val point = ClickablePoint(Point(1, 1), Anchor.Vertex(VertexId("V1")))
     EditorState.clickablePoints.set(List(point))
     EditorState.measurementStartPoint.set(Some(point))
     EditorState.measurementEndPoint.set(Some(point))

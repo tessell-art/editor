@@ -7,7 +7,7 @@ import munit.FunSuite
 class DotExporterSpec extends FunSuite:
 
   override def beforeEach(context: BeforeEach): Unit =
-    EditorState.currentTiling.set(io.github.scala_tessella.tessella.IncrementalTiling.empty)
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
 
   test("exportTilingToDOT should not export when tiling is empty") {
     // Given empty tiling

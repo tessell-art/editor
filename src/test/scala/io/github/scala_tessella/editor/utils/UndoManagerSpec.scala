@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.tessella.IncrementalTiling
+import io.github.scala_tessella.dcel.TilingDCEL
 import munit.FunSuite
 
 class UndoManagerSpec extends FunSuite:
@@ -10,7 +10,7 @@ class UndoManagerSpec extends FunSuite:
 
   override def beforeEach(context: BeforeEach): Unit = {
     UndoManager.clearHistory()
-    EditorState.currentTiling.set(IncrementalTiling.empty)
+    EditorState.currentTiling.set(TilingDCEL.empty)
     EditorState.selectedPolygon.set(None)
     EditorState.selectedPerimeterEdges.set(Set.empty)
     EditorState.selectedTilingPolygons.set(Set.empty)
