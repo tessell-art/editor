@@ -35,12 +35,12 @@ object TessellationOperations:
       EditorState.selectedPerimeterEdges.set(Set.empty)
 
   // Prefer stable FaceId: parse once at the UI boundary and delegate to FaceId API
-  def attemptPolygonDeletion(polygonId: String): Unit =
-    parseFaceIdFromPolygonDomId(polygonId) match
+  def attemptPolygonDeletion(faceId: FaceId): Unit =
+    parseFaceIdFromPolygonDomId(faceId.value) match
       case Some(fid) =>
         attemptFaceDeletion(fid)
       case None =>
-        ErrorOperations.showError(s"Could not extract FaceId from polygon id: $polygonId")
+        ErrorOperations.showError(s"Could not extract FaceId from polygon id: $faceId")
 
   // Attempt to delete a face by FaceId (stable, DCEL-native)
   def attemptFaceDeletion(faceId: FaceId): Unit =

@@ -11,10 +11,6 @@ import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingN
 
 object SelectionOperations:
 
-  // Extract polygon tag from polygon ID
-  private def extractPolyTag(polygonId: String): String =
-    polygonId
-
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
       val startOpt = EditorState.measurementStartPoint.now()
@@ -83,7 +79,7 @@ object SelectionOperations:
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
-        val allPolygonIds = tiling.innerFaces.map(_.id.value).toSet
+        val allPolygonIds = tiling.innerFaces.map(_.id).toSet
         EditorState.selectedTilingPolygons.set(allPolygonIds)
         EditorState.selectedPerimeterEdges.set(Set.empty)
 
@@ -93,14 +89,13 @@ object SelectionOperations:
       if !tiling.isEmpty then
         val polygonIdsToAdd = tiling.innerFaces.collect {
           // @todo two traversals, one for the number of sides, one for the angles
-          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => face.id.value
+          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => face.id
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
-  def selectPolygonsByColor(polygonId: String): Unit =
+  def selectPolygonsByColor(faceId: FaceId): Unit =
     ifNotProcessing:
-      val polyTag = extractPolyTag(polygonId)
-      EditorState.polygonColors.now().get(polyTag).foreach { color =>
+      EditorState.polygonColors.now().get(faceId).foreach { color =>
         val polygonIdsToAdd = EditorState.polygonColors.now().collect {
           case (tag, c) if c == color => tag
         }.toSet
@@ -108,11 +103,11 @@ object SelectionOperations:
       }
       EditorState.activeTool.set(None) // Deactivate after picking
 
-  def toggleTilingPolygonSelection(polygonId: String): Unit =
+  def toggleTilingPolygonSelection(faceId: FaceId): Unit =
     ifNotProcessing:
       EditorState.selectedTilingPolygons.update { selected =>
-        if selected.contains(polygonId) then selected - polygonId
-        else selected + polygonId
+        if selected.contains(faceId) then selected - faceId
+        else selected + faceId
       }
 
   def togglePerimeterEdgeSelection(edgeId: String): Unit =
@@ -122,20 +117,18 @@ object SelectionOperations:
         else selected + edgeId
       }
 
-  def handleTilingPolygonClick(polygonId: String): Unit =
+  def handleTilingPolygonClick(faceId: FaceId): Unit =
     EditorState.activeTool.now() match
       case Some(Tool.ColorPicker) =>
-        val polyTag = extractPolyTag(polygonId)
-        EditorState.polygonColors.now().get(polyTag).foreach { color =>
+        EditorState.polygonColors.now().get(faceId).foreach { color =>
           EditorState.fillColor.set(color)
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.ShapeAndColorPicker) =>
-        val polyTag = extractPolyTag(polygonId)
         val tiling = EditorState.currentTiling.now()
-        EditorState.polygonColors.now().get(polyTag).foreach { color =>
+        EditorState.polygonColors.now().get(faceId).foreach { color =>
           EditorState.fillColor.set(color)
-          val face = tiling.findInnerFace(FaceId(polyTag)).toOption.get
+          val face = tiling.findInnerFace(faceId).toOption.get
           if face.hasEqualAngles then
             val sides = face.halfEdges.toOption.get.size
             EditorState.selectedPolygon.set(Some(sides))
@@ -144,31 +137,30 @@ object SelectionOperations:
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.SelectByColor) =>
-        selectPolygonsByColor(polygonId)
+        selectPolygonsByColor(faceId)
       case Some(Tool.Measurement) =>
-        handlePolygonClickForMeasurement(polygonId)
+        handlePolygonClickForMeasurement(faceId)
       case Some(Tool.Eraser) =>
-        handlePolygonClickForMeasurement(polygonId)
+        handlePolygonClickForMeasurement(faceId)
       case Some(Tool.Inserter) =>
-        handlePolygonClickForMeasurement(polygonId, edgesOnly = true)
+        handlePolygonClickForMeasurement(faceId, edgesOnly = true)
       case _ =>
         EditorState.editorMode.now() match
           case EditorMode.Select =>
-            toggleTilingPolygonSelection(polygonId)
+            toggleTilingPolygonSelection(faceId)
           case EditorMode.Delete =>
-            TessellationOperations.attemptPolygonDeletion(polygonId)
+            TessellationOperations.attemptPolygonDeletion(faceId)
 
-  private def handlePolygonClickForMeasurement(polygonId: String, edgesOnly: Boolean = false): Unit =
+  private def handlePolygonClickForMeasurement(faceId: FaceId, edgesOnly: Boolean = false): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
-        val polyTag = extractPolyTag(polygonId)
 
         tiling.innerFaces.find { face =>
-          val tag = face.id.value
-          tag == polyTag
+          val tag = face.id
+          tag == faceId
         } match
           case Some(face) =>
-            EditorState.highlightedPolygonId.set(Some(polygonId))
+            EditorState.highlightedPolygonId.set(Some(faceId))
 
             if edgesOnly then
               EditorState.clickablePoints.set(Nil)

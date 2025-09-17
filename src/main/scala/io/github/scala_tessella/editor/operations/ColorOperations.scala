@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
+import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.UndoManager
 
@@ -22,10 +23,10 @@ object ColorOperations:
           }
         }
 
-  def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =
-    EditorState.polygonColors.now().get(polyTag) match
+  def getOrAssignPolygonColor(faceId: FaceId): (Int, Int, Int) =
+    EditorState.polygonColors.now().get(faceId) match
       case Some(rgb) => rgb
       case None =>
         val rgb = EditorState.fillColor.now()
-        EditorState.polygonColors.update(_ + (polyTag -> rgb))
+        EditorState.polygonColors.update(_ + (faceId -> rgb))
         rgb

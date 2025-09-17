@@ -7,8 +7,7 @@ import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.TilingSVG.toMetadata
-import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG, VertexId}
-import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import org.scalajs.dom
 
 import scala.math.BigDecimal.RoundingMode
@@ -82,8 +81,7 @@ object SvgExporter:
   private [utils] def generatePolygonsXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double, strokeWidth: Double): String =
     val polygonsXml = tiling.innerFaces.map { face =>
       val vertices = face.getVertices.toOption.get
-      val polyTag = face.id.value
-      val color = AppState.getOrAssignPolygonColor(polyTag).toRgbString
+      val color = AppState.getOrAssignPolygonColor(face.id).toRgbString
       val points = // pointsString(nodes, coordinates, scale, offsetX, offsetY)
         vertices.map { vertex =>
           val x = (vertex.coords.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)

@@ -59,10 +59,7 @@ object EditorState:
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
 
   /** Set of selected tiling polygon IDs */
-  val selectedTilingPolygons: Var[Set[String]] = Var(Set.empty)
-
-  /** Strictness setting for the tiling (STRICT or CROSSING) */
-  val strictness: Var[Strictness] = Var(Strictness.STRICT)
+  val selectedTilingPolygons: Var[Set[FaceId]] = Var(Set.empty)
 
   //
   // COLOR MANAGEMENT
@@ -72,7 +69,7 @@ object EditorState:
   val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80))
 
   /** Map of polygon tags to their colors */
-  val polygonColors: Var[Map[String, (Int, Int, Int)]] = Var(Map.empty)
+  val polygonColors: Var[Map[FaceId, (Int, Int, Int)]] = Var(Map.empty)
 
   /** Whether the color picker is visible */
   val showColorPicker: Var[Boolean] = Var(false)
@@ -143,7 +140,7 @@ object EditorState:
   val measurementPreviousEndPoint: Var[Option[Point]] = Var(None)
 
   /** ID of the highlighted polygon during measurement/insertion */
-  val highlightedPolygonId: Var[Option[String]] = Var(None)
+  val highlightedPolygonId: Var[Option[FaceId]] = Var(None)
 
   /** List of clickable points for the measurement/eraser tools */
   val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
@@ -164,10 +161,7 @@ object EditorState:
 
   /** Selected face for insertion, derived from highlighted polygon id */
   val selectedFaceForInsertion: Signal[Option[FaceId]] =
-    highlightedPolygonId.signal.map {
-      case Some(id) => Some(FaceId(id))
-      case _ => None
-    }
+    highlightedPolygonId.signal
 
   /** System theme as a Signal (uses media query, no Var) */
   private val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")

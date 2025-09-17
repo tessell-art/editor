@@ -15,7 +15,7 @@ import io.github.scala_tessella.tessella.Topology.{Edge, Node as TilingNode}
 case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None)
 
 // Case class to represent a failed polygon deletion
-case class FailedPolygonDeletion(polygonId: String, polygonNodes: Vector[TilingNode])
+case class FailedPolygonDeletion(faceId: FaceId, polygonNodes: Vector[TilingNode])
 
 enum Anchor:
 
@@ -61,16 +61,16 @@ object AppState:
         case EditorMode.Delete => EditorMode.Select
       }
 
-  /**
-   * Toggles between STRICT and CROSSING strictness modes for the tiling.
-   * Does nothing if the editor is currently processing an operation.
-   */
-  def toggleStrictness(): Unit =
-    ifNotProcessing:
-      strictness.update {
-        case Strictness.STRICT => Strictness.CROSSING
-        case _                 => Strictness.STRICT
-      }
+//  /**
+//   * Toggles between STRICT and CROSSING strictness modes for the tiling.
+//   * Does nothing if the editor is currently processing an operation.
+//   */
+//  def toggleStrictness(): Unit =
+//    ifNotProcessing:
+//      strictness.update {
+//        case Strictness.STRICT => Strictness.CROSSING
+//        case _                 => Strictness.STRICT
+//      }
 
   /**
    * Toggles the visibility of node labels.
@@ -115,8 +115,8 @@ object AppState:
    * The behavior depends on the current editor mode and active tool.
    * @param polygonId The ID of the clicked polygon
    */
-  def handleTilingPolygonClick(polygonId: String): Unit =
-    SelectionOperations.handleTilingPolygonClick(polygonId)
+  def handleTilingPolygonClick(faceId: FaceId): Unit =
+    SelectionOperations.handleTilingPolygonClick(faceId)
 
   /**
    * Handles a click on a perimeter edge.
@@ -162,8 +162,8 @@ object AppState:
    * @param polyTag The tag of the polygon
    * @return The color of the polygon (RGB tuple)
    */
-  def getOrAssignPolygonColor(polyTag: String): (Int, Int, Int) =
-    ColorOperations.getOrAssignPolygonColor(polyTag)
+  def getOrAssignPolygonColor(faceId: FaceId): (Int, Int, Int) =
+    ColorOperations.getOrAssignPolygonColor(faceId)
 
   /**
    * Shows an error message with optional details about failed operations.

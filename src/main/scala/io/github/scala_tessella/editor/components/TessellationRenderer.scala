@@ -57,16 +57,16 @@ object TessellationRenderer:
     Some(FaceId(polygonId))
 
   // New: build polygon elements from a precomputed points string.
-  private def renderTilingPolygonFromPoints(pointsStr: String, id: String, polyTag: String): Element =
-    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
+  private def renderTilingPolygonFromPoints(pointsStr: String, faceId: FaceId): Element =
+    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(faceId))
 
     val rgbSignal = EditorState.polygonColors.signal.map {
-      _.getOrElse(polyTag, (200, 200, 200)).toRgbString
+      _.getOrElse(faceId, (200, 200, 200)).toRgbString
     }
 
     // Check if this polygon should be hidden due to failed deletion
     val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
-      case Some(failedDel) => failedDel.polygonId == id
+      case Some(failedDel) => failedDel.faceId == faceId
       case None => false
     }
 
@@ -114,7 +114,7 @@ object TessellationRenderer:
             val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
             cursor + opacity
         },
-      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(id) }
+      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(faceId) }
     )
 
     val patternOverlay = svg.polygon(
@@ -137,19 +137,18 @@ object TessellationRenderer:
     val facesData = tiling.innerFaces.map { face =>
       val vs = face.getVertices.toOption.get
       val ids = vs.map(_.id).toVector
-      val polyTag = face.id.value
-      val polygonId = polyTag
+      val polygonId = face.id
       // Compute points string once and reuse
       val pointsStr = ids.map(tiling.coordinates).map { bp =>
         val (x, y) = tilingPointToCanvasView(bp.toPoint)
         s"$x,$y"
       }.mkString(" ")
-      (ids, polygonId, polyTag, pointsStr)
+      (ids, polygonId, pointsStr)
     }
 
-    val tilingPolygons = facesData.map { case (_, polygonId, polyTag, pointsStr) =>
-      getOrAssignPolygonColor(polyTag)
-      renderTilingPolygonFromPoints(pointsStr, polygonId, polyTag)
+    val tilingPolygons = facesData.map { case (_, polygonId, pointsStr) =>
+      getOrAssignPolygonColor(polygonId)
+      renderTilingPolygonFromPoints(pointsStr, polygonId)
     }
 
 //    val tilingPolygons = tiling.innerFaces.map { face =>
