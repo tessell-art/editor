@@ -5,6 +5,7 @@ import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.tessella.Geometry.Point
 import io.github.scala_tessella.tessella.BigDecimalGeometry.{AngleDegree, BigCoords}
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 import scala.math.*
 
@@ -49,21 +50,27 @@ object PolygonPlacementGeometry:
     val midX = (vertex1.x + vertex2.x) / 2
     val midY = (vertex1.y + vertex2.y) / 2
 
-    // Determine inward normal:
-    // - If intoFace is provided, decide by face winding (robust for concave faces).
-    // - Otherwise fallback to the previous default (leftNormal).
+    // Determine inward normal using DCEL face boundary orientation (CCW for inner faces).
+    // If the edge appears as (v1 -> v2) on the face boundary, interior is leftNormal.
+    // If the edge appears as (v2 -> v1), interior (for that directed edge) is left of (v2 -> v1),
+    // which corresponds to rightNormal relative to (v1 -> v2).
+    def normalForFace(faceId: FaceId): Option[(Double, Double, Boolean)] =
+      val face = tiling.findInnerFace(faceId).toOption.get
+      val ids: Vector[VertexId] = face.getVertices.toOption.get.map(_.id).toVector
+      val forward = ids.slidingO(2).exists(p => p(0) == edge._1 && p(1) == edge._2)
+      if !forward then Some((leftNormal._1, leftNormal._2, false))
+      else
+        val backward = ids.slidingO(2).exists(p => p(0) == edge._2 && p(1) == edge._1)
+        if backward then Some((rightNormal._1, rightNormal._2, true)) else None
+
     val (perpX, perpY, wasFlipped) = intoFace match
       case Some(fid) =>
-        val face = tiling.findInnerFace(fid).toOption.get
-        val vs = face.getVertices.toOption.get
-        val pts = vs.map(_.coords).map(_.toPoint).toVector
-        val isCCW = signedArea(pts) > 0
-        if isCCW then
-          (leftNormal._1, leftNormal._2, false)
-        else
-          (rightNormal._1, rightNormal._2, true)
+        normalForFace(fid).getOrElse((leftNormal._1, leftNormal._2, false))
       case None =>
-        (leftNormal._1, leftNormal._2, false)
+        // Try to identify any inner face containing the directed edge (either orientation)
+        val found =
+          tiling.innerFaces.view.flatMap(f => normalForFace(f.id)).headOption
+        found.getOrElse((leftNormal._1, leftNormal._2, false))
 
     val halfAngle: AngleDegree = AngleDegree(180) / polygonSides
     val sideLength = edgeLen
