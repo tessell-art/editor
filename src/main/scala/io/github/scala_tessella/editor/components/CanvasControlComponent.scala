@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.operations.OperationGuard.gate
 
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
@@ -22,7 +23,7 @@ object CanvasControlComponent:
       icon,
       className := "toggle-btn",
       cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(tool)),
-      onClick --> { _ => toggleTool(tool) },
+      onClick.compose(gate) --> { _ => toggleTool(tool) },
       title := titleText
     )
 
@@ -45,7 +46,7 @@ object CanvasControlComponent:
                 svg.fill <-- EditorState.fillColor.signal.map { case (r, g, b) => f"rgb($r,$g,$b)" }
               )
             ),
-            onClick --> { _ =>
+            onClick.compose(gate) --> { _ =>
               // Use shared state from EditorState
               EditorState.tempColor.set(EditorState.fillColor.now())
               EditorState.showColorPicker.set(true)

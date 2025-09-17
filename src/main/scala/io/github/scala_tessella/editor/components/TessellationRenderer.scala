@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
+import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
@@ -218,7 +219,10 @@ object TessellationRenderer:
       svg.strokeWidth := "1",
       svg.className := "clickable-point",
       onMountCallback { ctx =>
-        ctx.thisNode.events(onClick.preventDefault.mapTo(p))
+        // Guard the event stream at the source
+        gate(
+          ctx.thisNode.events(onClick.preventDefault.mapTo(p))
+        )
           .withCurrentValueOf(EditorState.activeTool.signal)
           .foreach {
             case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
@@ -384,7 +388,7 @@ object TessellationRenderer:
             val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
             cursor + opacity
         },
-      onClick --> { _ => AppState.handleTilingPolygonClick(id) }
+      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(id) }
     )
 
     val patternOverlay = svg.polygon(
@@ -442,7 +446,7 @@ object TessellationRenderer:
       svg.strokeLineCap := "round",
       svg.className := "interior-edge-transparent",
       // Show inner preview oriented into this face
-      onMouseEnter --> { _ =>
+      onMouseEnter.compose(gate) --> { _ =>
         EditorState.selectedPolygon.now() match
           case Some(sides) =>
             val tiling = EditorState.currentTiling.now()
@@ -451,11 +455,11 @@ object TessellationRenderer:
             )
           case None => ()
       },
-      onMouseLeave --> { _ =>
+      onMouseLeave.compose(gate) --> { _ =>
         EditorState.previewPlacement.set(None)
       },
       // Trigger insertion directly when clicking the highlighted interior edge
-      onClick.preventDefault --> { _ =>
+      onClick.preventDefault.compose(gate) --> { _ =>
         EditorState.activeTool.now() match
           case Some(Tool.Inserter) =>
             TessellationOperations.attemptPolygonInsertion(edge._1, edge._2)
@@ -503,18 +507,19 @@ object TessellationRenderer:
       svg.className := "perimeter-edge-transparent",
       svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ => "none")),
       // Enhanced visual feedback and click handling
-      onMouseEnter --> { _ =>
+      onMouseEnter.compose(gate) --> { _ =>
         (EditorState.activeTool.now(), EditorState.selectedPolygon.now()) match
           case (_, Some(sides)) =>
             val tiling = EditorState.currentTiling.now()
             EditorState.previewPlacement.set(Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(edgeIndex, sides, edge, tiling)))
-          case _ =>
-            ()
+          case _ => ()
       },
-      onMouseLeave --> { _ =>
+      onMouseLeave.compose(gate) --> { _ =>
         EditorState.previewPlacement.set(None)
       },
-      onClick --> { _ => AppState.handlePerimeterEdgeClick(id, edgeIndex) }
+      onClick.compose(gate) --> { _ =>
+        AppState.handlePerimeterEdgeClick(id, edgeIndex)
+      }
     )
 
     // The visible line that the user sees
