@@ -40,9 +40,9 @@ object PolygonPlacementGeometry:
     val midY = (vertex1.y + vertex2.y) / 2
 
     // Determine inward normal using DCEL face boundary orientation (CCW for inner faces).
-    // If the edge appears as (v1 -> v2) on the face boundary, interior is leftNormal.
-    // If the edge appears as (v2 -> v1), interior (for that directed edge) is left of (v2 -> v1),
-    // which corresponds to rightNormal relative to (v1 -> v2).
+    // If the edge appears as (v2 -> v1) on the face boundary, interior is leftNormal.
+    // If the edge appears as (v1 -> v2), interior (for that directed edge) is left of (v1 -> v2),
+    // which corresponds to rightNormal relative to (v2 -> v1).
     def normalForFace(faceId: FaceId): Option[(Double, Double, Boolean)] =
       val face = tiling.findInnerFace(faceId).toOption.get
       val ids: Vector[VertexId] = face.getVertices.toOption.get.map(_.id).toVector

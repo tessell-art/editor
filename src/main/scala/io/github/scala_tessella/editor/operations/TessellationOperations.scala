@@ -38,226 +38,53 @@ object TessellationOperations:
 
   // Attempt to delete a polygon from the tessellation
   def attemptPolygonDeletion(polygonId: String): Unit =
-    val future =
-      AsyncUtils.withLoadingState { () =>
-        currentTiling.now() match
-          case tiling if !tiling.isEmpty =>
-            // Extract polygon tag from the ID
-            val polyTag = if polygonId.startsWith("tiling-poly-") then
-              polygonId.substring("tiling-poly-".length)
-            else
-              polygonId
-            // Find the specific polygon in the tiling
-//            val targetPolygon = tiling.orientedPolygons.find { nodes =>
-//              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-//              tag == polyTag
-//            }
-            val targetPolygon = tiling.innerFaces.find { face =>
-              val tag = face.id.value
-              tag == polyTag
-            }
 
-            targetPolygon match
-              case Some(face) =>
-                // All checks passed - try actual deletion
-                val result: Either[TilingError, TilingDCEL] =
-                  tiling.maybeDeleteFace(face.id)
-                result match
-                  case Right(newTiling) =>
-                    // Success: return the new tiling
-                    Right(newTiling)
-                  case Left(errMsg) =>
-                    // Failure: return error with wireframe info
-                    Left(s"Cannot remove polygon: ${errMsg.message}")
+    val tilingBefore = currentTiling.now()
+    if tilingBefore.isEmpty then
+      ErrorOperations.showError("No tessellation available to modify")
+    else
+      val polyTag =
+        if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length)
+        else polygonId
 
-              case None =>
-                Left(s"Could not find polygon with tag: $polyTag")
-
-          case _ =>
-            Left("No tessellation available to modify")
+      val op = () => {
+        val tiling = currentTiling.now()
+        tiling.innerFaces.find(_.id.value == polyTag) match
+          case Some(face) => tiling.maybeDeleteFace(face.id)
+          case None => Left(ValidationError(s"Could not find polygon with tag: $polyTag"))
       }
 
-    future.foreach {
-      case Right(newTiling) =>
-        // Success: save state before change, then update tiling
-        UndoManager.saveState()
-        currentTiling.set(newTiling)
-        ErrorOperations.clearError()
-      case Left(errMsg) =>
-        // Failure: show error with wireframe info
-        val polygonNodes = currentTiling.now() match
-          case tiling if !tiling.isEmpty =>
-            val polyTag = if polygonId.startsWith("tiling-poly-") then
-              polygonId.substring("tiling-poly-".length)
-            else
-              polygonId
+      OperationRunner.runTilingOp(op)(
+        onSuccess = (),
+        onFailure = err => {
+          // Optionally create detailed deletion info here if needed
+          ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
+        }
+      )
 
-//            tiling.orientedPolygons.find { nodes =>
-//              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-//              tag == polyTag
-//            }.getOrElse(Vector.empty)
-          case _ => Vector.empty
-
-//        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
-//        ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
-    }
-
-    future.recover {
-      case ex: Exception =>
-        ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
-    }
-
-  // Attempt to delete a polygon from the tessellation
+  // Attempt to delete a face by FaceId
   def attemptFaceDeletion(faceId: FaceId): Unit =
-    val future =
-      AsyncUtils.withLoadingState { () =>
-        currentTiling.now() match
-          case tiling if !tiling.isEmpty =>
-            // All checks passed - try actual deletion
-            val result: Either[TilingError, TilingDCEL] =
-              tiling.maybeDeleteFace(faceId)
-            result match
-              case Right(newTiling) =>
-                // Success: return the new tiling
-                Right(newTiling)
-              case Left(errMsg) =>
-                // Failure: return error with wireframe info
-                Left(s"Cannot remove polygon: ${errMsg.message}")
-          case _ =>
-            Left("No tessellation available to modify")
-      }
+    val op = () => currentTiling.now().maybeDeleteFace(faceId)
+    OperationRunner.runTilingOp(op)(
+      onSuccess = (),
+      onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
+    )
 
-    future.foreach {
-      case Right(newTiling) =>
-        // Success: save state before change, then update tiling
-        UndoManager.saveState()
-        currentTiling.set(newTiling)
-        ErrorOperations.clearError()
-      case Left(errMsg) =>
-        // Failure: show error with wireframe info
-        val polygonNodes = currentTiling.now() match
-          case tiling if !tiling.isEmpty =>
-//            val polyTag = if polygonId.startsWith("tiling-poly-") then
-//              polygonId.substring("tiling-poly-".length)
-//            else
-//              polygonId
-
-          //            tiling.orientedPolygons.find { nodes =>
-          //              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-          //              tag == polyTag
-          //            }.getOrElse(Vector.empty)
-          case _ => Vector.empty
-
-      //        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
-      //        ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
-    }
-
-    future.recover {
-      case ex: Exception =>
-        ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
-    }
-
-  // Attempt to delete a polygon from the tessellation
+  // Attempt to delete a vertex by VertexId
   def attemptVertexDeletion(vertexId: VertexId): Unit =
-    val future =
-      AsyncUtils.withLoadingState { () =>
-        currentTiling.now() match
-          case tiling if !tiling.isEmpty =>
-                // All checks passed - try actual deletion
-                val result: Either[TilingError, TilingDCEL] =
-                  tiling.maybeDeleteVertex(vertexId)
-                result match
-                  case Right(newTiling) =>
-                    // Success: return the new tiling
-                    Right(newTiling)
-                  case Left(errMsg) =>
-                    // Failure: return error with wireframe info
-                    Left(s"Cannot remove vertex: ${errMsg.message}")
+    val op = () => currentTiling.now().maybeDeleteVertex(vertexId)
+    OperationRunner.runTilingOp(op)(
+      onSuccess = (),
+      onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
+    )
 
-          case _ =>
-            Left("No tessellation available to modify")
-      }
-
-    future.foreach {
-      case Right(newTiling) =>
-        // Success: save state before change, then update tiling
-        UndoManager.saveState()
-        currentTiling.set(newTiling)
-        ErrorOperations.clearError()
-      case Left(errMsg) =>
-        // Failure: show error with wireframe info
-//        val polygonNodes = currentTiling.now() match
-//          case tiling if !tiling.isEmpty =>
-//            val polyTag = if polygonId.startsWith("tiling-poly-") then
-//              polygonId.substring("tiling-poly-".length)
-//            else
-//              polygonId
-//
-//          //            tiling.orientedPolygons.find { nodes =>
-//          //              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-//          //              tag == polyTag
-//          //            }.getOrElse(Vector.empty)
-//          case _ => Vector.empty
-
-      //        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
-      //        ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
-    }
-
-    future.recover {
-      case ex: Exception =>
-        ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
-    }
-
-  // Attempt to delete a polygon from the tessellation
+  // Attempt to delete an edge by endpoints
   def attemptEdgeDeletion(startVertexId: VertexId, endVertexId: VertexId): Unit =
-    val future =
-      AsyncUtils.withLoadingState { () =>
-        currentTiling.now() match
-          case tiling if !tiling.isEmpty =>
-            // All checks passed - try actual deletion
-            val result: Either[TilingError, TilingDCEL] =
-              tiling.maybeDeleteEdge(startVertexId, endVertexId)
-            result match
-              case Right(newTiling) =>
-                // Success: return the new tiling
-                Right(newTiling)
-              case Left(errMsg) =>
-                // Failure: return error with wireframe info
-                Left(s"Cannot remove edge: ${errMsg.message}")
-
-          case _ =>
-            Left("No tessellation available to modify")
-      }
-
-    future.foreach {
-      case Right(newTiling) =>
-        // Success: save state before change, then update tiling
-        UndoManager.saveState()
-        currentTiling.set(newTiling)
-        ErrorOperations.clearError()
-      case Left(errMsg) =>
-      // Failure: show error with wireframe info
-      //        val polygonNodes = currentTiling.now() match
-      //          case tiling if !tiling.isEmpty =>
-      //            val polyTag = if polygonId.startsWith("tiling-poly-") then
-      //              polygonId.substring("tiling-poly-".length)
-      //            else
-      //              polygonId
-      //
-      //          //            tiling.orientedPolygons.find { nodes =>
-      //          //              val tag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-      //          //              tag == polyTag
-      //          //            }.getOrElse(Vector.empty)
-      //          case _ => Vector.empty
-
-      //        val failedDeletionInfo = FailedPolygonDeletion(polygonId, polygonNodes)
-      //        ErrorOperations.showError(errMsg, deletion = Some(failedDeletionInfo))
-    }
-
-    future.recover {
-      case ex: Exception =>
-        ErrorOperations.showError(s"Error during polygon deletion: ${ex.getMessage}")
-    }
+    val op = () => currentTiling.now().maybeDeleteEdge(startVertexId, endVertexId)
+    OperationRunner.runTilingOp(op)(
+      onSuccess = (),
+      onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
+    )
 
   // Handle perimeter edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
@@ -265,13 +92,9 @@ object TessellationOperations:
       case (tiling, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available to grow")
       case (tiling, Some(polygonSides)) =>
-        // Try to grow the edge with the selected polygon
-        AsyncUtils.withLoadingState { () =>
+        val op = () =>
           try
-            import io.github.scala_tessella.tessella.RegularPolygon.Polygon
-            val polygon = Polygon(polygonSides)
             val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
-
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, polygonSides)
@@ -279,29 +102,26 @@ object TessellationOperations:
               Left(ValidationError("Invalid edge index"))
           catch
             case e: Exception => Left(ValidationError(s"Error growing edge: ${e.getMessage}"))
-        }.foreach {
-          case Right(newTiling) =>
-            // Success: save state before change, then update tiling
-            UndoManager.saveState()
-            currentTiling.set(newTiling)
+
+        OperationRunner.runTilingOp(op)(
+          onSuccess = {
             EditorState.selectedPerimeterEdges.set(Set.empty)
-            ErrorOperations.clearError()
-          case Left(errMsg) =>
-            // Failure: show error message with wireframe (no state to undo)
+          },
+          onFailure = err => {
             val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               val placement = FailedPolygonPlacement(edgeIndex, polygonSides, (selectedEdge(0), selectedEdge(1)), tiling)
-              val truncated = errMsg.message
-//                val idx = errMsg.indexOf("See SVG")
-//                if idx >= 0 then errMsg.substring(0, idx)
-//                else errMsg
-              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated", Some(placement))
+              val truncated = err.message
+              ErrorOperations.showError(
+                s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated",
+                Some(placement)
+              )
             else
-              ErrorOperations.showError(errMsg.message)
-        }
+              ErrorOperations.showError(err.message)
+          }
+        )
       case (_, None) =>
-        // This case should be handled by the caller
         ()
 
   // Helper: try to find the inner face that contains this directed edge; if not found, None
@@ -318,47 +138,30 @@ object TessellationOperations:
       case (tiling, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available for insertion")
       case (tiling, Some(polygonSides)) =>
-        // Try to grow the edge with the selected polygon
-        AsyncUtils.withLoadingState { () =>
-          try
-            tiling.maybeAddRegularPolygon(startVertexId, endVertexId, polygonSides)
+        val op = () =>
+          try tiling.maybeAddRegularPolygon(startVertexId, endVertexId, polygonSides)
           catch
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
-        }.foreach {
-          case Right(newTiling) =>
-            // Success: save state before change, then update tiling
-            UndoManager.saveState()
-            currentTiling.set(newTiling)
+  
+        OperationRunner.runTilingOp(op)(
+          onSuccess = {
             EditorState.selectedPerimeterEdges.set(Set.empty)
-            ErrorOperations.clearError()
-          case Left(error) =>
-            val tiling = currentTiling.now()
-            val maybeFaceId = findFaceContainingEdge(tiling, startVertexId, endVertexId)
-            val maybeSides = EditorState.selectedPolygon.now()
+          },
+          onFailure = error => {
+            val curr = currentTiling.now()
+            val maybeFaceId = findFaceContainingEdge(curr, startVertexId, endVertexId)
             val placementOpt =
-              for
-                sides <- maybeSides
-              yield FailedPolygonPlacement(
-                edgeIndex = 0, // not needed for interior wireframe
-                polygonSides = sides,
-                edge = (startVertexId, endVertexId),
-                tiling = tiling,
-                intoFace = maybeFaceId
+              Some(
+                FailedPolygonPlacement(
+                  edgeIndex = 0, // not needed for interior wireframe
+                  polygonSides = polygonSides,
+                  edge = (startVertexId, endVertexId),
+                  tiling = curr,
+                  intoFace = maybeFaceId
+                )
               )
             ErrorOperations.showError(s"Cannot insert polygon: ${error.message}", placement = placementOpt)
-//            // Failure: show error message with wireframe (no state to undo)
-//            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
-//            if edgeIndex < perimeterEdges.length then
-//              val selectedEdge = perimeterEdges(edgeIndex)
-//              val placement = FailedPolygonPlacement(edgeIndex, polygonSides, (selectedEdge(0), selectedEdge(1)), tiling)
-//              val truncated = errMsg.message
-//              //                val idx = errMsg.indexOf("See SVG")
-//              //                if idx >= 0 then errMsg.substring(0, idx)
-//              //                else errMsg
-//              ErrorOperations.showError(s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated", Some(placement))
-//            else
-//              ErrorOperations.showError(errMsg.message)
-        }
+          }
+        )
       case (_, None) =>
-        // This case should be handled by the caller
         ()
