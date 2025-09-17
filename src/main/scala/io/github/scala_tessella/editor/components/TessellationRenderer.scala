@@ -54,9 +54,7 @@ object TessellationRenderer:
 
   // Helper: extract FaceId from "tiling-poly-<faceId>"
   private def polygonIdToFaceId(polygonId: String): Option[FaceId] =
-    val prefix = "tiling-poly-"
-    if polygonId.startsWith(prefix) then Some(FaceId(polygonId.drop(prefix.length)))
-    else None
+    Some(FaceId(polygonId))
 
   // New: build polygon elements from a precomputed points string.
   private def renderTilingPolygonFromPoints(pointsStr: String, id: String, polyTag: String): Element =
@@ -140,7 +138,7 @@ object TessellationRenderer:
       val vs = face.getVertices.toOption.get
       val ids = vs.map(_.id).toVector
       val polyTag = face.id.value
-      val polygonId = s"tiling-poly-$polyTag"
+      val polygonId = polyTag
       // Compute points string once and reuse
       val pointsStr = ids.map(tiling.coordinates).map { bp =>
         val (x, y) = tilingPointToCanvasView(bp.toPoint)

@@ -149,6 +149,4 @@ object TessellationOperations:
   // Parse FaceId from a DOM polygon id of the form "tiling-poly-<faceId>"
   // Centralizing this at the operation boundary allows UI to keep legacy ids while core uses FaceId.
   private def parseFaceIdFromPolygonDomId(polygonId: String): Option[FaceId] =
-    val prefix = "tiling-poly-"
-    if polygonId.startsWith(prefix) then Some(FaceId(polygonId.drop(prefix.length)))
-    else None
+    Some(FaceId(polygonId))

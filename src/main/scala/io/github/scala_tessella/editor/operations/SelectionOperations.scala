@@ -10,13 +10,9 @@ import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingN
 
 object SelectionOperations:
 
-  private def polygonId(nodes: Seq[TilingNode]): String =
-    val polyTag = nodes.sorted(using NodeOrdering).map(_.toString).mkString("-")
-    s"tiling-poly-$polyTag"
-
   // Extract polygon tag from polygon ID
   private def extractPolyTag(polygonId: String): String =
-    if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length) else polygonId
+    polygonId
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
@@ -86,7 +82,7 @@ object SelectionOperations:
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
-        val allPolygonIds = tiling.innerFaces.map("tiling-poly-" + _.id.value).toSet
+        val allPolygonIds = tiling.innerFaces.map(_.id.value).toSet
         EditorState.selectedTilingPolygons.set(allPolygonIds)
         EditorState.selectedPerimeterEdges.set(Set.empty)
 
@@ -96,7 +92,7 @@ object SelectionOperations:
       if !tiling.isEmpty then
         val polygonIdsToAdd = tiling.innerFaces.collect {
           // @todo two traversals, one for the number of sides, one for the angles
-          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => "tiling-poly-" + face.id.value
+          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => face.id.value
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
@@ -105,7 +101,7 @@ object SelectionOperations:
       val polyTag = extractPolyTag(polygonId)
       EditorState.polygonColors.now().get(polyTag).foreach { color =>
         val polygonIdsToAdd = EditorState.polygonColors.now().collect {
-          case (tag, c) if c == color => s"tiling-poly-$tag"
+          case (tag, c) if c == color => tag
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
       }

@@ -165,8 +165,7 @@ object EditorState:
   /** Selected face for insertion, derived from highlighted polygon id */
   val selectedFaceForInsertion: Signal[Option[FaceId]] =
     highlightedPolygonId.signal.map {
-      case Some(id) if id.startsWith("tiling-poly-") =>
-        Some(FaceId(id.stripPrefix("tiling-poly-")))
+      case Some(id) => Some(FaceId(id))
       case _ => None
     }
 

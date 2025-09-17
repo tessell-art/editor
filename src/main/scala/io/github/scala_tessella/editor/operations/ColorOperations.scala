@@ -13,8 +13,7 @@ object ColorOperations:
         UndoManager.saveState()
 
         val selectedTags = selectedIds.map { id =>
-          if id.startsWith("tiling-poly-") then id.substring("tiling-poly-".length)
-          else id
+          id
         }
 
         EditorState.polygonColors.update { currentColors =>
