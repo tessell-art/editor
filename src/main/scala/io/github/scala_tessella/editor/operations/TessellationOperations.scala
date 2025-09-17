@@ -1,14 +1,12 @@
 package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.models.EditorState.{currentTiling, strictness}
+import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
-import io.github.scala_tessella.editor.utils.{AsyncUtils, TilingGenerator, UndoManager}
+import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, TilingError, ValidationError, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object TessellationOperations:
 
@@ -36,33 +34,15 @@ object TessellationOperations:
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
 
-  // Attempt to delete a polygon from the tessellation
+  // Prefer stable FaceId: parse once at the UI boundary and delegate to FaceId API
   def attemptPolygonDeletion(polygonId: String): Unit =
+    parseFaceIdFromPolygonDomId(polygonId) match
+      case Some(fid) =>
+        attemptFaceDeletion(fid)
+      case None =>
+        ErrorOperations.showError(s"Could not extract FaceId from polygon id: $polygonId")
 
-    val tilingBefore = currentTiling.now()
-    if tilingBefore.isEmpty then
-      ErrorOperations.showError("No tessellation available to modify")
-    else
-      val polyTag =
-        if polygonId.startsWith("tiling-poly-") then polygonId.substring("tiling-poly-".length)
-        else polygonId
-
-      val op = () => {
-        val tiling = currentTiling.now()
-        tiling.innerFaces.find(_.id.value == polyTag) match
-          case Some(face) => tiling.maybeDeleteFace(face.id)
-          case None => Left(ValidationError(s"Could not find polygon with tag: $polyTag"))
-      }
-
-      OperationRunner.runTilingOp(op)(
-        onSuccess = (),
-        onFailure = err => {
-          // Optionally create detailed deletion info here if needed
-          ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
-        }
-      )
-
-  // Attempt to delete a face by FaceId
+  // Attempt to delete a face by FaceId (stable, DCEL-native)
   def attemptFaceDeletion(faceId: FaceId): Unit =
     val op = () => currentTiling.now().maybeDeleteFace(faceId)
     OperationRunner.runTilingOp(op)(
@@ -78,7 +58,7 @@ object TessellationOperations:
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
     )
 
-  // Attempt to delete an edge by endpoints
+  // Attempt to delete an edge by endpoints (stable VertexId pair)
   def attemptEdgeDeletion(startVertexId: VertexId, endVertexId: VertexId): Unit =
     val op = () => currentTiling.now().maybeDeleteEdge(startVertexId, endVertexId)
     OperationRunner.runTilingOp(op)(
@@ -165,3 +145,10 @@ object TessellationOperations:
         )
       case (_, None) =>
         ()
+
+  // Parse FaceId from a DOM polygon id of the form "tiling-poly-<faceId>"
+  // Centralizing this at the operation boundary allows UI to keep legacy ids while core uses FaceId.
+  private def parseFaceIdFromPolygonDomId(polygonId: String): Option[FaceId] =
+    val prefix = "tiling-poly-"
+    if polygonId.startsWith(prefix) then Some(FaceId(polygonId.drop(prefix.length)))
+    else None
