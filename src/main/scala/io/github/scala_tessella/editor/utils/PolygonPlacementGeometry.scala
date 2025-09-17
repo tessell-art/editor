@@ -19,17 +19,6 @@ object PolygonPlacementGeometry:
     def toPoint: Point =
       Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
 
-  /** Signed area: positive => CCW, negative => CW */
-  private def signedArea(points: Vector[Point]): Double =
-    var acc = 0.0
-    var i = 0
-    val n = points.length
-    while i < n do
-      val j = (i + 1) % n
-      acc += points(i).x * points(j).y - points(j).x * points(i).y
-      i += 1
-    acc / 2.0
-
   /** Compute canvas coordinates of the wireframe points for a placement preview/failure. */
   def computeWireframePoints(polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None): Vector[(Double, Double)] =
     val vertex1 = tiling.coordinates(edge._1).toPoint
