@@ -64,27 +64,25 @@ object Logger:
     val ts = new js.Date().toISOString()
     s"[$ts] [${level.toString.toUpperCase}]"
 
-  private inline def format(msg: => String, data: Seq[Any]): String =
-    if data.nonEmpty then s"${prefix(Level.Info)} $msg ${data.mkString(" ")}"
-    else s"$msg"
-
+  private def formatMessage(level: Level, msg: => String, data: Seq[Any]): String =
+    s"${prefix(level)} $msg${if data.nonEmpty then " " + data.mkString(" ") else ""}"
+  
   def debug(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Debug) then
-      dom.console.log(s"${prefix(Level.Debug)} $msg${if data.nonEmpty then " " + data.mkString(" ") else ""}")
-
+      dom.console.log(formatMessage(Level.Debug, msg, data))
+  
   def info(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Info) then
-      dom.console.info(s"${prefix(Level.Info)} $msg${if data.nonEmpty then " " + data.mkString(" ") else ""}")
-
+      dom.console.info(formatMessage(Level.Info, msg, data))
+  
   def warn(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Warn) then
-      dom.console.warn(s"${prefix(Level.Warn)} $msg${if data.nonEmpty then " " + data.mkString(" ") else ""}")
-
+      dom.console.warn(formatMessage(Level.Warn, msg, data))
+  
   def error(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Error) then
-      dom.console.error(s"${prefix(Level.Error)} $msg${if data.nonEmpty then " " + data.mkString(" ") else ""}")
-
+      dom.console.error(formatMessage(Level.Error, msg, data))
+  
   def error(e: Throwable, context: => String = "Unhandled error"): Unit =
     if shouldLog(Level.Error) then
       dom.console.error(s"${prefix(Level.Error)} $context: ${e.getMessage}")
-      e.printStackTrace()

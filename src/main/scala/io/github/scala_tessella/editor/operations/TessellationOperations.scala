@@ -34,14 +34,6 @@ object TessellationOperations:
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
 
-  // Prefer stable FaceId: parse once at the UI boundary and delegate to FaceId API
-  def attemptPolygonDeletion(faceId: FaceId): Unit =
-    parseFaceIdFromPolygonDomId(faceId.value) match
-      case Some(fid) =>
-        attemptFaceDeletion(fid)
-      case None =>
-        ErrorOperations.showError(s"Could not extract FaceId from polygon id: $faceId")
-
   // Attempt to delete a face by FaceId (stable, DCEL-native)
   def attemptFaceDeletion(faceId: FaceId): Unit =
     val op = () => currentTiling.now().maybeDeleteFace(faceId)
@@ -72,9 +64,9 @@ object TessellationOperations:
       case (tiling, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available to grow")
       case (tiling, Some(polygonSides)) =>
+        val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
         val op = () =>
           try
-            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, polygonSides)
@@ -88,7 +80,6 @@ object TessellationOperations:
             EditorState.selectedPerimeterEdges.set(Set.empty)
           },
           onFailure = err => {
-            val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               val placement = FailedPolygonPlacement(edgeIndex, polygonSides, (selectedEdge(0), selectedEdge(1)), tiling)

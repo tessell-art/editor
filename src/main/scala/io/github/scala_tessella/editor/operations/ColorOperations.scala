@@ -12,13 +12,8 @@ object ColorOperations:
       val selectedIds = EditorState.selectedTilingPolygons.now()
       if selectedIds.nonEmpty then
         UndoManager.saveState()
-
-        val selectedTags = selectedIds.map { id =>
-          id
-        }
-
         EditorState.polygonColors.update { currentColors =>
-          selectedTags.foldLeft(currentColors) { (colors, tag) =>
+          selectedIds.foldLeft(currentColors) { (colors, tag) =>
             colors + (tag -> color)
           }
         }

@@ -139,19 +139,19 @@ object SelectionOperations:
       case Some(Tool.SelectByColor) =>
         selectPolygonsByColor(faceId)
       case Some(Tool.Measurement) =>
-        handlePolygonClickForMeasurement(faceId)
+        setupFaceClickablePoints(faceId)
       case Some(Tool.Eraser) =>
-        handlePolygonClickForMeasurement(faceId)
+        setupFaceClickablePoints(faceId)
       case Some(Tool.Inserter) =>
-        handlePolygonClickForMeasurement(faceId, edgesOnly = true)
+        setupFaceClickablePoints(faceId, edgesOnly = true)
       case _ =>
         EditorState.editorMode.now() match
           case EditorMode.Select =>
             toggleTilingPolygonSelection(faceId)
           case EditorMode.Delete =>
-            TessellationOperations.attemptPolygonDeletion(faceId)
+            TessellationOperations.attemptFaceDeletion(faceId)
 
-  private def handlePolygonClickForMeasurement(faceId: FaceId, edgesOnly: Boolean = false): Unit =
+  private def setupFaceClickablePoints(faceId: FaceId, edgesOnly: Boolean = false): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
 
