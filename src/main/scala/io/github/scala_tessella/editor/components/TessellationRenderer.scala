@@ -58,16 +58,110 @@ object TessellationRenderer:
     if polygonId.startsWith(prefix) then Some(FaceId(polygonId.drop(prefix.length)))
     else None
 
+  // New: build polygon elements from a precomputed points string.
+  private def renderTilingPolygonFromPoints(pointsStr: String, id: String, polyTag: String): Element =
+    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
+
+    val rgbSignal = EditorState.polygonColors.signal.map {
+      _.getOrElse(polyTag, (200, 200, 200)).toRgbString
+    }
+
+    // Check if this polygon should be hidden due to failed deletion
+    val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
+      case Some(failedDel) => failedDel.polygonId == id
+      case None => false
+    }
+
+    // Update stroke and styling based on editor mode
+    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
+      case (selected, mode) =>
+        if selected then "#ff6b6b"
+        else mode match
+          case EditorMode.Select => "#646cff"
+          case EditorMode.Delete => "#ff4444"
+    }
+
+    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
+      case (selected, mode) =>
+        if selected then "3.5"
+        else mode match
+          case EditorMode.Select => "1.5"
+          case EditorMode.Delete => "2.0"
+    }
+
+    val basePolygon = svg.polygon(
+      svg.points := pointsStr, // static, precomputed
+      svg.fill <-- rgbSignal, // reactive (color changes)
+      svg.stroke <-- strokeColorSignal, // reactive
+      svg.strokeWidth <-- strokeWidthSignal, // reactive
+      svg.className <-- EditorState.editorMode.signal.map {
+        case EditorMode.Select => "tiling-polygon"
+        case EditorMode.Delete => "tiling-polygon delete-mode"
+      },
+      // Cursor style and conditional opacity
+      svg.style <-- shouldHideForDeletion
+        .combineWith(EditorState.editorMode.signal)
+        .combineWith(EditorState.activeTool.signal).map {
+          case (hidden, mode, tool) =>
+            val cursor = tool match
+              case Some(Tool.ColorPicker) => s"cursor: $colorPickerCursor;"
+              case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
+              case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
+              case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
+              case Some(Tool.Eraser) => s"cursor: $eraserCursor;"
+              case Some(Tool.Inserter) => s"cursor: $inserterCursor;"
+              case _ => mode match
+                case EditorMode.Select => "cursor: pointer;"
+                case EditorMode.Delete => s"cursor: $deleteCursor;"
+            val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
+            cursor + opacity
+        },
+      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(id) }
+    )
+
+    val patternOverlay = svg.polygon(
+      svg.points := pointsStr, // static, precomputed
+      svg.fill := "url(#selection-pattern)",
+      svg.pointerEvents := "none",
+      svg.style <-- shouldHideForDeletion.map(hidden => if hidden then "opacity: 0;" else "opacity: 1;")
+    )
+
+    svg.g(
+      basePolygon,
+      child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map {
+        case (selected, hidden) => if selected && !hidden then Some(patternOverlay) else None
+      }
+    )
+
   def renderTiling(tiling: TilingDCEL): Element =
 
-    val tilingPolygons = tiling.innerFaces.map { face =>
-      val vertices = face.getVertices.toOption.get
-      val ids = vertices.map(_.id).toVector
+    // Precompute face data once per render pass
+    val facesData = tiling.innerFaces.map { face =>
+      val vs = face.getVertices.toOption.get
+      val ids = vs.map(_.id).toVector
       val polyTag = face.id.value
       val polygonId = s"tiling-poly-$polyTag"
-      getOrAssignPolygonColor(polyTag)
-      renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
+      // Compute points string once and reuse
+      val pointsStr = ids.map(tiling.coordinates).map { bp =>
+        val (x, y) = tilingPointToCanvasView(bp.toPoint)
+        s"$x,$y"
+      }.mkString(" ")
+      (ids, polygonId, polyTag, pointsStr)
     }
+
+    val tilingPolygons = facesData.map { case (_, polygonId, polyTag, pointsStr) =>
+      getOrAssignPolygonColor(polyTag)
+      renderTilingPolygonFromPoints(pointsStr, polygonId, polyTag)
+    }
+
+//    val tilingPolygons = tiling.innerFaces.map { face =>
+//      val vertices = face.getVertices.toOption.get
+//      val ids = vertices.map(_.id).toVector
+//      val polyTag = face.id.value
+//      val polygonId = s"tiling-poly-$polyTag"
+//      getOrAssignPolygonColor(polyTag)
+//      renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
+//    }
 
     val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList.zipWithIndex.map {
       (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
@@ -328,83 +422,83 @@ object TessellationRenderer:
     def toPoint: Point =
       Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
 
-  private def renderTilingPolygon(coordinates: Map[VertexId, BigPoint], nodes: Vector[VertexId], id: String, polyTag: String): Element =
-    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
-
-    val points = nodes.map(coordinates).map { vertex =>
-      val (x, y) = tilingPointToCanvasView(vertex.toPoint)
-      s"$x,$y"
-    }.mkString(" ")
-
-    val rgbSignal = EditorState.polygonColors.signal.map { _.getOrElse(polyTag, (200, 200, 200)).toRgbString }
-
-    // Check if this polygon should be hidden due to failed deletion
-    val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
-      case Some(failedDel) => failedDel.polygonId == id
-      case None => false
-    }
-
-    // Update stroke and styling based on editor mode
-    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
-      case (selected, mode) =>
-        if selected then "#ff6b6b"
-        else mode match
-          case EditorMode.Select => "#646cff"
-          case EditorMode.Delete => "#ff4444" // Red tint for delete mode
-    }
-
-    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
-      case (selected, mode) =>
-        if selected then "3.5"
-        else mode match
-          case EditorMode.Select => "1.5"
-          case EditorMode.Delete => "2.0" // Slightly thicker in delete mode
-    }
-
-    val basePolygon = svg.polygon(
-      svg.points := points,
-      svg.fill <-- rgbSignal,
-      svg.stroke <-- strokeColorSignal,
-      svg.strokeWidth <-- strokeWidthSignal,
-      svg.className <-- EditorState.editorMode.signal.map {
-        case EditorMode.Select => "tiling-polygon"
-        case EditorMode.Delete => "tiling-polygon delete-mode"
-      },
-      // Add cursor style based on mode
-      svg.style <-- shouldHideForDeletion
-        .combineWith(EditorState.editorMode.signal)
-        .combineWith(EditorState.activeTool.signal).map {
-          case (hidden, mode, tool) =>
-            val cursor = tool match
-              case Some(Tool.ColorPicker)   => s"cursor: $colorPickerCursor;"
-              case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
-              case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
-              case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
-              case Some(Tool.Eraser) => s"cursor: $eraserCursor;"
-              case Some(Tool.Inserter) => s"cursor: $inserterCursor;"
-              case _ => mode match
-                case EditorMode.Select => "cursor: pointer;"
-                case EditorMode.Delete => s"cursor: $deleteCursor;"
-            val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
-            cursor + opacity
-        },
-      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(id) }
-    )
-
-    val patternOverlay = svg.polygon(
-      svg.points := points,
-      svg.fill := "url(#selection-pattern)",
-      svg.pointerEvents := "none",
-      // Hide pattern overlay when showing deletion wireframe
-      svg.style <-- shouldHideForDeletion.map(hidden => if hidden then "opacity: 0;" else "opacity: 1;")
-    )
-
-    svg.g(
-      basePolygon,
-      child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map {
-        case (selected, hidden) => if (selected && !hidden) Some(patternOverlay) else None
-      }
-    )
+//  private def renderTilingPolygon(coordinates: Map[VertexId, BigPoint], nodes: Vector[VertexId], id: String, polyTag: String): Element =
+//    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
+//
+//    val points = nodes.map(coordinates).map { vertex =>
+//      val (x, y) = tilingPointToCanvasView(vertex.toPoint)
+//      s"$x,$y"
+//    }.mkString(" ")
+//
+//    val rgbSignal = EditorState.polygonColors.signal.map { _.getOrElse(polyTag, (200, 200, 200)).toRgbString }
+//
+//    // Check if this polygon should be hidden due to failed deletion
+//    val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
+//      case Some(failedDel) => failedDel.polygonId == id
+//      case None => false
+//    }
+//
+//    // Update stroke and styling based on editor mode
+//    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
+//      case (selected, mode) =>
+//        if selected then "#ff6b6b"
+//        else mode match
+//          case EditorMode.Select => "#646cff"
+//          case EditorMode.Delete => "#ff4444" // Red tint for delete mode
+//    }
+//
+//    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
+//      case (selected, mode) =>
+//        if selected then "3.5"
+//        else mode match
+//          case EditorMode.Select => "1.5"
+//          case EditorMode.Delete => "2.0" // Slightly thicker in delete mode
+//    }
+//
+//    val basePolygon = svg.polygon(
+//      svg.points := points,
+//      svg.fill <-- rgbSignal,
+//      svg.stroke <-- strokeColorSignal,
+//      svg.strokeWidth <-- strokeWidthSignal,
+//      svg.className <-- EditorState.editorMode.signal.map {
+//        case EditorMode.Select => "tiling-polygon"
+//        case EditorMode.Delete => "tiling-polygon delete-mode"
+//      },
+//      // Add cursor style based on mode
+//      svg.style <-- shouldHideForDeletion
+//        .combineWith(EditorState.editorMode.signal)
+//        .combineWith(EditorState.activeTool.signal).map {
+//          case (hidden, mode, tool) =>
+//            val cursor = tool match
+//              case Some(Tool.ColorPicker)   => s"cursor: $colorPickerCursor;"
+//              case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
+//              case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
+//              case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
+//              case Some(Tool.Eraser) => s"cursor: $eraserCursor;"
+//              case Some(Tool.Inserter) => s"cursor: $inserterCursor;"
+//              case _ => mode match
+//                case EditorMode.Select => "cursor: pointer;"
+//                case EditorMode.Delete => s"cursor: $deleteCursor;"
+//            val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
+//            cursor + opacity
+//        },
+//      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(id) }
+//    )
+//
+//    val patternOverlay = svg.polygon(
+//      svg.points := points,
+//      svg.fill := "url(#selection-pattern)",
+//      svg.pointerEvents := "none",
+//      // Hide pattern overlay when showing deletion wireframe
+//      svg.style <-- shouldHideForDeletion.map(hidden => if hidden then "opacity: 0;" else "opacity: 1;")
+//    )
+//
+//    svg.g(
+//      basePolygon,
+//      child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map {
+//        case (selected, hidden) => if (selected && !hidden) Some(patternOverlay) else None
+//      }
+//    )
 
   // New: render interactive interior edges for inserter tool
   private def renderInteriorEdges(tiling: TilingDCEL): List[Element] =
