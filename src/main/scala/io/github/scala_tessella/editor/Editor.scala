@@ -3,12 +3,16 @@ package io.github.scala_tessella.editor
 import io.github.scala_tessella.editor.components.{ColorPickerPopupComponent, EditorCanvasComponent, MenuBarComponent, PolygonPaletteComponent}
 import io.github.scala_tessella.editor.interactions.KeyboardEventHandler
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.Logger
 
 import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
 
 @main
 def Editor(): Unit =
+  // Initialize logging based on environment (dev vs prod)
+  Logger.initFromEnvironment()
+  Logger.info("Editor starting up")
   // This observer will update the body's class list whenever the theme changes.
   // We use unsafeWindowOwner because this is a global setting for the app's lifetime.
   val _ = EditorApp.effectiveTheme.foreach { theme =>
