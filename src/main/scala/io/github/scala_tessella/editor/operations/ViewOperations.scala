@@ -85,11 +85,6 @@ object ViewOperations:
         Some(createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY))
     }
 
-  extension (bigPoint: BigPoint)
-    
-    def toPoint: Point =
-      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
-    
   def fitTilingToCanvas(): Unit =
     val tiling = EditorState.currentTiling.now()
     if tiling.isEmpty then return

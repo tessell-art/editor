@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
@@ -156,11 +157,6 @@ object SelectionOperations:
             toggleTilingPolygonSelection(polygonId)
           case EditorMode.Delete =>
             TessellationOperations.attemptPolygonDeletion(polygonId)
-
-  extension (bigPoint: BigPoint)
-
-    def toPoint: Point =
-      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
 
   private def handlePolygonClickForMeasurement(polygonId: String, edgesOnly: Boolean = false): Unit =
     EditorState.currentTiling.now() match

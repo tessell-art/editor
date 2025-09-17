@@ -15,10 +15,6 @@ import scala.math.*
  */
 object PolygonPlacementGeometry:
 
-  extension (bigPoint: BigPoint)
-    def toPoint: Point =
-      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
-
   /** Compute canvas coordinates of the wireframe points for a placement preview/failure. */
   def computeWireframePoints(polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None): Vector[(Double, Double)] =
     val vertex1 = tiling.coordinates(edge._1).toPoint

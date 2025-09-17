@@ -415,11 +415,6 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-  extension (bigPoint: BigPoint)
-
-    def toPoint: Point =
-      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
-
 //  private def renderTilingPolygon(coordinates: Map[VertexId, BigPoint], nodes: Vector[VertexId], id: String, polyTag: String): Element =
 //    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
 //

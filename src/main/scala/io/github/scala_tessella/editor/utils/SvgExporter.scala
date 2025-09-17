@@ -41,11 +41,6 @@ object SvgExporter:
       }
     })
 
-  extension (bigPoint: BigPoint)
-
-    def toPoint: Point =
-      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
-
   private [utils] def generateSvgContent(tiling: TilingDCEL, showNodeLabels: Boolean, showDual: Boolean): String =
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then return ""

@@ -58,10 +58,5 @@ object FailedPolygonRenderer:
 //      case _: Exception => svg.g()
 //    }
 
-  extension (bigPoint: BigPoint)
-
-    def toPoint: Point =
-      Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
-
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
     PolygonPlacementGeometry.computeWireframePoints(placement.polygonSides, placement.edge, placement.tiling, placement.intoFace)
