@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
-
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
+import io.github.scala_tessella.editor.operations.ErrorOperations
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
 
@@ -96,8 +96,15 @@ object SvgImporter:
           AppState.fitTilingToCanvas()
           UndoManager.clearHistory()
     }.recover { case e: Throwable =>
-      val explanation: String =
-        "Only SVG saved by this editor with Tessella DCEL metadata can be loaded."
-      dom.window.alert(s"Failed to import SVG: ${e.getMessage}\n$explanation")
+      // Friendlier, centralized message with remediation hint, via non-blocking toast
+      val hint =
+        "This SVG likely lacks Tessella DCEL metadata.\nUse File → Save SVG in this editor to produce importable files."
+      ErrorOperations.showError(
+        message = s"Failed to import SVG: ${e.getMessage}",
+        context = Some("SVG Import"),
+        hint = Some(hint),
+        asToast = true,
+        severity = ErrorOperations.Severity.Error
+      )
       e.printStackTrace()
     }

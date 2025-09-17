@@ -142,7 +142,7 @@ object TessellationOperations:
           try tiling.maybeAddRegularPolygon(startVertexId, endVertexId, polygonSides)
           catch
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
-  
+
         OperationRunner.runTilingOp(op)(
           onSuccess = {
             EditorState.selectedPerimeterEdges.set(Set.empty)
