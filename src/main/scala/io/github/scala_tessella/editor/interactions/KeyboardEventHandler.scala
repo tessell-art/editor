@@ -35,34 +35,48 @@ object KeyboardEventHandler:
     }
 
     if !targetIsInput then
-      event.key match
-        case "r" | "R" =>
+      // Normalize key handling and support Mac (Meta) as accelerator
+      val key = event.key
+      val keyLower = key.toLowerCase
+      val isAccel = event.ctrlKey || event.metaKey
+      val isShift = event.shiftKey
+
+      (keyLower, isAccel, isShift) match
+        case ("r", false, _) =>
           event.preventDefault()
           ViewOperations.rotateView(+15)
-        case "e" | "E" =>
+        case ("e", false, _) =>
           event.preventDefault()
           ViewOperations.rotateView(-15)
-        case "Z" if event.ctrlKey && event.shiftKey =>
+        case ("z", true, true) =>
+          // Ctrl+Shift+Z / Cmd+Shift+Z → Redo
           event.preventDefault()
           AppState.redo()
-        case "z" if event.ctrlKey =>
+        case ("z", true, false) =>
+          // Ctrl+Z / Cmd+Z → Undo
           event.preventDefault()
           AppState.undo()
-        case "s" if event.ctrlKey =>
-          // Use the snapshots captured above
+        case ("s", true, true) =>
+          // Ctrl+Shift+S / Cmd+Shift+S → Save As (suppress browser Save As even if app doesn't handle it)
+          event.preventDefault()
+          ()
+        case ("s", true, false) =>
+          // Ctrl+S / Cmd+S → Save
+          event.preventDefault() // always prevent to avoid browser save dialog
           if hasFileName && !currentTiling.isEmpty then
             SvgExporter.saveTilingToSVG()
-        case "+" | "=" =>
+        case ("+", _, _) | ("=", _, _) =>
           event.preventDefault()
           EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.1, 5.0)))
-        case "-" | "_" =>
+        case ("-", _, _) | ("_", _, _) =>
           event.preventDefault()
           EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.1, 0.1)))
-        case "Escape" =>
+        case ("escape", _, _) =>
           event.preventDefault()
           clearAllSelections()
-        case "Delete" | "Backspace" =>
+        case ("delete", _, _) | ("backspace", _, _) =>
           event.preventDefault()
           // Future deletion logic can be added here
           ()
-        case _ => ()
+        case _ =>
+          ()
