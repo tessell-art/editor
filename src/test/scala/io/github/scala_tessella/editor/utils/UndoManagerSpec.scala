@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
+import TilingBuilders.*
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
@@ -23,7 +24,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   test("saveState adds to undo stack and clears redo stack") {
     // Create a state and undo it to populate the redo stack
     UndoManager.saveState()
-    EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(3).toOption.get)
+    EditorState.currentTiling.set(freshSquare())
     UndoManager.undo()
 
     assertEquals(UndoManager.redoCount.now(), 1)
@@ -39,7 +40,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     val initialTiling = EditorState.currentTiling.now()
     UndoManager.saveState()
 
-    val newTiling = TilingDCEL.createRegularPolygon(4).toOption.get
+    val newTiling = freshSquare()
     EditorState.currentTiling.set(newTiling)
 
     UndoManager.undo()
@@ -54,7 +55,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     val initialTiling = EditorState.currentTiling.now()
     UndoManager.saveState()
 
-    val newTiling = TilingDCEL.createRegularPolygon(4).toOption.get
+    val newTiling = freshSquare()
     EditorState.currentTiling.set(newTiling)
 
     UndoManager.undo()
@@ -68,7 +69,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
 
   test("clearHistory clears both undo and redo stacks") {
     UndoManager.saveState()
-    EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(3).toOption.get)
+    EditorState.currentTiling.set(freshTriangle())
     UndoManager.undo()
 
     UndoManager.clearHistory()
@@ -89,12 +90,12 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
 
   test("oldest state should be discarded when MAX_UNDO_DEPTH is exceeded") {
     // This state will be pushed out of the stack
-    val discardedTiling = TilingDCEL.createRegularPolygon(3).toOption.get
+    val discardedTiling = freshTriangle()
     UndoManager.saveState()
     EditorState.currentTiling.set(discardedTiling)
 
     // This is the first state that should be kept
-    val firstKeptTiling = TilingDCEL.createRegularPolygon(4).toOption.get
+    val firstKeptTiling = freshSquare()
     UndoManager.saveState()
     EditorState.currentTiling.set(firstKeptTiling)
 

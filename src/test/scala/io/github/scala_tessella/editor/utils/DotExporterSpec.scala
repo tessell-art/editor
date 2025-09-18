@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
+import TilingBuilders.freshSquare
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
@@ -30,7 +31,7 @@ class DotExporterSpec extends FunSuite with EditorStateFixture:
     open >= 0 && close > open && s.substring(open + 1, close).trim.nonEmpty
 
   test("tiling should generate structurally valid DOT content (header, braces, non-empty body)") {
-    val tiling = TilingDCEL.createRegularPolygon(4).toOption.get
+    val tiling = freshSquare()
     EditorState.currentTiling.set(tiling)
 
     val dotContent = tiling.toDOT

@@ -22,7 +22,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     node4 -> BigPoint(0, 1)
   )
 
-  private val squareTiling = TilingDCEL.createRegularPolygon(4).toOption.get
+  private val squareTiling = TilingBuilders.freshSquare()
 
   test("should convert nodes to SVG points string") {
     val nodes = List(node1, node2, node3)
