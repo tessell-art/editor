@@ -6,7 +6,7 @@ import io.github.scala_tessella.editor.operations.TessellationOperations.selectP
 
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
-import io.github.scala_tessella.tessella.Geometry.Radian.{TAU, TAU_2}
+import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
 
 import scala.math.{cos, sin}
 

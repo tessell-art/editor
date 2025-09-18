@@ -5,17 +5,15 @@ import io.github.scala_tessella.editor.models.EditorConfig.*
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.models.ViewTransform
 import io.github.scala_tessella.editor.utils.Bounds
-
-import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.tessella.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
 
 object ViewOperations:
 
   // Pure function to transform coordinates based on rotation
   private [operations] def transformCoordinates(coords: Iterable[Point], rotationDegrees: Int): List[Point] =
-    val rotationRad = AngleDegree(rotationDegrees).toRadian
-    coords.map(_.rotate(rotationRad)).toList
+    val rotationRad = AngleDegree(rotationDegrees).toBigRadian.toBigDecimal.toDouble
+    coords.map(_.rotate(Radian(rotationRad))).toList
 
   // Pure function to calculate safe tiling dimensions
   private [operations] def calculateSafeDimensions(tilingWidth: Double, tilingHeight: Double): (Double, Double) =
@@ -166,7 +164,7 @@ object ViewOperations:
     val scale = currentTransform.scale
     val panX = currentTransform.panX
     val panY = currentTransform.panY
-    val rotationRad = AngleDegree(currentTransform.rotationDegrees).toRadian.toDouble
+    val rotationRad = AngleDegree(currentTransform.rotationDegrees).toBigRadian.toBigDecimal.toDouble
 
     val viewCenterX = canvasCenterX
     val viewCenterY = canvasCenterY
@@ -178,7 +176,7 @@ object ViewOperations:
 
     // Calculate new rotation
     val newRotationDegrees = currentTransform.rotationDegrees + delta
-    val newRotationRad = AngleDegree(newRotationDegrees).toRadian.toDouble
+    val newRotationRad = AngleDegree(newRotationDegrees).toBigRadian.toBigDecimal.toDouble
 
     // Calculate new pan values
     val (newPanX, newPanY) = calculateRotatedPan(

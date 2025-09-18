@@ -2,8 +2,8 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 import scala.math.*

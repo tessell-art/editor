@@ -27,7 +27,7 @@ class UndoManagerSpec extends FunSuite:
   test("saveState adds to undo stack and clears redo stack") {
     // Create a state and undo it to populate the redo stack
     UndoManager.saveState()
-    EditorState.currentTiling.set(TilingGenerator.createTilingFromPolygon(3).get)
+    EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(3).toOption.get)
     UndoManager.undo()
 
     assertEquals(UndoManager.redoCount.now(), 1)
@@ -43,7 +43,7 @@ class UndoManagerSpec extends FunSuite:
     val initialTiling = EditorState.currentTiling.now()
     UndoManager.saveState()
 
-    val newTiling = TilingGenerator.createTilingFromPolygon(4).get
+    val newTiling = TilingDCEL.createRegularPolygon(4).toOption.get
     EditorState.currentTiling.set(newTiling)
 
     UndoManager.undo()
@@ -58,7 +58,7 @@ class UndoManagerSpec extends FunSuite:
     val initialTiling = EditorState.currentTiling.now()
     UndoManager.saveState()
 
-    val newTiling = TilingGenerator.createTilingFromPolygon(4).get
+    val newTiling = TilingDCEL.createRegularPolygon(4).toOption.get
     EditorState.currentTiling.set(newTiling)
 
     UndoManager.undo()
@@ -72,7 +72,7 @@ class UndoManagerSpec extends FunSuite:
 
   test("clearHistory clears both undo and redo stacks") {
     UndoManager.saveState()
-    EditorState.currentTiling.set(TilingGenerator.createTilingFromPolygon(3).get)
+    EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(3).toOption.get)
     UndoManager.undo()
 
     UndoManager.clearHistory()
@@ -93,19 +93,19 @@ class UndoManagerSpec extends FunSuite:
 
   test("oldest state should be discarded when MAX_UNDO_DEPTH is exceeded") {
     // This state will be pushed out of the stack
-    val discardedTiling = TilingGenerator.createTilingFromPolygon(3).get
+    val discardedTiling = TilingDCEL.createRegularPolygon(3).toOption.get
     UndoManager.saveState()
     EditorState.currentTiling.set(discardedTiling)
 
     // This is the first state that should be kept
-    val firstKeptTiling = TilingGenerator.createTilingFromPolygon(4).get
+    val firstKeptTiling = TilingDCEL.createRegularPolygon(4).toOption.get
     UndoManager.saveState()
     EditorState.currentTiling.set(firstKeptTiling)
 
     // Fill the undo stack up to MAX_UNDO_DEPTH
     for (i <- 1 to MAX_UNDO_DEPTH) {
       UndoManager.saveState()
-      EditorState.currentTiling.set(TilingGenerator.createTilingFromPolygon(i + 5).get)
+      EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(i + 5).toOption.get)
     }
 
     assertEquals(UndoManager.undoCount.now(), MAX_UNDO_DEPTH)

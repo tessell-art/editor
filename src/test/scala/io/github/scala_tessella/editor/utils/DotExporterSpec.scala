@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.TilingGenerator
 import munit.FunSuite
 
 class DotExporterSpec extends FunSuite:
@@ -21,7 +21,7 @@ class DotExporterSpec extends FunSuite:
   }
 
   test("tiling should generate valid DOT content") {
-    val tiling = TilingGenerator.createTilingFromPolygon(4).get
+    val tiling = TilingDCEL.createRegularPolygon(4).toOption.get
     EditorState.currentTiling.set(tiling)
     
     val dotContent = tiling.toDOT

@@ -4,7 +4,7 @@ import io.github.scala_tessella.editor.models.ViewTransform
 import io.github.scala_tessella.editor.utils.Bounds
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import munit.FunSuite
 
 import scala.math.Pi

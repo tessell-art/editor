@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
+import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
 
@@ -12,9 +13,13 @@ class ColorOperationsSpec extends FunSuite:
     EditorState.fillColor.set((255, 0, 0)) // Default test color
   }
 
+  val F1: FaceId = FaceId("F1")
+  val F2: FaceId = FaceId("F2") 
+  val F3: FaceId = FaceId("F3")
+  
   test("applyColorToSelectedPolygons should apply the current fill color to selected polygons") {
     // Given
-    val selectedIds = Set("poly1", "poly2")
+    val selectedIds = Set(F1, F2)
     EditorState.selectedTilingPolygons.set(selectedIds)
     val color = (100, 150, 200)
     EditorState.fillColor.set(color)
@@ -24,14 +29,14 @@ class ColorOperationsSpec extends FunSuite:
 
     // Then
     val colors = EditorState.polygonColors.now()
-    assertEquals(colors.get("poly1"), Some(color))
-    assertEquals(colors.get("poly2"), Some(color))
+    assertEquals(colors.get(F1), Some(color))
+    assertEquals(colors.get(F2), Some(color))
   }
 
   test("applyColorToSelectedPolygons should not change colors of unselected polygons") {
     // Given
-    EditorState.polygonColors.set(Map("poly3" -> (0, 0, 255)))
-    val selectedIds = Set("poly1")
+    EditorState.polygonColors.set(Map(F3 -> (0, 0, 255)))
+    val selectedIds = Set(F1)
     EditorState.selectedTilingPolygons.set(selectedIds)
     val color = (100, 150, 200)
 
@@ -40,13 +45,13 @@ class ColorOperationsSpec extends FunSuite:
 
     // Then
     val colors = EditorState.polygonColors.now()
-    assertEquals(colors.get("poly1"), Some(color))
-    assertEquals(colors.get("poly3"), Some((0, 0, 255))) // Should be unchanged
+    assertEquals(colors.get(F1), Some(color))
+    assertEquals(colors.get(F3), Some((0, 0, 255))) // Should be unchanged
   }
 
   test("applyColorToSelectedPolygons should do nothing if no polygons are selected") {
     // Given
-    val initialColors = Map("poly3" -> (0, 0, 255))
+    val initialColors = Map(F3 -> (0, 0, 255))
     EditorState.polygonColors.set(initialColors)
     EditorState.selectedTilingPolygons.set(Set.empty)
     val color = (100, 150, 200)
@@ -61,10 +66,10 @@ class ColorOperationsSpec extends FunSuite:
   test("getOrAssignPolygonColor should return existing color if available") {
     // Given
     val existingColor = (123, 45, 67)
-    EditorState.polygonColors.set(Map("poly1" -> existingColor))
+    EditorState.polygonColors.set(Map(F1 -> existingColor))
 
     // When
-    val result = ColorOperations.getOrAssignPolygonColor("poly1")
+    val result = ColorOperations.getOrAssignPolygonColor(F1)
 
     // Then
     assertEquals(result, existingColor)
@@ -74,18 +79,18 @@ class ColorOperationsSpec extends FunSuite:
     // Given: No color for "poly1"
     
     // When
-    val result = ColorOperations.getOrAssignPolygonColor("poly1")
+    val result = ColorOperations.getOrAssignPolygonColor(F1)
 
     // Then
-    val assignedColor = EditorState.polygonColors.now().get("poly1")
+    val assignedColor = EditorState.polygonColors.now().get(F1)
     assert(assignedColor.isDefined, "A color should have been assigned")
     assertEquals(result, assignedColor.get)
   }
 
   test("getOrAssignPolygonColor should not reassign color on multiple calls") {
     // When
-    val firstResult = ColorOperations.getOrAssignPolygonColor("poly1")
-    val secondResult = ColorOperations.getOrAssignPolygonColor("poly1")
+    val firstResult = ColorOperations.getOrAssignPolygonColor(F1)
+    val secondResult = ColorOperations.getOrAssignPolygonColor(F1)
 
     // Then
     assertEquals(firstResult, secondResult)

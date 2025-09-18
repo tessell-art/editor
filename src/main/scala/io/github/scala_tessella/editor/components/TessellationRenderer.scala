@@ -11,7 +11,7 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
-import io.github.scala_tessella.tessella.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom.EndingType.transparent
 
 object TessellationRenderer:

@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor
 
+import io.github.scala_tessella.dcel.FaceId
 import munit.FunSuite
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.models.ViewTransform
@@ -149,7 +150,7 @@ class EditorLogicSpec extends FunSuite:
     selectPolygon(6)
     assert(!AppState.isTilingEmpty)
 
-    val polygonId = "test-polygon"
+    val polygonId = FaceId("F1")
 
     // Initially empty
     assert(EditorState.selectedTilingPolygons.now().isEmpty)
@@ -187,7 +188,7 @@ class EditorLogicSpec extends FunSuite:
     selectPolygon(6)
 
     // Set up some selections
-    EditorState.selectedTilingPolygons.set(Set("poly1"))
+    EditorState.selectedTilingPolygons.set(Set(FaceId("F1")))
     EditorState.selectedPerimeterEdges.set(Set("edge1"))
 
     // Clear all
@@ -205,7 +206,7 @@ class EditorLogicSpec extends FunSuite:
 
     // Create a tiling and set up selections
     selectPolygon(6)
-    EditorState.selectedTilingPolygons.set(Set("poly1"))
+    EditorState.selectedTilingPolygons.set(Set(FaceId("F1")))
     clearAllSelections()
 
     // Node labels visibility and error should remain unchanged
@@ -234,7 +235,7 @@ class EditorLogicSpec extends FunSuite:
     assert(!initialTiling.isEmpty)
 
     // Simulate growing the tiling by adding selections
-    EditorState.selectedTilingPolygons.set(Set("poly1", "poly2"))
+    EditorState.selectedTilingPolygons.set(Set(FaceId("F1"), FaceId("F2")))
     EditorState.selectedPerimeterEdges.set(Set("edge1"))
 
     // Change polygon selection
@@ -243,7 +244,7 @@ class EditorLogicSpec extends FunSuite:
     // Tiling should remain the same
     assertEquals(EditorState.currentTiling.now(), initialTiling)
     // Selections should be preserved
-    assertEquals(EditorState.selectedTilingPolygons.now(), Set("poly1", "poly2"))
+    assertEquals(EditorState.selectedTilingPolygons.now(), Set(FaceId("F1"), FaceId("F2")))
     assertEquals(EditorState.selectedPerimeterEdges.now(), Set("edge1"))
     // Only the selected polygon type should change
     assertEquals(EditorState.selectedPolygon.now(), Some(4))
