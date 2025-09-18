@@ -1,9 +1,7 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.dcel.VertexId
+import io.github.scala_tessella.dcel.{FaceId, VertexId}
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
-import io.github.scala_tessella.tessella.Topology.Node
 import munit.FunSuite
 
 class AppStateSpec extends FunSuite {
@@ -11,7 +9,6 @@ class AppStateSpec extends FunSuite {
   override def beforeEach(context: BeforeEach): Unit = {
     // Reset any relevant state before each test
     EditorState.editorMode.set(EditorMode.Select)
-    EditorState.strictness.set(Strictness.STRICT)
     EditorState.clickablePoints.set(Nil)
     EditorState.measurementStartPoint.set(None)
     EditorState.measurementEndPoint.set(None)
@@ -34,19 +31,6 @@ class AppStateSpec extends FunSuite {
     assertEquals(EditorState.editorMode.now(), EditorMode.Select)
   }
 
-  test("toggleStrictness should switch from STRICT to CROSSING") {
-    assertEquals(EditorState.strictness.now(), Strictness.STRICT)
-    AppState.toggleStrictness()
-    assertEquals(EditorState.strictness.now(), Strictness.CROSSING)
-  }
-
-  test("toggleStrictness should switch from CROSSING to STRICT") {
-    EditorState.strictness.set(Strictness.CROSSING)
-    assertEquals(EditorState.strictness.now(), Strictness.CROSSING)
-    AppState.toggleStrictness()
-    assertEquals(EditorState.strictness.now(), Strictness.STRICT)
-  }
-
   test("clearMeasurements should reset all measurement-related state") {
     // Given: some measurement state is set
     val point = ClickablePoint(Point(1, 1), Anchor.Vertex(VertexId("V1")))
@@ -55,7 +39,7 @@ class AppStateSpec extends FunSuite {
     EditorState.measurementEndPoint.set(Some(point))
     EditorState.measurementResult.set(Some(123.45))
     EditorState.measurementAngle.set(Some(0.5))
-    EditorState.highlightedPolygonId.set(Some("poly1"))
+    EditorState.highlightedPolygonId.set(Some(FaceId("F1")))
     EditorState.measurementPreviousEndPoint.set(Some(Point(0,0)))
 
     // When
