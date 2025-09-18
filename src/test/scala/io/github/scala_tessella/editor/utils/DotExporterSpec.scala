@@ -10,23 +10,34 @@ class DotExporterSpec extends FunSuite with EditorStateFixture:
   test("exportTilingToDOT should not export when tiling is empty") {
     // Given empty tiling
     assert(EditorState.currentTiling.now().isEmpty)
-    
+
     // When trying to export (would need to mock FileDownloader.trigger)
     DotExporter.exportTilingToDOT()
-    
+
     // Then no file should be downloaded (would verify with mock)
     // This test would need dependency injection or mocking framework
   }
 
-  test("tiling should generate valid DOT content") {
+  private def bracesBalanced(s: String): Boolean =
+    s.count(_ == '{') == s.count(_ == '}')
+
+  private def graphHeader(s: String): Boolean =
+    s.trim.startsWith("graph") || s.trim.startsWith("strict graph") || s.trim.startsWith("digraph")
+
+  private def nonEmptyBody(s: String): Boolean =
+    val open = s.indexOf('{')
+    val close = s.lastIndexOf('}')
+    open >= 0 && close > open && s.substring(open + 1, close).trim.nonEmpty
+
+  test("tiling should generate structurally valid DOT content (header, braces, non-empty body)") {
     val tiling = TilingDCEL.createRegularPolygon(4).toOption.get
     EditorState.currentTiling.set(tiling)
-    
+
     val dotContent = tiling.toDOT
-    
-    // Verify DOT content structure
-    assert(dotContent.nonEmpty)
-    assert(dotContent.contains("graph"))
-    assert(dotContent.contains("{"))
-    assert(dotContent.contains("}"))
+
+    // Structural checks instead of brittle substring contains
+    assert(dotContent.nonEmpty, clue = "DOT content should not be empty")
+    assert(graphHeader(dotContent), clue = "DOT should start with 'graph' or 'strict graph'")
+    assert(bracesBalanced(dotContent), clue = "DOT braces should be balanced")
+    assert(nonEmptyBody(dotContent), clue = "DOT graph body should be non-empty")
   }
