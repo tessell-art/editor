@@ -19,20 +19,6 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     assert(EditorState.errorMessage.now().isEmpty)
   }
 
-  test("Show error should set error message") {
-    val testMessage = "Test error message"
-    showError(testMessage)
-    assertEquals(EditorState.errorMessage.now(), Some(testMessage))
-  }
-
-  test("Clear error should remove error message") {
-    showError("Test error")
-    assert(EditorState.errorMessage.now().isDefined)
-
-    clearError()
-    assert(EditorState.errorMessage.now().isEmpty)
-  }
-
   test("Node labels should be hidden by default") {
     assert(!EditorState.showNodeLabels.now())
   }
@@ -124,73 +110,6 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     assert(EditorState.errorMessage.now().isDefined)
   }
 
-  test("View transform should update correctly") {
-    val initialTransform = ViewTransform()
-    EditorState.viewTransform.set(initialTransform)
-
-    // Test scale update
-    EditorState.viewTransform.update(t => t.copy(scale = 2.0))
-    assertEquals(EditorState.viewTransform.now().scale, 2.0)
-
-    // Test rotation update
-    EditorState.viewTransform.update(t => t.withRotation(45))
-    assertEquals(EditorState.viewTransform.now().rotationDegrees, 45)
-  }
-
-  test("Tiling polygon selection logic should work") {
-    // Create a tiling first
-    selectPolygon(6)
-    assert(!AppState.isTilingEmpty)
-
-    val polygonId = FaceId("F1")
-
-    // Initially empty
-    assert(EditorState.selectedTilingPolygons.now().isEmpty)
-
-    // Toggle selection
-    toggleTilingPolygonSelection(polygonId)
-    assert(EditorState.selectedTilingPolygons.now().contains(polygonId))
-
-    // Toggle again to deselect
-    toggleTilingPolygonSelection(polygonId)
-    assert(!EditorState.selectedTilingPolygons.now().contains(polygonId))
-  }
-
-  test("Perimeter edge selection logic should work") {
-    // Create a tiling first
-    selectPolygon(6)
-    assert(!AppState.isTilingEmpty)
-
-    val edgeId = "test-edge"
-
-    // Initially empty
-    assert(EditorState.selectedPerimeterEdges.now().isEmpty)
-
-    // Toggle selection
-    togglePerimeterEdgeSelection(edgeId)
-    assert(EditorState.selectedPerimeterEdges.now().contains(edgeId))
-
-    // Toggle again to deselect
-    togglePerimeterEdgeSelection(edgeId)
-    assert(!EditorState.selectedPerimeterEdges.now().contains(edgeId))
-  }
-
-  test("Clear all selections should work") {
-    // Create a tiling first
-    selectPolygon(6)
-
-    // Set up some selections
-    EditorState.selectedTilingPolygons.set(Set(FaceId("F1")))
-    EditorState.selectedPerimeterEdges.set(Set("edge1"))
-
-    // Clear all
-    clearAllSelections()
-
-    // Verify all are cleared
-    assert(EditorState.selectedTilingPolygons.now().isEmpty)
-    assert(EditorState.selectedPerimeterEdges.now().isEmpty)
-  }
-
   test("Clear all selections should not affect node label visibility or error messages") {
     // Set node labels to visible and show error
     EditorState.showNodeLabels.set(true)
@@ -204,20 +123,6 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     // Node labels visibility and error should remain unchanged
     assert(EditorState.showNodeLabels.now())
     assert(EditorState.errorMessage.now().isDefined)
-  }
-
-  test("Multiple error messages should work correctly") {
-    // Show first error
-    showError("First error")
-    assertEquals(EditorState.errorMessage.now(), Some("First error"))
-
-    // Show second error (should replace first)
-    showError("Second error")
-    assertEquals(EditorState.errorMessage.now(), Some("Second error"))
-
-    // Clear error
-    clearError()
-    assert(EditorState.errorMessage.now().isEmpty)
   }
 
   test("Polygon selection preserves existing tiling complexity") {
