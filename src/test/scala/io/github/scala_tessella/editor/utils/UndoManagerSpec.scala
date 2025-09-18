@@ -7,8 +7,6 @@ import munit.FunSuite
 
 class UndoManagerSpec extends FunSuite with EditorStateFixture:
 
-  private val MAX_UNDO_DEPTH = 10
-
   override def beforeEach(context: BeforeEach): Unit = {
     super.beforeEach(context)
     UndoManager.clearHistory()
@@ -82,11 +80,11 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   }
 
   test("undo stack size should not exceed MAX_UNDO_DEPTH") {
-    for (i <- 1 to MAX_UNDO_DEPTH + 5) {
+    for (i <- 1 to UndoManager.maxUndoDepth + 5) {
       UndoManager.saveState()
       EditorState.selectedPolygon.set(Some(i))
     }
-    assertEquals(UndoManager.undoCount.now(), MAX_UNDO_DEPTH)
+    assertEquals(UndoManager.undoCount.now(), UndoManager.maxUndoDepth)
   }
 
   test("oldest state should be discarded when MAX_UNDO_DEPTH is exceeded") {
@@ -101,15 +99,15 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     EditorState.currentTiling.set(firstKeptTiling)
 
     // Fill the undo stack up to MAX_UNDO_DEPTH
-    for (i <- 1 to MAX_UNDO_DEPTH) {
+    for (i <- 1 to UndoManager.maxUndoDepth) {
       UndoManager.saveState()
       EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(i + 5).toOption.get)
     }
 
-    assertEquals(UndoManager.undoCount.now(), MAX_UNDO_DEPTH)
+    assertEquals(UndoManager.undoCount.now(), UndoManager.maxUndoDepth)
 
     // Undo all operations
-    for (_ <- 1 to MAX_UNDO_DEPTH) {
+    for (_ <- 1 to UndoManager.maxUndoDepth) {
       UndoManager.undo()
     }
 

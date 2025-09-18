@@ -12,6 +12,9 @@ object UndoManager:
   private val undoStack: mutable.Stack[AppStateSnapshot] = mutable.Stack.empty
   private val redoStack: mutable.Stack[AppStateSnapshot] = mutable.Stack.empty
 
+  // Expose read-only accessor for tests and other modules to avoid magic numbers
+  def maxUndoDepth: Int = MAX_UNDO_DEPTH
+
   // Signals to track if undo/redo is available
   val canUndo: Var[Boolean] = Var(false)
   val canRedo: Var[Boolean] = Var(false)
