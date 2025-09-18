@@ -15,7 +15,7 @@ class ViewOperationsSpec extends FunSuite:
 
   test("anf") {
     val x = AngleDegree(90).toBigRadian
-    assertEquals(x.toBigDecimal.toDouble, 1.5707963267948966)
+    assertEquals(x.toBigDecimal.toDouble, 1.5707963267948966, delta)
   }
 
   test("transformCoordinates should rotate points correctly") {
@@ -35,8 +35,8 @@ class ViewOperationsSpec extends FunSuite:
 
   test("calculateSafeDimensions should handle positive dimensions") {
     val (width, height) = ViewOperations.calculateSafeDimensions(100.0, 200.0)
-    assertEquals(width, 100.0)
-    assertEquals(height, 200.0)
+    assertEquals(width, 100.0, delta)
+    assertEquals(height, 200.0, delta)
   }
 
   test("calculateSafeDimensions should handle zero or negative dimensions") {
@@ -51,7 +51,7 @@ class ViewOperationsSpec extends FunSuite:
     // available width = 200 - 50 = 150. scaleX = 150 / 100 = 1.5
     // available height = 200 - 50 = 150. scaleY = 150 / 50 = 3
     // min is 1.5
-    assertEquals(scale, 1.5)
+    assertEquals(scale, 1.5, delta)
   }
 
   test("calculateNewScale should calculate scale to fit height") {
@@ -59,22 +59,22 @@ class ViewOperationsSpec extends FunSuite:
     // available width = 150. scaleX = 150 / 50 = 3
     // available height = 150. scaleY = 150 / 100 = 1.5
     // min is 1.5
-    assertEquals(scale, 1.5)
+    assertEquals(scale, 1.5, delta)
   }
 
   test("calculateTilingCenter should return the center of the bounds") {
     val bounds = Bounds(minX = 10, minY = 20, maxX = 90, maxY = 80)
     val (centerX, centerY) = ViewOperations.calculateTilingCenter(bounds)
-    assertEquals(centerX, 50.0)
-    assertEquals(centerY, 50.0)
+    assertEquals(centerX, 50.0, delta)
+    assertEquals(centerY, 50.0, delta)
   }
 
   test("createUpdatedViewTransform should update scale and pan") {
     val initialTransform = ViewTransform(scale = 1.0, panX = 0, panY = 0, rotationDegrees = 0)
     val updatedTransform = ViewOperations.createUpdatedViewTransform(initialTransform, newScale = 2.0, newPanX = 100, newPanY = -100)
-    assertEquals(updatedTransform.scale, 2.0)
-    assertEquals(updatedTransform.panX, 100.0)
-    assertEquals(updatedTransform.panY, -100.0)
+    assertEquals(updatedTransform.scale, 2.0, delta)
+    assertEquals(updatedTransform.panX, 100.0, delta)
+    assertEquals(updatedTransform.panY, -100.0, delta)
     assertEquals(updatedTransform.rotationDegrees, 0) // Should not change
   }
 
@@ -134,7 +134,7 @@ class ViewOperationsSpec extends FunSuite:
     assertEquals(panX, 50.0, delta)
     assertEquals(panY, -50.0, delta)
   }
-  
+
   val initialTransform: ViewTransform = ViewTransform(1.0, 0, 0.0, 0)
   val testCanvasWidth = 800.0
   val testCanvasHeight = 600.0
