@@ -134,7 +134,6 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
   test("should handle empty coordinates") {
     val result = SvgExporter.generateLabelsXml(Map.empty, 1.0, 0.0, 0.0)
-    println(result)
     assertEquals(result, "")
   }
 
