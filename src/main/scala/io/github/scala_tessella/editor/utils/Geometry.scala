@@ -1,15 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.ring_seq.RingSeq.{Index, slidingO, rotationsAndReflections}
-
-import scala.math.Ordered.orderingToOrdered
-
 import scala.annotation.targetName
 
 /** Planar geometry simplified toolbox */
 object Geometry:
-
-  val ACCURACY = 1.0E-12
 
   /** Standard unit of angular measure */
   opaque type Radian = Double
@@ -55,9 +49,6 @@ object Geometry:
   /** A point in the plane defined by its 2 Cartesian coordinates x and y */
   case class Point(x: Double, y: Double):
 
-    //    def toPoint2D: Point2D =
-    //      Point2D(x, y)
-
     /** Sum of two points */
     def plus(that: Point): Point =
       Point(this.x + that.x, this.y + that.y)
@@ -75,10 +66,6 @@ object Geometry:
       val sit: Double =
         Math.sin(theta)
       Point(x * cot - y * sit, x * sit + y * cot)
-
-//    /** Tests whether this `Point` is approximately equal to another, within given accuracy. */
-//    def almostEquals(that: Point, accuracy: Double = ACCURACY): Boolean =
-//      this.x.~=(that.x, accuracy) && this.y.~=(that.y, accuracy)
 
     /** New point moved by polar coordinates
      *
@@ -118,99 +105,6 @@ object Geometry:
     def createPolar(rho: Double, theta: Radian): Point =
       Point(rho * Math.cos(theta), rho * Math.sin(theta))
 
-    /** Computes the orientation of the 3 points:
-     *  returns +1 is the path P0->P1->P2 turns Counter-Clockwise,
-     *  -1 if the path turns Clockwise,
-     *  and 0 if the point P2 is located on the line segment [P0 P1].
-     *  Algorithm taken from Sedgewick.
-     *
-     * @param p0 the initial point
-     * @param p1 the middle point
-     * @param p2 the last point
-     * @return +1, 0 or -1, depending on the relative position of the points
-     */
-    def ccw(p0: Point, p1: Point, p2: Point): Int =
-      val dx1: Double =
-        p1.x - p0.x
-      val dy1: Double =
-        p1.y - p0.y
-      val dx2: Double =
-        p2.x - p0.x
-      val dy2: Double =
-        p2.y - p0.y
-      if dx1 * dy2 > dy1 * dx2 then
-        1
-      else if dx1 * dy2 < dy1 * dx2 then
-        -1
-      else if !(dx1 * dx2 < 0.0) && !(dy1 * dy2 < 0.0) then
-        if Math.hypot(dx1, dy1) < Math.hypot(dx2, dy2) then 1 else 0
-      else -1
-
-  /** 2x2 matrix for linear transformations */
-  case class Matrix2x2(m00: Double, m01: Double, m10: Double, m11: Double):
-
-    /** Determinant of the matrix */
-    def determinant: Double =
-      m00 * m11 - m01 * m10
-
-    /** Inverse of the matrix, if it exists */
-    def inverse: Option[Matrix2x2] =
-      val det = determinant
-      if det.abs < ACCURACY then None
-      else Some(Matrix2x2(
-        m11 / det, -m01 / det,
-        -m10 / det, m00 / det
-      ))
-
-    /** Matrix multiplication with another 2x2 matrix */
-    def multiply(other: Matrix2x2): Matrix2x2 =
-      Matrix2x2(
-        m00 * other.m00 + m01 * other.m10,
-        m00 * other.m01 + m01 * other.m11,
-        m10 * other.m00 + m11 * other.m10,
-        m10 * other.m01 + m11 * other.m11
-      )
-
-    /** Apply this matrix to a point (treating point as column vector) */
-    def transform(p: Point): Point =
-      Point(m00 * p.x + m01 * p.y, m10 * p.x + m11 * p.y)
-
-  object Matrix2x2:
-
-    /** Creates a matrix from two column vectors */
-    def fromColumns(v1: Point, v2: Point): Matrix2x2 =
-      Matrix2x2(v1.x, v2.x, v1.y, v2.y)
-
-    /** Finds the linear transformation matrix that maps vectors v1->u1 and v2->u2 */
-    def findTransform(v1: Point, v2: Point, u1: Point, u2: Point): Option[Matrix2x2] =
-      val V: Matrix2x2 = fromColumns(v1, v2)
-      val U: Matrix2x2 = fromColumns(u1, u2)
-      V.inverse.map(U.multiply)
-
-//  extension (points: Vector[Point])
-//
-//
-//    /** Checks if all points are all distinct in 2D space */
-//    def areAllDistinct: Boolean =
-//      !sortedCouples.exists(almostEqualCouple)
-//
-//
-//    def distances: Vector[Double] =
-//      points.slidingO(2).map(_.toCouple).map(_.distanceTo(_)).toVector
-//
-//    /** Checks if two sequences of side lengths are congruent (allowing reflection) */
-//    def isCongruentTo(other: Vector[Point]): Boolean =
-//      if points.isEmpty then true
-//      else if points.sizeCompare(other) != 0 then false
-//      else
-//        val thisSides: Vector[Double] = points.distances
-//        val otherSides: Vector[Double] = other.distances
-//
-//        def allAlmostEq(xs: Vector[Double], ys: Vector[Double]): Boolean =
-//          xs.zip(ys).forall(_.~=(_, ACCURACY))
-//
-//        otherSides.rotationsAndReflections.exists(allAlmostEq(thisSides, _))
-
   /** Line segment, defined as the set of points located between the two end points. */
   case class LineSegment(point1: Point, point2: Point):
 
@@ -220,161 +114,34 @@ object Geometry:
     private val dy: Double =
       point2.y - point1.y
 
-    //    private def toLineSegment2D: LineSegment2D =
-    //      LineSegment2D(point1.toPoint2D, point2.toPoint2D)
-
     def midPoint: Point =
       Point((point1.x + point2.x) / 2, (point1.y + point2.y) / 2)
 
     def length: Double =
       Math.hypot(dx, dy)
 
-//    def hasUnitLength(accuracy: Double = ACCURACY): Boolean =
-//      length.~=(1.0, accuracy)
-//
-//    def hasAlmostEqualLength(that: LineSegment, accuracy: Double = ACCURACY): Boolean =
-//      this.length.~=(that.length, accuracy)
-//
-//    /** Checks if the given point is approximately equal to one of the two edges of the line segment */
-//    def containsAtEdges(point: Point): Boolean =
-//      point.almostEquals(point1, ACCURACY) || point.almostEquals(point2, ACCURACY)
-
     /** Computes the horizontal angle of the line segment */
     def horizontalAngle: Radian =
       Radian((Math.atan2(dy, dx) + Radian.TAU) % Radian.TAU)
 
-//    /** Tests whether this `LineSegment` is approximately equal to another, within given accuracy. */
-//    def almostEquals(that: LineSegment, accuracy: Double = ACCURACY): Boolean =
-//      this.point1.almostEquals(that.point1, accuracy) && this.point2.almostEquals(that.point2, accuracy)
-
-    def intersectsStrict(that: LineSegment): Boolean =
-      Point.ccw(this.point1, this.point2, that.point1) * Point.ccw(this.point1, this.point2, that.point2) < 0 &&
-        Point.ccw(that.point1, that.point2, this.point1) * Point.ccw(that.point1, that.point2, this.point2) < 0
-
-    def intersects(that: LineSegment): Boolean =
-      val e1p1: Point =
-        this.point1
-      val e1p2: Point =
-        this.point2
-      val e2p1: Point =
-        that.point1
-      val e2p2: Point =
-        that.point2
-      val b1: Boolean =
-        Point.ccw(e1p1, e1p2, e2p1) * Point.ccw(e1p1, e1p2, e2p2) <= 0
-      val b2: Boolean =
-        Point.ccw(e2p1, e2p2, e1p1) * Point.ccw(e2p1, e2p2, e1p2) <= 0
-      b1 && b2
-
-//    /** Checks if intersecting with another segment, without touching the edge points */
-//    def lesserIntersects(that: LineSegment): Boolean =
-//      this.intersects(that) && !(this.containsAtEdges(that.point1) || this.containsAtEdges(that.point2))
-
-//    /** Finds the intersection point with another line segment */
-//    def intersection(that: LineSegment): Option[Point] =
-//      val p1x = this.point1.x
-//      val p1y = this.point1.y
-//      val p3x = that.point1.x
-//      val p3y = that.point1.y
+//    /** Checks if at least one endpoint is contained in the given box */
+//    def hasEndpointIn(box: Box): Boolean =
+//      box.contains(point1) || box.contains(point2)
 //
-//      val thatDx = that.point2.x - that.point1.x
-//      val thatDy = that.point2.y - that.point1.y
+//  /** Bounds of a shape. */
+//  case class Box(x0: Double, x1: Double, y0: Double, y1: Double):
 //
-//      val commonDenominator = this.dx * thatDy - this.dy * thatDx
+//    def contains(point: Point): Boolean =
+//      if point.x < x0 then false
+//      else if point.y < y0 then false
+//      else if point.x > x1 then false
+//      else !(point.y > y1)
 //
-//      if commonDenominator.~=(0.0, ACCURACY) then
-//        // Lines are parallel or collinear.
-//        // A more advanced implementation could check for overlapping collinear segments here.
-//        None
-//      else
-//        // Parameter t for this segment: P_intersect = this.point1 + t * (this.dx, this.dy)
-//        val tNominator = (p1y - p3y) * thatDx - (p1x - p3x) * thatDy
-//        val t = tNominator / commonDenominator
+//    def enlarge(d: Double): Box =
+//      Box(x0 - d, x1 +d, y0 - d, y1 + d)
 //
-//        // Parameter u for that segment: P_intersect = that.point1 + u * (thatDx, thatDy)
-//        // uNominator derived from standard line intersection formulas:
-//        // u_num = this.dx * (p1y - p3y) - this.dy * (p1x - p3x)
-//        val uNominator = this.dx * (p1y - p3y) - this.dy * (p1x - p3x)
-//        val u = uNominator / commonDenominator
+//    def width: Double =
+//      x1 - x0
 //
-//        // Check if parameters t and u are within [0, 1] range (with accuracy tolerance)
-//        if t >= (0.0 - ACCURACY) && t <= (1.0 + ACCURACY) &&
-//          u >= (0.0 - ACCURACY) && u <= (1.0 + ACCURACY) then
-//          val intersectX = p1x + t * this.dx
-//          val intersectY = p1y + t * this.dy
-//          Some(Point(intersectX, intersectY))
-//        else
-//          // Lines intersect, but not on both segments
-//          None
-
-    /** Checks if at least one endpoint is contained in the given box */
-    def hasEndpointIn(box: Box): Boolean =
-      box.contains(point1) || box.contains(point2)
-
-//  extension (lines: Iterable[LineSegment])
-//
-//    /** Checks if sequentially almost equal to another sequence */
-//    @targetName("almostEq")
-//    def almostEquals(others: Iterable[LineSegment]): Boolean =
-//      lines.compareElems(others)(_.almostEquals(_, LESSER_ACCURACY))
-//
-//    /** Checks if the two sequences of segments are intersecting */
-//    def lesserIntersects(other: Iterable[LineSegment]): Boolean =
-//      lines.exists(line => other.exists(line.lesserIntersects))
-
-  /** Bounds of a shape. */
-  case class Box(x0: Double, x1: Double, y0: Double, y1: Double):
-
-    def contains(point: Point): Boolean =
-      if point.x < x0 then false
-      else if point.y < y0 then false
-      else if point.x > x1 then false
-      else !(point.y > y1)
-
-    def enlarge(d: Double): Box =
-      Box(x0 - d, x1 +d, y0 - d, y1 + d)
-
-    def width: Double =
-      x1 - x0
-
-    def height: Double =
-      y1 - y0
-
-//  /** Represents a polygonal domain whose boundary is a single closed polyline. */
-//  class SimplePolygon(vertices: List[Point]):
-//
-//    /** Gets an ordered sequence of vertices */
-//    val getVertices: List[Point] =
-//      vertices
-//
-//    private def edges: Vector[LineSegment] =
-//      vertices.slidingO(2).map(_.toCouple).toVector.map(LineSegment(_, _))
-//
-//    private def edgesCombinations: Iterator[(Index, Index)] =
-//      val length: Int =
-//        vertices.size
-//      for
-//        i1 <- (0 until length).iterator
-//        i2 <- (0 until length).iterator
-//        // avoid checking with self, already checked and adjacent edges
-//        if i1 > i2 + 1 && i1 != (if i2 == 0 then length else i2) - 1
-//      yield (i1, i2)
-//
-//    /** Checks if the polygon is self-intersecting */
-//    def isSelfIntersecting: Boolean =
-//      edgesCombinations.exists((i1, i2) => edges(i1).intersects(edges(i2)))
-//
-//    /** Filters the intersecting sides */
-//    def intersectingSides: Iterator[(LineSegment, LineSegment)] =
-//      edgesCombinations
-//        .filter((i1, i2) => edges(i1).intersects(edges(i2)))
-//        .map((i1, i2) => (edges(i1), edges(i2)))
-//
-//  /** Represents a regular polygon. */
-//  class RegularPolygon2D(vertices: List[Point]) extends SimplePolygon(vertices):
-//
-//    /** Center of the polygon */
-//    def center(): Point =
-//      val size: Int =
-//        vertices.size
-//      Point(vertices.map(_.x).sum / size, vertices.map(_.y).sum / size)
+//    def height: Double =
+//      y1 - y0
