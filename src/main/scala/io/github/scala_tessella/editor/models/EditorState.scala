@@ -6,6 +6,8 @@ import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom
 import io.github.scala_tessella.dcel.FaceId
 
+import scala.scalajs.js
+
 /**
  * EditorState object contains all the state variables for the editor.
  * The state is organized into logical groups for better maintainability.
@@ -44,7 +46,7 @@ object EditorState:
   /** Whether the dual tessellation should be shown */
   val showDual: Var[Boolean] = Var(false)
 
-  /** Theme preference: None means follow system, Some("light") or Some("dark") is user override */
+  /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
   val userThemePreference: Var[Option[String]] = Var(None)
 
   //
@@ -54,7 +56,7 @@ object EditorState:
   /** Current tiling being edited */
   val currentTiling: Var[TilingDCEL] = Var(TilingDCEL.empty)
 
-  /** Set of selected perimeter edge IDs */
+  /** Set of selected perimeter-edge IDs */
   val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
 
   /** Set of selected tiling polygon IDs */
@@ -154,7 +156,7 @@ object EditorState:
   // Derived Signals (no Vars)
   // -------------------------
 
-  /** Is Inserter tool active */
+  /** Checks if Inserter tool is active */
   val isInserterActive: Signal[Boolean] =
     activeTool.signal.map(_.contains(Tool.Inserter))
 
@@ -162,14 +164,20 @@ object EditorState:
   val selectedFaceForInsertion: Signal[Option[FaceId]] =
     highlightedPolygonId.signal
 
-  /** System theme as a Signal (uses media query, no Var) */
-  private val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
+  /** System theme as a Signal (uses a media query, no Var) */
   private val systemThemeBus = new EventBus[String]
   val systemTheme: Signal[String] =
-    systemThemeBus.events.startWith(if (lightMediaQuery.matches) "light" else "dark")
-  lightMediaQuery.addEventListener("change", (_: dom.Event) =>
-    systemThemeBus.writer.onNext(if (lightMediaQuery.matches) "light" else "dark")
-  )
+    if js.typeOf(js.Dynamic.global.window) != "undefined" then
+      // Browser environment
+      val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
+      val signal = systemThemeBus.events.startWith(if lightMediaQuery.matches then "light" else "dark")
+      lightMediaQuery.addEventListener("change", (_: dom.Event) =>
+        systemThemeBus.writer.onNext(if lightMediaQuery.matches then "light" else "dark")
+      )
+      signal
+    else
+      // Test/Node.js environment - default to light theme
+      systemThemeBus.events.startWith("light")
 
   /** Effective theme: user's preference or system */
   val effectiveTheme: Signal[String] =
@@ -181,6 +189,6 @@ object EditorState:
   /** Theme-aware overlay preview stroke color */
   val overlayPreviewStrokeColor: Signal[String] =
     effectiveTheme.map {
-      case "light" => "#222222" // dark grey for light mode
+      case "light" => "#222222" // dark gray for light mode
       case _       => "#ffffff" // white for dark mode
     }
