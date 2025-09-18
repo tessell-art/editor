@@ -6,6 +6,7 @@ import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.Logger
 
 object SelectionOperations:
 
@@ -87,7 +88,7 @@ object SelectionOperations:
       if !tiling.isEmpty then
         val polygonIdsToAdd = tiling.innerFaces.collect {
           // @todo two traversals, one for the number of sides, one for the angles
-          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles => face.id
+          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles.toOption.get => face.id
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
@@ -127,11 +128,14 @@ object SelectionOperations:
         EditorState.polygonColors.now().get(faceId).foreach { color =>
           EditorState.fillColor.set(color)
           val face = tiling.findInnerFace(faceId).toOption.get
-          if face.hasEqualAngles then
+          if face.hasEqualAngles.toOption.get then
             val sides = face.halfEdges.toOption.get.size
             EditorState.selectedPolygon.set(Some(sides))
+            EditorState.selectedIrregularPolygon.set(None)
           else
             EditorState.selectedPolygon.set(None)
+            Logger.warn(s"Face $faceId has non-equal angles: ${face.angles.toOption.get}")
+            EditorState.selectedIrregularPolygon.set(Some(face.angles.toOption.get.toVector))
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.SelectByColor) =>

@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.{*, given}
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom
@@ -151,6 +152,13 @@ object EditorState:
 
   /** Measurement result (angle) */
   val measurementAngle: Var[Option[Double]] = Var(None)
+
+  //
+  // IRREGULAR POLYGON SELECTION
+  //
+
+  /** Selected irregular polygon described by internal angles in degrees */
+  val selectedIrregularPolygon: Var[Option[Vector[AngleDegree]]] = Var(None)
 
   // -------------------------
   // Derived Signals (no Vars)
