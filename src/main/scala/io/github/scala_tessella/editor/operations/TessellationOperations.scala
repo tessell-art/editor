@@ -4,7 +4,7 @@ import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
-import io.github.scala_tessella.editor.utils.{TilingGenerator, UndoManager}
+import io.github.scala_tessella.editor.utils.UndoManager
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, TilingError, ValidationError, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
@@ -16,7 +16,7 @@ object TessellationOperations:
 
       if currentTiling.now().isEmpty then
         UndoManager.saveState()
-        TilingGenerator.createTilingFromPolygon(sides) match
+        TilingDCEL.createRegularPolygon(sides).toOption match
           case Some(tiling) =>
             currentTiling.set(tiling)
             SelectionOperations.clearAllSelections()

@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.editor.models.ViewTransform
 import io.github.scala_tessella.editor.utils.Bounds
 
-import io.github.scala_tessella.tessella.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.tessella.Geometry.Point
 import munit.FunSuite
 
@@ -14,8 +14,8 @@ class ViewOperationsSpec extends FunSuite:
   private val delta = 1E-9
 
   test("anf") {
-    val x = AngleDegree(90).toRadian
-    assertEquals(x.toDouble, 1.5707963267948966)
+    val x = AngleDegree(90).toBigRadian
+    assertEquals(x.toBigDecimal.toDouble, 1.5707963267948966)
   }
 
   test("transformCoordinates should rotate points correctly") {

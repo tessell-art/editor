@@ -3,7 +3,6 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.{*, given}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.tessella.Geometry.Point
-import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 import org.scalajs.dom
 import io.github.scala_tessella.dcel.FaceId
 

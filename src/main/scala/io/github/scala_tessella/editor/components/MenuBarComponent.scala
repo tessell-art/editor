@@ -6,7 +6,6 @@ import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImpor
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.{regularNames, semiRegularNames, Template}
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 import scala.math.{max, min}
 

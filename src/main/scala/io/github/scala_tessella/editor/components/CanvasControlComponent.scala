@@ -4,7 +4,6 @@ import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 
 import com.raquo.laminar.api.L.{*, given}
-import io.github.scala_tessella.tessella.IncrementalTiling.Strictness
 
 object CanvasControlComponent:
 

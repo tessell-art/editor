@@ -3,11 +3,9 @@ package io.github.scala_tessella.editor.operations
 import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
-import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import io.github.scala_tessella.tessella.Geometry.{LineSegment, Point}
-import io.github.scala_tessella.tessella.Topology.{NodeOrdering, Node as TilingNode}
 
 object SelectionOperations:
 
