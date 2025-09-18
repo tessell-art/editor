@@ -8,6 +8,7 @@ import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
@@ -537,7 +538,7 @@ object TessellationRenderer:
           case Some(sides) =>
             val tiling = EditorState.currentTiling.now()
             EditorState.previewPlacement.set(
-              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, sides, edge, tiling, intoFace = Some(faceId)))
+              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, RegularPolygon(sides).angles, edge, tiling, intoFace = Some(faceId)))
             )
           case None => ()
       },
@@ -597,7 +598,7 @@ object TessellationRenderer:
         (EditorState.activeTool.now(), EditorState.selectedPolygon.now()) match
           case (_, Some(sides)) =>
             val tiling = EditorState.currentTiling.now()
-            EditorState.previewPlacement.set(Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(edgeIndex, sides, edge, tiling)))
+            EditorState.previewPlacement.set(Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(edgeIndex, RegularPolygon(sides).angles, edge, tiling)))
           case _ => ()
       },
       onMouseLeave.compose(gate) --> { _ =>

@@ -59,4 +59,4 @@ object FailedPolygonRenderer:
 //    }
 
   private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[(Double, Double)] =
-    PolygonPlacementGeometry.computeWireframePoints(placement.polygonSides, placement.edge, placement.tiling, placement.intoFace)
+    PolygonPlacementGeometry.computeWireframePoints(placement.angles, placement.edge, placement.tiling, placement.intoFace)

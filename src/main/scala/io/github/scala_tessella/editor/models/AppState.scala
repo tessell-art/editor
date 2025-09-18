@@ -3,13 +3,13 @@ package io.github.scala_tessella.editor.models
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.UndoManager
-
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.utils.Geometry.Point
 
 // Case class to represent a failed polygon placement
-case class FailedPolygonPlacement(edgeIndex: Int, polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None)
+case class FailedPolygonPlacement(edgeIndex: Int, angles: Vector[AngleDegree], edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None)
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(faceId: FaceId, polygonNodes: Vector[VertexId])

@@ -15,7 +15,7 @@ import scala.math.*
 object PolygonPlacementGeometry:
 
   /** Compute canvas coordinates of the wireframe points for a placement preview/failure. */
-  def computeWireframePoints(polygonSides: Int, edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None): Vector[(Double, Double)] =
+  def computeWireframePoints(angles: Vector[AngleDegree], edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None): Vector[(Double, Double)] =
     val vertex1 = tiling.coordinates(edge._1).toPoint
     val vertex2 = tiling.coordinates(edge._2).toPoint
 
@@ -24,16 +24,20 @@ object PolygonPlacementGeometry:
 
     val (perpX, perpY, wasFlipped) = determineInwardNormal(tiling, edge, intoFace, (ux, uy))
 
-    val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
-
-    val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
-
-    val angleStep = halfAngle * 2
-    val edgeAngle = atan2(uy, ux)
-    val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
-    val winding = if wasFlipped then -1 else 1
-
-    generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
+    if angles.toSet.size == 1 then
+      val polygonSides = angles.size
+      val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
+  
+      val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
+  
+      val angleStep = halfAngle * 2
+      val edgeAngle = atan2(uy, ux)
+      val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
+      val winding = if wasFlipped then -1 else 1
+  
+      generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
+    else
+      ???
 
   /** Calculates basic geometric properties of an edge. */
   private def computeEdgeGeometrics(vertex1: Point, vertex2: Point): (Double, Double, Double, Point) =

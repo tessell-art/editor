@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
+import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
@@ -82,7 +83,7 @@ object TessellationOperations:
           onFailure = err => {
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              val placement = FailedPolygonPlacement(edgeIndex, polygonSides, (selectedEdge(0), selectedEdge(1)), tiling)
+              val placement = FailedPolygonPlacement(edgeIndex, RegularPolygon(polygonSides).angles, (selectedEdge(0), selectedEdge(1)), tiling)
               val truncated = err.message
               ErrorOperations.showError(
                 s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated",
@@ -125,7 +126,7 @@ object TessellationOperations:
               Some(
                 FailedPolygonPlacement(
                   edgeIndex = 0, // not needed for interior wireframe
-                  polygonSides = polygonSides,
+                  angles = RegularPolygon(polygonSides).angles,
                   edge = (startVertexId, endVertexId),
                   tiling = curr,
                   intoFace = maybeFaceId
