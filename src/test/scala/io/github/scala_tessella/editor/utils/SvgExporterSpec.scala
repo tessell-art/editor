@@ -4,9 +4,10 @@ import io.github.scala_tessella.dcel.VertexId
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.editor.EditorStateFixture
 import munit.FunSuite
 
-class SvgExporterSpec extends FunSuite:
+class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
   // Test data setup
   private val node1 = VertexId("V1")
@@ -163,7 +164,7 @@ class SvgExporterSpec extends FunSuite:
     assert(result.contains("<vertex id=\"V1\" x=\"0\" y=\"0\""))
   }
 
-  test("should handle empty coordinates") {
+  test("should handle empty tiling without coordinates") {
     val result = SvgExporter.generateMetadataXml(TilingDCEL.empty)
 
     assert(result.contains("<metadata>"))

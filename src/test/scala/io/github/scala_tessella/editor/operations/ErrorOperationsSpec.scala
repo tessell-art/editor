@@ -1,14 +1,10 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, FailedPolygonDeletion}
+import io.github.scala_tessella.editor.EditorStateFixture
+import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import munit.FunSuite
 
-class ErrorOperationsSpec extends FunSuite:
-
-  override def beforeEach(context: BeforeEach): Unit =
-    EditorState.errorMessage.set(None)
-    EditorState.failedPlacement.set(None)
-    EditorState.failedDeletion.set(None)
+class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("showError should set error message") {
     val message = "Test error message"

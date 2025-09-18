@@ -1,16 +1,16 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.FaceId
+import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
 
-class ColorOperationsSpec extends FunSuite:
+class ColorOperationsSpec extends FunSuite with EditorStateFixture:
 
   override def beforeEach(context: BeforeEach): Unit = {
-    // Reset state before each test
-    EditorState.polygonColors.set(Map.empty)
-    EditorState.selectedTilingPolygons.set(Set.empty)
-    EditorState.fillColor.set((255, 0, 0)) // Default test color
+    super.beforeEach(context)
+    // Suite-specific test defaults
+    EditorState.fillColor.set((255, 0, 0))
   }
 
   val F1: FaceId = FaceId("F1")

@@ -2,19 +2,17 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.editor.EditorStateFixture
 import munit.FunSuite
 
-class UndoManagerSpec extends FunSuite:
+class UndoManagerSpec extends FunSuite with EditorStateFixture:
 
   private val MAX_UNDO_DEPTH = 10
 
   override def beforeEach(context: BeforeEach): Unit = {
+    super.beforeEach(context)
     UndoManager.clearHistory()
-    EditorState.currentTiling.set(TilingDCEL.empty)
-    EditorState.selectedPolygon.set(None)
-    EditorState.selectedPerimeterEdges.set(Set.empty)
-    EditorState.selectedTilingPolygons.set(Set.empty)
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.fillColor.set((76, 175, 80))
   }
 
   test("initial state has no undo or redo") {

@@ -8,15 +8,7 @@ import io.github.scala_tessella.editor.operations.TessellationOperations.*
 import io.github.scala_tessella.editor.operations.ErrorOperations.*
 import io.github.scala_tessella.editor.operations.SelectionOperations.*
 
-class EditorLogicSpec extends FunSuite:
-
-  override def beforeEach(context: BeforeEach): Unit =
-    // Reset state before each test
-    EditorState.selectedPolygon.set(None)
-    clearTiling() // Start with empty tiling
-    EditorState.viewTransform.set(ViewTransform())
-    EditorState.showNodeLabels.set(false) // Start with labels hidden
-    clearError() // Clear any error messages
+class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
   test("Editor should start with empty tiling") {
     assert(AppState.isTilingEmpty)

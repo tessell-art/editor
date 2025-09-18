@@ -1,21 +1,11 @@
 package io.github.scala_tessella.editor.models
 
 import io.github.scala_tessella.dcel.{FaceId, VertexId}
+import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.utils.Geometry.Point
 import munit.FunSuite
 
-class AppStateSpec extends FunSuite {
-
-  override def beforeEach(context: BeforeEach): Unit =
-    // Reset any relevant state before each test
-    EditorState.editorMode.set(EditorMode.Select)
-    EditorState.clickablePoints.set(Nil)
-    EditorState.measurementStartPoint.set(None)
-    EditorState.measurementEndPoint.set(None)
-    EditorState.measurementResult.set(None)
-    EditorState.measurementAngle.set(None)
-    EditorState.highlightedPolygonId.set(None)
-    EditorState.measurementPreviousEndPoint.set(None)
+class AppStateSpec extends FunSuite with EditorStateFixture:
 
   test("toggleEditorMode should switch from Select to Delete") {
     assertEquals(EditorState.editorMode.now(), EditorMode.Select)
@@ -53,5 +43,3 @@ class AppStateSpec extends FunSuite {
     assertEquals(EditorState.measurementResult.now(), None)
     assertEquals(EditorState.measurementAngle.now(), None)
   }
-
-}

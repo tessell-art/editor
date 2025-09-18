@@ -1,13 +1,11 @@
 package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
 
-class DotExporterSpec extends FunSuite:
-
-  override def beforeEach(context: BeforeEach): Unit =
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+class DotExporterSpec extends FunSuite with EditorStateFixture:
 
   test("exportTilingToDOT should not export when tiling is empty") {
     // Given empty tiling
