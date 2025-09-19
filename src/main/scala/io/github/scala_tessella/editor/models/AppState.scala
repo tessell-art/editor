@@ -39,10 +39,10 @@ object AppState:
   export EditorState.*
 
   // Expose undo/redo capabilities for UI components
-  /** Signal indicating whether undo operation is available */
+  /** Signal indicating whether the undo operation is available */
   val canUndo: Signal[Boolean] = UndoManager.canUndo.signal
 
-  /** Signal indicating whether redo operation is available */
+  /** Signal indicating whether the redo operation is available */
   val canRedo: Signal[Boolean] = UndoManager.canRedo.signal
 
   // Simple UI operations
@@ -110,7 +110,7 @@ object AppState:
   /**
    * Handles a click on a tiling polygon.
    * The behavior depends on the current editor mode and active tool.
-   * @param polygonId The ID of the clicked polygon
+   * @param faceId The ID of the clicked polygon
    */
   def handleTilingPolygonClick(faceId: FaceId): Unit =
     SelectionOperations.handleTilingPolygonClick(faceId)
@@ -155,8 +155,8 @@ object AppState:
     ColorOperations.applyColorToSelectedPolygons(color)
 
   /**
-   * Gets the color for a polygon, or assigns a new one if it doesn't have one.
-   * @param polyTag The tag of the polygon
+   * Gets the color for a polygon or assigns a new one if it doesn't have one.
+   * @param faceId The tag of the polygon
    * @return The color of the polygon (RGB tuple)
    */
   def getOrAssignPolygonColor(faceId: FaceId): (Int, Int, Int) =
