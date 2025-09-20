@@ -275,7 +275,7 @@ object PolygonPaletteComponent:
               svg.path(svg.d := "M 6 6 L 18 18")
             )
           ),
-          h2("Adjust attachment head"),
+          h2("Adjust attachment edge"),
           div(
             className := "popup-text-scrollable",
             child.maybe <-- EditorState.recentIrregularPolygon.signal.map {
