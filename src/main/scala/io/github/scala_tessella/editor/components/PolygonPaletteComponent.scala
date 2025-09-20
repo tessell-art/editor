@@ -8,6 +8,7 @@ import io.github.scala_tessella.editor.operations.TessellationOperations.*
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, rotateRight, reflectAt}
 import org.scalajs.dom
 
 import scala.math.{cos, sin}
@@ -166,7 +167,7 @@ object PolygonPaletteComponent:
 
     // local popup state for the head-angle chooser
     val showHeadPopup = Var(false)
-    val headIndex = Var(0) // which vertex/edge is the "head" (attachment edge starts at this vertex)
+    val headIndex = Var(1) // which vertex/edge is the "head" (attachment edge starts at this vertex)
 
     // When clicked, select irregular. If tiling is empty, create it from the irregular polygon.
     val onSelectIrregular: Observer[dom.MouseEvent] =
@@ -187,13 +188,20 @@ object PolygonPaletteComponent:
     val shiftLeft: Observer[dom.MouseEvent] = Observer { e =>
       e.stopPropagation()
       val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-      if n > 0 then headIndex.set(((headIndex.now() - 1) % n + n) % n)
+      if n > 0 then
+        EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateLeft(1)))
     }
     val shiftRight: Observer[dom.MouseEvent] = Observer { e =>
       e.stopPropagation()
       val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-      if n > 0 then headIndex.set((headIndex.now() + 1) % n)
+      if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateRight(1)))
     }
+    val flip: Observer[dom.MouseEvent] = Observer { e =>
+      e.stopPropagation()
+      val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
+      if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.reflectAt(1)))
+    }
+
     val closePopup: Observer[dom.MouseEvent] = Observer { _ => showHeadPopup.set(false) }
 
     // Render small slot with an extra corner button
@@ -282,7 +290,8 @@ object PolygonPaletteComponent:
                     div(
                       className := "controls",
                       button(tpe := "button", className := "btn-left", title := "Move head left", onClick --> shiftLeft, "◀"),
-                      button(tpe := "button", className := "btn-right", title := "Move head right", onClick --> shiftRight, "▶")
+                      button(tpe := "button", className := "btn-right", title := "Move head right", onClick --> shiftRight, "▶"),
+                      button(tpe := "button", className := "btn-flip", title := "Flip", onClick --> flip, "Flip ⧎")
                     )
                   )
                 )
