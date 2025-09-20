@@ -198,7 +198,13 @@ object PolygonPaletteComponent:
             )
           )
       },
-      div(className := "polygon-label", "irr")
+      div(
+        className := "polygon-label",
+        child.text <-- EditorState.recentIrregularPolygon.signal.map {
+          case None          => "Irregular"
+          case Some(angles)  => s"Irr-${angles.size}"
+        }
+      )
     )
 
   // Render the irregular polygon preview from AngleDegree vector (unit edges)
