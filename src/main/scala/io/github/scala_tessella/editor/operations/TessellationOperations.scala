@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
-import io.github.scala_tessella.editor.utils.UndoManager
+import io.github.scala_tessella.editor.utils.{Logger, UndoManager}
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, TilingError, ValidationError, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
@@ -14,6 +14,7 @@ object TessellationOperations:
   def selectPolygon(sides: Int): Unit =
     ifNotProcessing:
       EditorState.selectedPolygon.set(Some(sides))
+      EditorState.selectedIrregularPolygon.set(None)
 
       if currentTiling.now().isEmpty then
         UndoManager.saveState()
@@ -61,16 +62,23 @@ object TessellationOperations:
 
   // Handle perimeter edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
-    (currentTiling.now(), EditorState.selectedPolygon.now()) match
-      case (tiling, _) if tiling.isEmpty =>
+    (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.selectedIrregularPolygon.now()) match
+      case (tiling, _, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available to grow")
-      case (tiling, Some(polygonSides)) =>
+      case (_, None, None) =>
+        Logger.warn("Both regular polygon and irregular polygon unselected")
+      case (_, Some(_), Some(_)) =>
+        Logger.error("Should not happen: both regular polygon and irregular polygon selected")
+      case (tiling, maybeSides, maybeAngles) =>
         val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
         val op = () =>
           try
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, polygonSides)
+              if maybeSides.isDefined then
+                tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, maybeSides.get)
+              else
+                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, maybeAngles.get.toList)
             else
               Left(ValidationError("Invalid edge index"))
           catch
@@ -83,18 +91,23 @@ object TessellationOperations:
           onFailure = err => {
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              val placement = FailedPolygonPlacement(edgeIndex, RegularPolygon(polygonSides).angles, (selectedEdge(0), selectedEdge(1)), tiling)
+              val angles = maybeAngles.getOrElse(RegularPolygon(maybeSides.get).angles)
+              val placement = FailedPolygonPlacement(edgeIndex, angles, (selectedEdge(0), selectedEdge(1)), tiling)
               val truncated = err.message
-              ErrorOperations.showError(
-                s"Growing ${polygonName(polygonSides)}s on this perimeter edge is invalid. Switch Validation OFF to proceed. $truncated",
-                Some(placement)
-              )
+              if maybeSides.isDefined then
+                ErrorOperations.showError(
+                  s"Growing ${polygonName(maybeSides.get)}s on this perimeter edge is invalid. $truncated",
+                  Some(placement)
+                )
+              else
+                ErrorOperations.showError(
+                  s"Growing the given ${maybeAngles.get.size}-sides irregular polygon on this perimeter edge is invalid. $truncated",
+                  Some(placement)
+                )
             else
               ErrorOperations.showError(err.message)
           }
         )
-      case (_, None) =>
-        ()
 
   // Helper: try to find the inner face that contains this directed edge; if not found, None
   private def findFaceContainingEdge(tiling: TilingDCEL, v1: VertexId, v2: VertexId): Option[FaceId] =
