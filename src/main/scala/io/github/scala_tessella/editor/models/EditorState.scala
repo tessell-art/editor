@@ -157,8 +157,10 @@ object EditorState:
   // IRREGULAR POLYGON SELECTION
   //
 
+  val initialShape: Vector[AngleDegree] = Vector(60, 120, 60, 120).map(AngleDegree(_))
+
   /** Latest irregular polygon shape chosen (always shown in the slot) */
-  val recentIrregularPolygon: Var[Option[Vector[AngleDegree]]] = Var(None)
+  val recentIrregularPolygon: Var[Option[Vector[AngleDegree]]] = Var(Some(initialShape))
 
   /** Whether the irregular polygon is currently selected in the palette */
   val isIrregularSelected: Var[Boolean] = Var(false)
@@ -168,7 +170,7 @@ object EditorState:
     isIrregularSelected.signal
       .combineWith(recentIrregularPolygon.signal)
       .map { (isSel, recent) => if isSel then recent else None }
-      
+
   // -------------------------
   // Derived Signals (no Vars)
   // -------------------------
