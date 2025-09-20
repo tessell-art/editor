@@ -3,10 +3,11 @@ package io.github.scala_tessella.editor.components
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.operations.TessellationOperations.selectPolygon
-
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
+import org.scalajs.dom
 
 import scala.math.{cos, sin}
 
@@ -29,14 +30,15 @@ object PolygonPaletteComponent:
       div(
         className := "palette-grid",
         EditorConfig.polygonSides.map(sides => polygonButton(sides)),
-        customPolygonSelector()
+        customPolygonSelector(),
+        irregularPolygonSlot() // <-- new selectable slot
       ),
       div(
         className := "selected-info",
         child.maybe <-- EditorState.selectedPolygon.signal.map(_.map { sides =>
           val polygonName = PolygonNameGenerator.polygonName(sides)
           div(
-//            p(s"Selected: $sides-sided polygon ($polygonName)"),
+            //            p(s"Selected: $sides-sided polygon ($polygonName)"),
             button(
               className := "select-all-by-type-btn",
               s"Select all ${polygonName}s",
@@ -118,7 +120,11 @@ object PolygonPaletteComponent:
       tpe := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
       disabled <-- EditorState.isProcessing.signal,
-      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ => selectPolygon(sides) },
+      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
+        // Selecting a regular polygon deselects irregular
+        EditorState.isIrregularSelected.set(false)
+        selectPolygon(sides)
+      },
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)
     )
@@ -142,6 +148,100 @@ object PolygonPaletteComponent:
       svg.viewBox := s"0 0 $size $size",
       svg.polygon(
         svg.points := points,
+        svg.fill := "currentColor",
+        svg.stroke := "currentColor",
+        svg.strokeWidth := "1"
+      )
+    )
+
+  // ---------- Irregular polygon slot ----------
+
+  // Button-like slot that appears after an irregular polygon is available and is selectable.
+  private def irregularPolygonSlot(): Element =
+    val isIrregularSelected: Signal[Boolean] =
+      EditorState.selectedIrregularPolygon.signal.map(_.isDefined)
+
+    val btnClass = polygonButtonClass("polygon-btn irregular-polygon-slot", isIrregularSelected)
+
+    // When clicked, make the irregular polygon the active selection (and clear regular selection)
+    val onSelectIrregular: Observer[dom.MouseEvent] =
+      Observer { _ =>
+        if !EditorState.isProcessing.now() && EditorState.recentIrregularPolygon.now().isDefined then
+          // Selecting irregular: clear regular selection and toggle on
+          EditorState.selectedPolygon.set(None)
+          EditorState.isIrregularSelected.set(true)
+      }
+
+    button(
+      className <-- btnClass,
+      tpe := "button",
+      title := "Irregular polygon",
+      disabled <-- EditorState.isProcessing.signal
+        .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
+        .map { (processing, noneRecent) => processing || noneRecent },
+      onClick.filter(_ => !EditorState.isProcessing.now()) --> onSelectIrregular,
+      child <-- EditorState.recentIrregularPolygon.signal.map {
+        case Some(angles) => irregularPolygonSvg(angles)
+        case None =>
+          // simple placeholder
+          svg.svg(
+            svg.width := "40",
+            svg.height := "40",
+            svg.viewBox := "0 0 40 40",
+            svg.rect(
+              svg.x := "8",
+              svg.y := "8",
+              svg.width := "24",
+              svg.height := "24",
+              svg.fill := "none",
+              svg.stroke := "currentColor"
+            )
+          )
+      },
+      div(className := "polygon-label", "irr")
+    )
+
+  // Render the irregular polygon preview from AngleDegree vector (unit edges)
+  private def irregularPolygonSvg(anglesDeg: Vector[AngleDegree]): Element =
+    val size = 40
+    val pad = 4.0
+
+    // Walk edges of length 1, turning by exterior angles (180 - interior)
+    val turns = anglesDeg.map(_.supplement)
+    var x = 0.0
+    var y = 0.0
+    var heading = AngleDegree(0) // degrees
+    val pts = collection.mutable.ArrayBuffer[(Double, Double)]()
+    pts += ((x, y))
+    turns.foreach { t =>
+      val rad = heading.toBigRadian.toBigDecimal.toDouble
+      x = x + Math.cos(rad)
+      y = y + Math.sin(rad)
+      pts += ((x, y))
+      heading = heading + t
+    }
+
+    val xs = pts.map(_._1); val ys = pts.map(_._2)
+    val minX = xs.min; val maxX = xs.max
+    val minY = ys.min; val maxY = ys.max
+    val w = Math.max(1e-6, maxX - minX)
+    val h = Math.max(1e-6, maxY - minY)
+    val scale = (size - 2 * pad) / Math.max(w, h)
+    val offX = (size - scale * w) / 2.0 - scale * minX
+    val offY = (size - scale * h) / 2.0 - scale * minY
+
+    val svgPoints = pts.toVector.map { case (px, py) =>
+      val sx = offX + px * scale
+      val sy = offY + py * scale
+      f"$sx%.3f,$sy%.3f"
+    }.mkString(" ")
+
+    svg.svg(
+      svg.width := size.toString,
+      svg.height := size.toString,
+      svg.viewBox := s"0 0 $size $size",
+      svg.polygon(
+        svg.points := svgPoints,
         svg.fill := "currentColor",
         svg.stroke := "currentColor",
         svg.strokeWidth := "1"

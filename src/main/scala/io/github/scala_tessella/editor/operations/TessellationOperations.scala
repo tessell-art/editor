@@ -13,8 +13,9 @@ object TessellationOperations:
 
   def selectPolygon(sides: Int): Unit =
     ifNotProcessing:
+      // Selecting a regular polygon deselects the irregular
+      EditorState.isIrregularSelected.set(false)
       EditorState.selectedPolygon.set(Some(sides))
-      EditorState.selectedIrregularPolygon.set(None)
 
       if currentTiling.now().isEmpty then
         UndoManager.saveState()
@@ -62,14 +63,14 @@ object TessellationOperations:
 
   // Handle perimeter edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
-    (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.selectedIrregularPolygon.now()) match
+    (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
       case (tiling, _, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available to grow")
-      case (_, None, None) =>
+      case (_, None, false) =>
         Logger.warn("Both regular polygon and irregular polygon unselected")
-      case (_, Some(_), Some(_)) =>
+      case (_, Some(_), true) =>
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
-      case (tiling, maybeSides, maybeAngles) =>
+      case (tiling, maybeSides, _) =>
         val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
         val op = () =>
           try
@@ -78,7 +79,8 @@ object TessellationOperations:
               if maybeSides.isDefined then
                 tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, maybeSides.get)
               else
-                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, maybeAngles.get.toList)
+                val angles = EditorState.recentIrregularPolygon.now().get.toList
+                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, angles)
             else
               Left(ValidationError("Invalid edge index"))
           catch
@@ -91,7 +93,7 @@ object TessellationOperations:
           onFailure = err => {
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              val angles = maybeAngles.getOrElse(RegularPolygon(maybeSides.get).angles)
+              val angles = maybeSides.map(sides => RegularPolygon(sides).angles).getOrElse(EditorState.recentIrregularPolygon.now().get)
               val placement = FailedPolygonPlacement(edgeIndex, angles, (selectedEdge(0), selectedEdge(1)), tiling)
               val truncated = err.message
               if maybeSides.isDefined then
@@ -101,7 +103,7 @@ object TessellationOperations:
                 )
               else
                 ErrorOperations.showError(
-                  s"Growing the given ${maybeAngles.get.size}-sides irregular polygon on this perimeter edge is invalid. $truncated",
+                  s"Growing the given ${angles.size}-sides irregular polygon on this perimeter edge is invalid. $truncated",
                   Some(placement)
                 )
             else

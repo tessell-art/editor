@@ -130,12 +130,14 @@ object SelectionOperations:
           val face = tiling.findInnerFace(faceId).toOption.get
           if face.hasEqualAngles.toOption.get then
             val sides = face.halfEdges.toOption.get.size
+            EditorState.recentIrregularPolygon.set(None)
+            EditorState.isIrregularSelected.set(false)
             EditorState.selectedPolygon.set(Some(sides))
-            EditorState.selectedIrregularPolygon.set(None)
           else
+            val angles = face.angles.toOption.get.toVector
+            EditorState.recentIrregularPolygon.set(Some(angles)) // remember latest irregular
             EditorState.selectedPolygon.set(None)
-            Logger.warn(s"Face $faceId has non-equal angles: ${face.angles.toOption.get}")
-            EditorState.selectedIrregularPolygon.set(Some(face.angles.toOption.get.toVector))
+            EditorState.isIrregularSelected.set(true) // select irregular
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.SelectByColor) =>
@@ -193,7 +195,7 @@ object SelectionOperations:
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     ifNotProcessing:
-      (EditorState.currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.selectedIrregularPolygon.now()) match
-        case (_, None, None)                   => togglePerimeterEdgeSelection(edgeId)
+      (EditorState.currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
+        case (_, None, false)                  => togglePerimeterEdgeSelection(edgeId)
         case (tiling, _, _) if !tiling.isEmpty => TessellationOperations.attemptPolygonAddition(edgeId, edgeIndex)
         case (_, _, _)                         => ErrorOperations.showError("No tiling available to grow")
