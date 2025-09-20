@@ -144,12 +144,21 @@ object TessellationOperations:
     }.map(_.id)
 
   def attemptPolygonInsertion(startVertexId: VertexId, endVertexId: VertexId): Unit =
-    (currentTiling.now(), EditorState.selectedPolygon.now()) match
-      case (tiling, _) if tiling.isEmpty =>
+    (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
+      case (tiling, _, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available for insertion")
-      case (tiling, Some(polygonSides)) =>
+      case (_, None, false) =>
+        Logger.warn("Both regular polygon and irregular polygon unselected")
+      case (_, Some(_), true) =>
+        Logger.error("Should not happen: both regular polygon and irregular polygon selected")
+      case (tiling, maybeSides, _) =>
         val op = () =>
-          try tiling.maybeAddRegularPolygon(startVertexId, endVertexId, polygonSides)
+          try
+            if maybeSides.isDefined then
+              tiling.maybeAddRegularPolygon(startVertexId, endVertexId, maybeSides.get)
+            else
+              val angles = EditorState.recentIrregularPolygon.now().get.toList
+              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, angles)
           catch
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
@@ -160,21 +169,32 @@ object TessellationOperations:
           onFailure = error => {
             val curr = currentTiling.now()
             val maybeFaceId = findFaceContainingEdge(curr, startVertexId, endVertexId)
-            val placementOpt =
-              Some(
-                FailedPolygonPlacement(
-                  edgeIndex = 0, // not needed for interior wireframe
-                  angles = RegularPolygon(polygonSides).angles,
-                  edge = (startVertexId, endVertexId),
-                  tiling = curr,
-                  intoFace = maybeFaceId
+            if maybeSides.isDefined then
+              val placementOpt =
+                Some(
+                  FailedPolygonPlacement(
+                    edgeIndex = 0, // not needed for interior wireframe
+                    angles = RegularPolygon(maybeSides.get).angles,
+                    edge = (startVertexId, endVertexId),
+                    tiling = curr,
+                    intoFace = maybeFaceId
+                  )
                 )
-              )
-            ErrorOperations.showError(s"Cannot insert polygon: ${error.message}", placement = placementOpt)
+              ErrorOperations.showError(s"Cannot insert regular polygon: ${error.message}", placement = placementOpt)
+            else
+              val placementOpt =
+                Some(
+                  FailedPolygonPlacement(
+                    edgeIndex = 0, // not needed for interior wireframe
+                    angles = EditorState.recentIrregularPolygon.now().get,
+                    edge = (startVertexId, endVertexId),
+                    tiling = curr,
+                    intoFace = maybeFaceId
+                  )
+                )
+              ErrorOperations.showError(s"Cannot insert irregular polygon: ${error.message}", placement = placementOpt)
           }
         )
-      case (_, None) =>
-        ()
 
   // Parse FaceId from a DOM polygon id of the form "tiling-poly-<faceId>"
   // Centralizing this at the operation boundary allows UI to keep legacy ids while core uses FaceId.

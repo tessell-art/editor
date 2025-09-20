@@ -199,7 +199,7 @@ object TessellationRenderer:
           }
         }
 
-    // Hover preview wireframe for insertion
+    // Hover preview wireframe for boundary addition
     val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map { placement =>
       placement.map(PreviewPolygonRenderer.renderPreview)
     }
