@@ -2,14 +2,12 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
-import io.github.scala_tessella.editor.operations.TessellationOperations.selectPolygon
-import io.github.scala_tessella.editor.operations.ErrorOperations.showError
+import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
+import io.github.scala_tessella.editor.operations.TessellationOperations.*
+
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
-import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
 import org.scalajs.dom
 
 import scala.math.{cos, sin}
@@ -169,18 +167,9 @@ object PolygonPaletteComponent:
     // When clicked, select irregular. If tiling is empty, create it from the irregular polygon.
     val onSelectIrregular: Observer[dom.MouseEvent] =
       Observer { _ =>
-        if !EditorState.isProcessing.now() && EditorState.recentIrregularPolygon.now().isDefined then
-          if EditorState.currentTiling.now().isEmpty then
-            // Initialize tiling with the irregular polygon
-            TilingDCEL.createSimplePolygon(EditorState.recentIrregularPolygon.now().get.toList).toOption match
-              case Some(tiling) =>
-                EditorState.currentTiling.set(tiling)
-                clearAllSelections()
-              case None =>
-                showError("Failed to create tiling from irregular polygon")
-          // Select irregular in palette and clear regular selection
-          EditorState.selectedPolygon.set(None)
-          EditorState.isIrregularSelected.set(true)
+        if EditorState.recentIrregularPolygon.now().isDefined then
+          initializeWithIrregularIfEmpty()
+          selectIrregularInPalette()
       }
 
     button(

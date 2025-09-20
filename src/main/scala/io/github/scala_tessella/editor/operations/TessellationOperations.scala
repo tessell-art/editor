@@ -37,6 +37,29 @@ object TessellationOperations:
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
 
+  /** Select the irregular polygon in the palette (deselect regular if any). */
+  def selectIrregularInPalette(): Unit =
+    ifNotProcessing:
+      if EditorState.recentIrregularPolygon.now().isDefined then
+        EditorState.selectedPolygon.set(None)
+        EditorState.isIrregularSelected.set(true)
+
+  /** If the tiling is empty and a recent irregular exists, initialize the tiling with it. */
+  def initializeWithIrregularIfEmpty(): Unit =
+    ifNotProcessing:
+      if currentTiling.now().isEmpty then
+        EditorState.recentIrregularPolygon.now() match
+          case Some(angles) =>
+            UndoManager.saveState()
+            TilingDCEL.createSimplePolygon(angles.toList).toOption match
+              case Some(tiling) =>
+                currentTiling.set(tiling)
+                SelectionOperations.clearAllSelections()
+              case None =>
+                UndoManager.undo()
+                ErrorOperations.showError("Failed to create tiling from irregular polygon")
+          case None => ()
+
   // Attempt to delete a face by FaceId (stable, DCEL-native)
   def attemptFaceDeletion(faceId: FaceId): Unit =
     val op = () => currentTiling.now().maybeDeleteFace(faceId)
