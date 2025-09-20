@@ -37,7 +37,63 @@ object PolygonPlacementGeometry:
   
       generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
     else
-      ???
+
+      // Irregular polygon with unit edges and given internal angles.
+      // Build a local polygon starting from origin along +X, then translate/rotate to align the first edge to (v1->v2) and offset inward.
+      val local = buildUnitEdgePolygon(angles)
+    
+      // Compute transform: align local first edge (from (0,0) to (1,0)) to the actual perimeter edge (vertex1 -> vertex2)
+      val edgeAngle = atan2(uy, ux)
+      val rotCos = cos(edgeAngle)
+      val rotSin = sin(edgeAngle)
+    
+      // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
+      val world = local.map { p =>
+        val sx = p.x * edgeLen
+        val sy = p.y * edgeLen
+        val rx = sx * rotCos - sy * rotSin
+        val ry = sx * rotSin + sy * rotCos
+        Point(vertex1.x + rx, vertex1.y + ry)
+      }
+    
+      // Offset the polygon inward by moving its centroid along the inward normal by a small amount.
+      // For a preview wireframe this helps visualize inward growth for irregular cases too.
+      val (cx, cy) =
+        if world.nonEmpty then
+          val (sx, sy) = world.foldLeft((0.0, 0.0)) { case ((ax, ay), p) => (ax + p.x, ay + p.y) }
+          (sx / world.length, sy / world.length)
+        else (0.0, 0.0)
+    
+      // The offset magnitude: use a fraction of the edge length so preview remains close to boundary.
+      val inwardOffset = edgeLen * 0.0 // keep vertices exactly on constructed positions; change to e.g. 0.0 or 0.05 to nudge inward
+      val worldInward = world.map { p =>
+        Point(p.x + perpX * inwardOffset, p.y + perpY * inwardOffset)
+      }
+    
+      worldInward.map(tilingPointToCanvasView)
+
+  /** Build polygon vertices in local space using unit edge length and given internal angles. */
+  private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point] =
+    if angles.isEmpty then Vector.empty
+    else
+      // Start at origin, first edge along +X
+      var pts = Vector(Point(0.0, 0.0))
+      var heading = 0.0 // radians
+      var curr = Point(0.0, 0.0)
+
+      // Walk edges: after each edge move, turn by exterior angle (PI - interior)
+      angles.foreach { a =>
+        val rad = heading
+        val nx = curr.x + cos(rad)
+        val ny = curr.y + sin(rad)
+        val next = Point(nx, ny)
+        pts = pts :+ next
+        heading = heading + (math.Pi - a.toBigRadian.toBigDecimal.toDouble)
+      }
+
+      // Close precision drift: translate so that the first edge midpoint aligns at the origin horizontally.
+      // Not strictly necessary for placement, but keeps shape stable if used standalone.
+      pts
 
   /** Calculates basic geometric properties of an edge. */
   private def computeEdgeGeometrics(vertex1: Point, vertex2: Point): (Double, Double, Double, Point) =

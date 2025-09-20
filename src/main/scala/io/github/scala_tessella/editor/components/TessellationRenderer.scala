@@ -1,18 +1,19 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, FailedPolygonPlacement, Tool}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
+import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
+import io.github.scala_tessella.editor.utils.Geometry.Point
+
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
-import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom.EndingType.transparent
 
 object TessellationRenderer:
@@ -595,11 +596,16 @@ object TessellationRenderer:
       svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ => "none")),
       // Enhanced visual feedback and click handling
       onMouseEnter.compose(gate) --> { _ =>
-        (EditorState.activeTool.now(), EditorState.selectedPolygon.now()) match
-          case (_, Some(sides)) =>
+        (EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now(), EditorState.recentIrregularPolygon.now()) match
+          case (maybeSides, isIrregular, maybeAngles) =>
             val tiling = EditorState.currentTiling.now()
-            EditorState.previewPlacement.set(Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(edgeIndex, RegularPolygon(sides).angles, edge, tiling)))
-          case _ => ()
+            val angles =
+              if isIrregular then
+                maybeAngles.get
+              else
+                RegularPolygon(maybeSides.get).angles
+            EditorState.previewPlacement.set(Some(FailedPolygonPlacement(edgeIndex, angles, edge, tiling)))
+          case null => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
         EditorState.previewPlacement.set(None)
