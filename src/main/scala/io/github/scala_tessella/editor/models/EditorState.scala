@@ -153,6 +153,9 @@ object EditorState:
   /** Measurement result (angle) */
   val measurementAngle: Var[Option[Double]] = Var(None)
 
+  /** Whether the angle measurement result is shown in radians or degrees */
+  val isAngleShownInRad: Var[Boolean] = Var(true)
+
   //
   // IRREGULAR POLYGON SELECTION
   //

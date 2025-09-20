@@ -29,11 +29,25 @@ object EditorCanvasComponent:
         ),
         div(
           className := "measurement-result",
-          child.text <-- EditorState.measurementResult.signal.combineWith(EditorState.measurementAngle.signal).map {
-            case (None, _) => ""
-            case (Some(distance), None) => distanceString(distance)
-            case (Some(distance), Some(angle)) => f"Angle: $angle%.6f rad · ${distanceString(distance)}"
-          },
+          child <-- EditorState.measurementResult.signal
+            .combineWith(EditorState.measurementAngle.signal)
+            .combineWith(EditorState.isAngleShownInRad.signal)
+            .map {
+              case (None, _, _) => ""
+              case (Some(distance), None, _) => distanceString(distance)
+              case (Some(distance), Some(angle), isRad) =>
+                val angleText = if isRad then f"Angle: $angle%.6f rad" else f"Angle: ${angle * 180 / Math.PI}%.2f°"
+                val distancePart = distanceString(distance)
+                span(
+                  span(
+                    onClick --> { _ => EditorState.isAngleShownInRad.update(!_) },
+                    title := "Click to toggle radians/degrees",
+                    className := "angle-toggle",
+                    angleText
+                  ),
+                  span(s" · $distancePart")
+                )
+          }
         )
       ),
       // A new wrapper for the SVG and its overlays
