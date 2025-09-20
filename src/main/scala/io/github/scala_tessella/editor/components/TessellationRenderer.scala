@@ -535,13 +535,20 @@ object TessellationRenderer:
       svg.className := "interior-edge-transparent",
       // Show inner preview oriented into this face
       onMouseEnter.compose(gate) --> { _ =>
-        EditorState.selectedPolygon.now() match
-          case Some(sides) =>
+        (EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
+          case (maybeSides, isIrregular) =>
             val tiling = EditorState.currentTiling.now()
-            EditorState.previewPlacement.set(
-              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, RegularPolygon(sides).angles, edge, tiling, intoFace = Some(faceId)))
-            )
-          case None => ()
+            if isIrregular then
+              val angles = EditorState.recentIrregularPolygon.now().get
+              EditorState.previewPlacement.set(
+                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, angles, edge, tiling, intoFace = Some(faceId)))
+              )
+            else
+              val sides = maybeSides.getOrElse(0)
+              EditorState.previewPlacement.set(
+                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, RegularPolygon(sides).angles, edge, tiling, intoFace = Some(faceId)))
+              )
+          case null => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
         EditorState.previewPlacement.set(None)
