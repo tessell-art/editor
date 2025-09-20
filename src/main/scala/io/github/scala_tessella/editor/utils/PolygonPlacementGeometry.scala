@@ -4,7 +4,7 @@ import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.utils.Geometry.Point
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.ring_seq.RingSeq.slidingO
+import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
 
 import scala.math.*
 
@@ -73,7 +73,7 @@ object PolygonPlacementGeometry:
       // For each interior angle:
       // 1) advance one unit in current heading to create next vertex
       // 2) then turn by the exterior angle (PI - interior)
-      angles.foreach { a =>
+      angles.rotateLeft(1).foreach { a =>
         val nx = curr.x + cos(heading)
         val ny = curr.y + sin(heading)
         val next = Point(nx, ny)
