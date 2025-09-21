@@ -162,7 +162,7 @@ object TessellationRenderer:
 //      renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
 //    }
 
-    val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList.zipWithIndex.map {
+    val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList.zipWithIndex.map {
       (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
     }
 

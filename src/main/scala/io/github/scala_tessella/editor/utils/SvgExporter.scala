@@ -98,7 +98,7 @@ object SvgExporter:
        |  </g>""".stripMargin
 
   private [utils] def generatePerimeterXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double, strokeWidthPeri: Double): String =
-    val perimeterNodes = tiling.boundaryVertices.toOption.get
+    val perimeterNodes = tiling.boundaryVertices
     if perimeterNodes.isEmpty then ""
     else
       val points =

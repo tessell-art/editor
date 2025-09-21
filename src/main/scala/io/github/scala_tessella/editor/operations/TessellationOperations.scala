@@ -94,7 +94,7 @@ object TessellationOperations:
       case (_, Some(_), true) =>
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
       case (tiling, maybeSides, _) =>
-        val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.id).slidingO(2).toList
+        val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList
         val op = () =>
           try
             if edgeIndex < perimeterEdges.length then
