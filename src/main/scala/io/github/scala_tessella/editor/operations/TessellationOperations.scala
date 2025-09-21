@@ -101,7 +101,7 @@ object TessellationOperations:
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               if maybeSides.isDefined then
-                tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, maybeSides.get)
+                tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, RegularPolygon(maybeSides.get))
               else
                 val angles = EditorState.recentIrregularPolygon.now().get.toList
                 tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, angles)
@@ -156,7 +156,7 @@ object TessellationOperations:
         val op = () =>
           try
             if maybeSides.isDefined then
-              tiling.maybeAddRegularPolygon(startVertexId, endVertexId, maybeSides.get)
+              tiling.maybeAddRegularPolygon(startVertexId, endVertexId, RegularPolygon(maybeSides.get))
             else
               val angles = EditorState.recentIrregularPolygon.now().get.toList
               tiling.maybeAddSimplePolygon(startVertexId, endVertexId, angles)
