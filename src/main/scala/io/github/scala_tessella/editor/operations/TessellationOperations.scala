@@ -19,11 +19,12 @@ object TessellationOperations:
 
       if currentTiling.now().isEmpty then
         UndoManager.saveState()
-        TilingDCEL.createRegularPolygon(sides).toOption match
-          case Some(tiling) =>
-            currentTiling.set(tiling)
-            SelectionOperations.clearAllSelections()
-          case None =>
+        try
+          val tiling = TilingDCEL.createRegularPolygon(RegularPolygon(sides))
+          currentTiling.set(tiling)
+          SelectionOperations.clearAllSelections()
+        catch
+          case e: Throwable =>
             UndoManager.undo()
             ErrorOperations.showError(s"Failed to create tiling from $sides-sided polygon")
 
