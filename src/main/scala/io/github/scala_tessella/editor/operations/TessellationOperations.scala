@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
-import io.github.scala_tessella.dcel.Polygon.RegularPolygon
+import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
@@ -52,7 +52,7 @@ object TessellationOperations:
         EditorState.recentIrregularPolygon.now() match
           case Some(angles) =>
             UndoManager.saveState()
-            TilingDCEL.createSimplePolygon(angles.toList).toOption match
+            TilingDCEL.createSimplePolygon(SimplePolygon(angles)).toOption match
               case Some(tiling) =>
                 currentTiling.set(tiling)
                 SelectionOperations.clearAllSelections()
@@ -103,8 +103,8 @@ object TessellationOperations:
               if maybeSides.isDefined then
                 tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, RegularPolygon(maybeSides.get))
               else
-                val angles = EditorState.recentIrregularPolygon.now().get.toList
-                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, angles)
+                val angles = EditorState.recentIrregularPolygon.now().get
+                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, SimplePolygon(angles))
             else
               Left(ValidationError("Invalid edge index"))
           catch
@@ -158,8 +158,8 @@ object TessellationOperations:
             if maybeSides.isDefined then
               tiling.maybeAddRegularPolygon(startVertexId, endVertexId, RegularPolygon(maybeSides.get))
             else
-              val angles = EditorState.recentIrregularPolygon.now().get.toList
-              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, angles)
+              val angles = EditorState.recentIrregularPolygon.now().get
+              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, SimplePolygon(angles))
           catch
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
