@@ -4,6 +4,7 @@ import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorSta
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
 import io.github.scala_tessella.editor.operations.TessellationOperations.*
+import io.github.scala_tessella.editor.operations.OperationGuard.gate
 
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
@@ -69,63 +70,51 @@ object PolygonPaletteComponent:
     )
 
   private def customPolygonSelector(): Element =
-    val customSides = Var(11) // This remains the "source of truth" for the integer value.
-    val inputValue = Var(customSides.now().toString) // A separate Var for the input's string value.
+    val customSides = Var(11)
+    val inputValue = Var(customSides.now().toString)
 
-    // Helper function to validate and clamp the input value
     def validateSides(input: String): Int =
       input.toIntOption.getOrElse(3).clamp(3, 100)
 
-    // Helper function to update both customSides and inputValue
     def updateSides(sides: Int): Unit =
       customSides.set(sides)
       inputValue.set(sides.toString)
 
-    // This observer will sync the input field if `customSides` is ever changed programmatically.
     val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
-
-    // Create a signal that parses the input value to determine the shape to display
     val displaySides = inputValue.signal.map(validateSides)
-
-    // Signal to check if the custom polygon is currently selected. Uses the validated `customSides`.
     val isSelected = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
       (maybeSelected, currentCustom) => maybeSelected.contains(currentCustom)
     }
-
-    // An observer that validates the input and updates the "source of truth" (`customSides`).
     val validateAndUpdateObserver = Observer[Any] { _ =>
       val validatedSides = validateSides(inputValue.now())
       updateSides(validatedSides)
     }
 
     div(
-      syncInputToSource, // The observer needs to be owned by the element
+      syncInputToSource,
       className <-- polygonButtonClass("polygon-btn custom-polygon-creator", isSelected),
       title <-- displaySides.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
-      // The whole div is clickable to select the polygon with the current number of sides
-      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
-        // Validate the input first, then select the polygon
-        val validatedSides = validateSides(inputValue.now())
-        updateSides(validatedSides)
-        selectPolygon(validatedSides)
+      // Replace imperative guard with gated click stream combined with current validated sides
+      inContext { thisDiv =>
+        gate(thisDiv.events(onClick))
+          .withCurrentValueOf(displaySides)
+          .map { case (_, validatedSides) => validatedSides } --> { validatedSides =>
+          updateSides(validatedSides)
+          selectPolygon(validatedSides)
+        }
       },
-      // Dynamic SVG preview, which updates as the user types
       child <-- displaySides.map(sides => polygonSvg(sides)),
-      // Number input, which acts as the label
       input(
         tpe := "number",
         className := "polygon-label-input",
         minAttr := "3",
         maxAttr := "100",
-        // Control the input with our local string Var for a fluid typing experience
         controlled(
           value <-- inputValue,
           onInput.mapToValue --> inputValue
         ),
-        // Validate when the user finishes editing (leaves the field or presses Enter)
         onBlur --> validateAndUpdateObserver,
         onKeyPress.filter(_.key == "Enter").preventDefault --> validateAndUpdateObserver,
-        // Prevent clicks on the input from triggering the container's onClick handler
         onClick.stopPropagation --> {},
         disabled <-- EditorState.isProcessing.signal
       )
@@ -138,10 +127,11 @@ object PolygonPaletteComponent:
       tpe := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
       disabled <-- EditorState.isProcessing.signal,
-      onClick.filter(_ => !EditorState.isProcessing.now()) --> { _ =>
-        // Selecting a regular polygon deselects irregular
-        EditorState.isIrregularSelected.set(false)
-        selectPolygon(sides)
+      inContext { thisBtn =>
+        gate(thisBtn.events(onClick)) --> { _ =>
+          EditorState.isIrregularSelected.set(false)
+          selectPolygon(sides)
+        }
       },
       polygonSvg(sides),
       div(className := "polygon-label", sides.toString)
