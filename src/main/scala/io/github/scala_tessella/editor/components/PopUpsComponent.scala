@@ -85,6 +85,20 @@ object PopUpsComponent:
               "click one to add the selected regular polygon."
             ),
           ),
+          h3("Adding irregular polygons"),
+          ul(
+            li(
+              "Select the irregular shape from the last button in the palette.")
+            ,
+            li(
+              "Click the '+' button on the top right corner of the button to change the attaching edge."
+            ),
+            li(
+              "Use the ",
+              IconsSVG.eyeDropperPentagonIcon,
+              " ", i("Shape and color picker"), " tool to select the shape (and the fill color) of an existing irregular polygon."
+            )
+          ),
           h3("Deleting"),
           ul(
             li(
@@ -126,7 +140,7 @@ object PopUpsComponent:
             li(
               "Use the ",
               IconsSVG.eyeDropperPentagonIcon,
-              " ", i("Shape and color picker"), " tool to select both the shape and the fill color from an existing regular polygon."
+              " ", i("Shape and color picker"), " tool to select both the shape and the fill color from an existing polygon."
             )
           ),
           h3("Measurement"),
