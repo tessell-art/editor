@@ -186,26 +186,6 @@ object PolygonPaletteComponent:
         EditorState.showIrregularPolygonPopup.set(true)
     }
 
-    // controls
-    val shiftLeft: Observer[dom.MouseEvent] = Observer { e =>
-      e.stopPropagation()
-      val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-      if n > 0 then
-        EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateLeft(1)))
-    }
-    val shiftRight: Observer[dom.MouseEvent] = Observer { e =>
-      e.stopPropagation()
-      val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-      if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateRight(1)))
-    }
-    val flip: Observer[dom.MouseEvent] = Observer { e =>
-      e.stopPropagation()
-      val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-      if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.reflectAt(1)))
-    }
-
-    val closePopup: Observer[dom.MouseEvent] = Observer { _ => EditorState.showIrregularPolygonPopup.set(false) }
-
     button(
       className <-- btnClass,
       tpe := "button",
