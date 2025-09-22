@@ -4,6 +4,7 @@ import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.ring_seq.RingSeq.{reflectAt, rotateLeft, rotateRight}
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import org.scalajs.dom
 
 object PopUpsComponent:
@@ -289,22 +290,23 @@ object PopUpsComponent:
   private val closeIrregularPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showIrregularPolygonPopup)
 
   // controls
-  private val shiftLeft: Observer[dom.MouseEvent] = Observer { e =>
-    e.stopPropagation()
-    val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-    if n > 0 then
-      EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateLeft(1)))
-  }
-  private val shiftRight: Observer[dom.MouseEvent] = Observer { e =>
-    e.stopPropagation()
-    val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-    if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateRight(1)))
-  }
-  private val flip: Observer[dom.MouseEvent] = Observer { e =>
-    e.stopPropagation()
-    val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
-    if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.reflectAt(1)))
-  }
+  private def modify(f: Vector[AngleDegree] => Vector[AngleDegree]): Observer[dom.MouseEvent] =
+    Observer { e =>
+      e.stopPropagation()
+      EditorState.recentIrregularPolygon.update {
+        case Some(v) if v.nonEmpty => Some(f(v))
+        case other => other
+      }
+    }
+
+  private val shiftLeft: Observer[dom.MouseEvent] =
+    modify(_.rotateLeft(1))
+
+  private val shiftRight: Observer[dom.MouseEvent] =
+    modify(_.rotateRight(1))
+
+  private val flip: Observer[dom.MouseEvent] =
+    modify(_.reflectAt(1))
 
   def irregularPolygonPopup(): Element =
     div(
