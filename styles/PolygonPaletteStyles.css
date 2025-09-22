@@ -114,3 +114,8 @@
   border: 1px solid #666;
   color: #000;
 }
+
+.corner-button {
+  margin-top: -16px;
+  margin-left: 42px;
+}

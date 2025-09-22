@@ -215,7 +215,7 @@ object PolygonPaletteComponent:
         onClick.stopPropagation --> openPopup,
         // simple plus icon
         svg.svg(
-          svg.width := "14", svg.height := "14", svg.viewBox := "0 0 24 24",
+          svg.width := "12", svg.height := "12", svg.viewBox := "0 -4 24 24",
           svg.path(svg.d := "M12 5v14M5 12h14", svg.stroke := "currentColor", svg.fill := "none", svg.strokeWidth := "2", svg.strokeLineCap := "round")
         )
       ),
