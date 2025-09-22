@@ -84,10 +84,10 @@ object KeyboardEventHandler:
           enqueueRotate(-15) // debounced
         case "Z" if event.ctrlKey && event.shiftKey =>
           event.preventDefault()
-          AppState.redo()
+          AppState.redoObserver
         case "z" if event.ctrlKey =>
           event.preventDefault()
-          AppState.undo()
+          AppState.undoObserver
         case "s" if event.ctrlKey =>
           event.preventDefault()
           // Use the snapshots captured above

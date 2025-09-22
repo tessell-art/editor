@@ -45,6 +45,17 @@ object AppState:
   /** Signal indicating whether the redo operation is available */
   val canRedo: Signal[Boolean] = UndoManager.canRedo.signal
 
+  // Observers for UI wiring (Laminar-idiomatic: views do --> AppState.XObserver)
+  val undoObserver: Observer[Any] = Observer { _ =>
+    ifNotProcessing:
+      UndoManager.undo()
+  }
+
+  val redoObserver: Observer[Any] = Observer { _ =>
+    ifNotProcessing:
+      UndoManager.redo()
+  }
+
   // Simple UI operations
 
   /**
@@ -219,22 +230,6 @@ object AppState:
       if selectedTilingPolygons.now().nonEmpty || selectedPerimeterEdges.now().nonEmpty then
         UndoManager.saveState()
         SelectionOperations.clearAllSelections()
-
-  /**
-   * Undoes the last operation.
-   * Does nothing if the editor is processing or if there's nothing to undo.
-   */
-  def undo(): Unit =
-    ifNotProcessing:
-      UndoManager.undo()
-
-  /**
-   * Redoes the last undone operation.
-   * Does nothing if the editor is processing or if there's nothing to redo.
-   */
-  def redo(): Unit =
-    ifNotProcessing:
-      UndoManager.redo()
 
   /**
    * Adjusts the view to fit the entire tiling in the canvas.
