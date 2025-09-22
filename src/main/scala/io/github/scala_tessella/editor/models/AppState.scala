@@ -189,6 +189,18 @@ object AppState:
         SelectionOperations.selectPolygonsBySides(sides)
 
   /**
+   * Selects all polygons with the same shape.
+   * Does nothing if the editor is processing or if the tiling is empty.
+   *
+   * @param angles The interior angles of the polygons to select
+   */
+  def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
+    ifNotProcessing:
+      if !isTilingEmpty then
+        UndoManager.saveState()
+        SelectionOperations.selectPolygonsByShape(angles)
+
+  /**
    * Selects all polygons in the tiling.
    * Does nothing if the editor is processing or if the tiling is empty.
    */

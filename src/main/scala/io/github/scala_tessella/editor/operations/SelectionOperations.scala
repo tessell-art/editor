@@ -1,10 +1,11 @@
 package io.github.scala_tessella.editor.operations
 
 import OperationGuard.ifNotProcessing
+import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.dcel.FaceId
-import io.github.scala_tessella.ring_seq.RingSeq.slidingO
+import io.github.scala_tessella.ring_seq.RingSeq.{slidingO, isRotationOrReflectionOf}
 import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.Logger
 
@@ -89,6 +90,16 @@ object SelectionOperations:
         val polygonIdsToAdd = tiling.innerFaces.collect {
           // @todo two traversals, one for the number of sides, one for the angles
           case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles.toOption.get => face.id
+        }.toSet
+        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+
+  def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
+    ifNotProcessing:
+      val tiling = EditorState.currentTiling.now()
+      if !tiling.isEmpty then
+        val polygonIdsToAdd = tiling.innerFaces.collect {
+          // @todo two traversals, one for the number of sides, one for the angles
+          case face if face.halfEdges.toOption.get.size == angles.size && face.angles.toOption.get.isRotationOrReflectionOf(angles) => face.id
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 

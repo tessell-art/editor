@@ -39,18 +39,32 @@ object PolygonPaletteComponent:
         className := "selected-info",
         child.maybe <-- EditorState.selectedPolygon.signal
           .combineWith(EditorState.isIrregularSelected.signal)
-          .map((maybeSides, _) => maybeSides.map { sides =>
-            val polygonName = PolygonNameGenerator.polygonName(sides)
-            div(
-              //            p(s"Selected: $sides-sided polygon ($polygonName)"),
-              button(
-                className := "select-all-by-type-btn",
-                s"Select all ${polygonName}s",
-                onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
-                disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
-              )
-            )
-          })
+          .map((maybeSides, isIrregular) =>
+              if isIrregular then
+                Option(
+                  div(
+                    button(
+                      className := "select-all-by-type-btn",
+                      s"Select irregular shape",
+                      onClick.preventDefault --> { _ => AppState.selectPolygonsByShape(EditorState.recentIrregularPolygon.now().get) },
+                      disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+                    )
+                  )
+                )
+              else
+                maybeSides.map { sides =>
+                val polygonName = PolygonNameGenerator.polygonName(sides)
+                div(
+                  //            p(s"Selected: $sides-sided polygon ($polygonName)"),
+                  button(
+                    className := "select-all-by-type-btn",
+                    s"Select all ${polygonName}s",
+                    onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
+                    disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+                  )
+                )
+            }
+          )
       )
     )
 
