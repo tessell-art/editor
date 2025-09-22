@@ -37,18 +37,20 @@ object PolygonPaletteComponent:
       ),
       div(
         className := "selected-info",
-        child.maybe <-- EditorState.selectedPolygon.signal.map(_.map { sides =>
-          val polygonName = PolygonNameGenerator.polygonName(sides)
-          div(
-            //            p(s"Selected: $sides-sided polygon ($polygonName)"),
-            button(
-              className := "select-all-by-type-btn",
-              s"Select all ${polygonName}s",
-              onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
-              disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+        child.maybe <-- EditorState.selectedPolygon.signal
+          .combineWith(EditorState.isIrregularSelected.signal)
+          .map((maybeSides, _) => maybeSides.map { sides =>
+            val polygonName = PolygonNameGenerator.polygonName(sides)
+            div(
+              //            p(s"Selected: $sides-sided polygon ($polygonName)"),
+              button(
+                className := "select-all-by-type-btn",
+                s"Select all ${polygonName}s",
+                onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
+                disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+              )
             )
-          )
-        })
+          })
       )
     )
 
