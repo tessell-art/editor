@@ -4,6 +4,7 @@ import io.github.scala_tessella.editor.models.EditorState
 
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
+import org.scalajs.dom
 
 object PopUpsComponent:
 
@@ -22,17 +23,21 @@ object PopUpsComponent:
       svg.path(svg.d := "M 6 6 L 18 18")
     )
 
+  private def closePopup(state: Var[Boolean]): Observer[dom.MouseEvent] = Observer { _ => state.set(false) }
+
+  private val closeGuidePopup: Observer[dom.MouseEvent] = closePopup(EditorState.showGuidePopup)
+
   private [components] def guidePopup(): Element =
     div(
       className := "popup-overlay",
       display <-- EditorState.showGuidePopup.signal.map(if (_) "flex" else "none"),
-      onClick --> (_ => EditorState.showGuidePopup.set(false)),
+      onClick --> closeGuidePopup,
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
         button(
           className := "popup-close-btn",
-          onClick --> (_ => EditorState.showGuidePopup.set(false)),
+          onClick --> closeGuidePopup,
           closeIcon
         ),
         h2("Guide"),
@@ -154,17 +159,19 @@ object PopUpsComponent:
       )
     )
 
+  private val closeShortcutsPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showShortcutsPopup)
+
   private [components] def shortcutsPopup(): Element =
     div(
       className := "popup-overlay",
       display <-- EditorState.showShortcutsPopup.signal.map(if (_) "flex" else "none"),
-      onClick --> (_ => EditorState.showShortcutsPopup.set(false)),
+      onClick --> closeShortcutsPopup,
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
         button(
           className := "popup-close-btn",
-          onClick --> (_ => EditorState.showShortcutsPopup.set(false)),
+          onClick --> closeShortcutsPopup,
           closeIcon
         ),
         h2("Keyboard Shortcuts"),
@@ -217,17 +224,19 @@ object PopUpsComponent:
       )
     )
 
+  private val closeAboutPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showAboutPopup)
+
   private [components] def helpPopup(): Element =
     div(
       className := "popup-overlay",
       display <-- EditorState.showAboutPopup.signal.map(if (_) "flex" else "none"),
-      onClick --> (_ => EditorState.showAboutPopup.set(false)),
+      onClick --> closeAboutPopup,
       div(
         className := "popup-content",
         onClick.stopPropagation --> {}, // Prevents clicks from closing the popup
         button(
           className := "popup-close-btn",
-          onClick --> (_ => EditorState.showAboutPopup.set(false)),
+          onClick --> closeAboutPopup,
           closeIcon
         ),
         img(
