@@ -138,7 +138,7 @@ object PolygonPaletteComponent:
     val radius = size * 0.35
 
     val points = (0 until sides).map { i =>
-      val angle = (TAU * i / sides) - TAU_2 // Start from top
+      val angle = (TAU * i / sides) - TAU_2 // Start from the top
       val x = centerX + radius * cos(angle.toDouble)
       val y = centerY + radius * sin(angle.toDouble)
       s"$x,$y"
@@ -173,7 +173,7 @@ object PolygonPaletteComponent:
           selectIrregularInPalette()
       }
 
-    // open popup from the corner button (stop bubbling so main button onClick does not trigger)
+    // open the popup from the corner button (stop bubbling so the main button onClick does not trigger)
     val openPopup: Observer[dom.MouseEvent] = Observer { e =>
       e.stopPropagation()
       if EditorState.recentIrregularPolygon.now().isDefined then
@@ -200,105 +200,54 @@ object PolygonPaletteComponent:
 
     val closePopup: Observer[dom.MouseEvent] = Observer { _ => EditorState.showIrregularPolygonPopup.set(false) }
 
-    // Render small slot with an extra corner button
-    div(
-      className := "irregular-slot-wrapper",
-      button(
-        className <-- btnClass,
-        tpe := "button",
-        title := "Irregular polygon",
-        disabled <-- EditorState.isProcessing.signal
-          .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
-          .map { (processing, noneRecent) => processing || noneRecent },
-        onClick.filter(_ => !EditorState.isProcessing.now()) --> onSelectIrregular,
-        // small corner button
-        div(
-          className := "corner-button",
-          title := "Adjust head (preview)",
-          onClick.stopPropagation --> openPopup,
-          // simple plus icon
-          svg.svg(
-            svg.width := "14", svg.height := "14", svg.viewBox := "0 0 24 24",
-            svg.path(svg.d := "M12 5v14M5 12h14", svg.stroke := "currentColor", svg.fill := "none", svg.strokeWidth := "2", svg.strokeLineCap := "round")
-          )
-        ),
-        // preview
-        child <-- EditorState.recentIrregularPolygon.signal.map {
-          case Some(angles) => irregularPolygonSvg(angles)
-          case None =>
-            svg.svg(
-              svg.width := "40",
-              svg.height := "40",
-              svg.viewBox := "0 0 40 40",
-              svg.rect(
-                svg.x := "8",
-                svg.y := "8",
-                svg.width := "24",
-                svg.height := "24",
-                svg.fill := "none",
-                svg.stroke := "currentColor"
-              )
-            )
-        },
-        div(
-          className := "polygon-label",
-          child.text <-- EditorState.recentIrregularPolygon.signal.map {
-            case None          => "Irregular"
-            case Some(angles)  => s"Irr-${angles.size}"
-          }
+    button(
+      className <-- btnClass,
+      tpe := "button",
+      title := "Irregular polygon",
+      disabled <-- EditorState.isProcessing.signal
+        .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
+        .map { (processing, noneRecent) => processing || noneRecent },
+      onClick.filter(_ => !EditorState.isProcessing.now()) --> onSelectIrregular,
+      // small corner button
+      div(
+        className := "corner-button",
+        title := "Adjust head (preview)",
+        onClick.stopPropagation --> openPopup,
+        // simple plus icon
+        svg.svg(
+          svg.width := "14", svg.height := "14", svg.viewBox := "0 0 24 24",
+          svg.path(svg.d := "M12 5v14M5 12h14", svg.stroke := "currentColor", svg.fill := "none", svg.strokeWidth := "2", svg.strokeLineCap := "round")
         )
       ),
-      // popup overlay (use same structure / classes as PopUpsComponent)
-      div(
-        className := "popup-overlay", // full-screen flex overlay
-        display <-- EditorState.showIrregularPolygonPopup.signal.map(if _ then "flex" else "none"),
-        onClick --> closePopup,
-        div(
-          className := "popup-content", // centered content card
-          onClick.stopPropagation --> {}, // prevent overlay close
-          button(
-            className := "popup-close-btn",
-            onClick --> closePopup,
-            // reuse the simple 'X' icon inline
-            svg.svg(
+      // preview
+      child <-- EditorState.recentIrregularPolygon.signal.map {
+        case Some(angles) => irregularPolygonSvg(angles)
+        case None =>
+          svg.svg(
+            svg.width := "40",
+            svg.height := "40",
+            svg.viewBox := "0 0 40 40",
+            svg.rect(
+              svg.x := "8",
+              svg.y := "8",
               svg.width := "24",
               svg.height := "24",
-              svg.viewBox := "0 0 24 24",
               svg.fill := "none",
-              svg.stroke := "currentColor",
-              svg.strokeWidth := "2",
-              svg.path(svg.d := "M 18 6 L 6 18"),
-              svg.path(svg.d := "M 6 6 L 18 18")
+              svg.stroke := "currentColor"
             )
-          ),
-          h2("Adjust attachment edge"),
-          div(
-            className := "popup-text-scrollable",
-            child.maybe <-- EditorState.recentIrregularPolygon.signal.map {
-              case None => Some(div("No irregular polygon"))
-              case Some(angles) =>
-                Some(
-                  div(
-                    className := "irregular-head-editor",
-                    // big preview with head marker
-                    div(className := "big-preview", bigIrregularWithHead(angles)),
-                    // controls row
-                    div(
-                      className := "controls",
-                      button(tpe := "button", className := "btn-left", title := "Move head left", onClick --> shiftLeft, "◀"),
-                      button(tpe := "button", className := "btn-right", title := "Move head right", onClick --> shiftRight, "▶"),
-                      button(tpe := "button", className := "btn-flip", title := "Flip", onClick --> flip, "Flip ⧎")
-                    )
-                  )
-                )
-            }
           )
-        )
+      },
+      div(
+        className := "polygon-label",
+        child.text <-- EditorState.recentIrregularPolygon.signal.map {
+          case None          => "Irregular"
+          case Some(angles)  => s"Irr-${angles.size}"
+        }
       )
     )
 
   // Big preview that highlights the head edge
-  private def bigIrregularWithHead(angles: Vector[AngleDegree]): Element =
+  private[components] def bigIrregularWithHead(angles: Vector[AngleDegree]): Element =
     val size = 220
     val pad = 12.0
 
@@ -321,11 +270,11 @@ object PolygonPaletteComponent:
       pts.toVector.dropRight(1)
 
     val basePts = unitPoints(angles)
-    val xs = basePts.map(_._1);
+    val xs = basePts.map(_._1)
     val ys = basePts.map(_._2)
-    val minX = xs.min;
+    val minX = xs.min
     val maxX = xs.max
-    val minY = ys.min;
+    val minY = ys.min
     val maxY = ys.max
     val w = Math.max(1e-6, maxX - minX)
     val h = Math.max(1e-6, maxY - minY)
@@ -343,11 +292,11 @@ object PolygonPaletteComponent:
     // render the highlighted head edge as a line on top
     def edgeLine(i: Int): Element =
       val n = basePts.size
-      val a = basePts(i % n);
+      val a = basePts(i % n)
       val b = basePts((i + 1) % n)
-      val ax = offX + a._1 * scale;
+      val ax = offX + a._1 * scale
       val ay = offY + a._2 * scale
-      val bx = offX + b._1 * scale;
+      val bx = offX + b._1 * scale
       val by = offY + b._2 * scale
       svg.line(
         svg.x1 := f"$ax%.3f", svg.y1 := f"$ay%.3f",
@@ -391,7 +340,8 @@ object PolygonPaletteComponent:
       heading = heading + t
     }
 
-    val xs = pts.map(_._1); val ys = pts.map(_._2)
+    val xs = pts.map(_._1)
+    val ys = pts.map(_._2)
     val minX = xs.min; val maxX = xs.max
     val minY = ys.min; val maxY = ys.max
     val w = Math.max(1e-6, maxX - minX)

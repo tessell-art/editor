@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.EditorState
-
+import io.github.scala_tessella.ring_seq.RingSeq.{reflectAt, rotateLeft, rotateRight}
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import org.scalajs.dom
@@ -268,6 +268,74 @@ object PopUpsComponent:
           p(
             "Built with Scala.js and Laminar.",
           )
+        )
+      )
+    )
+
+  private val closeIrregularPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showIrregularPolygonPopup)
+
+  // controls
+  private val shiftLeft: Observer[dom.MouseEvent] = Observer { e =>
+    e.stopPropagation()
+    val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
+    if n > 0 then
+      EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateLeft(1)))
+  }
+  private val shiftRight: Observer[dom.MouseEvent] = Observer { e =>
+    e.stopPropagation()
+    val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
+    if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.rotateRight(1)))
+  }
+  private val flip: Observer[dom.MouseEvent] = Observer { e =>
+    e.stopPropagation()
+    val n = EditorState.recentIrregularPolygon.now().map(_.size).getOrElse(0)
+    if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.reflectAt(1)))
+  }
+
+  def irregularPolygonPopup(): Element =
+    div(
+      className := "popup-overlay", // full-screen flex overlay
+      display <-- EditorState.showIrregularPolygonPopup.signal.map(if _ then "flex" else "none"),
+      onClick --> closeIrregularPopup,
+      div(
+        className := "popup-content", // centered content card
+        onClick.stopPropagation --> {}, // prevent overlay close
+        button(
+          className := "popup-close-btn",
+          onClick --> closeIrregularPopup,
+          // reuse the simple 'X' icon inline
+          svg.svg(
+            svg.width := "24",
+            svg.height := "24",
+            svg.viewBox := "0 0 24 24",
+            svg.fill := "none",
+            svg.stroke := "currentColor",
+            svg.strokeWidth := "2",
+            svg.path(svg.d := "M 18 6 L 6 18"),
+            svg.path(svg.d := "M 6 6 L 18 18")
+          )
+        ),
+        h2("Adjust attachment edge"),
+        div(
+          className := "popup-text-scrollable",
+          child.maybe <-- EditorState.recentIrregularPolygon.signal.map {
+            case None => Some(div("No irregular polygon"))
+            case Some(angles) =>
+              Some(
+                div(
+                  className := "irregular-head-editor",
+                  // big preview with head marker
+                  div(className := "big-preview", PolygonPaletteComponent.bigIrregularWithHead(angles)),
+                  // controls row
+                  div(
+                    className := "controls",
+                    button(tpe := "button", className := "btn-left", title := "Move head left", onClick --> shiftLeft, "◀"),
+                    button(tpe := "button", className := "btn-right", title := "Move head right", onClick --> shiftRight, "▶"),
+                    button(tpe := "button", className := "btn-flip", title := "Flip", onClick --> flip, "Flip ⧎")
+                  )
+                )
+              )
+          }
         )
       )
     )

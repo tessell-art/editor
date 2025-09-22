@@ -46,6 +46,7 @@ object MenuBarComponent:
         // Pass both the signal and the Var to the switcher
         themeSwitcher(effectiveTheme, userThemePreference)
       ),
+      PopUpsComponent.irregularPolygonPopup(),
       PopUpsComponent.guidePopup(),
       PopUpsComponent.shortcutsPopup(),
       PopUpsComponent.helpPopup()
