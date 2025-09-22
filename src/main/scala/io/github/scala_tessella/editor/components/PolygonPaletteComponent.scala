@@ -41,22 +41,28 @@ object PolygonPaletteComponent:
         child.maybe <-- EditorState.selectedPolygon.signal
           .combineWith(EditorState.isIrregularSelected.signal)
           .map((maybeSides, isIrregular) =>
-              if isIrregular then
-                Option(
-                  div(
-                    button(
-                      className := "select-all-by-type-btn",
-                      s"Select irregular shape",
-                      onClick.preventDefault --> { _ => AppState.selectPolygonsByShape(EditorState.recentIrregularPolygon.now().get) },
-                      disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
-                    )
+            if isIrregular then
+              Option(
+                div(
+                  button(
+                    className := "select-all-by-type-btn",
+                    s"Select irregular shape",
+                    // Replace with gated click composed with current angles
+                    inContext { btn =>
+                      gate(btn.events(onClick))
+                        .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+                        .collect { case (_, Some(angles)) => angles } --> { angles =>
+                        AppState.selectPolygonsByShape(angles)
+                      }
+                    },
+                    disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
                   )
                 )
-              else
-                maybeSides.map { sides =>
+              )
+            else
+              maybeSides.map { sides =>
                 val polygonName = PolygonNameGenerator.polygonName(sides)
                 div(
-                  //            p(s"Selected: $sides-sided polygon ($polygonName)"),
                   button(
                     className := "select-all-by-type-btn",
                     s"Select all ${polygonName}s",
@@ -64,7 +70,7 @@ object PolygonPaletteComponent:
                     disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
                   )
                 )
-            }
+              }
           )
       )
     )
