@@ -166,7 +166,6 @@ object PolygonPaletteComponent:
     val btnClass = polygonButtonClass("polygon-btn irregular-polygon-slot", isIrregularSelected)
 
     // local popup state for the head-angle chooser
-    val showHeadPopup = Var(false)
     val headIndex = Var(1) // which vertex/edge is the "head" (attachment edge starts at this vertex)
 
     // When clicked, select irregular. If tiling is empty, create it from the irregular polygon.
@@ -181,7 +180,7 @@ object PolygonPaletteComponent:
     val openPopup: Observer[dom.MouseEvent] = Observer { e =>
       e.stopPropagation()
       if EditorState.recentIrregularPolygon.now().isDefined then
-        showHeadPopup.set(true)
+        EditorState.showIrregularPolygonPopup.set(true)
     }
 
     // controls
@@ -202,7 +201,7 @@ object PolygonPaletteComponent:
       if n > 0 then EditorState.recentIrregularPolygon.set(EditorState.recentIrregularPolygon.now().map(_.reflectAt(1)))
     }
 
-    val closePopup: Observer[dom.MouseEvent] = Observer { _ => showHeadPopup.set(false) }
+    val closePopup: Observer[dom.MouseEvent] = Observer { _ => EditorState.showIrregularPolygonPopup.set(false) }
 
     // Render small slot with an extra corner button
     div(
@@ -255,7 +254,7 @@ object PolygonPaletteComponent:
       // popup overlay (use same structure / classes as PopUpsComponent)
       div(
         className := "popup-overlay", // full-screen flex overlay
-        display <-- showHeadPopup.signal.map(if _ then "flex" else "none"),
+        display <-- EditorState.showIrregularPolygonPopup.signal.map(if _ then "flex" else "none"),
         onClick --> closePopup,
         div(
           className := "popup-content", // centered content card

@@ -108,6 +108,9 @@ object EditorState:
   /** Whether the shortcuts popup is visible */
   val showShortcutsPopup: Var[Boolean] = Var(false)
 
+  /** Whether the irregular polygon popup is visible */
+  val showIrregularPolygonPopup: Var[Boolean] = Var(false)
+  
   //
   // ERROR HANDLING
   //
