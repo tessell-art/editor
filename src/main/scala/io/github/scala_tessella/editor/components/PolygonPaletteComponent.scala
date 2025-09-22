@@ -165,9 +165,6 @@ object PolygonPaletteComponent:
 
     val btnClass = polygonButtonClass("polygon-btn irregular-polygon-slot", isIrregularSelected)
 
-    // local popup state for the head-angle chooser
-    val headIndex = Var(1) // which vertex/edge is the "head" (attachment edge starts at this vertex)
-
     // When clicked, select irregular. If tiling is empty, create it from the irregular polygon.
     val onSelectIrregular: Observer[dom.MouseEvent] =
       Observer { _ =>
@@ -284,7 +281,7 @@ object PolygonPaletteComponent:
                   div(
                     className := "irregular-head-editor",
                     // big preview with head marker
-                    div(className := "big-preview", bigIrregularWithHead(angles, headIndex)),
+                    div(className := "big-preview", bigIrregularWithHead(angles)),
                     // controls row
                     div(
                       className := "controls",
@@ -300,8 +297,8 @@ object PolygonPaletteComponent:
       )
     )
 
-  // Big preview that highlights the head edge (headIndex -> headIndex+1)
-  private def bigIrregularWithHead(angles: Vector[AngleDegree], headIndexVar: Var[Int]): Element =
+  // Big preview that highlights the head edge
+  private def bigIrregularWithHead(angles: Vector[AngleDegree]): Element =
     val size = 220
     val pad = 12.0
 
@@ -371,7 +368,7 @@ object PolygonPaletteComponent:
         svg.stroke := "currentColor",
         svg.strokeWidth := "1.5"
       ),
-      child <-- headIndexVar.signal.map(i => edgeLine(((i % basePts.size) + basePts.size) % basePts.size))
+      edgeLine(((1 % basePts.size) + basePts.size) % basePts.size)
     )
 
   // Render the irregular polygon preview from AngleDegree vector (unit edges)
