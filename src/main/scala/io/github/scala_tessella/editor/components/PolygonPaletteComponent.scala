@@ -171,21 +171,6 @@ object PolygonPaletteComponent:
 
     val btnClass = polygonButtonClass("polygon-btn irregular-polygon-slot", isIrregularSelected)
 
-    // When clicked, select irregular. If tiling is empty, create it from the irregular polygon.
-    val onSelectIrregular: Observer[dom.MouseEvent] =
-      Observer { _ =>
-        if EditorState.recentIrregularPolygon.now().isDefined then
-          initializeWithIrregularIfEmpty()
-          selectIrregularInPalette()
-      }
-
-    // open the popup from the corner button (stop bubbling so the main button onClick does not trigger)
-    val openPopup: Observer[dom.MouseEvent] = Observer { e =>
-      e.stopPropagation()
-      if EditorState.recentIrregularPolygon.now().isDefined then
-        EditorState.showIrregularPolygonPopup.set(true)
-    }
-
     button(
       className <-- btnClass,
       tpe := "button",
@@ -193,13 +178,28 @@ object PolygonPaletteComponent:
       disabled <-- EditorState.isProcessing.signal
         .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
         .map { (processing, noneRecent) => processing || noneRecent },
-      onClick.filter(_ => !EditorState.isProcessing.now()) --> onSelectIrregular,
+      // replace filter+now() with gated click + current state
+      inContext { thisBtn =>
+        gate(thisBtn.events(onClick))
+          .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+          .collect { case (_, Some(_)) => () } --> { _ =>
+          initializeWithIrregularIfEmpty()
+          selectIrregularInPalette()
+        }
+      },
       // small corner button
       div(
         className := "corner-button",
         title := "Adjust head (preview)",
-        onClick.stopPropagation --> openPopup,
-        // simple plus icon
+        // stop propagation still needed, then gate the corner click stream
+        onClick.stopPropagation --> Observer.empty,
+        inContext { cornerDiv =>
+          gate(cornerDiv.events(onClick))
+            .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+            .collect { case (_, Some(_)) => () } --> { _ =>
+            EditorState.showIrregularPolygonPopup.set(true)
+          }
+        },
         svg.svg(
           svg.width := "12", svg.height := "12", svg.viewBox := "0 -4 24 24",
           svg.path(svg.d := "M12 5v14M5 12h14", svg.stroke := "currentColor", svg.fill := "none", svg.strokeWidth := "2", svg.strokeLineCap := "round")
@@ -226,8 +226,8 @@ object PolygonPaletteComponent:
       div(
         className := "polygon-label",
         child.text <-- EditorState.recentIrregularPolygon.signal.map {
-          case None          => "Irregular"
-          case Some(angles)  => s"Irr-${angles.size}"
+          case None => "Irregular"
+          case Some(angles) => s"Irr-${angles.size}"
         }
       )
     )
