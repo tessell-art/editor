@@ -9,8 +9,6 @@ import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, rotateRight, reflectAt}
-import org.scalajs.dom
 
 import scala.math.{cos, sin}
 
