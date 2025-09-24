@@ -258,9 +258,8 @@ object PolygonPaletteComponent:
     val maxY = ys.max
     val w = Math.max(1e-6, maxX - minX)
     val h = Math.max(1e-6, maxY - minY)
-    val scale = (size - 2 * pad) / Math.max(w, h)
-    val offX = (size - scale * w) / 2.0 - scale * minX
-    val offY = (size - scale * h) / 2.0 - scale * minY
+    val (scale, offX, offY) =
+      fitPointsToSquare(basePts.map { case (x, y) => Point(x, y) }, size, pad)
 
     def toStr(p: (Double, Double)) =
       val sx = offX + p._1 * scale
@@ -315,9 +314,8 @@ object PolygonPaletteComponent:
     val minY = ys.min; val maxY = ys.max
     val w = Math.max(1e-6, maxX - minX)
     val h = Math.max(1e-6, maxY - minY)
-    val scale = (size - 2 * pad) / Math.max(w, h)
-    val offX = (size - scale * w) / 2.0 - scale * minX
-    val offY = (size - scale * h) / 2.0 - scale * minY
+    val (scale, offX, offY) =
+      fitPointsToSquare(pts.map { case (x, y) => Point(x, y) }, size, pad)
 
     val svgPoints = pts.toVector.map { case (px, py) =>
       val sx = offX + px * scale
