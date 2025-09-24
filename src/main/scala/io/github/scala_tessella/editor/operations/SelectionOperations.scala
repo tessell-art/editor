@@ -141,7 +141,6 @@ object SelectionOperations:
           val face = tiling.findInnerFace(faceId).toOption.get
           if face.hasEqualAngles.toOption.get then
             val sides = face.halfEdges.toOption.get.size
-            EditorState.recentIrregularPolygon.set(None)
             EditorState.isIrregularSelected.set(false)
             EditorState.selectedPolygon.set(Some(sides))
           else
