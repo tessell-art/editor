@@ -57,6 +57,9 @@ object Geometry:
     def scale(factor: Double): Point =
       Point(x * factor, y * factor)
 
+    def transform(scaleFactor: Double, offset: Point): Point =
+      scale(scaleFactor).plus(offset)
+
     def rotate(theta: Radian): Point =
       val cot: Double =
         Math.cos(theta)
@@ -77,7 +80,7 @@ object Geometry:
 //      plusPolar(1)
 
     /** Calculates the horizontal angle between two points */
-    private def angleTo(other: Point): Radian =
+    def angleTo(other: Point): Radian =
       LineSegment(this, other).horizontalAngle
 
     def distanceTo(other: Point): Double =
@@ -145,12 +148,12 @@ object Geometry:
   // ---------------------------------------
   // New: general-purpose geometry utilities
   // ---------------------------------------
-  
+
   case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double):
     def width: Double = maxX - minX
-  
+
     def height: Double = maxY - minY
-  
+
   object Bounds:
     def fromPoints(points: Seq[Point]): Option[Bounds] =
       if points.isEmpty then None
@@ -158,11 +161,22 @@ object Geometry:
         val xs = points.map(_.x)
         val ys = points.map(_.y)
         Some(Bounds(xs.min, xs.max, ys.min, ys.max))
-  
+
   extension (points: Seq[Point])
     def maybeBounds: Option[Bounds] =
       Bounds.fromPoints(points)
-  
+
+  /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
+  def fitPointsToViewBox(points: Seq[Point], scale: Double, padding: Double): (Double, Double, Double, Double) =
+    Bounds.fromPoints(points) match
+      case None => (2 * padding, 2 * padding, padding, padding)
+      case Some(b) =>
+        val width = b.width * scale + 2 * padding
+        val height = b.height * scale + 2 * padding
+        val offX = -b.minX * scale + padding
+        val offY = -b.minY * scale + padding
+        (width, height, offX, offY)
+
   /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices (including start). */
   def walkUnitEdges(turns: Seq[Double]): Vector[Point] =
     var x = 0.0
@@ -177,7 +191,7 @@ object Geometry:
       heading = heading + t
     }
     pts.toVector
-  
+
   /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding. */
   def fitPointsToSquare(points: Seq[Point], size: Double, padding: Double): (Double, Double, Double) =
     Bounds.fromPoints(points) match
@@ -189,7 +203,7 @@ object Geometry:
         val offX = (size - scale * w) / 2.0 - scale * b.minX
         val offY = (size - scale * h) / 2.0 - scale * b.minY
         (scale, offX, offY)
-  
+
   /** Normalize delta angle to (-PI, PI]. */
   def normalizeDeltaAngle(a2: Double, a1: Double): Double =
     var d = a2 - a1

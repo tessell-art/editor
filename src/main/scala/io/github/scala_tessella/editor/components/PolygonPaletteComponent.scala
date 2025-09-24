@@ -245,25 +245,17 @@ object PolygonPaletteComponent:
     val pad = 12.0
 
     // compute polygon points in local unit-edges like in thumbnail
-    def unitPoints(a: Vector[AngleDegree]): Vector[(Double, Double)] =
+    def unitPoints(a: Vector[AngleDegree]): Vector[Point] =
       val turns = a.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-      Geometry.walkUnitEdges(turns).map(p => (p.x, p.y))
+      Geometry.walkUnitEdges(turns)
 
     val basePts = unitPoints(angles)
-    val xs = basePts.map(_._1)
-    val ys = basePts.map(_._2)
-    val minX = xs.min
-    val maxX = xs.max
-    val minY = ys.min
-    val maxY = ys.max
-    val w = Math.max(1e-6, maxX - minX)
-    val h = Math.max(1e-6, maxY - minY)
     val (scale, offX, offY) =
-      fitPointsToSquare(basePts.map { case (x, y) => Point(x, y) }, size, pad)
+      fitPointsToSquare(basePts, size, pad)
 
-    def toStr(p: (Double, Double)) =
-      val sx = offX + p._1 * scale
-      val sy = offY + p._2 * scale
+    def toStr(point: Point) =
+      val sx = offX + point.x * scale
+      val sy = offY + point.y * scale
       f"$sx%.3f,$sy%.3f"
 
     val pointsStr = basePts.map(toStr).mkString(" ")
@@ -306,20 +298,14 @@ object PolygonPaletteComponent:
 
     // Walk edges of length 1, turning by exterior angles (180 - interior)
     val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-    val pts = walkUnitEdges(turns).map(p => (p.x, p.y))
+    val pts = walkUnitEdges(turns)
 
-    val xs = pts.map(_._1)
-    val ys = pts.map(_._2)
-    val minX = xs.min; val maxX = xs.max
-    val minY = ys.min; val maxY = ys.max
-    val w = Math.max(1e-6, maxX - minX)
-    val h = Math.max(1e-6, maxY - minY)
     val (scale, offX, offY) =
-      fitPointsToSquare(pts.map { case (x, y) => Point(x, y) }, size, pad)
+      fitPointsToSquare(pts, size, pad)
 
-    val svgPoints = pts.toVector.map { case (px, py) =>
-      val sx = offX + px * scale
-      val sy = offY + py * scale
+    val svgPoints = pts.map { point =>
+      val sx = offX + point.x * scale
+      val sy = offY + point.y * scale
       f"$sx%.3f,$sy%.3f"
     }.mkString(" ")
 

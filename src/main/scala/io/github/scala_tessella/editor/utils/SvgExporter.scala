@@ -8,6 +8,7 @@ import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
+import io.github.scala_tessella.editor.utils.Geometry.fitPointsToViewBox
 import org.scalajs.dom
 
 import scala.math.BigDecimal.RoundingMode
@@ -44,15 +45,12 @@ object SvgExporter:
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then return ""
 
-    val bounds = coordinates.values.toList.map(_.toPoint).maybeBounds.get
+    val points = coordinates.values.toList.map(_.toPoint)
 
     val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
     val padding = 20.0
 
-    val width = (bounds.maxX - bounds.minX) * scale + 2 * padding
-    val height = (bounds.maxY - bounds.minY) * scale + 2 * padding
-    val offsetX = -bounds.minX * scale + padding
-    val offsetY = -bounds.minY * scale + padding
+    val (width, height, offsetX, offsetY) = fitPointsToViewBox(points, scale, padding)
 
     val polygonsXml = generatePolygonsXml(tiling, scale, offsetX, offsetY, strokeWidth)
     val perimeterXml = generatePerimeterXml(tiling, scale, offsetX, offsetY, strokeWidthPeri)
