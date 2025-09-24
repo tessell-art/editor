@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.TilingSVG.toMetadata
-import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
 import org.scalajs.dom
 
 import scala.math.BigDecimal.RoundingMode
@@ -78,21 +78,22 @@ object SvgExporter:
       s"$x,$y"
     }.mkString(" ")
 
+  private def pointsString(vertices: Seq[Vertex], scale: Double, offsetX: Double, offsetY: Double): String =
+    vertices.map { vertex =>
+      val x = (vertex.coords.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+      val y = (vertex.coords.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
+      s"$x,$y"
+    }.mkString(" ")
+
   private [utils] def generatePolygonsXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double, strokeWidth: Double): String =
-    val polygonsXml = tiling.innerFaces.map { face =>
-      val vertices = face.getVertices.toOption.get
-      val color = AppState.getOrAssignPolygonColor(face.id).toRgbString
-      val points = // pointsString(nodes, coordinates, scale, offsetX, offsetY)
-        vertices.map { vertex =>
-          val x = (vertex.coords.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-          val y = (vertex.coords.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-          s"$x,$y"
-        }.mkString(" ")
+    val polygonsXml =
+      tiling.innerFacesVertices.map { (faceId, faceVertices) =>
+        val color = AppState.getOrAssignPolygonColor(faceId).toRgbString
+        val points = pointsString(faceVertices, scale, offsetX, offsetY)
+        val nodesStr = "" //nodes.map(_.toString).mkString(",")
 
-      val nodesStr = "" //nodes.map(_.toString).mkString(",")
-
-      s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" />"""
-    }.mkString("\n")
+        s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" />"""
+      }.mkString("\n")
     s"""  <g id="tiling-polygons" stroke="#333" stroke-width="$strokeWidth">
        |$polygonsXml
        |  </g>""".stripMargin
@@ -101,14 +102,9 @@ object SvgExporter:
     val perimeterNodes = tiling.boundaryVertices
     if perimeterNodes.isEmpty then ""
     else
-      val points =
-        perimeterNodes.map { vertex =>
-          val x = (vertex.coords.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-          val y = (vertex.coords.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-          s"$x,$y"
-        }.mkString(" ")
-
+      val points = pointsString(perimeterNodes, scale, offsetX, offsetY)
       val nodesStr = ""// perimeterNodes.map(_.toString).mkString(",")
+
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
   private[utils] def generateDualTessellationXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double): String =

@@ -15,8 +15,8 @@ object DualTessellation:
    * @return A sequence of pairs of `BigPoint`, where each pair represents a line segment (midpoint, center).
    */
   def generateDualLines(tiling: TilingDCEL): List[(BigPoint, BigPoint)] =
-    tiling.innerFaces.flatMap { face =>
-      val points = face.getVertices.toOption.get.map(_.coords)
+    tiling.innerFacesVertices.flatMap { (_, faceVertices) =>
+      val points = faceVertices.map(_.coords)
       if points.size < 2 then List.empty
       else
         val center = BigPoint(

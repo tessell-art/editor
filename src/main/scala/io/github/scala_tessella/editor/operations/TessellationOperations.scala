@@ -140,7 +140,7 @@ object TessellationOperations:
     // We look for a face whose boundary contains the directed edge (v1 -> v2).
     // If DCEL provides halfEdges on face with next pointers, prefer that; here we rely on vertex order on the face.
     tiling.innerFaces.find { face =>
-      val ids = face.getVertices.toOption.get.map(_.id).toVector
+      val ids = tiling.findInnerFaceVertices(face.id).toOption.get.map(_.id).toVector
       ids.slidingO(2).exists(pair => pair(0) == v1 && pair(1) == v2)
     }.map(_.id)
 

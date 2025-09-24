@@ -109,15 +109,13 @@ object PolygonPlacementGeometry:
     val rightNormal = (uy, -ux) // Normal for CW traversal
 
     def findNormal(faceId: FaceId): Option[(Double, Double, Boolean)] =
-      tiling.findInnerFace(faceId).toOption.flatMap { face =>
-        face.getVertices.toOption.map(_.map(_.id).toVector).flatMap { ids =>
-          if !ids.slidingO(2).exists(p => p(0) == edge._1 && p(1) == edge._2) then
-            Some((leftNormal._1, leftNormal._2, false)) // Forward edge, use left normal, not flipped
-          else if ids.slidingO(2).exists(p => p(0) == edge._2 && p(1) == edge._1) then
-            Some((rightNormal._1, rightNormal._2, true)) // Backward edge, use right normal, flipped
-          else
-            None
-        }
+      tiling.findInnerFaceVertices(faceId).toOption.map(_.map(_.id).toVector).flatMap { ids =>
+        if !ids.slidingO(2).exists(p => p(0) == edge._1 && p(1) == edge._2) then
+          Some((leftNormal._1, leftNormal._2, false)) // Forward edge, use left normal, not flipped
+        else if ids.slidingO(2).exists(p => p(0) == edge._2 && p(1) == edge._1) then
+          Some((rightNormal._1, rightNormal._2, true)) // Backward edge, use right normal, flipped
+        else
+          None
       }
 
     intoFace match

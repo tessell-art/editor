@@ -11,7 +11,7 @@ import io.github.scala_tessella.editor.utils.Geometry.Point
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
-import io.github.scala_tessella.dcel.{Face, FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.{Face, FaceId, TilingDCEL, Vertex, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 
@@ -135,14 +135,14 @@ object TessellationRenderer:
   def renderTiling(tiling: TilingDCEL): Element =
 
     // Precompute face data once per render pass
-    val facesData: List[(FaceId, String)] = tiling.innerFaces.map { face =>
-      val faceVertices = face.getVertices.toOption.get
-      val pointStrings = faceVertices.map(vertex =>
-        val (x, y) = tilingPointToCanvasView(vertex.coords.toPoint)
-        s"$x,$y"
-      )
-      (face.id, pointStrings.mkString(" "))
-    }
+    val facesData: List[(FaceId, String)] =
+      tiling.innerFacesVertices.map { (faceId, faceVertices) =>
+        val pointStrings = faceVertices.map(vertex =>
+          val (x, y) = tilingPointToCanvasView(vertex.coords.toPoint)
+          s"$x,$y"
+        )
+        (faceId, pointStrings.mkString(" "))
+      }
 
     val tilingPolygons = facesData.map { case (faceId, pointsStr) =>
       getOrAssignPolygonColor(faceId)
@@ -403,25 +403,41 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-  private def faceToCoords: Face => List[Element] =
-    face =>
-      val vs = face.getVertices.toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
-      val edges = vs.slidingO(2).toList
-      edges.zipWithIndex.map { case (pair, idx) =>
-        renderInteriorEdge((pair(0), pair(1)), face.id, s"interior-edge-${face.id.value}-$idx")
-      }
+//  private def faceToCoords(tiling: TilingDCEL): FaceId => List[Element] =
+//    faceId =>
+//      val vs = tiling.findInnerFaceVertices(faceId).toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
+//      val edges = vs.slidingO(2).toList
+//      edges.zipWithIndex.map { case (pair, idx) =>
+//        renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
+//      }
+
+//  private def alt: (FaceId, List[Vertex]) => List[Element] =
+//    (faceId, faceVertices) =>
+//      val edges = faceVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList
+//      edges.zipWithIndex.map { case (pair, idx) =>
+//        renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
+//      }
 
   // New: render interactive interior edges for inserter tool
   private def renderInteriorEdges(tiling: TilingDCEL): List[Element] =
     if tiling.isEmpty then Nil
     else
-      tiling.innerFaces.flatMap { faceToCoords }
+      tiling.innerFacesVertices.flatMap { (faceId, faceVertices) =>
+        val edges = faceVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList
+        edges.zipWithIndex.map { case (pair, idx) =>
+          renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
+        }
+      }
 
   // New: render interactive interior edges for one selected face (Inserter mode)
   private def renderInteriorEdgesForFace(tiling: TilingDCEL, faceId: FaceId): List[Element] =
     if tiling.isEmpty then Nil
     else
-      tiling.findInnerFace(faceId).toOption.toList.flatMap { faceToCoords }
+      val faceVertices = tiling.findInnerFaceVertices(faceId).toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
+      val edges = faceVertices.slidingO(2).toList
+      edges.zipWithIndex.map { case (pair, idx) =>
+        renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
+      }
 
   private def renderInteriorEdge(edge: ((VertexId, BigPoint), (VertexId, BigPoint)), faceId: FaceId, id: String): Element =
     val v1 = edge._1._2.toPoint

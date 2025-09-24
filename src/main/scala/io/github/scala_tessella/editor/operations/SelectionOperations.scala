@@ -180,9 +180,9 @@ object SelectionOperations:
             if edgesOnly then
               EditorState.clickablePoints.set(Nil)
             else
-              val vs = face.getVertices.toOption.get
-              val vertices = vs.map(_.coords).map(_.toPoint)
-              val vertexIdsAndPoints = vs.map(_.id).zip(vertices)
+              val faceVertices = tiling.findInnerFaceVertices(face.id).toOption.get
+              val vertices = faceVertices.map(_.coords).map(_.toPoint)
+              val vertexIdsAndPoints = faceVertices.map(_.id).zip(vertices)
               val edges = vertexIdsAndPoints.toVector.slidingO(2).toList
               //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
               val midPoints = edges.map { edge =>
