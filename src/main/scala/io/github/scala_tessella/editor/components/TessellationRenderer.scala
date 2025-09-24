@@ -8,11 +8,10 @@ import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.Geometry.Point
-
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.{Face, FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 
@@ -152,15 +151,6 @@ object TessellationRenderer:
       getOrAssignPolygonColor(polygonId)
       renderTilingPolygonFromPoints(pointsStr, polygonId)
     }
-
-//    val tilingPolygons = tiling.innerFaces.map { face =>
-//      val vertices = face.getVertices.toOption.get
-//      val ids = vertices.map(_.id).toVector
-//      val polyTag = face.id.value
-//      val polygonId = s"tiling-poly-$polyTag"
-//      getOrAssignPolygonColor(polyTag)
-//      renderTilingPolygon(tiling.coordinates, ids, polygonId, polyTag)
-//    }
 
     val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList.zipWithIndex.map {
       (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
@@ -416,113 +406,32 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-//  private def renderTilingPolygon(coordinates: Map[VertexId, BigPoint], nodes: Vector[VertexId], id: String, polyTag: String): Element =
-//    val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(id))
-//
-//    val points = nodes.map(coordinates).map { vertex =>
-//      val (x, y) = tilingPointToCanvasView(vertex.toPoint)
-//      s"$x,$y"
-//    }.mkString(" ")
-//
-//    val rgbSignal = EditorState.polygonColors.signal.map { _.getOrElse(polyTag, (200, 200, 200)).toRgbString }
-//
-//    // Check if this polygon should be hidden due to failed deletion
-//    val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
-//      case Some(failedDel) => failedDel.polygonId == id
-//      case None => false
-//    }
-//
-//    // Update stroke and styling based on editor mode
-//    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
-//      case (selected, mode) =>
-//        if selected then "#ff6b6b"
-//        else mode match
-//          case EditorMode.Select => "#646cff"
-//          case EditorMode.Delete => "#ff4444" // Red tint for delete mode
-//    }
-//
-//    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
-//      case (selected, mode) =>
-//        if selected then "3.5"
-//        else mode match
-//          case EditorMode.Select => "1.5"
-//          case EditorMode.Delete => "2.0" // Slightly thicker in delete mode
-//    }
-//
-//    val basePolygon = svg.polygon(
-//      svg.points := points,
-//      svg.fill <-- rgbSignal,
-//      svg.stroke <-- strokeColorSignal,
-//      svg.strokeWidth <-- strokeWidthSignal,
-//      svg.className <-- EditorState.editorMode.signal.map {
-//        case EditorMode.Select => "tiling-polygon"
-//        case EditorMode.Delete => "tiling-polygon delete-mode"
-//      },
-//      // Add cursor style based on mode
-//      svg.style <-- shouldHideForDeletion
-//        .combineWith(EditorState.editorMode.signal)
-//        .combineWith(EditorState.activeTool.signal).map {
-//          case (hidden, mode, tool) =>
-//            val cursor = tool match
-//              case Some(Tool.ColorPicker)   => s"cursor: $colorPickerCursor;"
-//              case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
-//              case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
-//              case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
-//              case Some(Tool.Eraser) => s"cursor: $eraserCursor;"
-//              case Some(Tool.Inserter) => s"cursor: $inserterCursor;"
-//              case _ => mode match
-//                case EditorMode.Select => "cursor: pointer;"
-//                case EditorMode.Delete => s"cursor: $deleteCursor;"
-//            val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
-//            cursor + opacity
-//        },
-//      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(id) }
-//    )
-//
-//    val patternOverlay = svg.polygon(
-//      svg.points := points,
-//      svg.fill := "url(#selection-pattern)",
-//      svg.pointerEvents := "none",
-//      // Hide pattern overlay when showing deletion wireframe
-//      svg.style <-- shouldHideForDeletion.map(hidden => if hidden then "opacity: 0;" else "opacity: 1;")
-//    )
-//
-//    svg.g(
-//      basePolygon,
-//      child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map {
-//        case (selected, hidden) => if (selected && !hidden) Some(patternOverlay) else None
-//      }
-//    )
+  private def faceToCoords: Face => List[Element] =
+    face =>
+      val vs = face.getVertices.toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
+      val edges = vs.slidingO(2).toList
+      edges.zipWithIndex.map { case (pair, idx) =>
+        renderInteriorEdge((pair(0), pair(1)), face.id, s"interior-edge-${face.id.value}-$idx")
+      }
 
   // New: render interactive interior edges for inserter tool
   private def renderInteriorEdges(tiling: TilingDCEL): List[Element] =
     if tiling.isEmpty then Nil
     else
-      tiling.innerFaces.toList.flatMap { face =>
-        val vs = face.getVertices.toOption.get.map(_.id).toVector
-        val edges = vs.slidingO(2).toList
-        edges.zipWithIndex.map { case (pair, idx) =>
-          renderInteriorEdge(tiling.coordinates, (pair(0), pair(1)), face.id, s"interior-edge-${face.id.value}-$idx")
-        }
-      }
+      tiling.innerFaces.flatMap { faceToCoords }
 
   // New: render interactive interior edges for one selected face (Inserter mode)
   private def renderInteriorEdgesForFace(tiling: TilingDCEL, faceId: FaceId): List[Element] =
     if tiling.isEmpty then Nil
     else
-      tiling.findInnerFace(faceId).toOption.toList.flatMap { face =>
-        val vs = face.getVertices.toOption.get.map(_.id).toVector
-        val edges = vs.slidingO(2).toList
-        edges.zipWithIndex.map { case (pair, idx) =>
-          renderInteriorEdge(tiling.coordinates, (pair(0), pair(1)), face.id, s"interior-edge-${face.id.value}-$idx")
-        }
-      }
+      tiling.findInnerFace(faceId).toOption.toList.flatMap { faceToCoords }
 
-  private def renderInteriorEdge(coordinates: Map[VertexId, BigPoint], edge: (VertexId, VertexId), faceId: FaceId, id: String): Element =
-    val v1 = coordinates(edge._1).toPoint
-    val v2 = coordinates(edge._2).toPoint
+  private def renderInteriorEdge(edge: ((VertexId, BigPoint), (VertexId, BigPoint)), faceId: FaceId, id: String): Element =
+    val v1 = edge._1._2.toPoint
+    val v2 = edge._2._2.toPoint
     val (x1, y1) = tilingPointToCanvasView(v1)
     val (x2, y2) = tilingPointToCanvasView(v2)
+    val verticesPair = (edge._1._1, edge._2._1)
 
     val interactionArea = svg.line(
       svg.x1 := x1.toString,
@@ -541,12 +450,12 @@ object TessellationRenderer:
             if isIrregular then
               val angles = EditorState.recentIrregularPolygon.now().get
               EditorState.previewPlacement.set(
-                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, angles, edge, tiling, intoFace = Some(faceId)))
+                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, angles, verticesPair, tiling, intoFace = Some(faceId)))
               )
             else
               val sides = maybeSides.getOrElse(0)
               EditorState.previewPlacement.set(
-                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, RegularPolygon(sides).angles, edge, tiling, intoFace = Some(faceId)))
+                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, RegularPolygon(sides).angles, verticesPair, tiling, intoFace = Some(faceId)))
               )
           case null => ()
       },
@@ -557,7 +466,7 @@ object TessellationRenderer:
       onClick.preventDefault.compose(gate) --> { _ =>
         EditorState.activeTool.now() match
           case Some(Tool.Inserter) =>
-            TessellationOperations.attemptPolygonInsertion(edge._1, edge._2)
+            TessellationOperations.attemptPolygonInsertion(verticesPair._1, verticesPair._2)
             EditorState.previewPlacement.set(None)
           case _ => ()
       }
