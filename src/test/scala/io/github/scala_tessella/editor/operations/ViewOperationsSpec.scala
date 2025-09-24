@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.ViewTransform
-import io.github.scala_tessella.editor.utils.Bounds
+import io.github.scala_tessella.editor.utils.Geometry.Bounds
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.Point

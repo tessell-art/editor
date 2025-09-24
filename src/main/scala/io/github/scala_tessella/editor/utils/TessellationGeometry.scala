@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.editor.models.EditorConfig.*
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.{Point, transformPointToView}
 
 //case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double)
 
@@ -15,8 +15,7 @@ object TessellationGeometry:
    * @return A tuple (Double, Double) representing the (x, y) on the canvas.
    */
   def tilingPointToCanvasView(p: Point): (Double, Double) =
-    val transformed = p.transform(canvasScale, Point(canvasCenterX, canvasCenterY))
-    (transformed.x, transformed.y)
+    transformPointToView(p, canvasScale, canvasCenterX, canvasCenterY)
 
   extension (bigPoint: BigPoint)
 

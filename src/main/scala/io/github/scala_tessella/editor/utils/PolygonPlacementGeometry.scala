@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.{Point, edgeGeometrics, regularPolygonMetrics}
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
 
@@ -19,10 +19,10 @@ object PolygonPlacementGeometry:
     val vertex1 = tiling.coordinates(edge._1).toPoint
     val vertex2 = tiling.coordinates(edge._2).toPoint
 
-    val (edgeLen, ux, uy, midPoint) = computeEdgeGeometrics(vertex1, vertex2)
+    val (edgeLen, unitVector, midPoint) = edgeGeometrics(vertex1, vertex2)
     if (edgeLen == 0) return Vector.empty
 
-    val (perpX, perpY, wasFlipped) = determineInwardNormal(tiling, edge, intoFace, (ux, uy))
+    val (perpX, perpY, wasFlipped) = determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
 
     if angles.toSet.size == 1 then
       val polygonSides = angles.size
@@ -31,29 +31,29 @@ object PolygonPlacementGeometry:
       val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
   
       val angleStep = halfAngle * 2
-      val edgeAngle = atan2(uy, ux)
+      val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
       val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
       val winding = if wasFlipped then -1 else 1
-  
+
       generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
     else
 
       // Irregular polygon with unit edges and given internal angles.
-      // Build a local polygon starting from origin along +X, then translate/rotate to align the first edge to (v1->v2) and offset inward.
       val local = buildUnitEdgePolygon(angles)
 
-      // Compute transform: align local first edge (from (0,0) to (1,0)) to the actual perimeter edge (vertex1 -> vertex2)
-      val edgeAngle = atan2(uy, ux)
-      val rotCos = cos(edgeAngle)
-      val rotSin = sin(edgeAngle)
+      // Compute transform: align local first edge to the actual perimeter edge
+      val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
+      val rotCos = Math.cos(edgeAngle)
+      val rotSin = Math.sin(edgeAngle)
 
       // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
       val world = local.map { p =>
-        val sx = p.x * edgeLen
-        val sy = p.y * edgeLen
-        val rx = sx * rotCos - sy * rotSin
-        val ry = sx * rotSin + sy * rotCos
-        Point(vertex1.x + rx, vertex1.y + ry)
+        val scaled = p.scale(edgeLen)
+        val rotated = Point(
+          scaled.x * rotCos - scaled.y * rotSin,
+          scaled.x * rotSin + scaled.y * rotCos
+        )
+        vertex1.plus(rotated)
       }
 
       // No additional inward offset needed for preview points; keep exact constructed vertices

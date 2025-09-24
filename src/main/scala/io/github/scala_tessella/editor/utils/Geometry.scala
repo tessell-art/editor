@@ -173,6 +173,59 @@ object Geometry:
       center.plus(Point.createPolar(radius, angle))
     }
 
+  /** Build polygon vertices using unit edge length and given internal angles. */
+  def buildUnitEdgePolygon(angles: Seq[Double]): Vector[Point] =
+    if angles.isEmpty then Vector.empty
+    else
+      var pts = Vector.newBuilder[Point]
+      var heading = 0.0 // radians
+      var curr = Point(0.0, 0.0)
+
+      // first vertex
+      pts += curr
+
+      // Rotate the angles sequence to start from the second angle
+      val rotatedAngles = if angles.size > 1 then angles.tail ++ angles.take(1) else angles
+
+      // For each interior angle:
+      // 1) advance one unit in current heading to create next vertex
+      // 2) then turn by the exterior angle (PI - interior)
+      rotatedAngles.foreach { a =>
+        val nx = curr.x + Math.cos(heading)
+        val ny = curr.y + Math.sin(heading)
+        val next = Point(nx, ny)
+        pts += next
+        curr = next
+        heading = heading + (Math.PI - a)
+      }
+
+      // We now have N+1 points with the last equal to the first only for closed perfect polygons.
+      // For preview we want exactly N vertices, so drop the last step-produced point.
+      val built = pts.result()
+      if built.size >= 2 then built.dropRight(1) else built
+
+  /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
+  def edgeGeometrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
+    val dx = vertex2.x - vertex1.x
+    val dy = vertex2.y - vertex1.y
+    val edgeLen = Math.hypot(dx, dy)
+    val unitVector = if edgeLen == 0 then Point(0.0, 0.0) else Point(dx / edgeLen, dy / edgeLen)
+    val midPoint = Point((vertex1.x + vertex2.x) / 2, (vertex1.y + vertex2.y) / 2)
+    (edgeLen, unitVector, midPoint)
+
+  /** Generate perpendicular (normal) vectors to a given unit vector. Returns (left normal, right normal). */
+  def perpendicularVectors(unitVector: Point): (Point, Point) =
+    val leftNormal = Point(-unitVector.y, unitVector.x) // Normal for CCW traversal
+    val rightNormal = Point(unitVector.y, -unitVector.x) // Normal for CW traversal
+    (leftNormal, rightNormal)
+
+  /** Calculate geometric properties of a regular polygon (apothem, circumradius). */
+  def regularPolygonMetrics(sides: Int, sideLength: Double): (Double, Double, Double) =
+    val halfAngle = Math.PI / sides
+    val apothem = sideLength / (2 * Math.tan(halfAngle))
+    val radius = sideLength / (2 * Math.sin(halfAngle))
+    (apothem, radius, halfAngle)
+
   /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
   def fitPointsToViewBox(points: Seq[Point], scale: Double, padding: Double): (Double, Double, Double, Double) =
     Bounds.fromPoints(points) match
@@ -217,3 +270,31 @@ object Geometry:
     if d < -Math.PI then d += 2 * Math.PI
     if d > Math.PI then d -= 2 * Math.PI
     d
+
+  // ---------------------------------------
+  // Coordinate transformation utilities
+  // ---------------------------------------
+
+  /** Transform a point from tiling coordinates to canvas view coordinates using scale and offset. */
+  def transformPointToView(point: Point, scale: Double, offsetX: Double, offsetY: Double): (Double, Double) =
+    val transformed = point.transform(scale, Point(offsetX, offsetY))
+    (transformed.x, transformed.y)
+
+  /** Transform points for SVG generation with proper scaling and offsets. */
+  def transformPointsForSvg(points: Seq[Point], scale: Double, offsetX: Double, offsetY: Double): Seq[(Double, Double)] =
+    points.map(p => transformPointToView(p, scale, offsetX, offsetY))
+
+  /** Compute midpoint of two points. */
+  def midpoint(p1: Point, p2: Point): Point =
+    LineSegment(p1, p2).midPoint
+
+  /** Compute distance between two points. */
+  def distance(p1: Point, p2: Point): Double =
+    p1.distanceTo(p2)
+
+  /** Compute the angle from one point to another. */
+  def angleBetweenPoints(from: Point, to: Point): Radian =
+    LineSegment(from, to).horizontalAngle
+//    val dx = to.x - from.x
+//    val dy = to.y - from.y
+//    Radian((Math.atan2(dy, dx) + Radian.TAU) % Radian.TAU)
