@@ -135,18 +135,18 @@ object TessellationRenderer:
   def renderTiling(tiling: TilingDCEL): Element =
 
     // Precompute face data once per render pass
-    val facesData = tiling.innerFaces.map { face =>
-      val vs = face.getVertices.toOption.get
-      val (vertexIds, pointStrings) = vs.map(vertex =>
+    val facesData: List[(FaceId, String)] = tiling.innerFaces.map { face =>
+      val faceVertices = face.getVertices.toOption.get
+      val pointStrings = faceVertices.map(vertex =>
         val (x, y) = tilingPointToCanvasView(vertex.coords.toPoint)
-        (vertex.id, s"$x,$y")
-      ).unzip
-      (vertexIds, face.id, pointStrings.mkString(" "))
+        s"$x,$y"
+      )
+      (face.id, pointStrings.mkString(" "))
     }
 
-    val tilingPolygons = facesData.map { case (_, polygonId, pointsStr) =>
-      getOrAssignPolygonColor(polygonId)
-      renderTilingPolygonFromPoints(pointsStr, polygonId)
+    val tilingPolygons = facesData.map { case (faceId, pointsStr) =>
+      getOrAssignPolygonColor(faceId)
+      renderTilingPolygonFromPoints(pointsStr, faceId)
     }
 
     val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList.zipWithIndex.map {
