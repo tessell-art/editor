@@ -87,7 +87,7 @@ object ViewOperations:
     val tiling = EditorState.currentTiling.now()
     if tiling.isEmpty then return
 
-    val coords = tiling.coordinates.values.map(_.toPoint).map(_.scale(canvasScale))
+    val coords = tiling.boundaryVertices.map(_.coords.toPoint).map(_.scale(canvasScale))
     if coords.isEmpty then return
 
     EditorState.canvasElementRef.now().foreach { canvasElement =>
