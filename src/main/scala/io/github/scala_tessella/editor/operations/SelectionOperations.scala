@@ -180,7 +180,6 @@ object SelectionOperations:
             if edgesOnly then
               EditorState.clickablePoints.set(Nil)
             else
-              val coords = tiling.coordinates
               val vs = face.getVertices.toOption.get
               val vertices = vs.map(_.coords).map(_.toPoint)
               val vertexIdsAndPoints = vs.map(_.id).zip(vertices)

@@ -149,8 +149,8 @@ object TessellationRenderer:
       renderTilingPolygonFromPoints(pointsStr, faceId)
     }
 
-    val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList.zipWithIndex.map {
-      (vs, index) => renderPerimeterEdge(tiling.coordinates, (vs(0), vs(1)), index, s"perimeter-edge-$index")
+    val perimeterEdges = tiling.boundaryVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList.zipWithIndex.map {
+      (vs, index) => renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index")
     }
 
     // Interior edges overlay only when Inserter tool is active AND a polygon is highlighted
@@ -487,9 +487,9 @@ object TessellationRenderer:
       interactionArea
     )
 
-  private def renderPerimeterEdge(coordinates: Map[VertexId, BigPoint], edge: (VertexId, VertexId), edgeIndex: Int, id: String): Element =
-    val vertex1 = coordinates(edge._1).toPoint
-    val vertex2 = coordinates(edge._2).toPoint
+  private def renderPerimeterEdge(edge: ((VertexId, BigPoint), (VertexId, BigPoint)), edgeIndex: Int, id: String): Element =
+    val vertex1 = edge._1._2.toPoint
+    val vertex2 = edge._2._2.toPoint
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates
@@ -517,7 +517,7 @@ object TessellationRenderer:
                 maybeAngles.get
               else
                 RegularPolygon(maybeSides.get).angles
-            EditorState.previewPlacement.set(Some(FailedPolygonPlacement(edgeIndex, angles, edge, tiling)))
+            EditorState.previewPlacement.set(Some(FailedPolygonPlacement(edgeIndex, angles, (edge._1._1, edge._2._1), tiling)))
           case null => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
