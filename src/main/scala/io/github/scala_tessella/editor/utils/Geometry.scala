@@ -94,15 +94,15 @@ object Geometry:
 //    def flipVertically: Point =
 //      Point(x, -y)
 
-//  object Point:
-//
-//    /** Creates a point at origin */
-//    def apply(): Point =
-//      Point(0, 0)
-//
-//    /** Creates a point from polar coordinates */
-//    def createPolar(rho: Double, theta: Radian): Point =
-//      Point(rho * Math.cos(theta), rho * Math.sin(theta))
+  object Point:
+
+    /** Creates a point at origin */
+    def apply(): Point =
+      Point(0, 0)
+
+    /** Creates a point from polar coordinates */
+    def createPolar(rho: Double, theta: Radian): Point =
+      Point(rho * Math.cos(theta), rho * Math.sin(theta))
 
   /** Line segment, defined as the set of points located between the two end points. */
   case class LineSegment(point1: Point, point2: Point):
@@ -165,6 +165,13 @@ object Geometry:
   extension (points: Seq[Point])
     def maybeBounds: Option[Bounds] =
       Bounds.fromPoints(points)
+
+  /** Creates points for a regular polygon. */
+  def regularPolygonPoints(sides: Int, radius: Double, center: Point = Point(0, 0)): Seq[Point] =
+    (0 until sides).map { i =>
+      val angle = (Radian.TAU * i / sides) - Radian.TAU_2 // Start from the top
+      center.plus(Point.createPolar(radius, angle))
+    }
 
   /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
   def fitPointsToViewBox(points: Seq[Point], scale: Double, padding: Double): (Double, Double, Double, Double) =

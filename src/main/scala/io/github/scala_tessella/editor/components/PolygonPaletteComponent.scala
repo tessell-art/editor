@@ -4,11 +4,9 @@ import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorSta
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
 import io.github.scala_tessella.editor.utils.Geometry
-import io.github.scala_tessella.editor.utils.Geometry.Point
-import io.github.scala_tessella.editor.utils.Geometry.{fitPointsToSquare, walkUnitEdges}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, fitPointsToSquare, regularPolygonPoints, walkUnitEdges}
 import io.github.scala_tessella.editor.operations.TessellationOperations.*
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
@@ -146,16 +144,11 @@ object PolygonPaletteComponent:
 
   private def polygonSvg(sides: Int): Element =
     val size = 40
-    val centerX = size / 2.0
-    val centerY = size / 2.0
+    val center = Point(size / 2.0, size / 2.0)
     val radius = size * 0.35
 
-    val points = (0 until sides).map { i =>
-      val angle = (TAU * i / sides) - TAU_2 // Start from the top
-      val x = centerX + radius * cos(angle.toDouble)
-      val y = centerY + radius * sin(angle.toDouble)
-      s"$x,$y"
-    }.mkString(" ")
+    val points = regularPolygonPoints(sides, radius, center)
+      .map(p => s"${p.x},${p.y}").mkString(" ")
 
     svg.svg(
       svg.width := size.toString,
