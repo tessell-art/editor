@@ -90,6 +90,19 @@ object Geometry:
     def alignWithStart(first: Point, second: Point): Point =
       minus(first).rotate(Radian.TAU - first.angleTo(second))
 
+    /** Get the length (magnitude) of this point as a vector */
+    def magnitude: Double =
+      Math.hypot(x, y)
+
+    /** Normalize this point to unit length */
+    def normalized: Point =
+      val mag = magnitude
+      if mag == 0.0 then Point(0, 0) else Point(x / mag, y / mag)
+
+    /** Compute the dot product with another point (treating both as vectors) */
+    def dot(that: Point): Double =
+      this.x * that.x + this.y * that.y
+
 //    /** New point flipped vertically around the x-axis */
 //    def flipVertically: Point =
 //      Point(x, -y)

@@ -8,7 +8,7 @@ import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.fitPointsToViewBox
+import io.github.scala_tessella.editor.utils.Geometry.{fitPointsToViewBox, transformPointsForSvg}
 import org.scalajs.dom
 
 import scala.math.BigDecimal.RoundingMode
@@ -70,18 +70,24 @@ object SvgExporter:
        |</svg>""".stripMargin
 
   private [utils] def pointsString(nodes: Seq[VertexId], coordinates: Map[VertexId, BigPoint], scale: Double, offsetX: Double, offsetY: Double): String =
-    nodes.map(coordinates).map { vertex =>
-      val x = (vertex.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-      val y = (vertex.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-      s"$x,$y"
-    }.mkString(" ")
+    val points = nodes.map(coordinates).map(_.toPoint)
+    transformPointsForSvg(points, scale, offsetX, offsetY)
+      .map { case (x, y) =>
+        val xFormatted = BigDecimal(x).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
+        val yFormatted = BigDecimal(y).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
+        s"$xFormatted,$yFormatted"
+      }
+      .mkString(" ")
 
   private def pointsString(vertices: Seq[Vertex], scale: Double, offsetX: Double, offsetY: Double): String =
-    vertices.map { vertex =>
-      val x = (vertex.coords.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-      val y = (vertex.coords.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-      s"$x,$y"
-    }.mkString(" ")
+    val points = vertices.map(_.coords.toPoint)
+    transformPointsForSvg(points, scale, offsetX, offsetY)
+      .map { case (x, y) =>
+        val xFormatted = BigDecimal(x).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
+        val yFormatted = BigDecimal(y).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
+        s"$xFormatted,$yFormatted"
+      }
+      .mkString(" ")
 
   private [utils] def generatePolygonsXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double, strokeWidth: Double): String =
     val polygonsXml =
