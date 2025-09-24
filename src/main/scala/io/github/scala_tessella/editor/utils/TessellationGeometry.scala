@@ -4,7 +4,7 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.editor.models.EditorConfig.*
 import io.github.scala_tessella.editor.utils.Geometry.Point
 
-case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double)
+//case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double)
 
 object TessellationGeometry:
 
@@ -22,13 +22,13 @@ object TessellationGeometry:
     def toPoint: Point =
       Point(bigPoint.x.toDouble, bigPoint.y.toDouble)
 
-  extension (points: Seq[Point])
-
-    def maybeBounds: Option[Bounds] =
-      if points.isEmpty then None
-      else
-        val minX = points.map(_.x).min
-        val maxX = points.map(_.x).max
-        val minY = points.map(_.y).min
-        val maxY = points.map(_.y).max
-        Some(Bounds(minX, maxX, minY, maxY))
+//  extension (points: Seq[Point])
+//
+//    def maybeBounds: Option[Bounds] =
+//      if points.isEmpty then None
+//      else
+//        val minX = points.map(_.x).min
+//        val maxX = points.map(_.x).max
+//        val minY = points.map(_.y).min
+//        val maxY = points.map(_.y).max
+//        Some(Bounds(minX, maxX, minY, maxY))

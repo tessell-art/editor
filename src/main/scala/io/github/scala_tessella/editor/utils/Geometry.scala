@@ -141,3 +141,58 @@ object Geometry:
 //
 //    def height: Double =
 //      y1 - y0
+
+  // ---------------------------------------
+  // New: general-purpose geometry utilities
+  // ---------------------------------------
+  
+  case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double):
+    def width: Double = maxX - minX
+  
+    def height: Double = maxY - minY
+  
+  object Bounds:
+    def fromPoints(points: Seq[Point]): Option[Bounds] =
+      if points.isEmpty then None
+      else
+        val xs = points.map(_.x)
+        val ys = points.map(_.y)
+        Some(Bounds(xs.min, xs.max, ys.min, ys.max))
+  
+  extension (points: Seq[Point])
+    def maybeBounds: Option[Bounds] =
+      Bounds.fromPoints(points)
+  
+  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices (including start). */
+  def walkUnitEdges(turns: Seq[Double]): Vector[Point] =
+    var x = 0.0
+    var y = 0.0
+    var heading = 0.0 // radians
+    val pts = collection.mutable.ArrayBuffer[Point]()
+    pts += Point(x, y)
+    turns.foreach { t =>
+      x = x + Math.cos(heading)
+      y = y + Math.sin(heading)
+      pts += Point(x, y)
+      heading = heading + t
+    }
+    pts.toVector
+  
+  /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding. */
+  def fitPointsToSquare(points: Seq[Point], size: Double, padding: Double): (Double, Double, Double) =
+    Bounds.fromPoints(points) match
+      case None => (1.0, 0.0, 0.0)
+      case Some(b) =>
+        val w = Math.max(1e-6, b.width)
+        val h = Math.max(1e-6, b.height)
+        val scale = (size - 2 * padding) / Math.max(w, h)
+        val offX = (size - scale * w) / 2.0 - scale * b.minX
+        val offY = (size - scale * h) / 2.0 - scale * b.minY
+        (scale, offX, offY)
+  
+  /** Normalize delta angle to (-PI, PI]. */
+  def normalizeDeltaAngle(a2: Double, a1: Double): Double =
+    var d = a2 - a1
+    if d < -Math.PI then d += 2 * Math.PI
+    if d > Math.PI then d -= 2 * Math.PI
+    d

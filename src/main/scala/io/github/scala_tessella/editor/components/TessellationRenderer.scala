@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.{Point, normalizeDeltaAngle}
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
@@ -354,9 +354,7 @@ object TessellationRenderer:
     val endArcX = cx + radius * Math.cos(angle2)
     val endArcY = cy + radius * Math.sin(angle2)
 
-    var deltaAngle = angle2 - angle1
-    if (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI
-    if (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI
+    val deltaAngle = normalizeDeltaAngle(angle2, angle1)
 
     val largeArcFlag = 0
     val sweepFlag = if (deltaAngle > 0) 1 else 0

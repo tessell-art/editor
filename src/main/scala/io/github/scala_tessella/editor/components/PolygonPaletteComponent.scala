@@ -3,6 +3,9 @@ package io.github.scala_tessella.editor.components
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
 import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
+import io.github.scala_tessella.editor.utils.Geometry
+import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.{fitPointsToSquare, walkUnitEdges}
 import io.github.scala_tessella.editor.operations.TessellationOperations.*
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 
@@ -243,21 +246,8 @@ object PolygonPaletteComponent:
 
     // compute polygon points in local unit-edges like in thumbnail
     def unitPoints(a: Vector[AngleDegree]): Vector[(Double, Double)] =
-      val turns = a.map(_.supplement)
-      var x = 0.0
-      var y = 0.0
-      var heading = AngleDegree(0)
-      val pts = collection.mutable.ArrayBuffer[(Double, Double)]()
-      pts += ((x, y))
-      turns.foreach { t =>
-        val rad = heading.toBigRadian.toBigDecimal.toDouble
-        x = x + Math.cos(rad)
-        y = y + Math.sin(rad)
-        pts += ((x, y))
-        heading = heading + t
-      }
-      // keep only N vertices
-      pts.toVector.dropRight(1)
+      val turns = a.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
+      Geometry.walkUnitEdges(turns).map(p => (p.x, p.y))
 
     val basePts = unitPoints(angles)
     val xs = basePts.map(_._1)
@@ -316,19 +306,8 @@ object PolygonPaletteComponent:
     val pad = 4.0
 
     // Walk edges of length 1, turning by exterior angles (180 - interior)
-    val turns = anglesDeg.map(_.supplement)
-    var x = 0.0
-    var y = 0.0
-    var heading = AngleDegree(0) // degrees
-    val pts = collection.mutable.ArrayBuffer[(Double, Double)]()
-    pts += ((x, y))
-    turns.foreach { t =>
-      val rad = heading.toBigRadian.toBigDecimal.toDouble
-      x = x + Math.cos(rad)
-      y = y + Math.sin(rad)
-      pts += ((x, y))
-      heading = heading + t
-    }
+    val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
+    val pts = walkUnitEdges(turns).map(p => (p.x, p.y))
 
     val xs = pts.map(_._1)
     val ys = pts.map(_._2)
