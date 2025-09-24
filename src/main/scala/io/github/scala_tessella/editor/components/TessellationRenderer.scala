@@ -137,14 +137,11 @@ object TessellationRenderer:
     // Precompute face data once per render pass
     val facesData = tiling.innerFaces.map { face =>
       val vs = face.getVertices.toOption.get
-      val ids = vs.map(_.id).toVector
-      val polygonId = face.id
-      // Compute points string once and reuse
-      val pointsStr = ids.map(tiling.coordinates).map { bp =>
-        val (x, y) = tilingPointToCanvasView(bp.toPoint)
-        s"$x,$y"
-      }.mkString(" ")
-      (ids, polygonId, pointsStr)
+      val (vertexIds, pointStrings) = vs.map(vertex =>
+        val (x, y) = tilingPointToCanvasView(vertex.coords.toPoint)
+        (vertex.id, s"$x,$y")
+      ).unzip
+      (vertexIds, face.id, pointStrings.mkString(" "))
     }
 
     val tilingPolygons = facesData.map { case (_, polygonId, pointsStr) =>
