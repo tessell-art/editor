@@ -320,14 +320,14 @@ object PopUpsComponent:
             "Interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons."
           ),
           p(
-            "The editor depends on the ",
-            b("scala-tessella/tessella"),
-            " library. For more information, and to contribute, please visit the official ",
+            "The editor is part of the ",
+            b("scala-tessella"),
+            " project. For more information, and to contribute, please visit the ",
             a(
-              href   := "https://github.com/scala-tessella/tessella",
+              href   := "https://github.com/scala-tessella",
               target := "_blank", // Opens in a new tab
               rel    := "noopener noreferrer",
-              "GitHub repository"
+              "GitHub organization"
             ),
             "."
           ),
