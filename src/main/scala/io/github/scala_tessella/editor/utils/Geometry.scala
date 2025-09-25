@@ -17,17 +17,17 @@ object Geometry:
     def apply(d: Double): Radian =
       d
 
-    /**
-     * @see [[https://tauday.com/]]
-     */
-    val TAU: Radian = Radian(6.283185307179586)
+    /** @see
+      *   [[https://tauday.com/]]
+      */
+    val TAU: Radian   = Radian(6.283185307179586)
     val TAU_2: Radian = Radian(Math.PI)
 
     /** Normalize any angle to [0, TAU) */
     def normalize(a: Radian): Radian =
       val t = a % TAU
       if t < 0 then t + TAU else t
-  
+
     /** Normalize delta angle to (-PI, PI] */
     def normalizeDelta(a: Radian): Radian =
       var d = a % TAU
@@ -103,7 +103,7 @@ object Geometry:
     /** Rotate around an origin point */
     def rotateAround(origin: Point, theta: Radian): Point =
       this.minus(origin).rotate(theta).plus(origin)
-      
+
 //    /** New point moved by polar coordinates
 //     *
 //     * @param rho   distance
@@ -230,9 +230,9 @@ object Geometry:
   def buildUnitEdgePolygon(angles: Seq[Radian], startHeading: Radian = Radian(0)): Vector[Point] =
     if angles.isEmpty then Vector.empty
     else
-      val pts = Vector.newBuilder[Point]
+      val pts     = Vector.newBuilder[Point]
       var heading = startHeading.toDouble
-      var curr = Point(0.0, 0.0)
+      var curr    = Point(0.0, 0.0)
 
       // first vertex
       pts += curr
@@ -244,8 +244,8 @@ object Geometry:
       // 1) advance one unit in current heading to create next vertex
       // 2) then turn by the exterior angle (PI - interior)
       angles.rotateLeft(1).foreach { a =>
-        val nx = curr.x + Math.cos(heading)
-        val ny = curr.y + Math.sin(heading)
+        val nx   = curr.x + Math.cos(heading)
+        val ny   = curr.y + Math.sin(heading)
         val next = Point(nx, ny)
         pts += next
         curr = next
@@ -259,43 +259,49 @@ object Geometry:
 
   /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
   def edgeGeometrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
-    val dx = vertex2.x - vertex1.x
-    val dy = vertex2.y - vertex1.y
-    val edgeLen = Math.hypot(dx, dy)
+    val dx         = vertex2.x - vertex1.x
+    val dy         = vertex2.y - vertex1.y
+    val edgeLen    = Math.hypot(dx, dy)
     val unitVector = if edgeLen == 0 then Point(0.0, 0.0) else Point(dx / edgeLen, dy / edgeLen)
-    val midPoint = Point((vertex1.x + vertex2.x) / 2, (vertex1.y + vertex2.y) / 2)
+    val midPoint   = Point((vertex1.x + vertex2.x) / 2, (vertex1.y + vertex2.y) / 2)
     (edgeLen, unitVector, midPoint)
 
   /** Generate perpendicular (normal) vectors to a given unit vector. Returns (left normal, right normal). */
   def perpendicularVectors(unitVector: Point): (Point, Point) =
-    val leftNormal = Point(-unitVector.y, unitVector.x) // Normal for CCW traversal
+    val leftNormal  = Point(-unitVector.y, unitVector.x) // Normal for CCW traversal
     val rightNormal = Point(unitVector.y, -unitVector.x) // Normal for CW traversal
     (leftNormal, rightNormal)
 
   /** Calculate geometric properties of a regular polygon (apothem, circumradius). */
   def regularPolygonMetrics(sides: Int, sideLength: Double): (Double, Double, Double) =
     val halfAngle = Math.PI / sides
-    val apothem = sideLength / (2 * Math.tan(halfAngle))
-    val radius = sideLength / (2 * Math.sin(halfAngle))
+    val apothem   = sideLength / (2 * Math.tan(halfAngle))
+    val radius    = sideLength / (2 * Math.sin(halfAngle))
     (apothem, radius, halfAngle)
 
   /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
-  def fitPointsToViewBox(points: Seq[Point], scale: Double, padding: Double): (Double, Double, Double, Double) =
+  def fitPointsToViewBox(
+      points: Seq[Point],
+      scale: Double,
+      padding: Double
+  ): (Double, Double, Double, Double) =
     Bounds.fromPoints(points) match
-      case None => (2 * padding, 2 * padding, padding, padding)
+      case None    => (2 * padding, 2 * padding, padding, padding)
       case Some(b) =>
-        val width = b.width * scale + 2 * padding
+        val width  = b.width * scale + 2 * padding
         val height = b.height * scale + 2 * padding
-        val offX = -b.minX * scale + padding
-        val offY = -b.minY * scale + padding
+        val offX   = -b.minX * scale + padding
+        val offY   = -b.minY * scale + padding
         (width, height, offX, offY)
 
-  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices (including start). */
+  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
+    * (including start).
+    */
   def walkUnitEdges(turns: Seq[Double]): Vector[Point] =
-    var x = 0.0
-    var y = 0.0
+    var x       = 0.0
+    var y       = 0.0
     var heading = 0.0 // radians
-    val pts = collection.mutable.ArrayBuffer[Point]()
+    val pts     = collection.mutable.ArrayBuffer[Point]()
     pts += Point(x, y)
     turns.foreach { t =>
       x = x + Math.cos(heading)
@@ -305,16 +311,17 @@ object Geometry:
     }
     pts.toVector
 
-  /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding. */
+  /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding.
+    */
   def fitPointsToSquare(points: Seq[Point], size: Double, padding: Double): (Double, Double, Double) =
     Bounds.fromPoints(points) match
-      case None => (1.0, 0.0, 0.0)
+      case None    => (1.0, 0.0, 0.0)
       case Some(b) =>
-        val w = Math.max(1e-6, b.width)
-        val h = Math.max(1e-6, b.height)
+        val w     = Math.max(1e-6, b.width)
+        val h     = Math.max(1e-6, b.height)
         val scale = (size - 2 * padding) / Math.max(w, h)
-        val offX = (size - scale * w) / 2.0 - scale * b.minX
-        val offY = (size - scale * h) / 2.0 - scale * b.minY
+        val offX  = (size - scale * w) / 2.0 - scale * b.minX
+        val offY  = (size - scale * h) / 2.0 - scale * b.minY
         (scale, offX, offY)
 
   /** Normalize delta angle to (-PI, PI]. */
@@ -331,7 +338,12 @@ object Geometry:
     (transformed.x, transformed.y)
 
   /** Transform points for SVG generation with proper scaling and offsets. */
-  def transformPointsForSvg(points: Seq[Point], scale: Double, offsetX: Double, offsetY: Double): Seq[(Double, Double)] =
+  def transformPointsForSvg(
+      points: Seq[Point],
+      scale: Double,
+      offsetX: Double,
+      offsetY: Double
+  ): Seq[(Double, Double)] =
     points.map(p => transformPointToView(p, scale, offsetX, offsetY))
 
   /** Compute the midpoint of two points. */

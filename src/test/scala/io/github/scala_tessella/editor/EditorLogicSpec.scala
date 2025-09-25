@@ -1,12 +1,11 @@
 package io.github.scala_tessella.editor
 
 import io.github.scala_tessella.dcel.FaceId
-import munit.FunSuite
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
-import io.github.scala_tessella.editor.models.ViewTransform
-import io.github.scala_tessella.editor.operations.TessellationOperations.*
-import io.github.scala_tessella.editor.operations.ErrorOperations.*
-import io.github.scala_tessella.editor.operations.SelectionOperations.*
+import io.github.scala_tessella.editor.operations.ErrorOperations._
+import io.github.scala_tessella.editor.operations.SelectionOperations._
+import io.github.scala_tessella.editor.operations.TessellationOperations._
+import munit.FunSuite
 
 class EditorLogicSpec extends FunSuite with EditorStateFixture:
 

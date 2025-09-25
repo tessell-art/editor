@@ -5,16 +5,16 @@ import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
 
 // Represents a snapshot of the application state that can be undone
 case class AppStateSnapshot(
-   tiling: TilingDCEL,
-   selectedPolygon: Option[Int],
-   selectedPerimeterEdges: Set[String],
-   selectedTilingPolygons: Set[FaceId],
-   polygonColors: Map[FaceId, (Int, Int, Int)],
-   fillColor: (Int, Int, Int),
-   editorMode: EditorMode,
-   timestamp: Long = System.currentTimeMillis(),
-   recentIrregularPolygon: Option[Vector[AngleDegree]],
-   isIrregularSelected: Boolean
+    tiling: TilingDCEL,
+    selectedPolygon: Option[Int],
+    selectedPerimeterEdges: Set[String],
+    selectedTilingPolygons: Set[FaceId],
+    polygonColors: Map[FaceId, (Int, Int, Int)],
+    fillColor: (Int, Int, Int),
+    editorMode: EditorMode,
+    timestamp: Long = System.currentTimeMillis(),
+    recentIrregularPolygon: Option[Vector[AngleDegree]],
+    isIrregularSelected: Boolean
 )
 
 object AppStateSnapshot:

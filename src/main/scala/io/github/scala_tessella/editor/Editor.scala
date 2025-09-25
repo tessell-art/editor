@@ -1,11 +1,15 @@
 package io.github.scala_tessella.editor
 
-import io.github.scala_tessella.editor.components.{ColorPickerPopupComponent, EditorCanvasComponent, MenuBarComponent, PolygonPaletteComponent}
+import com.raquo.laminar.api.L._
+import io.github.scala_tessella.editor.components.{
+  ColorPickerPopupComponent,
+  EditorCanvasComponent,
+  MenuBarComponent,
+  PolygonPaletteComponent
+}
 import io.github.scala_tessella.editor.interactions.KeyboardEventHandler
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.Logger
-
-import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
 
 @main
@@ -32,14 +36,16 @@ object EditorApp:
   private val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
 
   // Use an EventBus to bridge the JS event into Airstream
-  private val systemThemeBus = new EventBus[String]
+  private val systemThemeBus              = new EventBus[String]
   private val systemTheme: Signal[String] =
     systemThemeBus.events.startWith(if (lightMediaQuery.matches) "light" else "dark")
 
   // Attach the listener once to push updates into the bus
-  lightMediaQuery.addEventListener("change", (_: dom.Event) => {
-    systemThemeBus.writer.onNext(if (lightMediaQuery.matches) "light" else "dark")
-  })
+  lightMediaQuery.addEventListener(
+    "change",
+    (_: dom.Event) =>
+      systemThemeBus.writer.onNext(if (lightMediaQuery.matches) "light" else "dark")
+  )
 
   // 2. The effective theme is the user's preference, or the system theme if none is set.
   val effectiveTheme: Signal[String] =

@@ -1,10 +1,9 @@
 package io.github.scala_tessella.editor.interactions
 
-import io.github.scala_tessella.editor.utils.Geometry.Point
-
-import com.raquo.laminar.api.L.{*, given}
-import org.scalajs.dom.{MouseEvent, WheelEvent}
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.Geometry.Point
+import org.scalajs.dom.{MouseEvent, WheelEvent}
 
 import scala.math.{max, min}
 
@@ -24,17 +23,19 @@ object MouseEventHandler:
 
   def handleMouseMove(event: MouseEvent): Unit =
     // Snapshot once per event
-    val dragging = EditorState.isDragging.now()
+    val dragging     = EditorState.isDragging.now()
     val dragStartOpt = EditorState.dragStart.now()
 
     if dragging then
       dragStartOpt.foreach { start =>
         val deltaX = event.clientX - start.x
         val deltaY = event.clientY - start.y
-        EditorState.viewTransform.update(t => t.copy(
-          panX = t.panX + deltaX,
-          panY = t.panY + deltaY
-        ))
+        EditorState.viewTransform.update(t =>
+          t.copy(
+            panX = t.panX + deltaX,
+            panY = t.panY + deltaY
+          )
+        )
         // Update new "last" drag start once
         EditorState.dragStart.set(Some(Point(event.clientX, event.clientY)))
       }
@@ -62,7 +63,7 @@ object MouseEventHandler:
 
     getCanvasRelativePosition(event).foreach { mousePos =>
       val scaleFactor = if (event.deltaY < 0) 1.1 else 0.9
-      val newScale = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
+      val newScale    = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
 
       // Calculate the world position that the mouse is pointing to before zoom
       val worldX = (mousePos.x - currentTransform.panX) / currentTransform.scale

@@ -1,9 +1,8 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, Tool}
+import com.raquo.laminar.api.L._
+import io.github.scala_tessella.editor.models.{AppState, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-
-import com.raquo.laminar.api.L.{*, given}
 
 object CanvasControlComponent:
 
@@ -12,18 +11,21 @@ object CanvasControlComponent:
       case Some(t) if t == tool =>
         if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter then AppState.clearMeasurements()
         None // Deactivate if it's the current tool
-      case _ =>
+      case _                    =>
         AppState.clearMeasurements() // Clear measurements when switching
-        Some(tool) // Activate the new tool
+        Some(tool)                   // Activate the new tool
     }
 
   private def createToolButton(tool: Tool, titleText: String, icon: Element): Element =
     button(
       icon,
       className := "toggle-btn",
-      cls.toggle("active") <-- EditorState.activeTool.signal.map(_.contains(tool)),
-      onClick.compose(gate) --> { _ => toggleTool(tool) },
-      title := titleText
+      cls("active") <-- EditorState.activeTool.signal.map(_.contains(tool)),
+      onClick.compose(gate) --> { _ =>
+
+        toggleTool(tool)
+      },
+      title     := titleText
     )
 
   def element: Element =
@@ -35,14 +37,16 @@ object CanvasControlComponent:
           button(
             "Fill ",
             svg.svg(
-              svg.width := "24",
+              svg.width  := "24",
               svg.height := "24",
               svg.rect(
-                svg.width := "18",
+                svg.width  := "18",
                 svg.height := "18",
-                svg.x := "2",
-                svg.y := "2",
-                svg.fill <-- EditorState.fillColor.signal.map { case (r, g, b) => f"rgb($r,$g,$b)" }
+                svg.x      := "2",
+                svg.y      := "2",
+                svg.fill <-- EditorState.fillColor.signal.map { case (r, g, b) =>
+                  f"rgb($r,$g,$b)"
+                }
               )
             ),
             onClick.compose(gate) --> { _ =>
@@ -102,9 +106,13 @@ object CanvasControlComponent:
               if show then "Labels: ON" else "Labels: OFF"
             ),
             className := "toggle-btn responsive-control",
-            cls.toggle("active") <-- EditorState.showNodeLabels.signal.map(identity),
-            onClick --> { _ => AppState.toggleNodeLabels() },
+            cls("active") <-- EditorState.showNodeLabels.signal.map(identity),
+            onClick --> { _ =>
+
+              AppState.toggleNodeLabels()
+            },
             title <-- EditorState.showNodeLabels.signal.map { show =>
+
               if show then "Click to hide the node labels" else "Click to show the node labels"
             }
           ),

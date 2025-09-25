@@ -1,5 +1,12 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
 
+// Enable semanticdb for Scalafix (Scala 3)
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
+// Optional: format when compiling (can be noisy in PRs; turn off if you prefer manual runs)
+ThisBuild / scalafmtOnCompile := true
+
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
@@ -35,6 +42,16 @@ lazy val editor = project.in(file("."))
 
     // Test dependencies
     libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,
+
+    // Compiler hygiene: turn on key warnings and make them fail the build
+    scalacOptions ++= Seq(
+      "-deprecation",         // warn on deprecated APIs
+      "-feature",             // warn on feature imports/usages
+      "-unchecked",           // extra checks for pattern matches, etc.
+      "-Wvalue-discard",      // warn when a non-Unit value is ignored
+      "-Wnonunit-statement",  // warn on statements that return non-Unit
+      "-Wunused:imports"      // needed by Scalafix to use OrganizeImports.removeUnused
+    ),
 
     // MUnit test framework
     testFrameworks += new TestFramework("munit.Framework")

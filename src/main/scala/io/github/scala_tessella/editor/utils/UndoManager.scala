@@ -1,13 +1,13 @@
 package io.github.scala_tessella.editor.utils
 
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{AppState, AppStateSnapshot, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
-import com.raquo.laminar.api.L.*
 
 import scala.collection.mutable
 
 object UndoManager:
-  private val MAX_UNDO_DEPTH = 10
+  private val MAX_UNDO_DEPTH                             = 10
   private val undoStack: mutable.Stack[AppStateSnapshot] = mutable.Stack.empty
   private val redoStack: mutable.Stack[AppStateSnapshot] = mutable.Stack.empty
 
@@ -39,10 +39,9 @@ object UndoManager:
       // Limit the stack size to MAX_UNDO_DEPTH
       if undoStack.size > MAX_UNDO_DEPTH then
         val tempStack = mutable.Stack[AppStateSnapshot]()
-        for (_ <- 0 until MAX_UNDO_DEPTH) {
+        for (_ <- 0 until MAX_UNDO_DEPTH)
           if undoStack.nonEmpty then
             tempStack.push(undoStack.pop())
-        }
         undoStack.clear()
         while tempStack.nonEmpty do
           undoStack.push(tempStack.pop())
@@ -105,7 +104,7 @@ object UndoManager:
   def getUndoPreview: Option[String] =
     if undoStack.nonEmpty then
       val snapshot = undoStack.top
-      val desc = if snapshot.tiling.isEmpty then "Clear tessellation" else "Tessellation modification"
+      val desc     = if snapshot.tiling.isEmpty then "Clear tessellation" else "Tessellation modification"
       Some(s"Undo: $desc")
     else
       None

@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.utils
 
-import TilingBuilders.*
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
-import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
+import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.TilingBuilders._
 import munit.FunSuite
 
 class UndoManagerSpec extends FunSuite with EditorStateFixture:
@@ -109,9 +109,8 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     assertEquals(UndoManager.undoCount.now(), UndoManager.maxUndoDepth)
 
     // Undo all operations
-    for (_ <- 1 to UndoManager.maxUndoDepth) {
+    for (_ <- 1 to UndoManager.maxUndoDepth)
       UndoManager.undo()
-    }
 
     // The current state should be the first one that was kept
     assertEquals(EditorState.currentTiling.now(), firstKeptTiling)

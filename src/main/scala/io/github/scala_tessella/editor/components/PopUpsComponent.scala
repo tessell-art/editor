@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.ring_seq.RingSeq.{reflectAt, rotateLeft, rotateRight}
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.ring_seq.RingSeq.{reflectAt, rotateLeft, rotateRight}
 import org.scalajs.dom
 
 object PopUpsComponent:
@@ -12,11 +12,11 @@ object PopUpsComponent:
   // Helper method to create a simple 'X' close icon
   private def closeIcon: Element =
     svg.svg(
-      svg.width := "24",
-      svg.height := "24",
-      svg.viewBox := "0 0 24 24",
-      svg.fill := "none",
-      svg.stroke := "currentColor",
+      svg.width       := "24",
+      svg.height      := "24",
+      svg.viewBox     := "0 0 24 24",
+      svg.fill        := "none",
+      svg.stroke      := "currentColor",
       svg.strokeWidth := "2",
 //      svg.strokeLinecap := "round",
 //      svg.strokeLinejoin := "round",
@@ -24,11 +24,14 @@ object PopUpsComponent:
       svg.path(svg.d := "M 6 6 L 18 18")
     )
 
-  private def closePopup(state: Var[Boolean]): Observer[dom.MouseEvent] = Observer { _ => state.set(false) }
+  private def closePopup(state: Var[Boolean]): Observer[dom.MouseEvent] = Observer { _ =>
+
+    state.set(false)
+  }
 
   private val closeGuidePopup: Observer[dom.MouseEvent] = closePopup(EditorState.showGuidePopup)
 
-  private [components] def guidePopup(): Element =
+  private[components] def guidePopup(): Element =
     div(
       className := "popup-overlay",
       display <-- EditorState.showGuidePopup.signal.map(if (_) "flex" else "none"),
@@ -68,36 +71,47 @@ object PopUpsComponent:
           ul(
             li("Click on any polygon to select it."),
             li("Use ", kbd("Esc"), " to deselect everything."),
-            li("Use the ", i("Select"), " button at the bottom of the palette to select all regular polygons with the same shape."),
+            li(
+              "Use the ",
+              i("Select"),
+              " button at the bottom of the palette to select all regular polygons with the same shape."
+            ),
             li(
               "Use the ",
               IconsSVG.selectByColorIcon,
-              " ", i("Select by color"), " tool to select all polygons with the same color.")
+              " ",
+              i("Select by color"),
+              " tool to select all polygons with the same color."
+            )
           ),
           h3("Adding interior polygons"),
           ul(
             li(
               "Use the ",
               IconsSVG.inserterIcon,
-              " ", i("Insertion"), " tool to add a regular polygon to the interior of an existing one."
+              " ",
+              i("Insertion"),
+              " tool to add a regular polygon to the interior of an existing one."
             ),
             li(
               "When you click on a polygon its edges will be highlighted, ",
               "click one to add the selected regular polygon."
-            ),
+            )
           ),
           h3("Adding irregular polygons"),
           ul(
             li(
-              "Select the irregular shape from the last button in the palette.")
-            ,
+              "Select the irregular shape from the last button in the palette."
+            ),
             li(
               "Click the '+' button on the top right corner of the button to change the attaching edge."
             ),
             li(
               "Use the ",
               IconsSVG.eyeDropperPentagonIcon,
-              " ", i("Shape and color picker"), " tool to select the shape (and the fill color) of an existing irregular polygon."
+              " ",
+              i("Shape and color picker"),
+              " tool to select the shape (and the fill color) of an existing irregular polygon."
             )
           ),
           h3("Deleting"),
@@ -105,52 +119,78 @@ object PopUpsComponent:
             li(
               "Use the ",
               IconsSVG.eraserIcon,
-              " ", i("Eraser"), " tool to delete a vertex, and edge or a whole polygon from the tiling."
+              " ",
+              i("Eraser"),
+              " tool to delete a vertex, and edge or a whole polygon from the tiling."
             ),
             li(
               "When you click on a polygon the vertices, edges (at midpoint) and face (at center) will be highlighted, ",
               "click one to delete the selected item."
-            ),
+            )
           ),
           h3("Navigating the Canvas"),
           ul(
             li("Pan: click and drag the canvas background to move the view."),
             li("Zoom: use the mouse wheel, or the ", kbd('+'), " and ", kbd('-'), " keys."),
             li("Rotate: use the ", kbd('E'), " (left) and ", kbd('R'), " (right) keys."),
-            li("Fit: use the ", b("View → Fit to Canvas"), " menu option to automatically adjust the view to see the entire tiling."),
-            li("Reset: use ", b("View → Reset View"), " to return to the default position, zoom, and rotation.")
+            li(
+              "Fit: use the ",
+              b("View → Fit to Canvas"),
+              " menu option to automatically adjust the view to see the entire tiling."
+            ),
+            li(
+              "Reset: use ",
+              b("View → Reset View"),
+              " to return to the default position, zoom, and rotation."
+            )
           ),
           h3("Visual options"),
           ul(
             li(
-              "You can switch ", b("Labels: ON"), " to show the node labels (numbers) of the underlying graph, each node a vertex."
-            ),
+              "You can switch ",
+              b("Labels: ON"),
+              " to show the node labels (numbers) of the underlying graph, each node a vertex."
+            )
 //            li(
 //              "Dual: use ", b("View → Show Dual"), " to show the dual of the tessellation."
 //            )
           ),
           h3("Styling"),
           ul(
-            li("To change polygons' color, select one or more polygons, then go to ", b("Edit → Fill Color..."), " to open the color picker."),
-            li("The new color will be applied to all currently selected polygons and will be used for any new polygon you add."),
+            li(
+              "To change polygons' color, select one or more polygons, then go to ",
+              b("Edit → Fill Color..."),
+              " to open the color picker."
+            ),
+            li(
+              "The new color will be applied to all currently selected polygons and will be used for any new polygon you add."
+            ),
             li(
               "Use the ",
               IconsSVG.eyeDropperIcon,
-              " ", i("Color picker"), " tool to select the fill color from an existing polygon."
+              " ",
+              i("Color picker"),
+              " tool to select the fill color from an existing polygon."
             ),
             li(
               "Use the ",
               IconsSVG.eyeDropperPentagonIcon,
-              " ", i("Shape and color picker"), " tool to select both the shape and the fill color from an existing polygon."
+              " ",
+              i("Shape and color picker"),
+              " tool to select both the shape and the fill color from an existing polygon."
             )
           ),
           h3("Measurement"),
           ul(
-            li("By constraint, each polygon side in the tiling has unit length, that is length equal to 1, or an integer multiple of it."),
+            li(
+              "By constraint, each polygon side in the tiling has unit length, that is length equal to 1, or an integer multiple of it."
+            ),
             li(
               "Use the ",
               IconsSVG.rulerIcon,
-              " ", i("Measurement"), " tool to calculate the unit distance between two key points (vertex, mid-side, center) of the polygons."
+              " ",
+              i("Measurement"),
+              " tool to calculate the unit distance between two key points (vertex, mid-side, center) of the polygons."
             ),
             li(
               "When you click on a polygon the key points will be highlighted, ",
@@ -165,10 +205,19 @@ object PopUpsComponent:
           ),
           h3("Saving & Loading"),
           ul(
-            li("Use the ", b("File"), " menu to save your work as an SVG file (", b("Save SVG"), " or ", b("Save SVG as..."), ")."),
+            li(
+              "Use the ",
+              b("File"),
+              " menu to save your work as an SVG file (",
+              b("Save SVG"),
+              " or ",
+              b("Save SVG as..."),
+              ")."
+            ),
             li("You can also load a previously saved SVG tiling."),
-            li("The tiling's topological structure can be exported as a DOT graph, in the Graphviz .gv file format.")
-
+            li(
+              "The tiling's topological structure can be exported as a DOT graph, in the Graphviz .gv file format."
+            )
           )
         )
       )
@@ -176,7 +225,7 @@ object PopUpsComponent:
 
   private val closeShortcutsPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showShortcutsPopup)
 
-  private [components] def shortcutsPopup(): Element =
+  private[components] def shortcutsPopup(): Element =
     div(
       className := "popup-overlay",
       display <-- EditorState.showShortcutsPopup.signal.map(if (_) "flex" else "none"),
@@ -241,7 +290,7 @@ object PopUpsComponent:
 
   private val closeAboutPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showAboutPopup)
 
-  private [components] def helpPopup(): Element =
+  private[components] def helpPopup(): Element =
     div(
       className := "popup-overlay",
       display <-- EditorState.showAboutPopup.signal.map(if (_) "flex" else "none"),
@@ -255,8 +304,8 @@ object PopUpsComponent:
           closeIcon
         ),
         img(
-          src := "tessella-logo.svg",
-          alt := "Tessella Logo",
+          src       := "tessella-logo.svg",
+          alt       := "Tessella Logo",
           className := "popup-logo"
         ),
         h1("Tessella"),
@@ -268,26 +317,29 @@ object PopUpsComponent:
         div(
           className := "popup-text-scrollable",
           p(
-            "Interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons.",
+            "Interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons."
           ),
           p(
-            "The editor depends on the ", b("scala-tessella/tessella"), " library. For more information, and to contribute, please visit the official ",
+            "The editor depends on the ",
+            b("scala-tessella/tessella"),
+            " library. For more information, and to contribute, please visit the official ",
             a(
-              href := "https://github.com/scala-tessella/tessella",
+              href   := "https://github.com/scala-tessella/tessella",
               target := "_blank", // Opens in a new tab
-              rel := "noopener noreferrer",
+              rel    := "noopener noreferrer",
               "GitHub repository"
             ),
             "."
           ),
           p(
-            "Built with Scala.js and Laminar.",
+            "Built with Scala.js and Laminar."
           )
         )
       )
     )
 
-  private val closeIrregularPopup: Observer[dom.MouseEvent] = closePopup(EditorState.showIrregularPolygonPopup)
+  private val closeIrregularPopup: Observer[dom.MouseEvent] =
+    closePopup(EditorState.showIrregularPolygonPopup)
 
   // controls
   private def modify(f: Vector[AngleDegree] => Vector[AngleDegree]): Observer[dom.MouseEvent] =
@@ -295,7 +347,7 @@ object PopUpsComponent:
       e.stopPropagation()
       EditorState.recentIrregularPolygon.update {
         case Some(v) if v.nonEmpty => Some(f(v))
-        case other => other
+        case other                 => other
       }
     }
 
@@ -321,11 +373,11 @@ object PopUpsComponent:
           onClick --> closeIrregularPopup,
           // reuse the simple 'X' icon inline
           svg.svg(
-            svg.width := "24",
-            svg.height := "24",
-            svg.viewBox := "0 0 24 24",
-            svg.fill := "none",
-            svg.stroke := "currentColor",
+            svg.width       := "24",
+            svg.height      := "24",
+            svg.viewBox     := "0 0 24 24",
+            svg.fill        := "none",
+            svg.stroke      := "currentColor",
             svg.strokeWidth := "2",
             svg.path(svg.d := "M 18 6 L 6 18"),
             svg.path(svg.d := "M 6 6 L 18 18")
@@ -335,7 +387,7 @@ object PopUpsComponent:
         div(
           className := "popup-text-scrollable",
           child.maybe <-- EditorState.recentIrregularPolygon.signal.map {
-            case None => Some(div("No irregular polygon"))
+            case None         => Some(div("No irregular polygon"))
             case Some(angles) =>
               Some(
                 div(
@@ -344,10 +396,28 @@ object PopUpsComponent:
                   div(className := "big-preview", PolygonPaletteComponent.bigIrregularWithHead(angles)),
                   // controls row
                   div(
-                    className := "controls",
-                    button(tpe := "button", className := "btn-left", title := "Move head left", onClick --> shiftLeft, "◀"),
-                    button(tpe := "button", className := "btn-right", title := "Move head right", onClick --> shiftRight, "▶"),
-                    button(tpe := "button", className := "btn-flip", title := "Flip", onClick --> flip, "Flip ⧎")
+                    className   := "controls",
+                    button(
+                      tpe       := "button",
+                      className := "btn-left",
+                      title     := "Move head left",
+                      onClick --> shiftLeft,
+                      "◀"
+                    ),
+                    button(
+                      tpe       := "button",
+                      className := "btn-right",
+                      title     := "Move head right",
+                      onClick --> shiftRight,
+                      "▶"
+                    ),
+                    button(
+                      tpe       := "button",
+                      className := "btn-flip",
+                      title     := "Flip",
+                      onClick --> flip,
+                      "Flip ⧎"
+                    )
                   )
                 )
               )

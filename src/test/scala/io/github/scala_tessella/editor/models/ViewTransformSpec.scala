@@ -34,17 +34,17 @@ class ViewTransformSpec extends FunSuite:
 
   test("withRotation should normalize rotation angles") {
     val transform = ViewTransform()
-    val rotated = transform.withRotation(450)
+    val rotated   = transform.withRotation(450)
     assertEquals(rotated.rotationDegrees, 90)
-    
+
     val negativeRotated = transform.withRotation(-45)
     assertEquals(negativeRotated.rotationDegrees, 315)
   }
 
   test("withRotation should preserve other properties") {
     val transform = ViewTransform(scale = 2.0, panX = 10.0, panY = 20.0)
-    val rotated = transform.withRotation(45)
-    
+    val rotated   = transform.withRotation(45)
+
     assertEquals(rotated.scale, 2.0)
     assertEquals(rotated.panX, 10.0)
     assertEquals(rotated.panY, 20.0)
@@ -53,8 +53,8 @@ class ViewTransformSpec extends FunSuite:
 
   test("copy should work correctly") {
     val original = ViewTransform(scale = 1.5, rotationDegrees = 90, panX = 5.0, panY = 10.0)
-    val copied = original.copy(scale = 2.0)
-    
+    val copied   = original.copy(scale = 2.0)
+
     assertEquals(copied.scale, 2.0)
     assertEquals(copied.rotationDegrees, 90)
     assertEquals(copied.panX, 5.0)
@@ -63,10 +63,10 @@ class ViewTransformSpec extends FunSuite:
 
   test("multiple rotation operations should work correctly") {
     val transform = ViewTransform()
-    val result = transform
+    val result    = transform
       .withRotation(45)
       .withRotation(360)
       .withRotation(-90)
-    
+
     assertEquals(result.rotationDegrees, 270)
   }

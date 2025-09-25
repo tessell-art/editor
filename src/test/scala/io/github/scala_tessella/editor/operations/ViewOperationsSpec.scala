@@ -1,17 +1,15 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.ViewTransform
-import io.github.scala_tessella.editor.utils.Geometry.Bounds
-
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.models.ViewTransform
+import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point}
 import munit.FunSuite
 
 import scala.math.Pi
 
 class ViewOperationsSpec extends FunSuite:
 
-  private val delta = 1E-9
+  private val delta = 1e-9
 
   test("anf") {
     val x = AngleDegree(90).toBigRadian
@@ -19,16 +17,16 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("transformCoordinates should rotate points correctly") {
-    val points = List(Point(1, 0), Point(0, 1))
+    val points  = List(Point(1, 0), Point(0, 1))
     val rotated = ViewOperations.transformCoordinates(points, 90)
     assert(Math.abs(rotated.head.x.toDouble - 0.0) < delta)
     assert(Math.abs(rotated.head.y.toDouble - 1.0) < delta)
-    assert(Math.abs(rotated(1).x.toDouble - (-1.0)) < delta)
+    assert(Math.abs(rotated(1).x.toDouble - -1.0) < delta)
     assert(Math.abs(rotated(1).y.toDouble - 0.0) < delta)
   }
 
   test("transformCoordinates should handle zero rotation") {
-    val points = List(Point(1, 2), Point(3, 4))
+    val points  = List(Point(1, 2), Point(3, 4))
     val rotated = ViewOperations.transformCoordinates(points, 0)
     assertEquals(rotated, points)
   }
@@ -47,7 +45,13 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("calculateNewScale should calculate scale to fit width") {
-    val scale = ViewOperations.calculateNewScale(canvasWidth = 200, canvasHeight = 200, tilingWidth = 100, tilingHeight = 50, padding = 25)
+    val scale = ViewOperations.calculateNewScale(
+      canvasWidth = 200,
+      canvasHeight = 200,
+      tilingWidth = 100,
+      tilingHeight = 50,
+      padding = 25
+    )
     // available width = 200 - 50 = 150. scaleX = 150 / 100 = 1.5
     // available height = 200 - 50 = 150. scaleY = 150 / 50 = 3
     // min is 1.5
@@ -55,7 +59,13 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("calculateNewScale should calculate scale to fit height") {
-    val scale = ViewOperations.calculateNewScale(canvasWidth = 200, canvasHeight = 200, tilingWidth = 50, tilingHeight = 100, padding = 25)
+    val scale = ViewOperations.calculateNewScale(
+      canvasWidth = 200,
+      canvasHeight = 200,
+      tilingWidth = 50,
+      tilingHeight = 100,
+      padding = 25
+    )
     // available width = 150. scaleX = 150 / 50 = 3
     // available height = 150. scaleY = 150 / 100 = 1.5
     // min is 1.5
@@ -63,7 +73,7 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("calculateTilingCenter should return the center of the bounds") {
-    val bounds = Bounds(minX = 10, minY = 20, maxX = 90, maxY = 80)
+    val bounds             = Bounds(minX = 10, minY = 20, maxX = 90, maxY = 80)
     val (centerX, centerY) = ViewOperations.calculateTilingCenter(bounds)
     assertEquals(centerX, 50.0, delta)
     assertEquals(centerY, 50.0, delta)
@@ -71,7 +81,12 @@ class ViewOperationsSpec extends FunSuite:
 
   test("createUpdatedViewTransform should update scale and pan") {
     val initialTransform = ViewTransform(scale = 1.0, panX = 0, panY = 0, rotationDegrees = 0)
-    val updatedTransform = ViewOperations.createUpdatedViewTransform(initialTransform, newScale = 2.0, newPanX = 100, newPanY = -100)
+    val updatedTransform = ViewOperations.createUpdatedViewTransform(
+      initialTransform,
+      newScale = 2.0,
+      newPanX = 100,
+      newPanY = -100
+    )
     assertEquals(updatedTransform.scale, 2.0, delta)
     assertEquals(updatedTransform.panX, 100.0, delta)
     assertEquals(updatedTransform.panY, -100.0, delta)
@@ -80,11 +95,12 @@ class ViewOperationsSpec extends FunSuite:
 
   test("inverseTransform should correctly calculate world coordinates for the view center") {
     val (viewCenterX, viewCenterY) = (400.0, 300.0)
-    val (panX, panY) = (50.0, -50.0)
-    val scale = 2.0
-    val rotationRad = Pi / 2 // 90 degrees
+    val (panX, panY)               = (50.0, -50.0)
+    val scale                      = 2.0
+    val rotationRad                = Pi / 2 // 90 degrees
 
-    val (worldX, worldY) = ViewOperations.inverseTransform(viewCenterX, viewCenterY, panX, panY, scale, rotationRad)
+    val (worldX, worldY) =
+      ViewOperations.inverseTransform(viewCenterX, viewCenterY, panX, panY, scale, rotationRad)
 
     // Manual calculation:
     // 1. Inverse Pan: (400-50, 300-(-50)) = (350, 350)
@@ -100,12 +116,13 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("forwardTransform should correctly calculate screen coordinates") {
-    val (worldX, worldY) = (275.0, 525.0)
+    val (worldX, worldY)           = (275.0, 525.0)
     val (viewCenterX, viewCenterY) = (400.0, 300.0)
-    val scale = 2.0
-    val rotationRad = Pi / 2 // 90 degrees
+    val scale                      = 2.0
+    val rotationRad                = Pi / 2 // 90 degrees
 
-    val (screenX, screenY) = ViewOperations.forwardTransform(worldX, worldY, viewCenterX, viewCenterY, scale, rotationRad)
+    val (screenX, screenY) =
+      ViewOperations.forwardTransform(worldX, worldY, viewCenterX, viewCenterY, scale, rotationRad)
 
     // Manual calculation:
     // 1. Forward Rotation (rotate by 90 deg around viewCenter(400,300)):
@@ -120,26 +137,27 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("calculateRotatedPan should compute pan to keep a point stationary during rotation") {
-    val (worldX, worldY) = (275.0, 525.0)
+    val (worldX, worldY)           = (275.0, 525.0)
     val (viewCenterX, viewCenterY) = (400.0, 300.0)
-    val scale = 2.0
-    val newRotationRad = Pi / 2 // 90 degrees
+    val scale                      = 2.0
+    val newRotationRad             = Pi / 2 // 90 degrees
 
     // After forward transform (rotation and scale), the point (worldX, worldY) moves to (350, 350) on screen, without pan.
     // We want it to be at (viewCenterX, viewCenterY) = (400, 300).
     // So, screen = pan + transformed => (400, 300) = (panX, panY) + (350, 350)
     // pan = (400-350, 300-350) = (50, -50)
 
-    val (panX, panY) = ViewOperations.calculateRotatedPan(worldX, worldY, viewCenterX, viewCenterY, scale, newRotationRad)
+    val (panX, panY) =
+      ViewOperations.calculateRotatedPan(worldX, worldY, viewCenterX, viewCenterY, scale, newRotationRad)
     assertEquals(panX, 50.0, delta)
     assertEquals(panY, -50.0, delta)
   }
 
   val initialTransform: ViewTransform = ViewTransform(1.0, 0, 0.0, 0)
-  val testCanvasWidth = 800.0
-  val testCanvasHeight = 600.0
-  val padding = 50.0
-  val coords: List[Point] = List(Point(10, 20), Point(110, 70)) // width=100, height=50
+  val testCanvasWidth                 = 800.0
+  val testCanvasHeight                = 600.0
+  val padding                         = 50.0
+  val coords: List[Point]             = List(Point(10, 20), Point(110, 70)) // width=100, height=50
 
   test("should return a new transform when fitting a tiling to the canvas") {
     val result = ViewOperations.calculateFitToCanvasTransform(
@@ -175,7 +193,8 @@ class ViewOperationsSpec extends FunSuite:
   test("should calculate transform based on viewBox, ignoring canvas dimensions") {
     // Since the transform is based on the SVG's viewBox, not the canvas element's size,
     // the function should return a valid transform even with invalid canvas dimensions.
-    val resultWithInvalidCanvas = ViewOperations.calculateFitToCanvasTransform(coords, 0, -10, initialTransform, padding)
+    val resultWithInvalidCanvas =
+      ViewOperations.calculateFitToCanvasTransform(coords, 0, -10, initialTransform, padding)
 
     val expectedResult = ViewOperations.calculateFitToCanvasTransform(
       coords,
@@ -185,18 +204,37 @@ class ViewOperationsSpec extends FunSuite:
       padding
     )
 
-    assert(resultWithInvalidCanvas.isDefined, "A transform should be returned even for invalid canvas dimensions")
-    assertEquals(resultWithInvalidCanvas, expectedResult, "The result should be the same regardless of canvas dimensions")
+    assert(
+      resultWithInvalidCanvas.isDefined,
+      "A transform should be returned even for invalid canvas dimensions"
+    )
+    assertEquals(
+      resultWithInvalidCanvas,
+      expectedResult,
+      "The result should be the same regardless of canvas dimensions"
+    )
   }
 
   test("should return None if coords are empty") {
-    val result = ViewOperations.calculateFitToCanvasTransform(Nil, testCanvasWidth, testCanvasHeight, initialTransform, padding)
+    val result = ViewOperations.calculateFitToCanvasTransform(
+      Nil,
+      testCanvasWidth,
+      testCanvasHeight,
+      initialTransform,
+      padding
+    )
     assertEquals(result, None)
   }
 
   test("should return None if tiling has no width or height") {
     val singlePointCoords = List(Point(10, 20))
-    val result = ViewOperations.calculateFitToCanvasTransform(singlePointCoords, testCanvasWidth, testCanvasHeight, initialTransform, padding)
+    val result            = ViewOperations.calculateFitToCanvasTransform(
+      singlePointCoords,
+      testCanvasWidth,
+      testCanvasHeight,
+      initialTransform,
+      padding
+    )
     assertEquals(result, None)
   }
 
@@ -206,7 +244,7 @@ class ViewOperationsSpec extends FunSuite:
     // after 90 deg rotation -> List(Point(-20, 10), Point(-70, 110))
     // rotated bounds: minX=-70, minY=10, maxX=-20, maxY=110
     // tilingWidth=50, tilingHeight=100
-    val result = ViewOperations.calculateFitToCanvasTransform(
+    val result           = ViewOperations.calculateFitToCanvasTransform(
       coords,
       testCanvasWidth,
       testCanvasHeight,

@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.models
 
 object EditorConfig:
   // Canvas ViewBox dimensions
-  val canvasViewBoxWidth = 800
+  val canvasViewBoxWidth  = 800
   val canvasViewBoxHeight = 600
 
   // The scale factor from tiling coordinates to SVG coordinates

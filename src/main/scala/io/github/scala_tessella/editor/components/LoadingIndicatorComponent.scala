@@ -1,8 +1,7 @@
 package io.github.scala_tessella.editor.components
 
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.EditorState
-
-import com.raquo.laminar.api.L.{*, given}
 
 object LoadingIndicatorComponent:
   def element: Element =
@@ -12,11 +11,11 @@ object LoadingIndicatorComponent:
       div(
         className := "loading-content",
         div(
-          className := "loading-spinner",
+          className := "loading-spinner"
           // CSS-based spinner animation
         ),
         div(
-          className := "loading-message",
+          className := "loading-message"
 //          child.text <-- AppState.loadingMessage.signal.map(_.getOrElse("Processing..."))
         )
       )

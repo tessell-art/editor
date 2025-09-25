@@ -9,10 +9,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object OperationRunner:
 
   /** Run an async DCEL mutation that returns Either[TilingError, TilingDCEL]
-    * - Shows a loading state
-    * - Saves undo state only if the new tiling differs from the current one
-    * - Updates the current tiling on success and clears error
-    * - Calls onSuccess / onFailure hooks for caller-specific behaviors
+    *   - Shows a loading state
+    *   - Saves undo state only if the new tiling differs from the current one
+    *   - Updates the current tiling on success and clears error
+    *   - Calls onSuccess / onFailure hooks for caller-specific behaviors
     */
   def runTilingOp(
       op: () => Either[TilingError, TilingDCEL]
@@ -30,6 +30,6 @@ object OperationRunner:
         // Clear error and allow caller extras (e.g., clearing selections)
         ErrorOperations.clearError()
         onSuccess
-      case Left(err) =>
+      case Left(err)        =>
         onFailure(err)
     }

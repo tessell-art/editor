@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.EditorState
 import com.raquo.airstream.core.EventStream
+import io.github.scala_tessella.editor.models.EditorState
 
 object OperationGuard:
   def ifNotProcessing(op: => Unit): Unit =
@@ -11,4 +11,6 @@ object OperationGuard:
   def gate[A](stream: EventStream[A]): EventStream[A] =
     stream
       .withCurrentValueOf(EditorState.isProcessing.signal)
-      .collect { case (a, false) => a }
+      .collect { case (a, false) =>
+        a
+      }

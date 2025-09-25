@@ -1,39 +1,39 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L._
 
 object IconsSVG:
 
   private def createIcon(viewBoxStr: String)(paths: Element*): Element =
     svg.svg(
-      svg.width := "1em",
-      svg.height := "1em",
+      svg.width   := "1em",
+      svg.height  := "1em",
       svg.viewBox := viewBoxStr,
-      svg.fill := "currentColor",
+      svg.fill    := "currentColor",
       paths
     )
 
-  private [components] def selectByColorIcon: Element =
+  private[components] def selectByColorIcon: Element =
     createIcon("0 0 37.643265 44.674143")(
       svg.path(
-        svg.d := "M 15.302,0 C 6.85,0 0,6.309 0,14.09 c 0,7.781 6.85,14.092 15.302,14.092 1.519,-8.259 4.996,-9.012 8.362,-9.012 0.751,0 1.497,0.038 2.214,0.038 2.521,0 4.687,-0.463 5.502,-4.646 C 32.744,7.586 23.752,0 15.302,0 Z m 14.335958,14.790305 c -0.744518,2.094393 -0.955291,2.261786 -3.024775,2.620009 -0.933269,0.161547 -0.832255,0.05748 -1.541035,-0.01983 -0.399,-0.01 -1.037565,-0.119539 -1.441565,-0.119539 -3.879,0 -7.639278,1.034464 -9.861278,8.777464 C 6.2285932,24.929856 1.9315932,19.753102 1.9315932,14.357102 c 0,-6.1150003 4.4505932,-12.4255088 13.5039578,-12.5590596 4.028562,-0.059427 9.877508,3.1268559 12.564508,6.3888559 0.901,1.0939997 2.079899,4.3374067 1.637899,6.6034067 z"
+        svg.d           := "M 15.302,0 C 6.85,0 0,6.309 0,14.09 c 0,7.781 6.85,14.092 15.302,14.092 1.519,-8.259 4.996,-9.012 8.362,-9.012 0.751,0 1.497,0.038 2.214,0.038 2.521,0 4.687,-0.463 5.502,-4.646 C 32.744,7.586 23.752,0 15.302,0 Z m 14.335958,14.790305 c -0.744518,2.094393 -0.955291,2.261786 -3.024775,2.620009 -0.933269,0.161547 -0.832255,0.05748 -1.541035,-0.01983 -0.399,-0.01 -1.037565,-0.119539 -1.441565,-0.119539 -3.879,0 -7.639278,1.034464 -9.861278,8.777464 C 6.2285932,24.929856 1.9315932,19.753102 1.9315932,14.357102 c 0,-6.1150003 4.4505932,-12.4255088 13.5039578,-12.5590596 4.028562,-0.059427 9.877508,3.1268559 12.564508,6.3888559 0.901,1.0939997 2.079899,4.3374067 1.637899,6.6034067 z"
       ),
       svg.path(
-        svg.d := "m 10.26,15.943 c -1.565,0 -2.839,1.273 -2.839,2.839 0,1.566 1.273,2.839 2.839,2.839 1.564,0 2.838,-1.273 2.838,-2.839 0,-1.566 -1.273,-2.839 -2.838,-2.839 z m 0,4.178 c -0.738,0 -1.339,-0.602 -1.339,-1.339 0,-0.738 0.601,-1.339 1.339,-1.339 0.737,0 1.338,0.602 1.338,1.339 0,0.737 -0.6,1.339 -1.338,1.339 z"
+        svg.d           := "m 10.26,15.943 c -1.565,0 -2.839,1.273 -2.839,2.839 0,1.566 1.273,2.839 2.839,2.839 1.564,0 2.838,-1.273 2.838,-2.839 0,-1.566 -1.273,-2.839 -2.838,-2.839 z m 0,4.178 c -0.738,0 -1.339,-0.602 -1.339,-1.339 0,-0.738 0.601,-1.339 1.339,-1.339 0.737,0 1.338,0.602 1.338,1.339 0,0.737 -0.6,1.339 -1.338,1.339 z"
       ),
-      svg.circle(svg.cx := "8.467", svg.cy := "11.012", svg.r := "2.0880001"),
-      svg.circle(svg.cx := "13.296", svg.cy := "7.2950001", svg.r := "2.089"),
+      svg.circle(svg.cx := "8.467", svg.cy     := "11.012", svg.r    := "2.0880001"),
+      svg.circle(svg.cx := "13.296", svg.cy    := "7.2950001", svg.r := "2.089"),
       svg.circle(svg.cx := "19.381001", svg.cy := "8.7869997", svg.r := "2.089"),
-      svg.circle(svg.cx := "24.089001", svg.cy := "12.497", svg.r := "2.089"),
+      svg.circle(svg.cx := "24.089001", svg.cy := "12.497", svg.r    := "2.089"),
       svg.g(
-        svg.transform := "matrix(0.09071207,0,0,0.09071207,11.351823,13.156144)",
+        svg.transform   := "matrix(0.09071207,0,0,0.09071207,11.351823,13.156144)",
         svg.polygon(
           svg.points := "57.617,303.138 123.48,224.061 181.017,347.451 244.459,317.867 186.921,194.478 289.834,194.854 57.617,0 "
         )
       )
     )
 
-  private [components] def rulerIcon: Element =
+  private[components] def rulerIcon: Element =
     createIcon("0 0 256 256")(
       svg.g(
         svg.transform := "translate(871, -1129)",
@@ -44,7 +44,8 @@ object IconsSVG:
     )
 
   private[components] val eraserViewBox: String = "0 0 507.85 507.85"
-  private[components] val eraserPathD: String = "M490.8,148.725l-104.8-104c-11.2-10.8-26-17.2-41.6-17.2c-15.6,0-30.4,6-41.6,17.2l-285.6,284 C6,339.525,0,354.325,0,369.925c0,15.6,6,30.4,17.2,41.2l66.8,66.8c1.6,1.6,3.6,2.4,5.6,2.4h279.6c4.4,0,8-3.6,8-8 c0-4.4-3.6-8-8-8H256.4l234-232.8C513.6,208.725,513.6,171.525,490.8,148.725z M234,464.325H92.8l-64.4-64 c-8-8-12.4-18.8-12.4-30.4c0-11.6,4.4-22,12.4-30.4l140.4-139.2l165.2,164.4L234,464.325z"
+  private[components] val eraserPathD: String   =
+    "M490.8,148.725l-104.8-104c-11.2-10.8-26-17.2-41.6-17.2c-15.6,0-30.4,6-41.6,17.2l-285.6,284 C6,339.525,0,354.325,0,369.925c0,15.6,6,30.4,17.2,41.2l66.8,66.8c1.6,1.6,3.6,2.4,5.6,2.4h279.6c4.4,0,8-3.6,8-8 c0-4.4-3.6-8-8-8H256.4l234-232.8C513.6,208.725,513.6,171.525,490.8,148.725z M234,464.325H92.8l-64.4-64 c-8-8-12.4-18.8-12.4-30.4c0-11.6,4.4-22,12.4-30.4l140.4-139.2l165.2,164.4L234,464.325z"
 
   private[components] def eraserIcon: Element =
     createIcon(eraserViewBox)(
@@ -54,14 +55,14 @@ object IconsSVG:
     )
 
   private[components] val inserterViewBox: String = "0 0 22 22"
-  private[components] val inserterPathD: String = "M 2,2 H 22 V 22 H 2 Z M 2,22 L 12,4.68 L 22,22 Z"
+  private[components] val inserterPathD: String   = "M 2,2 H 22 V 22 H 2 Z M 2,22 L 12,4.68 L 22,22 Z"
 
   private[components] def inserterIcon: Element =
     createIcon(inserterViewBox)(
       svg.path(
-        svg.d := inserterPathD,
-        svg.fill := "none",
-        svg.stroke := "currentColor",
+        svg.d           := inserterPathD,
+        svg.fill        := "none",
+        svg.stroke      := "currentColor",
         svg.strokeWidth := "2"
       )
     )
@@ -69,10 +70,10 @@ object IconsSVG:
   private[components] def plusIcon: Element =
     createIcon("0 -4 24 24")(
       svg.path(
-        svg.d := "M12 5v14M5 12h14",
-        svg.stroke := "currentColor",
-        svg.fill := "none",
-        svg.strokeWidth := "2",
+        svg.d             := "M12 5v14M5 12h14",
+        svg.stroke        := "currentColor",
+        svg.fill          := "none",
+        svg.strokeWidth   := "2",
         svg.strokeLineCap := "round"
       )
     )
@@ -84,24 +85,24 @@ object IconsSVG:
 
   private val EyeDropperViewBox = "0 0 56 56"
 
-  private [components] def eyeDropperIcon: Element =
+  private[components] def eyeDropperIcon: Element =
     createIcon(EyeDropperViewBox)(
       eyeDropperPath
     )
 
   private def pentagonPath: Element =
     svg.path(
-      svg.d := "M 26.825174,2.5454546 43.692134,26.323083 26.290443,49.712206 -1.3313534,40.389851 -1.000871,11.239195 Z",
-      svg.transform := "matrix(1.0313471,0,0,1.025013,7.6870211,-0.9863272)",
-      svg.opacity := "1",
-      svg.fill := "none",
-      svg.fillRule := "evenodd",
-      svg.stroke := "currentColor",
-      svg.strokeWidth := "3.03576",
-      svg.strokeLineJoin := "round",
+      svg.d                := "M 26.825174,2.5454546 43.692134,26.323083 26.290443,49.712206 -1.3313534,40.389851 -1.000871,11.239195 Z",
+      svg.transform        := "matrix(1.0313471,0,0,1.025013,7.6870211,-0.9863272)",
+      svg.opacity          := "1",
+      svg.fill             := "none",
+      svg.fillRule         := "evenodd",
+      svg.stroke           := "currentColor",
+      svg.strokeWidth      := "3.03576",
+      svg.strokeLineJoin   := "round",
       svg.strokeMiterLimit := "16",
-      svg.strokeDashArray := "none",
-      svg.strokeOpacity := "1"
+      svg.strokeDashArray  := "none",
+      svg.strokeOpacity    := "1"
     )
 
   private[components] def eyeDropperPentagonIcon: Element =

@@ -1,14 +1,13 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
-import io.github.scala_tessella.editor.utils.PolygonNameGenerator
-import io.github.scala_tessella.editor.utils.PolygonSvg
-import io.github.scala_tessella.editor.operations.TessellationOperations.*
-import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.components.IconsSVG.plusIcon
+import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
+import io.github.scala_tessella.editor.operations.OperationGuard.gate
+import io.github.scala_tessella.editor.operations.TessellationOperations._
+import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, PolygonSvg}
 
 object PolygonPaletteComponent:
 
@@ -45,9 +44,13 @@ object PolygonPaletteComponent:
                     s"Select irregular shape",
                     // Replace with gated click composed with current angles
                     inContext { btn =>
+
                       gate(btn.events(onClick))
                         .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
-                        .collect { case (_, Some(angles)) => angles } --> { angles =>
+                        .collect { case (_, Some(angles)) =>
+                          angles
+                        } --> { angles =>
+
                         AppState.selectPolygonsByShape(angles)
                       }
                     },
@@ -62,7 +65,10 @@ object PolygonPaletteComponent:
                   button(
                     className := "select-all-by-type-btn",
                     s"Select all ${polygonName}s",
-                    onClick.preventDefault.map(_ => sides) --> { s => AppState.selectPolygonsBySides(s) },
+                    onClick.preventDefault.map(_ => sides) --> { s =>
+
+                      AppState.selectPolygonsBySides(s)
+                    },
                     disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
                   )
                 )
@@ -73,7 +79,7 @@ object PolygonPaletteComponent:
 
   private def customPolygonSelector(): Element =
     val customSides = Var(11)
-    val inputValue = Var(customSides.now().toString)
+    val inputValue  = Var(customSides.now().toString)
 
     def validateSides(input: String): Int =
       input.toIntOption.getOrElse(3).clamp(3, 100)
@@ -82,10 +88,12 @@ object PolygonPaletteComponent:
       customSides.set(sides)
       inputValue.set(sides.toString)
 
-    val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
-    val displaySides = inputValue.signal.map(validateSides)
-    val isSelected = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
-      (maybeSelected, currentCustom) => maybeSelected.contains(currentCustom)
+    val syncInputToSource         = customSides.signal.changes.map(_.toString) --> inputValue
+    val displaySides              = inputValue.signal.map(validateSides)
+    val isSelected                = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
+      (maybeSelected, currentCustom) =>
+
+        maybeSelected.contains(currentCustom)
     }
     val validateAndUpdateObserver = Observer[Any] { _ =>
       val validatedSides = validateSides(inputValue.now())
@@ -98,19 +106,22 @@ object PolygonPaletteComponent:
       title <-- displaySides.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
       // Replace imperative guard with gated click stream combined with current validated sides
       inContext { thisDiv =>
+
         gate(thisDiv.events(onClick))
           .withCurrentValueOf(displaySides)
-          .map { case (_, validatedSides) => validatedSides } --> { validatedSides =>
+          .map { case (_, validatedSides) =>
+            validatedSides
+          } --> { validatedSides =>
           updateSides(validatedSides)
           selectPolygon(validatedSides)
         }
       },
       child <-- displaySides.map(sides => PolygonSvg.regularPreview(sides)),
       input(
-        tpe := "number",
+        tpe       := "number",
         className := "polygon-label-input",
-        minAttr := "3",
-        maxAttr := "100",
+        minAttr   := "3",
+        maxAttr   := "100",
         controlled(
           value <-- inputValue,
           onInput.mapToValue --> inputValue
@@ -123,13 +134,14 @@ object PolygonPaletteComponent:
     )
 
   private def polygonButton(sides: Int): Element =
-    val isSelected = EditorState.selectedPolygon.signal.map(_.contains(sides))
+    val isSelected   = EditorState.selectedPolygon.signal.map(_.contains(sides))
     button(
       className <-- polygonButtonClass("polygon-btn", isSelected),
-      tpe := "button",
+      tpe   := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
       disabled <-- EditorState.isProcessing.signal,
       inContext { thisBtn =>
+
         gate(thisBtn.events(onClick)) --> { _ =>
           EditorState.isIrregularSelected.set(false)
           selectPolygon(sides)
@@ -150,16 +162,22 @@ object PolygonPaletteComponent:
 
     button(
       className <-- btnClass,
-      tpe := "button",
+      tpe   := "button",
       title := "Irregular polygon",
       disabled <-- EditorState.isProcessing.signal
         .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
-        .map { (processing, noneRecent) => processing || noneRecent },
+        .map { (processing, noneRecent) =>
+
+          processing || noneRecent
+        },
       // replace filter+now() with gated click + current state
       inContext { thisBtn =>
+
         gate(thisBtn.events(onClick))
           .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
-          .collect { case (_, Some(_)) => () } --> { _ =>
+          .collect { case (_, Some(_)) =>
+            ()
+          } --> { _ =>
           initializeWithIrregularIfEmpty()
           selectIrregularInPalette()
         }
@@ -167,13 +185,17 @@ object PolygonPaletteComponent:
       // small corner button
       div(
         className := "corner-button",
-        title := "Adjust head (preview)",
+        title     := "Adjust head (preview)",
         // stop propagation still needed, then gate the corner click stream
         onClick.stopPropagation --> Observer.empty,
         inContext { cornerDiv =>
+
           gate(cornerDiv.events(onClick))
             .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
-            .collect { case (_, Some(_)) => () } --> { _ =>
+            .collect { case (_, Some(_)) =>
+              ()
+            } --> { _ =>
+
             EditorState.showIrregularPolygonPopup.set(true)
           }
         },
@@ -182,17 +204,17 @@ object PolygonPaletteComponent:
       // preview
       child <-- EditorState.recentIrregularPolygon.signal.map {
         case Some(angles) => PolygonSvg.irregularPreview(angles)
-        case None =>
+        case None         =>
           svg.svg(
-            svg.width := "40",
-            svg.height := "40",
+            svg.width   := "40",
+            svg.height  := "40",
             svg.viewBox := "0 0 40 40",
             svg.rect(
-              svg.x := "8",
-              svg.y := "8",
-              svg.width := "24",
+              svg.x      := "8",
+              svg.y      := "8",
+              svg.width  := "24",
               svg.height := "24",
-              svg.fill := "none",
+              svg.fill   := "none",
               svg.stroke := "currentColor"
             )
           )
@@ -200,7 +222,7 @@ object PolygonPaletteComponent:
       div(
         className := "polygon-label",
         child.text <-- EditorState.recentIrregularPolygon.signal.map {
-          case None => "Irregular"
+          case None         => "Irregular"
           case Some(angles) => s"Irr-${angles.size}"
         }
       )
@@ -209,5 +231,5 @@ object PolygonPaletteComponent:
   // Big preview that highlights the head edge
   private[components] def bigIrregularWithHead(angles: Vector[AngleDegree]): Element =
     val size = 220
-    val pad = 12.0
+    val pad  = 12.0
     PolygonSvg.irregularBigWithHead(angles, size, pad)

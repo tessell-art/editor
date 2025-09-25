@@ -14,14 +14,14 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
   }
 
   val F1: FaceId = FaceId("F1")
-  val F2: FaceId = FaceId("F2") 
+  val F2: FaceId = FaceId("F2")
   val F3: FaceId = FaceId("F3")
-  
+
   test("applyColorToSelectedPolygons should apply the current fill color to selected polygons") {
     // Given
     val selectedIds = Set(F1, F2)
     EditorState.selectedTilingPolygons.set(selectedIds)
-    val color = (100, 150, 200)
+    val color       = (100, 150, 200)
     EditorState.fillColor.set(color)
 
     // When
@@ -38,7 +38,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.polygonColors.set(Map(F3 -> (0, 0, 255)))
     val selectedIds = Set(F1)
     EditorState.selectedTilingPolygons.set(selectedIds)
-    val color = (100, 150, 200)
+    val color       = (100, 150, 200)
 
     // When
     ColorOperations.applyColorToSelectedPolygons(color)
@@ -54,7 +54,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     val initialColors = Map(F3 -> (0, 0, 255))
     EditorState.polygonColors.set(initialColors)
     EditorState.selectedTilingPolygons.set(Set.empty)
-    val color = (100, 150, 200)
+    val color         = (100, 150, 200)
 
     // When
     ColorOperations.applyColorToSelectedPolygons(color)
@@ -77,7 +77,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("getOrAssignPolygonColor should assign a new color if not available") {
     // Given: No color for "poly1"
-    
+
     // When
     val result = ColorOperations.getOrAssignPolygonColor(F1)
 
@@ -89,7 +89,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("getOrAssignPolygonColor should not reassign color on multiple calls") {
     // When
-    val firstResult = ColorOperations.getOrAssignPolygonColor(F1)
+    val firstResult  = ColorOperations.getOrAssignPolygonColor(F1)
     val secondResult = ColorOperations.getOrAssignPolygonColor(F1)
 
     // Then

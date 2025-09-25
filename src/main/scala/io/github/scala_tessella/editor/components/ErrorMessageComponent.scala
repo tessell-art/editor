@@ -1,9 +1,8 @@
 package io.github.scala_tessella.editor.components
 
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
-
-import com.raquo.laminar.api.L.{*, given}
 
 object ErrorMessageComponent:
   def element: Element =
@@ -15,9 +14,12 @@ object ErrorMessageComponent:
           span(className := "error-icon", "⚠️"),
           span(className := "error-text", message),
           button(
-            className := "error-close",
+            className    := "error-close",
             "×",
-            onClick --> { _ => clearError() } // This now clears both error and wireframe
+            onClick --> { _ =>
+
+              clearError()
+            } // This now clears both error and wireframe
           )
         )
       ))

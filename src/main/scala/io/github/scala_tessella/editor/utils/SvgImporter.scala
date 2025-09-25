@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
@@ -32,7 +32,7 @@ object SvgImporter:
   private def parseColor(colorStr: String): Option[(Int, Int, Int)] =
     Option(colorStr).flatMap { s =>
       val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
-      val result = rgbRegex.exec(s)
+      val result   = rgbRegex.exec(s)
       if result != null && result.length == 4 then
         for
           // exec can return undefined for captures, so we convert to Option
@@ -40,9 +40,9 @@ object SvgImporter:
           gStr <- result(2).toOption
           bStr <- result(3).toOption
           // Safely convert strings to integers
-          r <- Try(rStr.toInt).toOption
-          g <- Try(gStr.toInt).toOption
-          b <- Try(bStr.toInt).toOption
+          r    <- Try(rStr.toInt).toOption
+          g    <- Try(gStr.toInt).toOption
+          b    <- Try(bStr.toInt).toOption
         yield (r, g, b)
       else None
     }
@@ -50,10 +50,10 @@ object SvgImporter:
   def importTilingFromSVG(svgContent: String, filename: String): Unit =
     Try {
       val parser = new dom.DOMParser()
-      val doc = parser.parseFromString(svgContent, MIMEType.`image/svg+xml`)
+      val doc    = parser.parseFromString(svgContent, MIMEType.`image/svg+xml`)
 
       // Prefer namespace-aware selection for the tessella DCEL metadata
-      val ns = "https://github.com/scala-tessella/tessella"
+      val ns        = "https://github.com/scala-tessella/tessella"
       val tessElems = doc.getElementsByTagNameNS(ns, "tessella-dcel")
 
       // Fallback for cases where namespace lookups might fail (e.g., missing prefix binding)
@@ -67,7 +67,7 @@ object SvgImporter:
           )
 
       // Collect polygon fills (in order) to restore colors
-      val svgPolys = doc.querySelectorAll("#tiling-polygons polygon")
+      val svgPolys                         = doc.querySelectorAll("#tiling-polygons polygon")
       val polyFills: List[(Int, Int, Int)] =
         (0 until svgPolys.length).flatMap { i =>
           val el = svgPolys(i).asInstanceOf[dom.Element]
@@ -77,18 +77,20 @@ object SvgImporter:
       val metadataStr = tessElem.asInstanceOf[dom.Element].outerHTML
 
       TilingSVG.fromMetadata(metadataStr) match
-        case Left(err) =>
+        case Left(err)                 =>
           throw new Error(s"Failed to parse Tessella DCEL metadata: ${err.message}")
         case Right(tiling: TilingDCEL) =>
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
 
           // Map SVG polygon colors to faces by order (export preserves this order)
-          val faces = tiling.innerFaces.toList
+          val faces    = tiling.innerFaces.toList
           val colorMap =
             faces
               .zip(polyFills) // zip truncates safely if lengths differ
-              .map { case (face, rgb) => face.id -> rgb }
+              .map { case (face, rgb) =>
+                face.id -> rgb
+              }
               .toMap
           EditorState.polygonColors.set(colorMap)
 
@@ -107,4 +109,4 @@ object SvgImporter:
         severity = ErrorOperations.Severity.Error
       )
       e.printStackTrace()
-    }
+    }: Unit

@@ -1,9 +1,8 @@
 package io.github.scala_tessella.editor.utils
 
-import TilingBuilders.freshSquare
-import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.TilingBuilders.freshSquare
 import munit.FunSuite
 
 class DotExporterSpec extends FunSuite with EditorStateFixture:
@@ -26,7 +25,7 @@ class DotExporterSpec extends FunSuite with EditorStateFixture:
     s.trim.startsWith("graph") || s.trim.startsWith("strict graph") || s.trim.startsWith("digraph")
 
   private def nonEmptyBody(s: String): Boolean =
-    val open = s.indexOf('{')
+    val open  = s.indexOf('{')
     val close = s.lastIndexOf('}')
     open >= 0 && close > open && s.substring(open + 1, close).trim.nonEmpty
 

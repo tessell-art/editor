@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, FailedPolygonDeletion}
+import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
 import org.scalajs.dom
+
 import scala.scalajs.js
 import scala.util.Try
 
@@ -18,14 +19,14 @@ object ErrorOperations:
   // - hint: actionable remediation guidance shown to users
   // - asToast: render a non-blocking toast (default true for minor issues)
   def showError(
-                 message: String,
-                 placement: Option[FailedPolygonPlacement] = None,
-                 deletion: Option[FailedPolygonDeletion] = None,
-                 context: Option[String] = None,
-                 hint: Option[String] = None,
-                 asToast: Boolean = true,
-                 severity: Severity = Severity.Error
-               ): Unit =
+      message: String,
+      placement: Option[FailedPolygonPlacement] = None,
+      deletion: Option[FailedPolygonDeletion] = None,
+      context: Option[String] = None,
+      hint: Option[String] = None,
+      asToast: Boolean = true,
+      severity: Severity = Severity.Error
+  ): Unit =
     // Cancel any existing timeout for the error message
     messageTimeoutId.foreach(id => dom.window.clearTimeout(id))
 
@@ -48,17 +49,23 @@ object ErrorOperations:
     Try {
       if (js.typeOf(js.Dynamic.global.window) != "undefined") {
         // Timeout for the error message (10 seconds)
-        val newTimeoutId = dom.window.setTimeout(() => {
-          EditorState.errorMessage.set(None)
-          messageTimeoutId = None
-        }, 10000)
+        val newTimeoutId = dom.window.setTimeout(
+          () => {
+            EditorState.errorMessage.set(None)
+            messageTimeoutId = None
+          },
+          10000
+        )
         messageTimeoutId = Some(newTimeoutId)
 
         // Timeout for the visual feedback (3 seconds)
-        dom.window.setTimeout(() => {
-          EditorState.failedPlacement.set(None)
-          EditorState.failedDeletion.set(None)
-        }, 3000)
+        dom.window.setTimeout(
+          () => {
+            EditorState.failedPlacement.set(None)
+            EditorState.failedDeletion.set(None)
+          },
+          3000
+        ): Unit
 
         // Non-blocking toast for user feedback
         if asToast then
@@ -66,16 +73,31 @@ object ErrorOperations:
       }
     }.recover {
       case _ => // Ignore errors in test environment
-    }
+    }: Unit
 
   // Convenience helpers
-  def info(message: String, context: Option[String] = None, hint: Option[String] = None, asToast: Boolean = true): Unit =
+  def info(
+      message: String,
+      context: Option[String] = None,
+      hint: Option[String] = None,
+      asToast: Boolean = true
+  ): Unit =
     showError(message, context = context, hint = hint, asToast = asToast, severity = Severity.Info)
 
-  def warn(message: String, context: Option[String] = None, hint: Option[String] = None, asToast: Boolean = true): Unit =
+  def warn(
+      message: String,
+      context: Option[String] = None,
+      hint: Option[String] = None,
+      asToast: Boolean = true
+  ): Unit =
     showError(message, context = context, hint = hint, asToast = asToast, severity = Severity.Warning)
 
-  def error(message: String, context: Option[String] = None, hint: Option[String] = None, asToast: Boolean = true): Unit =
+  def error(
+      message: String,
+      context: Option[String] = None,
+      hint: Option[String] = None,
+      asToast: Boolean = true
+  ): Unit =
     showError(message, context = context, hint = hint, asToast = asToast, severity = Severity.Error)
 
   def clearError(): Unit =
@@ -98,12 +120,12 @@ object ErrorOperations:
         "style",
         "position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none;"
       )
-      dom.document.body.appendChild(container)
+      dom.document.body.appendChild(container): Unit
       container
 
   private def showToast(text: String, severity: Severity, durationMs: Int): Unit =
     val container = ensureToastContainer()
-    val toast = dom.document.createElement("div").asInstanceOf[dom.HTMLDivElement]
+    val toast     = dom.document.createElement("div").asInstanceOf[dom.HTMLDivElement]
     toast.setAttribute("role", "status")
     toast.setAttribute("aria-live", "polite")
     toast.className = "editor-toast"
@@ -128,13 +150,13 @@ object ErrorOperations:
     // Click to dismiss early
     toast.onclick = _ => removeToast(toast)
 
-    container.appendChild(toast)
+    container.appendChild(toast): Unit
 
     // Animate in
-    dom.window.requestAnimationFrame(_ => {
+    dom.window.requestAnimationFrame { _ =>
       toast.style.opacity = "1"
       toast.style.transform = "translateY(0)"
-    })
+    }: Unit
 
     // Auto-dismiss
     val timeoutId = dom.window.setTimeout(() => removeToast(toast), durationMs)
@@ -149,4 +171,4 @@ object ErrorOperations:
     dom.window.setTimeout(
       () => Option(toast.parentNode).foreach(_.removeChild(toast)),
       180
-    )
+    ): Unit

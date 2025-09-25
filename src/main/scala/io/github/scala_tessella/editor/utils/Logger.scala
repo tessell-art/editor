@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
 import org.scalajs.dom
+
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 
@@ -22,14 +23,14 @@ object Logger:
     minLevel
 
   /** Detect environment and set a sensible default logging level.
-   * - Debug for localhost/dev
-   * - Info for production
-   *
-   * Uses:
-   * - Vite's import.meta.env.MODE when available
-   * - process.env.NODE_ENV when available
-   * - hostname fallback
-   */
+    *   - Debug for localhost/dev
+    *   - Info for production
+    *
+    * Uses:
+    *   - Vite's import.meta.env.MODE when available
+    *   - process.env.NODE_ENV when available
+    *   - hostname fallback
+    */
   def initFromEnvironment(): Unit =
     val isLocalhost =
       try
@@ -48,7 +49,10 @@ object Logger:
     val nodeEnv: Option[String] =
       try
         val proc = js.Dynamic.global.selectDynamic("process")
-        if js.typeOf(proc) != "undefined" && !js.isUndefined(proc) && !js.isUndefined(proc.selectDynamic("env")) then
+        if js.typeOf(proc) != "undefined" && !js.isUndefined(proc) && !js.isUndefined(
+            proc.selectDynamic("env")
+          )
+        then
           proc.selectDynamic("env").selectDynamic("NODE_ENV").asInstanceOf[UndefOr[String]].toOption
         else None
       catch case _: Throwable => None
@@ -66,23 +70,23 @@ object Logger:
 
   private def formatMessage(level: Level, msg: => String, data: Seq[Any]): String =
     s"${prefix(level)} $msg${if data.nonEmpty then " " + data.mkString(" ") else ""}"
-  
+
   def debug(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Debug) then
       dom.console.log(formatMessage(Level.Debug, msg, data))
-  
+
   def info(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Info) then
       dom.console.info(formatMessage(Level.Info, msg, data))
-  
+
   def warn(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Warn) then
       dom.console.warn(formatMessage(Level.Warn, msg, data))
-  
+
   def error(msg: => String, data: Any*): Unit =
     if shouldLog(Level.Error) then
       dom.console.error(formatMessage(Level.Error, msg, data))
-  
+
   def error(e: Throwable, context: => String = "Unhandled error"): Unit =
     if shouldLog(Level.Error) then
       dom.console.error(s"${prefix(Level.Error)} $context: ${e.getMessage}")

@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.utils.SvgImporter.importTilingFromSVG
-
 import org.scalajs.dom
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,6 +15,7 @@ object TemplateLoader:
     val url = s"templates/$fileName"
     dom.fetch(url).toFuture
       .flatMap { response =>
+
         if response.ok then response.text().toFuture
         else Future.failed(new Exception(s"Failed to load template: ${response.statusText}"))
       }
@@ -24,7 +24,7 @@ object TemplateLoader:
           // This function will contain the logic to parse the SVG
           // and update the application state.
           AsyncUtils.withLoadingState(() => importTilingFromSVG(svgContent, fileName))
-        case Failure(exception) =>
+        case Failure(exception)  =>
           // You could implement a more user-friendly error display here
           println(s"Error loading template '$fileName': $exception")
           dom.window.alert(s"Failed to load template: $fileName")

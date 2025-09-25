@@ -1,10 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.dcel.VertexId
-import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.EditorStateFixture
+import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
 
 class SvgExporterSpec extends FunSuite with EditorStateFixture:
@@ -25,11 +24,11 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
   private val squareTiling = TilingBuilders.freshSquare()
 
   test("should convert nodes to SVG points string") {
-    val nodes = List(node1, node2, node3)
-    val scale = 2.0
+    val nodes   = List(node1, node2, node3)
+    val scale   = 2.0
     val offsetX = 5.0
     val offsetY = 10.0
-    val result = SvgExporter.pointsString(nodes, testCoordinates, scale, offsetX, offsetY)
+    val result  = SvgExporter.pointsString(nodes, testCoordinates, scale, offsetX, offsetY)
 
     // node1: (0*2+5, 0*2+10) = (5, 10)
     val expected = "5.000000,10.000000 7.000000,10.000000 7.000000,12.000000"
@@ -62,7 +61,9 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
   test("should include correct points in polygon") {
     val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, 0.0, 0.0, 1.5)
     // Should contain the points from our test coordinates
-    assert(result.contains("points=\"0.000000,0.000000 1.000000,0.000000 1.000000,1.000000 0.000000,1.000000\""))
+    assert(
+      result.contains("points=\"0.000000,0.000000 1.000000,0.000000 1.000000,1.000000 0.000000,1.000000\"")
+    )
   }
 
   test("should include node data attribute") {
@@ -158,7 +159,9 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
   test("should include tiling coordinates in metadata") {
     val result = SvgExporter.generateMetadataXml(squareTiling)
 
-    assert(result.contains("<tessella:tessella-dcel xmlns:tessella=\"https://github.com/scala-tessella/tessella\"><vertices>"))
+    assert(result.contains(
+      "<tessella:tessella-dcel xmlns:tessella=\"https://github.com/scala-tessella/tessella\"><vertices>"
+    ))
     assert(result.contains("</vertices>"))
     assert(result.contains("<vertex id=\"V1\" x=\"0\" y=\"0\""))
   }

@@ -29,7 +29,7 @@ class AppStateSpec extends FunSuite with EditorStateFixture:
     EditorState.measurementResult.set(Some(123.45))
     EditorState.measurementAngle.set(Some(0.5))
     EditorState.highlightedPolygonId.set(Some(FaceId("F1")))
-    EditorState.measurementPreviousEndPoint.set(Some(Point(0,0)))
+    EditorState.measurementPreviousEndPoint.set(Some(Point(0, 0)))
 
     // When
     AppState.clearMeasurements()

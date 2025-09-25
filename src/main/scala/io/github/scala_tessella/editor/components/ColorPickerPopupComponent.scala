@@ -1,11 +1,10 @@
 package io.github.scala_tessella.editor.components
 
+import com.raquo.laminar.api.L._
+import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
 import io.github.scala_tessella.editor.utils.ColorUtils.toRgbaString
-
-import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
-import com.raquo.laminar.api.L.{*, given}
 
 object ColorPickerPopupComponent:
   def element(isOpen: Var[Boolean], tempColor: Var[(Int, Int, Int)]): Element =
@@ -13,7 +12,10 @@ object ColorPickerPopupComponent:
       className := "color-picker-popup",
       display <-- isOpen.signal.map(open => if open then "flex" else "none"),
       // Background overlay
-      onClick --> { _ => isOpen.set(false) }, // Click outside closes
+      onClick --> { _ =>
+
+        isOpen.set(false)
+      }, // Click outside closes
       div(
         className := "popup-content",
         onClick.map(_.stopPropagation()) --> Observer.empty,
@@ -28,8 +30,15 @@ object ColorPickerPopupComponent:
         )(),
         div(
           className := "popup-actions",
-          button("Cancel", onClick --> { _ => isOpen.set(false) }),
-          button("OK",
+          button(
+            "Cancel",
+            onClick --> { _ =>
+
+              isOpen.set(false)
+            }
+          ),
+          button(
+            "OK",
             onClick --> { _ =>
               val newColor = tempColor.now()
               EditorState.fillColor.set(newColor)

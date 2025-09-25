@@ -1,11 +1,16 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.operations.{TessellationOperations, ViewOperations}
-import io.github.scala_tessella.editor.utils.{DotExporter, SvgExporter, SvgImporter, TemplateLoader, UndoManager}
-import io.github.scala_tessella.editor.utils.PolygonNameGenerator.{regularNames, semiRegularNames, Template}
-
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L._
+import io.github.scala_tessella.editor.models.{AppState, EditorState, ViewTransform}
+import io.github.scala_tessella.editor.operations.ViewOperations
+import io.github.scala_tessella.editor.utils.PolygonNameGenerator.{Template, regularNames, semiRegularNames}
+import io.github.scala_tessella.editor.utils.{
+  DotExporter,
+  SvgExporter,
+  SvgImporter,
+  TemplateLoader,
+  UndoManager
+}
 
 import scala.math.{max, min}
 
@@ -23,20 +28,25 @@ object MenuBarComponent:
         div(
           className := "menu-left-section",
           img(
-            src := "tessella-logo.svg",
-            alt := "Tessella Logo",
-            className := "menu-bar-logo"
+            src        := "tessella-logo.svg",
+            alt        := "Tessella Logo",
+            className  := "menu-bar-logo"
           ),
           // Hamburger button for small screens
           button(
-            className := "menu-toggle",
-            onClick --> { _ => isMenuOpen.update(!_) },
+            className  := "menu-toggle",
+            onClick --> { _ =>
+
+              isMenuOpen.update(!_)
+            },
             aria.label := "Toggle navigation menu",
             "☰"
           ),
           // The menu itself
           div(
-            className <-- isMenuOpen.signal.map(open => if (open) "menu-items-container open" else "menu-items-container"),
+            className <-- isMenuOpen.signal.map(open =>
+              if (open) "menu-items-container open" else "menu-items-container"
+            ),
             fileMenu(),
             editMenu(),
             viewMenu(),
@@ -67,21 +77,37 @@ object MenuBarComponent:
     )
 
   // A helper for creating a clickable link in a dropdown
-  private def dropdownLink(title: String, action: () => Unit, enabled: Signal[Boolean] = Val(true), shortcut: Option[String] = None): Element =
+  private def dropdownLink(
+      title: String,
+      action: () => Unit,
+      enabled: Signal[Boolean] = Val(true),
+      shortcut: Option[String] = None
+  ): Element =
     a(
       href := "#",
-      onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
-      className.toggle("disabled") <-- enabled.map(!_),
+      onClick.preventDefault.map(_ => action()) --> { _ =>
+
+        isMenuOpen.set(false)
+      }, // close menu on action
+      className("disabled") <-- enabled.map(!_),
       span(title),
       shortcut.map(s => span(className := "shortcut", s))
     )
 
   // A helper for creating a dropdown link with dynamic text
-  private def dropdownLinkDynamic(title: Signal[String], action: () => Unit, enabled: Signal[Boolean] = Val(true), shortcut: Option[String] = None): Element =
+  private def dropdownLinkDynamic(
+      title: Signal[String],
+      action: () => Unit,
+      enabled: Signal[Boolean] = Val(true),
+      shortcut: Option[String] = None
+  ): Element =
     a(
       href := "#",
-      onClick.preventDefault.map(_ => action()) --> { _ => isMenuOpen.set(false) }, // close menu on action
-      className.toggle("disabled") <-- enabled.map(!_),
+      onClick.preventDefault.map(_ => action()) --> { _ =>
+
+        isMenuOpen.set(false)
+      }, // close menu on action
+      className("disabled") <-- enabled.map(!_),
       span(child.text <-- title),
       shortcut.map(s => span(className := "shortcut", s))
     )
@@ -92,7 +118,10 @@ object MenuBarComponent:
       className := "submenu-item",
       a(
         href := "#",
-        onClick.preventDefault --> { _ => () }, // Prevent navigation, allows hover/focus
+        onClick.preventDefault --> { _ =>
+
+          ()
+        }, // Prevent navigation, allows hover/focus
         span(title),
         span(className := "submenu-arrow", "▸")
       ),
@@ -104,27 +133,34 @@ object MenuBarComponent:
 
   private def dropdownLinks(templates: List[Template]): List[Element] =
     templates.map(template =>
-      dropdownLink(s"${template.name} ${template.pattern}", () => TemplateLoader.loadTemplate(template.filename))
+      dropdownLink(
+        s"${template.name} ${template.pattern}",
+        () => TemplateLoader.loadTemplate(template.filename)
+      )
     )
 
   private def templatesMenu(): Element =
-    subMenuItem("New from Template...",
+    subMenuItem(
+      "New from Template...",
       // Regular tilings
       dropdownLinks(regularNames),
       div(className := "menu-separator"),
       // Semiregular tilings
-      dropdownLinks(semiRegularNames),
+      dropdownLinks(semiRegularNames)
     )
 
   private def fileMenu(): Element =
     val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
-    val hasFileName = EditorState.currentFileName.signal.map(_.isDefined)
-    menuItem("File",
-      dropdownLink("New", () =>
-        AppState.clearTiling()
-        EditorState.currentFileName.set(None)
-        UndoManager.clearHistory()
-        EditorState.viewTransform.set(ViewTransform())
+    val hasFileName   = EditorState.currentFileName.signal.map(_.isDefined)
+    menuItem(
+      "File",
+      dropdownLink(
+        "New",
+        () =>
+          AppState.clearTiling()
+          EditorState.currentFileName.set(None)
+          UndoManager.clearHistory()
+          EditorState.viewTransform.set(ViewTransform())
       ),
       templatesMenu(),
       div(className := "menu-separator"),
@@ -150,13 +186,19 @@ object MenuBarComponent:
 
   private def editMenu(): Element =
     val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
-    val hasSelection = EditorState.selectedTilingPolygons.signal
+    val hasSelection  = EditorState.selectedTilingPolygons.signal
       .combineWith(EditorState.selectedPerimeterEdges.signal)
       .map((polys, edges) => polys.nonEmpty || edges.nonEmpty)
 
-    menuItem("Edit",
-      dropdownLink("↶ Undo", () => AppState.undoObserver, AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink("↷ Redo", () => AppState.redoObserver, AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
+    menuItem(
+      "Edit",
+      dropdownLink("↶ Undo", () => AppState.undoObserver: Unit, AppState.canUndo, shortcut = Some("Ctrl+Z")),
+      dropdownLink(
+        "↷ Redo",
+        () => AppState.redoObserver: Unit,
+        AppState.canRedo,
+        shortcut = Some("Shift+Ctrl+Z")
+      ),
       div(className := "menu-separator"),
       dropdownLink("Clear Tiling", () => AppState.clearTiling()),
 //      div(className := "menu-separator"),
@@ -172,14 +214,14 @@ object MenuBarComponent:
       dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
       div(className := "menu-separator"),
       a(
-        href := "#",
+        href        := "#",
         "Fill Color...",
         onClick.preventDefault --> { _ =>
           EditorState.tempColor.set(EditorState.fillColor.now())
           EditorState.showColorPicker.set(true)
           isMenuOpen.set(false)
         }
-      ),
+      )
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.strictness.signal.map {
@@ -192,7 +234,8 @@ object MenuBarComponent:
 
   private def viewMenu(): Element =
     val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
-    menuItem("View",
+    menuItem(
+      "View",
       dropdownLinkDynamic(
         EditorState.showNodeLabels.signal.map(show => if (show) "Hide Node Labels" else "Show Node Labels"),
         () => AppState.toggleNodeLabels()
@@ -205,26 +248,38 @@ object MenuBarComponent:
       dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
       div(className := "menu-separator"),
-      dropdownLink("Zoom In", () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))), shortcut = Some("+")),
-      dropdownLink("Zoom Out", () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))), shortcut = Some("-")),
+      dropdownLink(
+        "Zoom In",
+        () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))),
+        shortcut = Some("+")
+      ),
+      dropdownLink(
+        "Zoom Out",
+        () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))),
+        shortcut = Some("-")
+      ),
       dropdownLink("Rotate Left", () => ViewOperations.rotateView(-30), shortcut = Some("E")),
       dropdownLink("Rotate Right", () => ViewOperations.rotateView(30), shortcut = Some("R"))
     )
 
   private def helpMenu(): Element =
-    menuItem("Help",
-      dropdownLink("Guide...", () => { EditorState.showGuidePopup.set(true) }),
-      dropdownLink("Keyboard Shortcuts...", () => { EditorState.showShortcutsPopup.set(true) }),
+    menuItem(
+      "Help",
+      dropdownLink("Guide...", () => EditorState.showGuidePopup.set(true)),
+      dropdownLink("Keyboard Shortcuts...", () => EditorState.showShortcutsPopup.set(true)),
       div(className := "menu-separator"),
-      dropdownLink("About...", () => { EditorState.showAboutPopup.set(true) }),
+      dropdownLink("About...", () => EditorState.showAboutPopup.set(true))
     )
 
   // This now handles the theme update logic directly
-  private def themeSwitcher(effectiveTheme: Signal[String], userThemePreference: Var[Option[String]]): Element =
+  private def themeSwitcher(
+      effectiveTheme: Signal[String],
+      userThemePreference: Var[Option[String]]
+  ): Element =
     button(
       className := "theme-toggle-button",
       title <-- effectiveTheme.map {
-        case "dark" => "Switch to Light Mode"
+        case "dark"  => "Switch to Light Mode"
         case "light" => "Switch to Dark Mode"
       },
       // Safely get the current theme on click and update the state
@@ -233,7 +288,7 @@ object MenuBarComponent:
         userThemePreference.set(Some(nextTheme))
       },
       child <-- effectiveTheme.map {
-        case "dark"  => IconsSVG.sunIcon // Sun icon for dark mode, to switch to light
+        case "dark"  => IconsSVG.sunIcon  // Sun icon for dark mode, to switch to light
         case "light" => IconsSVG.moonIcon // Moon icon for light mode, to switch to dark
       }
     )

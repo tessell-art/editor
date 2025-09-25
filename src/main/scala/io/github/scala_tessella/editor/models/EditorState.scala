@@ -1,18 +1,16 @@
 package io.github.scala_tessella.editor.models
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
 import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom
-import io.github.scala_tessella.dcel.FaceId
 
 import scala.scalajs.js
 
-/**
- * EditorState object contains all the state variables for the editor.
- * The state is organized into logical groups for better maintainability.
- */
+/** EditorState object contains all the state variables for the editor. The state is organized into logical
+  * groups for better maintainability.
+  */
 object EditorState:
   //
   // FILE MANAGEMENT
@@ -110,7 +108,7 @@ object EditorState:
 
   /** Whether the irregular polygon popup is visible */
   val showIrregularPolygonPopup: Var[Boolean] = Var(false)
-  
+
   //
   // ERROR HANDLING
   //
@@ -175,7 +173,10 @@ object EditorState:
   val selectedIrregularPolygon: Signal[Option[Vector[AngleDegree]]] =
     isIrregularSelected.signal
       .combineWith(recentIrregularPolygon.signal)
-      .map { (isSel, recent) => if isSel then recent else None }
+      .map { (isSel, recent) =>
+
+        if isSel then recent else None
+      }
 
   // -------------------------
   // Derived Signals (no Vars)
@@ -190,14 +191,16 @@ object EditorState:
     highlightedPolygonId.signal
 
   /** System theme as a Signal (uses a media query, no Var) */
-  private val systemThemeBus = new EventBus[String]
+  private val systemThemeBus      = new EventBus[String]
   val systemTheme: Signal[String] =
     if js.typeOf(js.Dynamic.global.window) != "undefined" then
       // Browser environment
       val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
-      val signal = systemThemeBus.events.startWith(if lightMediaQuery.matches then "light" else "dark")
-      lightMediaQuery.addEventListener("change", (_: dom.Event) =>
-        systemThemeBus.writer.onNext(if lightMediaQuery.matches then "light" else "dark")
+      val signal          = systemThemeBus.events.startWith(if lightMediaQuery.matches then "light" else "dark")
+      lightMediaQuery.addEventListener(
+        "change",
+        (_: dom.Event) =>
+          systemThemeBus.writer.onNext(if lightMediaQuery.matches then "light" else "dark")
       )
       signal
     else

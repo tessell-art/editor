@@ -1,11 +1,11 @@
 package io.github.scala_tessella.editor.models
 
 case class ViewTransform(
-                          scale: Double = 1.0,
-                          rotationDegrees: Int = 0,
-                          panX: Double = 0.0,
-                          panY: Double = 0.0
-                        ):
+    scale: Double = 1.0,
+    rotationDegrees: Int = 0,
+    panX: Double = 0.0,
+    panY: Double = 0.0
+):
   // Helper method to normalize rotation to 0-359 degrees
   def normalizeRotation(degrees: Int): Int =
     val normalized = degrees % 360

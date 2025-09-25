@@ -16,7 +16,7 @@ object ColorUtils:
   extension (color: (Int, Int, Int))
 
     def toRgbString: String = rgbToString(color)
-    
+
     def toRgbaString: String = rgbaToString(color)
 
     def toHexString: String = rgbToHex(color)

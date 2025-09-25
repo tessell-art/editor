@@ -1,39 +1,44 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.utils.TessellationGeometry.*
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.{Point, edgeGeometrics, regularPolygonMetrics}
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, edgeGeometrics}
+import io.github.scala_tessella.editor.utils.TessellationGeometry._
 import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
 
-import scala.math.*
+import scala.math._
 
-/**
- * Shared geometry utilities to compute the exact placement (screen points) of a regular polygon
- * attached to a given edge. If intoFace is provided, the polygon is oriented towards that face's interior.
- */
+/** Shared geometry utilities to compute the exact placement (screen points) of a regular polygon attached to
+  * a given edge. If intoFace is provided, the polygon is oriented towards that face's interior.
+  */
 object PolygonPlacementGeometry:
 
   /** Compute canvas coordinates of the wireframe points for a placement preview/failure. */
-  def computeWireframePoints(angles: Vector[AngleDegree], edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None): Vector[(Double, Double)] =
+  def computeWireframePoints(
+      angles: Vector[AngleDegree],
+      edge: (VertexId, VertexId),
+      tiling: TilingDCEL,
+      intoFace: Option[FaceId] = None
+  ): Vector[(Double, Double)] =
     val vertex1 = tiling.coordinates(edge._1).toPoint
     val vertex2 = tiling.coordinates(edge._2).toPoint
 
     val (edgeLen, unitVector, midPoint) = edgeGeometrics(vertex1, vertex2)
     if (edgeLen == 0) return Vector.empty
 
-    val (perpX, perpY, wasFlipped) = determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
+    val (perpX, perpY, wasFlipped) =
+      determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
 
     if angles.toSet.size == 1 then
-      val polygonSides = angles.size
+      val polygonSides                 = angles.size
       val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
-  
+
       val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
-  
-      val angleStep = halfAngle * 2
-      val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
+
+      val angleStep  = halfAngle * 2
+      val edgeAngle  = Math.atan2(unitVector.y, unitVector.x)
       val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
-      val winding = if wasFlipped then -1 else 1
+      val winding    = if wasFlipped then -1 else 1
 
       generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
     else
@@ -43,12 +48,12 @@ object PolygonPlacementGeometry:
 
       // Compute transform: align local first edge to the actual perimeter edge
       val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
-      val rotCos = Math.cos(edgeAngle)
-      val rotSin = Math.sin(edgeAngle)
+      val rotCos    = Math.cos(edgeAngle)
+      val rotSin    = Math.sin(edgeAngle)
 
       // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
       val world = local.map { p =>
-        val scaled = p.scale(edgeLen)
+        val scaled  = p.scale(edgeLen)
         val rotated = Point(
           scaled.x * rotCos - scaled.y * rotSin,
           scaled.x * rotSin + scaled.y * rotCos
@@ -63,9 +68,9 @@ object PolygonPlacementGeometry:
   private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point] =
     if angles.isEmpty then Vector.empty
     else
-      var pts = Vector.newBuilder[Point]
+      var pts     = Vector.newBuilder[Point]
       var heading = 0.0 // radians
-      var curr = Point(0.0, 0.0)
+      var curr    = Point(0.0, 0.0)
 
       // first vertex
       pts += curr
@@ -74,8 +79,8 @@ object PolygonPlacementGeometry:
       // 1) advance one unit in current heading to create next vertex
       // 2) then turn by the exterior angle (PI - interior)
       angles.rotateLeft(1).foreach { a =>
-        val nx = curr.x + cos(heading)
-        val ny = curr.y + sin(heading)
+        val nx   = curr.x + cos(heading)
+        val ny   = curr.y + sin(heading)
         val next = Point(nx, ny)
         pts += next
         curr = next
@@ -89,27 +94,28 @@ object PolygonPlacementGeometry:
 
   /** Calculates basic geometric properties of an edge. */
   private def computeEdgeGeometrics(vertex1: Point, vertex2: Point): (Double, Double, Double, Point) =
-    val ex = vertex2.x - vertex1.x
-    val ey = vertex2.y - vertex1.y
-    val edgeLen = sqrt(ex * ex + ey * ey)
-    val ux = if edgeLen == 0 then 0.0 else ex / edgeLen
-    val uy = if edgeLen == 0 then 0.0 else ey / edgeLen
+    val ex       = vertex2.x - vertex1.x
+    val ey       = vertex2.y - vertex1.y
+    val edgeLen  = sqrt(ex * ex + ey * ey)
+    val ux       = if edgeLen == 0 then 0.0 else ex / edgeLen
+    val uy       = if edgeLen == 0 then 0.0 else ey / edgeLen
     val midPoint = Point((vertex1.x + vertex2.x) / 2, (vertex1.y + vertex2.y) / 2)
     (edgeLen, ux, uy, midPoint)
 
   /** Determines the inward-pointing normal vector for an edge relative to a face. */
   private def determineInwardNormal(
-    tiling: TilingDCEL,
-    edge: (VertexId, VertexId),
-    intoFace: Option[FaceId],
-    unitVector: (Double, Double)
+      tiling: TilingDCEL,
+      edge: (VertexId, VertexId),
+      intoFace: Option[FaceId],
+      unitVector: (Double, Double)
   ): (Double, Double, Boolean) =
-    val (ux, uy) = unitVector
-    val leftNormal = (-uy, ux)  // Normal for CCW traversal
+    val (ux, uy)    = unitVector
+    val leftNormal  = (-uy, ux) // Normal for CCW traversal
     val rightNormal = (uy, -ux) // Normal for CW traversal
 
     def findNormal(faceId: FaceId): Option[(Double, Double, Boolean)] =
       tiling.findInnerFaceVertices(faceId).toOption.map(_.map(_.id).toVector).flatMap { ids =>
+
         if !ids.slidingO(2).exists(p => p(0) == edge._1 && p(1) == edge._2) then
           Some((leftNormal._1, leftNormal._2, false)) // Forward edge, use left normal, not flipped
         else if ids.slidingO(2).exists(p => p(0) == edge._2 && p(1) == edge._1) then
@@ -121,7 +127,7 @@ object PolygonPlacementGeometry:
     intoFace match
       case Some(fid) =>
         findNormal(fid).getOrElse((leftNormal._1, leftNormal._2, false))
-      case None =>
+      case None      =>
         tiling.innerFaces.view
           .flatMap(f => findNormal(f.id))
           .headOption
@@ -130,28 +136,33 @@ object PolygonPlacementGeometry:
   /** Calculates geometric properties of the regular polygon to be placed. */
   private def computePolygonGeometrics(polygonSides: Int, sideLength: Double): (Double, Double, AngleDegree) =
     val halfAngle: AngleDegree = AngleDegree(180) / polygonSides
-    val apothem = sideLength / (2 * tan(halfAngle.toBigRadian.toBigDecimal.toDouble))
-    val radius = sideLength / (2 * sin(halfAngle.toBigRadian.toBigDecimal.toDouble))
+    val apothem                = sideLength / (2 * tan(halfAngle.toBigRadian.toBigDecimal.toDouble))
+    val radius                 = sideLength / (2 * sin(halfAngle.toBigRadian.toBigDecimal.toDouble))
     (apothem, radius, halfAngle)
 
   /** Calculates the starting angle for generating polygon vertices. */
-  private def computeVertexStartAngle(edgeAngle: Double, wasFlipped: Boolean, polygonSides: Int, halfAngle: AngleDegree): Double =
-    val isOdd = polygonSides % 2 == 1
+  private def computeVertexStartAngle(
+      edgeAngle: Double,
+      wasFlipped: Boolean,
+      polygonSides: Int,
+      halfAngle: AngleDegree
+  ): Double =
+    val isOdd                   = polygonSides % 2 == 1
     val baseOffset: AngleDegree = AngleDegree(90) - halfAngle
-    val oddHalfStep = if isOdd && !wasFlipped then halfAngle else AngleDegree(0)
+    val oddHalfStep             = if isOdd && !wasFlipped then halfAngle else AngleDegree(0)
     edgeAngle + (baseOffset + oddHalfStep).toBigRadian.toBigDecimal.toDouble
 
   /** Generates the vertex points for the wireframe polygon. */
   private def generateWireframeVertices(
-    polygonSides: Int,
-    center: Point,
-    radius: Double,
-    startAngle: Double,
-    angleStep: AngleDegree,
-    winding: Int
+      polygonSides: Int,
+      center: Point,
+      radius: Double,
+      startAngle: Double,
+      angleStep: AngleDegree,
+      winding: Int
   ): Vector[(Double, Double)] =
     (0 until polygonSides).map { i =>
-      val a = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
+      val a  = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
       val px = center.x + radius * cos(a)
       val py = center.y + radius * sin(a)
       tilingPointToCanvasView(Point(px, py))

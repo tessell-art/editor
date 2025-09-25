@@ -1,26 +1,36 @@
 package io.github.scala_tessella.editor.utils
 
-import com.raquo.laminar.api.L.{*, given}
-import SvgDsl.{polygon, fmt3, root}
-import Geometry.{Point, fitPointsToSquare, regularPolygonPoints, walkUnitEdges}
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.editor.utils.Geometry.{
+  Point,
+  fitPointsToSquare,
+  regularPolygonPoints,
+  walkUnitEdges
+}
+import io.github.scala_tessella.editor.utils.SvgDsl.{fmt3, polygon, root}
 
 object PolygonSvg:
 
   // Generic: render an arbitrary polygon preview fitted to a square
-  def previewFitted(points: Vector[Point], size: Int, pad: Double, strokeW: String = SvgDsl.Defaults.strokeWidthThin): Element =
+  def previewFitted(
+      points: Vector[Point],
+      size: Int,
+      pad: Double,
+      strokeW: String = SvgDsl.Defaults.strokeWidthThin
+  ): Element =
     val (scale, offX, offY) = fitPointsToSquare(points, size, pad)
-    val scaled = points.map(p => Point(offX + p.x * scale, offY + p.y * scale))
-    val pointsStr = SvgDsl.toPointsString(scaled)
+    val scaled              = points.map(p => Point(offX + p.x * scale, offY + p.y * scale))
+    val pointsStr           = SvgDsl.toPointsString(scaled)
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = strokeW)
     )
 
   // Regular polygon thumbnail (used in palette buttons)
   def regularPreview(sides: Int, size: Int = 40, radiusFactor: Double = 0.35): Element =
-    val center = Point(size / 2.0, size / 2.0)
-    val radius = size * radiusFactor
-    val pts = regularPolygonPoints(sides, radius, center)
+    val center    = Point(size / 2.0, size / 2.0)
+    val radius    = size * radiusFactor
+    val pts       = regularPolygonPoints(sides, radius, center)
     val pointsStr = SvgDsl.toPointsString(pts)
     root(size)(
       polygon(pointsStr)
@@ -29,27 +39,30 @@ object PolygonSvg:
   // Irregular polygon from AngleDegree edges, unit walk + fit
   def irregularPreview(anglesDeg: Vector[AngleDegree], size: Int = 40, pad: Double = 4.0): Element =
     val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-    val pts = walkUnitEdges(turns)
+    val pts   = walkUnitEdges(turns)
     previewFitted(pts, size, pad)
 
   // Big irregular with head line overlay
   def irregularBigWithHead(anglesDeg: Vector[AngleDegree], size: Int = 220, pad: Double = 12.0): Element =
-    val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-    val basePts = walkUnitEdges(turns)
-    val (scale, offX, offY) = io.github.scala_tessella.editor.utils.Geometry.fitPointsToSquare(basePts, size, pad)
-    def sx(p: Point) = offX + p.x * scale
-    def sy(p: Point) = offY + p.y * scale
-    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(sx(p), sy(p))).mkString(" ")
-    val headIdx = ((1 % basePts.size) + basePts.size) % basePts.size
-    val a = basePts(headIdx)
-    val b = basePts((headIdx + 1) % basePts.size)
+    val turns               = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
+    val basePts             = walkUnitEdges(turns)
+    val (scale, offX, offY) =
+      io.github.scala_tessella.editor.utils.Geometry.fitPointsToSquare(basePts, size, pad)
+    def sx(p: Point)        = offX + p.x * scale
+    def sy(p: Point)        = offY + p.y * scale
+    val pointsStr           = basePts.map(p => SvgDsl.fmt3Point(sx(p), sy(p))).mkString(" ")
+    val headIdx             = ((1 % basePts.size) + basePts.size) % basePts.size
+    val a                   = basePts(headIdx)
+    val b                   = basePts((headIdx + 1) % basePts.size)
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
-        svg.x1 := fmt3(sx(a)), svg.y1 := fmt3(sy(a)),
-        svg.x2 := fmt3(sx(b)), svg.y2 := fmt3(sy(b)),
-        svg.stroke := "#ff6b6b",
-        svg.strokeWidth := "4",
+        svg.x1            := fmt3(sx(a)),
+        svg.y1            := fmt3(sy(a)),
+        svg.x2            := fmt3(sx(b)),
+        svg.y2            := fmt3(sy(b)),
+        svg.stroke        := "#ff6b6b",
+        svg.strokeWidth   := "4",
         svg.strokeLineCap := "round",
         svg.pointerEvents := "none"
       )

@@ -1,12 +1,12 @@
 package io.github.scala_tessella.editor.operations
 
-import OperationGuard.ifNotProcessing
 import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, ValidationError, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
-import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonDeletion, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.{Logger, UndoManager}
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, TilingError, ValidationError, VertexId}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 object TessellationOperations:
@@ -56,10 +56,10 @@ object TessellationOperations:
               case Some(tiling) =>
                 currentTiling.set(tiling)
                 SelectionOperations.clearAllSelections()
-              case None =>
+              case None         =>
                 UndoManager.undo()
                 ErrorOperations.showError("Failed to create tiling from irregular polygon")
-          case None => ()
+          case None         => ()
 
   // Attempt to delete a face by FaceId (stable, DCEL-native)
   def attemptFaceDeletion(faceId: FaceId): Unit =
@@ -90,13 +90,13 @@ object TessellationOperations:
     (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
       case (tiling, _, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available to grow")
-      case (_, None, false) =>
+      case (_, None, false)                 =>
         Logger.warn("Both regular polygon and irregular polygon unselected")
-      case (_, Some(_), true) =>
+      case (_, Some(_), true)               =>
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
-      case (tiling, maybeSides, _) =>
+      case (tiling, maybeSides, _)          =>
         val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList
-        val op = () =>
+        val op             = () =>
           try
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
@@ -111,15 +111,17 @@ object TessellationOperations:
             case e: Exception => Left(ValidationError(s"Error growing edge: ${e.getMessage}"))
 
         OperationRunner.runTilingOp(op)(
-          onSuccess = {
-            EditorState.selectedPerimeterEdges.set(Set.empty)
-          },
-          onFailure = err => {
+          onSuccess =
+            EditorState.selectedPerimeterEdges.set(Set.empty),
+          onFailure = err =>
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
-              val angles = maybeSides.map(sides => RegularPolygon(sides).angles).getOrElse(EditorState.recentIrregularPolygon.now().get)
-              val placement = FailedPolygonPlacement(edgeIndex, angles, (selectedEdge(0), selectedEdge(1)), tiling)
-              val truncated = err.message
+              val angles       = maybeSides.map(sides => RegularPolygon(sides).angles).getOrElse(
+                EditorState.recentIrregularPolygon.now().get
+              )
+              val placement    =
+                FailedPolygonPlacement(edgeIndex, angles, (selectedEdge(0), selectedEdge(1)), tiling)
+              val truncated    = err.message
               if maybeSides.isDefined then
                 ErrorOperations.showError(
                   s"Growing ${polygonName(maybeSides.get)}s on this perimeter edge is invalid. $truncated",
@@ -132,7 +134,6 @@ object TessellationOperations:
                 )
             else
               ErrorOperations.showError(err.message)
-          }
         )
 
   // Helper: try to find the inner face that contains this directed edge; if not found, None
@@ -148,11 +149,11 @@ object TessellationOperations:
     (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
       case (tiling, _, _) if tiling.isEmpty =>
         ErrorOperations.showError("No tiling available for insertion")
-      case (_, None, false) =>
+      case (_, None, false)                 =>
         Logger.warn("Both regular polygon and irregular polygon unselected")
-      case (_, Some(_), true) =>
+      case (_, Some(_), true)               =>
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
-      case (tiling, maybeSides, _) =>
+      case (tiling, maybeSides, _)          =>
         val op = () =>
           try
             if maybeSides.isDefined then
@@ -164,11 +165,10 @@ object TessellationOperations:
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
         OperationRunner.runTilingOp(op)(
-          onSuccess = {
-            EditorState.selectedPerimeterEdges.set(Set.empty)
-          },
+          onSuccess =
+            EditorState.selectedPerimeterEdges.set(Set.empty),
           onFailure = error => {
-            val curr = currentTiling.now()
+            val curr        = currentTiling.now()
             val maybeFaceId = findFaceContainingEdge(curr, startVertexId, endVertexId)
             if maybeSides.isDefined then
               val placementOpt =
@@ -181,7 +181,10 @@ object TessellationOperations:
                     intoFace = maybeFaceId
                   )
                 )
-              ErrorOperations.showError(s"Cannot insert regular polygon: ${error.message}", placement = placementOpt)
+              ErrorOperations.showError(
+                s"Cannot insert regular polygon: ${error.message}",
+                placement = placementOpt
+              )
             else
               val placementOpt =
                 Some(
@@ -193,7 +196,10 @@ object TessellationOperations:
                     intoFace = maybeFaceId
                   )
                 )
-              ErrorOperations.showError(s"Cannot insert irregular polygon: ${error.message}", placement = placementOpt)
+              ErrorOperations.showError(
+                s"Cannot insert irregular polygon: ${error.message}",
+                placement = placementOpt
+              )
           }
         )
 

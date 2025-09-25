@@ -1,16 +1,15 @@
 package io.github.scala_tessella.editor.interactions
 
-import io.github.scala_tessella.editor.components.{EditorCanvasComponent, MenuBarComponent}
-import io.github.scala_tessella.editor.models.{AppState, EditorMode, EditorState}
+import com.raquo.laminar.api.L._
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.SvgExporter
-
-import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
+
 import scala.math.{max, min}
-import scala.scalajs.js.timers.{SetTimeoutHandle, setTimeout, clearTimeout} // debouncing timers
+import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout} // debouncing timers
 
 object KeyboardEventHandler:
 
@@ -18,14 +17,16 @@ object KeyboardEventHandler:
     // Gate the stream using the processing signal without calling .now() per keydown
     windowEvents(_.onKeyDown)
       .withCurrentValueOf(EditorState.isProcessing.signal)
-      .collect { case (event, false) => event }
+      .collect { case (event, false) =>
+        event
+      }
       --> handleKeyDown
 
   // --- Debounced rotate / zoom state ---
-  private var rotateAccum: Int = 0
+  private var rotateAccum: Int                      = 0
   private var rotateTimer: Option[SetTimeoutHandle] = None
 
-  private var zoomAccum: Double = 1.0
+  private var zoomAccum: Double                   = 1.0
   private var zoomTimer: Option[SetTimeoutHandle] = None
 
   private val debounceMs = 20 // ~1 frame @ 50fps; adjust 16–33ms as desired
@@ -64,46 +65,46 @@ object KeyboardEventHandler:
   def handleKeyDown(event: KeyboardEvent): Unit =
     // Snapshot small pieces of state once per key event
     val currentTiling = EditorState.currentTiling.now()
-    val hasFileName = EditorState.currentFileName.now().isDefined
+    val hasFileName   = EditorState.currentFileName.now().isDefined
 
     val targetIsInput = Option(event.target).exists {
-      case _: dom.html.Input => true
-      case _: dom.html.TextArea => true
-      case _: dom.html.Select => true
+      case _: dom.html.Input                            => true
+      case _: dom.html.TextArea                         => true
+      case _: dom.html.Select                           => true
       case el: dom.html.Element if el.isContentEditable => true
-      case _ => false
+      case _                                            => false
     }
 
     if !targetIsInput then
       event.key match
-        case "r" | "R" =>
+        case "r" | "R"                              =>
           event.preventDefault()
           enqueueRotate(+15) // debounced
-        case "e" | "E" =>
+        case "e" | "E"                              =>
           event.preventDefault()
           enqueueRotate(-15) // debounced
         case "Z" if event.ctrlKey && event.shiftKey =>
           event.preventDefault()
-          AppState.redoObserver
-        case "z" if event.ctrlKey =>
+          AppState.redoObserver: Unit
+        case "z" if event.ctrlKey                   =>
           event.preventDefault()
-          AppState.undoObserver
-        case "s" if event.ctrlKey =>
+          AppState.undoObserver: Unit
+        case "s" if event.ctrlKey                   =>
           event.preventDefault()
           // Use the snapshots captured above
           if hasFileName && !currentTiling.isEmpty then
             SvgExporter.saveTilingToSVG()
-        case "+" | "=" =>
+        case "+" | "="                              =>
           event.preventDefault()
           enqueueZoom(1.1) // debounced
-        case "-" | "_" =>
+        case "-" | "_"                              =>
           event.preventDefault()
           enqueueZoom(1.0 / 1.1) // debounced
-        case "Escape" =>
+        case "Escape"                               =>
           event.preventDefault()
           clearAllSelections()
-        case "Delete" | "Backspace" =>
+        case "Delete" | "Backspace"                 =>
           event.preventDefault()
           // Future deletion logic can be added here
           ()
-        case _ => ()
+        case _                                      => ()

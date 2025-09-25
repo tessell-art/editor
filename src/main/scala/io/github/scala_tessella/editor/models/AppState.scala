@@ -1,15 +1,21 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.editor.operations.*
-import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.UndoManager
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
+import io.github.scala_tessella.editor.operations._
 import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.UndoManager
 
 // Case class to represent a failed polygon placement
-case class FailedPolygonPlacement(edgeIndex: Int, angles: Vector[AngleDegree], edge: (VertexId, VertexId), tiling: TilingDCEL, intoFace: Option[FaceId] = None)
+case class FailedPolygonPlacement(
+    edgeIndex: Int,
+    angles: Vector[AngleDegree],
+    edge: (VertexId, VertexId),
+    tiling: TilingDCEL,
+    intoFace: Option[FaceId] = None
+)
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(faceId: FaceId, polygonNodes: Vector[VertexId])
@@ -30,10 +36,9 @@ enum EditorMode:
 enum Tool:
   case ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Inserter, Measurement
 
-/**
- * AppState object provides a higher-level interface to the editor state.
- * It exports all members of EditorState and provides methods to manipulate the state.
- */
+/** AppState object provides a higher-level interface to the editor state. It exports all members of
+  * EditorState and provides methods to manipulate the state.
+  */
 object AppState:
   // Expose state for components to read
   export EditorState.*
@@ -47,21 +52,22 @@ object AppState:
 
   // Observers for UI wiring (Laminar-idiomatic: views do --> AppState.XObserver)
   val undoObserver: Observer[Any] = Observer { _ =>
+
     ifNotProcessing:
       UndoManager.undo()
   }
 
   val redoObserver: Observer[Any] = Observer { _ =>
+
     ifNotProcessing:
       UndoManager.redo()
   }
 
   // Simple UI operations
 
-  /**
-   * Toggles between Select and Delete editor modes.
-   * Does nothing if the editor is currently processing an operation.
-   */
+  /** Toggles between Select and Delete editor modes. Does nothing if the editor is currently processing an
+    * operation.
+    */
   def toggleEditorMode(): Unit =
     ifNotProcessing:
       editorMode.update {
@@ -80,166 +86,162 @@ object AppState:
 //        case _                 => Strictness.STRICT
 //      }
 
-  /**
-   * Toggles the visibility of node labels.
-   * Does nothing if the editor is currently processing an operation.
-   */
+  /** Toggles the visibility of node labels. Does nothing if the editor is currently processing an operation.
+    */
   def toggleNodeLabels(): Unit =
     ifNotProcessing:
       showNodeLabels.update(!_)
 
-  /**
-   * Toggles the visibility of the dual tessellation.
-   * Does nothing if the editor is currently processing an operation.
-   */
+  /** Toggles the visibility of the dual tessellation. Does nothing if the editor is currently processing an
+    * operation.
+    */
   def toggleShowDual(): Unit =
     ifNotProcessing:
       showDual.update(!_)
 
-  /**
-   * Checks if the current tiling is empty.
-   * @return true if the tiling is empty, false otherwise
-   */
+  /** Checks if the current tiling is empty.
+    * @return
+    *   true if the tiling is empty, false otherwise
+    */
   def isTilingEmpty: Boolean = currentTiling.now().isEmpty
 
   // Delegate to operation objects
 
-  /**
-   * Selects a polygon with the specified number of sides.
-   * @param sides The number of sides of the polygon to select
-   */
+  /** Selects a polygon with the specified number of sides.
+    * @param sides
+    *   The number of sides of the polygon to select
+    */
   def selectPolygon(sides: Int): Unit =
     TessellationOperations.selectPolygon(sides)
 
-  /**
-   * Clears the current tiling and all measurements.
-   */
+  /** Clears the current tiling and all measurements.
+    */
   def clearTiling(): Unit =
     clearMeasurements()
     TessellationOperations.clearTiling()
 
-  /**
-   * Handles a click on a tiling polygon.
-   * The behavior depends on the current editor mode and active tool.
-   * @param faceId The ID of the clicked polygon
-   */
+  /** Handles a click on a tiling polygon. The behavior depends on the current editor mode and active tool.
+    * @param faceId
+    *   The ID of the clicked polygon
+    */
   def handleTilingPolygonClick(faceId: FaceId): Unit =
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-  /**
-   * Handles a click on a perimeter edge.
-   * @param edgeId The ID of the clicked edge
-   * @param edgeIndex The index of the clicked edge
-   */
+  /** Handles a click on a perimeter edge.
+    * @param edgeId
+    *   The ID of the clicked edge
+    * @param edgeIndex
+    *   The index of the clicked edge
+    */
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     SelectionOperations.handlePerimeterEdgeClick(edgeId, edgeIndex)
 
-  /**
-   * Handles a click on a point for measurement.
-   * @param point The clicked point
-   */
+  /** Handles a click on a point for measurement.
+    * @param point
+    *   The clicked point
+    */
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForMeasurement(point)
 
-  /**
-   * Handles a click on a point for deletion.
-   *
-   * @param point The clicked point
-   */
+  /** Handles a click on a point for deletion.
+    *
+    * @param point
+    *   The clicked point
+    */
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForDeletion(point)
 
-
-  /**
-   * Handles a click on an edge point for insertion.
-   *
-   * @param point The clicked edge point
-   */
+  /** Handles a click on an edge point for insertion.
+    *
+    * @param point
+    *   The clicked edge point
+    */
   def handlePointClickForInsertion(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForInsertion(point)
 
-  /**
-   * Applies the specified color to all selected polygons.
-   * @param color The color to apply (RGB tuple)
-   */
+  /** Applies the specified color to all selected polygons.
+    * @param color
+    *   The color to apply (RGB tuple)
+    */
   def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
     ColorOperations.applyColorToSelectedPolygons(color)
 
-  /**
-   * Gets the color for a polygon or assigns a new one if it doesn't have one.
-   * @param faceId The tag of the polygon
-   * @return The color of the polygon (RGB tuple)
-   */
+  /** Gets the color for a polygon or assigns a new one if it doesn't have one.
+    * @param faceId
+    *   The tag of the polygon
+    * @return
+    *   The color of the polygon (RGB tuple)
+    */
   def getOrAssignPolygonColor(faceId: FaceId): (Int, Int, Int) =
     ColorOperations.getOrAssignPolygonColor(faceId)
 
-  /**
-   * Shows an error message with optional details about failed operations.
-   * @param message The error message to display
-   * @param placement Optional details about a failed polygon placement
-   * @param deletion Optional details about a failed polygon deletion
-   */
-  def showError(message: String, placement: Option[FailedPolygonPlacement] = None, deletion: Option[FailedPolygonDeletion] = None): Unit =
+  /** Shows an error message with optional details about failed operations.
+    * @param message
+    *   The error message to display
+    * @param placement
+    *   Optional details about a failed polygon placement
+    * @param deletion
+    *   Optional details about a failed polygon deletion
+    */
+  def showError(
+      message: String,
+      placement: Option[FailedPolygonPlacement] = None,
+      deletion: Option[FailedPolygonDeletion] = None
+  ): Unit =
     ErrorOperations.showError(message, placement, deletion)
 
-  /**
-   * Clears the current error message and details.
-   */
+  /** Clears the current error message and details.
+    */
   def clearError(): Unit =
     ErrorOperations.clearError()
 
-  /**
-   * Selects all polygons with the specified number of sides.
-   * Does nothing if the editor is processing or if the tiling is empty.
-   * @param sides The number of sides of the polygons to select
-   */
+  /** Selects all polygons with the specified number of sides. Does nothing if the editor is processing or if
+    * the tiling is empty.
+    * @param sides
+    *   The number of sides of the polygons to select
+    */
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
       if !isTilingEmpty then
         UndoManager.saveState()
         SelectionOperations.selectPolygonsBySides(sides)
 
-  /**
-   * Selects all polygons with the same shape.
-   * Does nothing if the editor is processing or if the tiling is empty.
-   *
-   * @param angles The interior angles of the polygons to select
-   */
+  /** Selects all polygons with the same shape. Does nothing if the editor is processing or if the tiling is
+    * empty.
+    *
+    * @param angles
+    *   The interior angles of the polygons to select
+    */
   def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
     ifNotProcessing:
       if !isTilingEmpty then
         UndoManager.saveState()
         SelectionOperations.selectPolygonsByShape(angles)
 
-  /**
-   * Selects all polygons in the tiling.
-   * Does nothing if the editor is processing or if the tiling is empty.
-   */
+  /** Selects all polygons in the tiling. Does nothing if the editor is processing or if the tiling is empty.
+    */
   def selectAll(): Unit =
     ifNotProcessing:
       if !isTilingEmpty then
         UndoManager.saveState()
         SelectionOperations.selectAllPolygons()
 
-  /**
-   * Deselects all selected polygons and edges.
-   * Does nothing if the editor is processing or if nothing is selected.
-   */
+  /** Deselects all selected polygons and edges. Does nothing if the editor is processing or if nothing is
+    * selected.
+    */
   def deselectAll(): Unit =
     ifNotProcessing:
       if selectedTilingPolygons.now().nonEmpty || selectedPerimeterEdges.now().nonEmpty then
         UndoManager.saveState()
         SelectionOperations.clearAllSelections()
 
-  /**
-   * Adjusts the view to fit the entire tiling in the canvas.
-   */
+  /** Adjusts the view to fit the entire tiling in the canvas.
+    */
   def fitTilingToCanvas(): Unit =
     ViewOperations.fitTilingToCanvas()
 
-  /**
-   * Clears all measurement-related state.
-   */
+  /** Clears all measurement-related state.
+    */
   def clearMeasurements(): Unit =
     clickablePoints.set(Nil)
     measurementStartPoint.set(None)

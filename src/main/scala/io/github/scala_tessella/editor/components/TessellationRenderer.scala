@@ -1,38 +1,51 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{AppState, ClickablePoint, EditorMode, EditorState, FailedPolygonPlacement, Tool}
+import com.raquo.laminar.api.L._
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.Polygon.RegularPolygon
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.editor.models.{
+  AppState,
+  ClickablePoint,
+  EditorMode,
+  EditorState,
+  FailedPolygonPlacement,
+  Tool
+}
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
-import io.github.scala_tessella.editor.utils.TessellationGeometry.*
-import io.github.scala_tessella.editor.utils.ColorUtils.*
+import io.github.scala_tessella.editor.utils.ColorUtils._
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, normalizeDeltaAngle}
-import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.dcel.Polygon.RegularPolygon
-import io.github.scala_tessella.dcel.{Face, FaceId, TilingDCEL, Vertex, VertexId}
+import io.github.scala_tessella.editor.utils.TessellationGeometry._
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 
 object TessellationRenderer:
 
-  private val colorPickerCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 56 56'%3E%3Cpath fill='white' stroke='black' stroke-width='2' d='M39.6 28.9L40.3 28.1c1.1-1.2 1.1-2.6-.1-3.8L39.5 23.6c3.5-3.2 7.5-3.6 9.9-6.1 3.5-3.5 2.3-8.4-.1-10.9s-7.4-3.6-10.9-.1c-2.5 2.4-2.9 6.4-6.1 10l-.7-.7c-1.2-1.2-2.6-1.1-3.8.1l-.7.6c-1.4 1.4-1.2 2.6 0 3.8l1 1L10.6 39C3.3 46.2 6.8 45.1 2.9 50.7l2.1 2.2c5.4-3.9 4.7-0 12-7.3L34.8 27.8l1 1c1.2 1.2 2.4 1.5 3.8.1zM10.1 46.1c-.9-.9-.7-1.8.2-2.7L30.3 23.3l2.5 2.5L12.8 45.9c-.8.8-1.8 1-2.7.2z'/%3E%3C/svg%3E\") 2 24, auto"
-  private val selectByColorCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='31' viewBox='0 0 37.643265 44.674143'%3E%3Cg fill='white' stroke='black' stroke-width='1'%3E%3Cpath d='M 15.302,0 C 6.85,0 0,6.309 0,14.09 c 0,7.781 6.85,14.092 15.302,14.092 1.519,-8.259 4.996,-9.012 8.362,-9.012 0.751,0 1.497,0.038 2.214,0.038 2.521,0 4.687,-0.463 5.502,-4.646 C 32.744,7.586 23.752,0 15.302,0 Z m 14.335958,14.790305 c -0.744518,2.094393 -0.955291,2.261786 -3.024775,2.620009 -0.933269,0.161547 -0.832255,0.05748 -1.541035,-0.01983 -0.399,-0.01 -1.037565,-0.119539 -1.441565,-0.119539 -3.879,0 -7.639278,1.034464 -9.861278,8.777464 C 6.2285932,24.929856 1.9315932,19.753102 1.9315932,14.357102 c 0,-6.1150003 4.4505932,-12.4255088 13.5039578,-12.5590596 4.028562,-0.059427 9.877508,3.1268559 12.564508,6.3888559 0.901,1.0939997 2.079899,4.3374067 1.637899,6.6034067 z'/%3E%3Cpath d='m 10.26,15.943 c -1.565,0 -2.839,1.273 -2.839,2.839 0,1.566 1.273,2.839 2.839,2.839 1.564,0 2.838,-1.273 2.838,-2.839 0,-1.566 -1.273,-2.839 -2.838,-2.839 z m 0,4.178 c -0.738,0 -1.339,-0.602 -1.339,-1.339 0,-0.738 0.601,-1.339 1.339,-1.339 0.737,0 1.338,0.602 1.338,1.339 0,0.737 -0.6,1.339 -1.338,1.339 z'/%3E%3Ccircle cx='8.467' cy='11.012' r='2.0880001'/%3E%3Ccircle cx='13.296' cy='7.2950001' r='2.089'/%3E%3Ccircle cx='19.381001' cy='8.7869997' r='2.089'/%3E%3Ccircle cx='24.089001' cy='12.497' r='2.089'/%3E%3Cg transform='matrix(0.09071207,0,0,0.09071207,11.351823,13.156144)'%3E%3Cpolygon points='57.617,303.138 123.48,224.061 181.017,347.451 244.459,317.867 186.921,194.478 289.834,194.854 57.617,0'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\") 11 9, auto"
-  private val eraserCursor = s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='${IconsSVG.eraserViewBox}'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='${IconsSVG.eraserPathD}'/%3E%3C/svg%3E\") 5 20, auto"
-  private val inserterCursor = s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='27' height='27' viewBox='${IconsSVG.inserterViewBox}'%3E%3Cpath fill='none' stroke='black' stroke-width='2' d='${IconsSVG.inserterPathD}'/%3E%3C/svg%3E\") 13 0, auto"
-  private val measurementCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-871 1129 256 256'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='M-871,1185.5l199.2,199.7l56.8-56.7l-199.2-199.7L-871,1185.5z M-627,1328.5l-36.3,36.3l-187.3-187.7l36.4-36.2l25.4,25.4 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2L-627,1328.5z M-820.3,1165.2c3.1,3,3.2,8,0.2,11.2c-3,3.1-8,3.2-11.2,0.2c-3.1-3-3.2-8-0.2-11.2 C-828.5,1162.3-823.5,1162.2-820.3,1165.2z'/%3E%3C/svg%3E\") 4 4, auto"
-  private val deleteCursor = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='21' viewBox='0 0 32 32'%3E%3Cpath stroke='white' stroke-width='6' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3Cpath stroke='red' stroke-width='3' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3C/svg%3E\") 10 10, auto"
+  private val colorPickerCursor   =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 56 56'%3E%3Cpath fill='white' stroke='black' stroke-width='2' d='M39.6 28.9L40.3 28.1c1.1-1.2 1.1-2.6-.1-3.8L39.5 23.6c3.5-3.2 7.5-3.6 9.9-6.1 3.5-3.5 2.3-8.4-.1-10.9s-7.4-3.6-10.9-.1c-2.5 2.4-2.9 6.4-6.1 10l-.7-.7c-1.2-1.2-2.6-1.1-3.8.1l-.7.6c-1.4 1.4-1.2 2.6 0 3.8l1 1L10.6 39C3.3 46.2 6.8 45.1 2.9 50.7l2.1 2.2c5.4-3.9 4.7-0 12-7.3L34.8 27.8l1 1c1.2 1.2 2.4 1.5 3.8.1zM10.1 46.1c-.9-.9-.7-1.8.2-2.7L30.3 23.3l2.5 2.5L12.8 45.9c-.8.8-1.8 1-2.7.2z'/%3E%3C/svg%3E\") 2 24, auto"
+  private val selectByColorCursor =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='31' viewBox='0 0 37.643265 44.674143'%3E%3Cg fill='white' stroke='black' stroke-width='1'%3E%3Cpath d='M 15.302,0 C 6.85,0 0,6.309 0,14.09 c 0,7.781 6.85,14.092 15.302,14.092 1.519,-8.259 4.996,-9.012 8.362,-9.012 0.751,0 1.497,0.038 2.214,0.038 2.521,0 4.687,-0.463 5.502,-4.646 C 32.744,7.586 23.752,0 15.302,0 Z m 14.335958,14.790305 c -0.744518,2.094393 -0.955291,2.261786 -3.024775,2.620009 -0.933269,0.161547 -0.832255,0.05748 -1.541035,-0.01983 -0.399,-0.01 -1.037565,-0.119539 -1.441565,-0.119539 -3.879,0 -7.639278,1.034464 -9.861278,8.777464 C 6.2285932,24.929856 1.9315932,19.753102 1.9315932,14.357102 c 0,-6.1150003 4.4505932,-12.4255088 13.5039578,-12.5590596 4.028562,-0.059427 9.877508,3.1268559 12.564508,6.3888559 0.901,1.0939997 2.079899,4.3374067 1.637899,6.6034067 z'/%3E%3Cpath d='m 10.26,15.943 c -1.565,0 -2.839,1.273 -2.839,2.839 0,1.566 1.273,2.839 2.839,2.839 1.564,0 2.838,-1.273 2.838,-2.839 0,-1.566 -1.273,-2.839 -2.838,-2.839 z m 0,4.178 c -0.738,0 -1.339,-0.602 -1.339,-1.339 0,-0.738 0.601,-1.339 1.339,-1.339 0.737,0 1.338,0.602 1.338,1.339 0,0.737 -0.6,1.339 -1.338,1.339 z'/%3E%3Ccircle cx='8.467' cy='11.012' r='2.0880001'/%3E%3Ccircle cx='13.296' cy='7.2950001' r='2.089'/%3E%3Ccircle cx='19.381001' cy='8.7869997' r='2.089'/%3E%3Ccircle cx='24.089001' cy='12.497' r='2.089'/%3E%3Cg transform='matrix(0.09071207,0,0,0.09071207,11.351823,13.156144)'%3E%3Cpolygon points='57.617,303.138 123.48,224.061 181.017,347.451 244.459,317.867 186.921,194.478 289.834,194.854 57.617,0'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\") 11 9, auto"
+  private val eraserCursor        =
+    s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='${IconsSVG.eraserViewBox}'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='${IconsSVG.eraserPathD}'/%3E%3C/svg%3E\") 5 20, auto"
+  private val inserterCursor      =
+    s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='27' height='27' viewBox='${IconsSVG.inserterViewBox}'%3E%3Cpath fill='none' stroke='black' stroke-width='2' d='${IconsSVG.inserterPathD}'/%3E%3C/svg%3E\") 13 0, auto"
+  private val measurementCursor   =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-871 1129 256 256'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='M-871,1185.5l199.2,199.7l56.8-56.7l-199.2-199.7L-871,1185.5z M-627,1328.5l-36.3,36.3l-187.3-187.7l36.4-36.2l25.4,25.4 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2L-627,1328.5z M-820.3,1165.2c3.1,3,3.2,8,0.2,11.2c-3,3.1-8,3.2-11.2,0.2c-3.1-3-3.2-8-0.2-11.2 C-828.5,1162.3-823.5,1162.2-820.3,1165.2z'/%3E%3C/svg%3E\") 4 4, auto"
+  private val deleteCursor        =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='21' viewBox='0 0 32 32'%3E%3Cpath stroke='white' stroke-width='6' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3Cpath stroke='red' stroke-width='3' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3C/svg%3E\") 10 10, auto"
 
   private val selectionPattern: Element = svg.defs(
     svg.pattern(
-      svg.idAttr := "selection-pattern",
+      svg.idAttr       := "selection-pattern",
       svg.patternUnits := "userSpaceOnUse",
-      svg.width := "8",
-      svg.height := "8",
+      svg.width        := "8",
+      svg.height       := "8",
       svg.path(
-        svg.d := "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4",
-        svg.stroke := "rgba(40, 40, 40, 0.6)",
+        svg.d           := "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4",
+        svg.stroke      := "rgba(40, 40, 40, 0.6)",
         svg.strokeWidth := "1.5"
       )
     )
@@ -40,15 +53,15 @@ object TessellationRenderer:
 
   private def renderDualTessellation(tiling: TilingDCEL): List[Element] =
     generateDualLines(tiling).map { case (midPoint, center) =>
-      val (x1, y1) = tilingPointToCanvasView(midPoint.toPoint)
-      val (x2, y2) = tilingPointToCanvasView(center.toPoint)
+      val (x1, y1)            = tilingPointToCanvasView(midPoint.toPoint)
+      val (x2, y2)            = tilingPointToCanvasView(center.toPoint)
       svg.line(
-        svg.x1 := x1.toString,
-        svg.y1 := y1.toString,
-        svg.x2 := x2.toString,
-        svg.y2 := y2.toString,
-        svg.stroke := "red",
-        svg.strokeWidth := "1",
+        svg.x1            := x1.toString,
+        svg.y1            := y1.toString,
+        svg.x2            := x2.toString,
+        svg.y2            := y2.toString,
+        svg.stroke        := "red",
+        svg.strokeWidth   := "1",
         svg.pointerEvents := "none"
       )
     }
@@ -68,24 +81,26 @@ object TessellationRenderer:
     // Check if this polygon should be hidden due to failed deletion
     val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
       case Some(failedDel) => failedDel.faceId == faceId
-      case None => false
+      case None            => false
     }
 
     // Update stroke and styling based on editor mode
     val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
       case (selected, mode) =>
         if selected then "#ff6b6b"
-        else mode match
-          case EditorMode.Select => "#646cff"
-          case EditorMode.Delete => "#ff4444"
+        else
+          mode match
+            case EditorMode.Select => "#646cff"
+            case EditorMode.Delete => "#ff4444"
     }
 
     val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
       case (selected, mode) =>
         if selected then "3.5"
-        else mode match
-          case EditorMode.Select => "1.5"
-          case EditorMode.Delete => "2.0"
+        else
+          mode match
+            case EditorMode.Select => "1.5"
+            case EditorMode.Delete => "2.0"
     }
 
     val basePolygon = svg.polygon(
@@ -102,25 +117,28 @@ object TessellationRenderer:
         .combineWith(EditorState.editorMode.signal)
         .combineWith(EditorState.activeTool.signal).map {
           case (hidden, mode, tool) =>
-            val cursor = tool match
-              case Some(Tool.ColorPicker) => s"cursor: $colorPickerCursor;"
+            val cursor  = tool match
+              case Some(Tool.ColorPicker)         => s"cursor: $colorPickerCursor;"
               case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
-              case Some(Tool.SelectByColor) => s"cursor: $selectByColorCursor;"
-              case Some(Tool.Measurement) => s"cursor: $measurementCursor;"
-              case Some(Tool.Eraser) => s"cursor: $eraserCursor;"
-              case Some(Tool.Inserter) => s"cursor: $inserterCursor;"
-              case _ => mode match
-                case EditorMode.Select => "cursor: pointer;"
-                case EditorMode.Delete => s"cursor: $deleteCursor;"
+              case Some(Tool.SelectByColor)       => s"cursor: $selectByColorCursor;"
+              case Some(Tool.Measurement)         => s"cursor: $measurementCursor;"
+              case Some(Tool.Eraser)              => s"cursor: $eraserCursor;"
+              case Some(Tool.Inserter)            => s"cursor: $inserterCursor;"
+              case _                              => mode match
+                  case EditorMode.Select => "cursor: pointer;"
+                  case EditorMode.Delete => s"cursor: $deleteCursor;"
             val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
             cursor + opacity
         },
-      onClick.compose(gate) --> { _ => AppState.handleTilingPolygonClick(faceId) }
+      onClick.compose(gate) --> { _ =>
+
+        AppState.handleTilingPolygonClick(faceId)
+      }
     )
 
     val patternOverlay = svg.polygon(
-      svg.points := pointsStr, // static, precomputed
-      svg.fill := "url(#selection-pattern)",
+      svg.points        := pointsStr, // static, precomputed
+      svg.fill          := "url(#selection-pattern)",
       svg.pointerEvents := "none",
       svg.style <-- shouldHideForDeletion.map(hidden => if hidden then "opacity: 0;" else "opacity: 1;")
     )
@@ -145,30 +163,36 @@ object TessellationRenderer:
       }
 
     val tilingPolygons = facesData.map { case (faceId, pointsStr) =>
-      getOrAssignPolygonColor(faceId)
+      getOrAssignPolygonColor(faceId): Unit
       renderTilingPolygonFromPoints(pointsStr, faceId)
     }
 
-    val perimeterEdges = tiling.boundaryVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList.zipWithIndex.map {
-      (vs, index) => renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index")
-    }
+    val perimeterEdges =
+      tiling.boundaryVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList.zipWithIndex.map {
+        (vs, index) =>
+
+          renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index")
+      }
 
     // Interior edges overlay only when Inserter tool is active AND a polygon is highlighted
     val interiorEdgesOverlay = children <--
       EditorState.isInserterActive
         .combineWith(EditorState.selectedFaceForInsertion)
         .map { (isInserter, faceIdOpt) =>
+
           (isInserter, faceIdOpt) match
             case (true, Some(fid)) => renderInteriorEdgesForFace(tiling, fid)
-            case _ => List.empty
+            case _                 => List.empty
         }
 
     val dualDisplay = children <-- EditorState.showDual.signal.map { isVisible =>
+
       if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
       else List.empty
     }
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
+
       if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
     }
 
@@ -177,17 +201,19 @@ object TessellationRenderer:
       EditorState.failedPlacement.signal
         .combineWith(EditorState.isInserterActive, EditorState.selectedFaceForInsertion)
         .map { (placementOpt, isInserter, faceIdOpt) =>
+
           placementOpt.map { p =>
             val adjusted =
               (isInserter, faceIdOpt) match
                 case (true, Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
-                case _ => p
+                case _                                       => p
             FailedPolygonRenderer.renderFailedPlacement(adjusted)
           }
         }
 
     // Hover preview wireframe for boundary addition
     val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map { placement =>
+
       placement.map(PreviewPolygonRenderer.renderPreview)
     }
 
@@ -200,12 +226,15 @@ object TessellationRenderer:
     val clickablePointsDisplay = children <-- EditorState.clickablePoints.signal
       .combineWith(EditorState.measurementStartPoint.signal)
       .map { (points, startPointOpt) =>
+
         points.filterNot(p => startPointOpt.contains(p)).map(renderClickablePoint)
       }
 
-    val measurementStartPointDisplay = child.maybe <-- EditorState.measurementStartPoint.signal.map(_.map(renderMeasurementStartPoint))
-    val measurementEndPointDisplay = child.maybe <-- EditorState.measurementEndPoint.signal.map(_.map(renderMeasurementEndPoint))
-    val measurementLineDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
+    val measurementStartPointDisplay =
+      child.maybe <-- EditorState.measurementStartPoint.signal.map(_.map(renderMeasurementStartPoint))
+    val measurementEndPointDisplay   =
+      child.maybe <-- EditorState.measurementEndPoint.signal.map(_.map(renderMeasurementEndPoint))
+    val measurementLineDisplay       = child.maybe <-- EditorState.measurementStartPoint.signal
       .combineWith(EditorState.measurementEndPoint.signal)
       .map {
         case (Some(start), Some(end)) => Some(renderMeasurementLine(start, end))
@@ -216,7 +245,7 @@ object TessellationRenderer:
       .combineWith(EditorState.measurementPreviousEndPoint.signal)
       .map {
         case (Some(start), Some(previousEnd)) => Some(renderPreviousMeasurementLine(start, previousEnd))
-        case _ => None
+        case _                                => None
       }
 
     val measurementAngleArcDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
@@ -224,7 +253,7 @@ object TessellationRenderer:
       .map {
         case (Some(start), Some(previousEnd), Some(end)) =>
           Some(renderMeasurementAngleArc(start, previousEnd, end))
-        case _ => None
+        case _                                           => None
       }
 
     svg.g(
@@ -258,12 +287,12 @@ object TessellationRenderer:
       val offsetY = y - 4
 
       svg.text(
-        svg.x := offsetX.toString,
-        svg.y := offsetY.toString,
+        svg.x                := offsetX.toString,
+        svg.y                := offsetY.toString,
         svg.fontSize <-- EditorState.viewTransform.signal.map(transform =>
           // Scale the font size with zoom but keep it readable
           val baseFontSize = 12
-          val scaledSize = (baseFontSize / transform.scale).max(8).min(20)
+          val scaledSize   = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
         ),
         // Counter-rotate the text to keep it readable
@@ -271,18 +300,18 @@ object TessellationRenderer:
           // Rotate around the text position to counter the canvas rotation
           s"rotate(${-transform.rotationDegrees} $offsetX $offsetY)"
         ),
-        svg.fill := "#ffeb3b", // Bright yellow for visibility
-        svg.fontFamily := "monospace",
-        svg.fontWeight := "bold",
-        svg.textAnchor := "start",
+        svg.fill             := "#ffeb3b", // Bright yellow for visibility
+        svg.fontFamily       := "monospace",
+        svg.fontWeight       := "bold",
+        svg.textAnchor       := "start",
         svg.dominantBaseline := "middle",
-        svg.className := "node-label",
+        svg.className        := "node-label",
         // Add stroke for better readability
-        svg.stroke := "#000",
+        svg.stroke           := "#000",
         svg.strokeWidth <-- EditorState.viewTransform.signal.map(transform =>
           (0.5 / transform.scale).max(0.2).min(1.0).toString
         ),
-        svg.paintOrder := "stroke fill",
+        svg.paintOrder       := "stroke fill",
         vertexId.value
       )
     }
@@ -291,13 +320,13 @@ object TessellationRenderer:
     val (x, y) = tilingPointToCanvasView(p.point)
 
     svg.circle(
-      svg.cx := x.toString,
-      svg.cy := y.toString,
-      svg.r := "4",
-      svg.fill := "#ff9500",
-      svg.stroke := "black",
-      svg.strokeWidth := "1",
-      svg.className := "clickable-point",
+      svg.cx            := x.toString,
+      svg.cy            := y.toString,
+      svg.r             := "4",
+      svg.fill          := "#ff9500",
+      svg.stroke        := "black",
+      svg.strokeWidth   := "1",
+      svg.className     := "clickable-point",
       onMountCallback { ctx =>
         // Guard the event stream at the source
         gate(
@@ -306,15 +335,15 @@ object TessellationRenderer:
           .withCurrentValueOf(EditorState.activeTool.signal)
           .foreach {
             case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
-            case (point, Some(Tool.Inserter)) => AppState.handlePointClickForInsertion(point)
+            case (point, Some(Tool.Inserter))    => AppState.handlePointClickForInsertion(point)
             case (point, _)                      => AppState.handlePointClickForDeletion(point)
-          }(using ctx.owner)
+          }(using ctx.owner): Unit
       },
-      svg.style := "cursor: crosshair;",
+      svg.style         := "cursor: crosshair;",
       svg.style <-- EditorState.activeTool.signal.map {
         case Some(Tool.Measurement) => s"cursor: crosshair;"
-        case Some(Tool.Inserter) => s"cursor: pointer;"
-        case _ => s"cursor: $deleteCursor;"
+        case Some(Tool.Inserter)    => s"cursor: pointer;"
+        case _                      => s"cursor: $deleteCursor;"
       },
       svg.pointerEvents := "visible"
     )
@@ -323,13 +352,13 @@ object TessellationRenderer:
     val (x, y) = tilingPointToCanvasView(p.point)
 
     svg.circle(
-      svg.cx := x.toString,
-      svg.cy := y.toString,
-      svg.r := "5",
-      svg.fill := (if isStartPoint then "#00C853" else "#D50000"),
-      svg.stroke := "black",
+      svg.cx          := x.toString,
+      svg.cy          := y.toString,
+      svg.r           := "5",
+      svg.fill        := (if isStartPoint then "#00C853" else "#D50000"),
+      svg.stroke      := "black",
       svg.strokeWidth := "1",
-      svg.className := s"measurement-${if isStartPoint then "start" else "end"}-point",
+      svg.className   := s"measurement-${if isStartPoint then "start" else "end"}-point",
       onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
     )
 
@@ -339,9 +368,13 @@ object TessellationRenderer:
   private def renderMeasurementEndPoint(p: ClickablePoint): Element =
     renderMeasurementPoint(p, isStartPoint = false)
 
-  private def renderMeasurementAngleArc(start: ClickablePoint, previousEnd: Point, end: ClickablePoint): Element =
+  private def renderMeasurementAngleArc(
+      start: ClickablePoint,
+      previousEnd: Point,
+      end: ClickablePoint
+  ): Element =
     val (cx, cy) = tilingPointToCanvasView(start.point)
-    val radius = 25.0
+    val radius   = 25.0
 
     val p1 = previousEnd
     val p2 = end.point
@@ -351,22 +384,22 @@ object TessellationRenderer:
 
     val startArcX = cx + radius * Math.cos(angle1)
     val startArcY = cy + radius * Math.sin(angle1)
-    val endArcX = cx + radius * Math.cos(angle2)
-    val endArcY = cy + radius * Math.sin(angle2)
+    val endArcX   = cx + radius * Math.cos(angle2)
+    val endArcY   = cy + radius * Math.sin(angle2)
 
     val deltaAngle = normalizeDeltaAngle(Radian(angle2), Radian(angle1))
 
     val largeArcFlag = 0
-    val sweepFlag = if deltaAngle.toDouble > 0 then 1 else 0
+    val sweepFlag    = if deltaAngle.toDouble > 0 then 1 else 0
 
     val dAttribute = s"M $startArcX $startArcY A $radius $radius 0 $largeArcFlag $sweepFlag $endArcX $endArcY"
 
     svg.path(
-      svg.d := dAttribute,
-      svg.fill := "none",
-      svg.stroke := "white",
-      svg.strokeWidth := "1",
-      svg.className := "measurement-angle-arc",
+      svg.d             := dAttribute,
+      svg.fill          := "none",
+      svg.stroke        := "white",
+      svg.strokeWidth   := "1",
+      svg.className     := "measurement-angle-arc",
       svg.pointerEvents := "none"
     )
 
@@ -375,13 +408,13 @@ object TessellationRenderer:
     val (x2, y2) = tilingPointToCanvasView(end)
 
     svg.line(
-      svg.x1 := x1.toString,
-      svg.y1 := y1.toString,
-      svg.x2 := x2.toString,
-      svg.y2 := y2.toString,
-      svg.stroke := "#ffffff",
-      svg.strokeWidth := "1",
-      svg.className := "previous-measurement-line",
+      svg.x1            := x1.toString,
+      svg.y1            := y1.toString,
+      svg.x2            := x2.toString,
+      svg.y2            := y2.toString,
+      svg.stroke        := "#ffffff",
+      svg.strokeWidth   := "1",
+      svg.className     := "previous-measurement-line",
       svg.pointerEvents := "none"
     )
 
@@ -390,15 +423,15 @@ object TessellationRenderer:
     val (x2, y2) = tilingPointToCanvasView(end.point)
 
     svg.line(
-      svg.x1 := x1.toString,
-      svg.y1 := y1.toString,
-      svg.x2 := x2.toString,
-      svg.y2 := y2.toString,
-      svg.stroke := "#ffffff",
-      svg.strokeWidth := "2",
+      svg.x1              := x1.toString,
+      svg.y1              := y1.toString,
+      svg.x2              := x2.toString,
+      svg.y2              := y2.toString,
+      svg.stroke          := "#ffffff",
+      svg.strokeWidth     := "2",
       svg.strokeDashArray := "5, 5",
-      svg.className := "measurement-line",
-      svg.pointerEvents := "none"
+      svg.className       := "measurement-line",
+      svg.pointerEvents   := "none"
     )
 
 //  private def faceToCoords(tiling: TilingDCEL): FaceId => List[Element] =
@@ -431,67 +464,87 @@ object TessellationRenderer:
   private def renderInteriorEdgesForFace(tiling: TilingDCEL, faceId: FaceId): List[Element] =
     if tiling.isEmpty then Nil
     else
-      val faceVertices = tiling.findInnerFaceVertices(faceId).toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
-      val edges = faceVertices.slidingO(2).toList
+      val faceVertices =
+        tiling.findInnerFaceVertices(faceId).toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
+      val edges        = faceVertices.slidingO(2).toList
       edges.zipWithIndex.map { case (pair, idx) =>
         renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
       }
 
-  private def renderInteriorEdge(edge: ((VertexId, BigPoint), (VertexId, BigPoint)), faceId: FaceId, id: String): Element =
-    val v1 = edge._1._2.toPoint
-    val v2 = edge._2._2.toPoint
-    val (x1, y1) = tilingPointToCanvasView(v1)
-    val (x2, y2) = tilingPointToCanvasView(v2)
+  private def renderInteriorEdge(
+      edge: ((VertexId, BigPoint), (VertexId, BigPoint)),
+      faceId: FaceId,
+      id: String
+  ): Element =
+    val v1           = edge._1._2.toPoint
+    val v2           = edge._2._2.toPoint
+    val (x1, y1)     = tilingPointToCanvasView(v1)
+    val (x2, y2)     = tilingPointToCanvasView(v2)
     val verticesPair = (edge._1._1, edge._2._1)
 
     val interactionArea = svg.line(
-      svg.x1 := x1.toString,
-      svg.y1 := y1.toString,
-      svg.x2 := x2.toString,
-      svg.y2 := y2.toString,
-      svg.stroke := transparent,
-      svg.strokeWidth := "10",
+      svg.x1            := x1.toString,
+      svg.y1            := y1.toString,
+      svg.x2            := x2.toString,
+      svg.y2            := y2.toString,
+      svg.stroke        := transparent,
+      svg.strokeWidth   := "10",
       svg.strokeLineCap := "round",
-      svg.className := "interior-edge-transparent",
+      svg.className     := "interior-edge-transparent",
       // Show inner preview oriented into this face
       onMouseEnter.compose(gate) --> { _ =>
+
         (EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
           case (maybeSides, isIrregular) =>
             val tiling = EditorState.currentTiling.now()
             if isIrregular then
               val angles = EditorState.recentIrregularPolygon.now().get
               EditorState.previewPlacement.set(
-                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, angles, verticesPair, tiling, intoFace = Some(faceId)))
+                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
+                  0,
+                  angles,
+                  verticesPair,
+                  tiling,
+                  intoFace = Some(faceId)
+                ))
               )
             else
               val sides = maybeSides.getOrElse(0)
               EditorState.previewPlacement.set(
-                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(0, RegularPolygon(sides).angles, verticesPair, tiling, intoFace = Some(faceId)))
+                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
+                  0,
+                  RegularPolygon(sides).angles,
+                  verticesPair,
+                  tiling,
+                  intoFace = Some(faceId)
+                ))
               )
-          case null => ()
+          case null                      => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
+
         EditorState.previewPlacement.set(None)
       },
       // Trigger insertion directly when clicking the highlighted interior edge
       onClick.preventDefault.compose(gate) --> { _ =>
+
         EditorState.activeTool.now() match
           case Some(Tool.Inserter) =>
             TessellationOperations.attemptPolygonInsertion(verticesPair._1, verticesPair._2)
             EditorState.previewPlacement.set(None)
-          case _ => ()
+          case _                   => ()
       }
     )
 
     val visibleLine = svg.line(
-      svg.x1 := x1.toString,
-      svg.y1 := y1.toString,
-      svg.x2 := x2.toString,
-      svg.y2 := y2.toString,
-      svg.stroke := "#20A4BE",
-      svg.strokeWidth := "3",
+      svg.x1            := x1.toString,
+      svg.y1            := y1.toString,
+      svg.x2            := x2.toString,
+      svg.y2            := y2.toString,
+      svg.stroke        := "#20A4BE",
+      svg.strokeWidth   := "3",
       svg.strokeLineCap := "round",
-      svg.className := "interior-edge",
+      svg.className     := "interior-edge",
       svg.pointerEvents := "none"
     )
 
@@ -501,9 +554,13 @@ object TessellationRenderer:
       interactionArea
     )
 
-  private def renderPerimeterEdge(edge: ((VertexId, BigPoint), (VertexId, BigPoint)), edgeIndex: Int, id: String): Element =
-    val vertex1 = edge._1._2.toPoint
-    val vertex2 = edge._2._2.toPoint
+  private def renderPerimeterEdge(
+      edge: ((VertexId, BigPoint), (VertexId, BigPoint)),
+      edgeIndex: Int,
+      id: String
+  ): Element =
+    val vertex1    = edge._1._2.toPoint
+    val vertex2    = edge._2._2.toPoint
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates
@@ -512,18 +569,25 @@ object TessellationRenderer:
 
     // A wider, transparent line for easier interaction, especially on touch devices
     val interactionArea = svg.line(
-      svg.x1 := x1.toString,
-      svg.y1 := y1.toString,
-      svg.x2 := x2.toString,
-      svg.y2 := y2.toString,
-      svg.stroke := transparent,
-      svg.strokeWidth := "12", // Increased width for a larger touch target
+      svg.x1            := x1.toString,
+      svg.y1            := y1.toString,
+      svg.x2            := x2.toString,
+      svg.y2            := y2.toString,
+      svg.stroke        := transparent,
+      svg.strokeWidth   := "12", // Increased width for a larger touch target
       svg.strokeLineCap := "round",
-      svg.className := "perimeter-edge-transparent",
-      svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ => "none")),
+      svg.className     := "perimeter-edge-transparent",
+      svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ =>
+        "none"
+      )),
       // Enhanced visual feedback and click handling
       onMouseEnter.compose(gate) --> { _ =>
-        (EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now(), EditorState.recentIrregularPolygon.now()) match
+
+        (
+          EditorState.selectedPolygon.now(),
+          EditorState.isIrregularSelected.now(),
+          EditorState.recentIrregularPolygon.now()
+        ) match
           case (maybeSides, isIrregular, maybeAngles) =>
             val tiling = EditorState.currentTiling.now()
             val angles =
@@ -531,27 +595,34 @@ object TessellationRenderer:
                 maybeAngles.get
               else
                 RegularPolygon(maybeSides.get).angles
-            EditorState.previewPlacement.set(Some(FailedPolygonPlacement(edgeIndex, angles, (edge._1._1, edge._2._1), tiling)))
-          case null => ()
+            EditorState.previewPlacement.set(Some(FailedPolygonPlacement(
+              edgeIndex,
+              angles,
+              (edge._1._1, edge._2._1),
+              tiling
+            )))
+          case null                                   => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
+
         EditorState.previewPlacement.set(None)
       },
       onClick.compose(gate) --> { _ =>
+
         AppState.handlePerimeterEdgeClick(id, edgeIndex)
       }
     )
 
     // The visible line that the user sees
     val visibleLine = svg.line(
-      svg.x1 := x1.toString,
-      svg.y1 := y1.toString,
-      svg.x2 := x2.toString,
-      svg.y2 := y2.toString,
-      svg.stroke := "#ff9500",
-      svg.strokeWidth := "4",
+      svg.x1            := x1.toString,
+      svg.y1            := y1.toString,
+      svg.x2            := x2.toString,
+      svg.y2            := y2.toString,
+      svg.stroke        := "#ff9500",
+      svg.strokeWidth   := "4",
       svg.strokeLineCap := "round",
-      svg.className := "perimeter-edge",
+      svg.className     := "perimeter-edge",
       svg.pointerEvents := "none" // This part does not need to capture pointer events
     )
 
