@@ -1,5 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
+import io.github.scala_tessella.ring_seq.RingSeq.rotateLeft
+
 import scala.annotation.targetName
 
 /** Planar geometry simplified toolbox */
@@ -20,6 +22,18 @@ object Geometry:
      */
     val TAU: Radian = Radian(6.283185307179586)
     val TAU_2: Radian = Radian(Math.PI)
+
+    /** Normalize any angle to [0, TAU) */
+    def normalize(a: Radian): Radian =
+      val t = a % TAU
+      if t < 0 then t + TAU else t
+  
+    /** Normalize delta angle to (-PI, PI] */
+    def normalizeDelta(a: Radian): Radian =
+      var d = a % TAU
+      if d <= -TAU_2 then d += TAU
+      if d > TAU_2 then d -= TAU
+      d
 
   extension (r: Radian)
 
@@ -50,12 +64,31 @@ object Geometry:
     def plus(that: Point): Point =
       Point(this.x + that.x, this.y + that.y)
 
+    /** Operator alias */
+    @targetName("pointPlus")
+    def +(that: Point): Point =
+      plus(that)
+
     /** Difference of two points */
     private def minus(that: Point): Point =
       Point(this.x - that.x, this.y - that.y)
 
+    /** Operator alias (private semantics preserved for alignWithStart) */
+    @targetName("pointMinus")
+    private def -(that: Point): Point =
+      minus(that)
+
     def scale(factor: Double): Point =
       Point(x * factor, y * factor)
+
+    /** Operator aliases for scalars */
+    @targetName("pointTimesScalar")
+    def *(k: Double): Point =
+      scale(k)
+
+    @targetName("pointDivideScalar")
+    def /(k: Double): Point =
+      Point(x / k, y / k)
 
     def transform(scaleFactor: Double, offset: Point): Point =
       scale(scaleFactor).plus(offset)
@@ -67,6 +100,10 @@ object Geometry:
         Math.sin(theta)
       Point(x * cot - y * sit, x * sit + y * cot)
 
+    /** Rotate around an origin point */
+    def rotateAround(origin: Point, theta: Radian): Point =
+      this.minus(origin).rotate(theta).plus(origin)
+      
 //    /** New point moved by polar coordinates
 //     *
 //     * @param rho   distance
@@ -97,7 +134,8 @@ object Geometry:
     /** Normalize this point to unit length */
     def normalized: Point =
       val mag = magnitude
-      if mag == 0.0 then Point(0, 0) else Point(x / mag, y / mag)
+      val eps = 1e-12
+      if mag < eps then Point(0, 0) else Point(x / mag, y / mag)
 
     /** Compute the dot product with another point (treating both as vectors) */
     def dot(that: Point): Double =
@@ -132,7 +170,7 @@ object Geometry:
     def length: Double =
       Math.hypot(dx, dy)
 
-    /** Computes the horizontal angle of the line segment */
+    /** Computes the horizontal angle of the line segment in [0, TAU) */
     def horizontalAngle: Radian =
       Radian((Math.atan2(dy, dx) + Radian.TAU) % Radian.TAU)
 
@@ -167,6 +205,8 @@ object Geometry:
 
     def height: Double = maxY - minY
 
+    def center: Point = Point((minX + maxX) / 2.0, (minY + maxY) / 2.0)
+
   object Bounds:
     def fromPoints(points: Seq[Point]): Option[Bounds] =
       if points.isEmpty then None
@@ -187,23 +227,23 @@ object Geometry:
     }
 
   /** Build polygon vertices using unit edge length and given internal angles. */
-  def buildUnitEdgePolygon(angles: Seq[Double]): Vector[Point] =
+  def buildUnitEdgePolygon(angles: Seq[Radian], startHeading: Radian = Radian(0)): Vector[Point] =
     if angles.isEmpty then Vector.empty
     else
-      var pts = Vector.newBuilder[Point]
-      var heading = 0.0 // radians
+      val pts = Vector.newBuilder[Point]
+      var heading = startHeading.toDouble
       var curr = Point(0.0, 0.0)
 
       // first vertex
       pts += curr
 
       // Rotate the angles sequence to start from the second angle
-      val rotatedAngles = if angles.size > 1 then angles.tail ++ angles.take(1) else angles
+//      val rotatedAngles = if angles.size > 1 then angles.tail ++ angles.take(1) else angles
 
       // For each interior angle:
       // 1) advance one unit in current heading to create next vertex
       // 2) then turn by the exterior angle (PI - interior)
-      rotatedAngles.foreach { a =>
+      angles.rotateLeft(1).foreach { a =>
         val nx = curr.x + Math.cos(heading)
         val ny = curr.y + Math.sin(heading)
         val next = Point(nx, ny)
@@ -278,11 +318,8 @@ object Geometry:
         (scale, offX, offY)
 
   /** Normalize delta angle to (-PI, PI]. */
-  def normalizeDeltaAngle(a2: Double, a1: Double): Double =
-    var d = a2 - a1
-    if d < -Math.PI then d += 2 * Math.PI
-    if d > Math.PI then d -= 2 * Math.PI
-    d
+  def normalizeDeltaAngle(a2: Radian, a1: Radian): Radian =
+    Radian.normalizeDelta(a2 - a1)
 
   // ---------------------------------------
   // Coordinate transformation utilities
@@ -297,7 +334,7 @@ object Geometry:
   def transformPointsForSvg(points: Seq[Point], scale: Double, offsetX: Double, offsetY: Double): Seq[(Double, Double)] =
     points.map(p => transformPointToView(p, scale, offsetX, offsetY))
 
-  /** Compute midpoint of two points. */
+  /** Compute the midpoint of two points. */
   def midpoint(p1: Point, p2: Point): Point =
     LineSegment(p1, p2).midPoint
 
