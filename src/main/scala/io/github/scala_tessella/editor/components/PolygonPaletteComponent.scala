@@ -2,16 +2,12 @@ package io.github.scala_tessella.editor.components
 
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator
-import io.github.scala_tessella.editor.utils.Geometry.Radian.{TAU, TAU_2}
-import io.github.scala_tessella.editor.utils.Geometry
-import io.github.scala_tessella.editor.utils.Geometry.{Point, fitPointsToSquare, regularPolygonPoints, walkUnitEdges}
+import io.github.scala_tessella.editor.utils.PolygonSvg
 import io.github.scala_tessella.editor.operations.TessellationOperations.*
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-
-import scala.math.{cos, sin}
 
 object PolygonPaletteComponent:
 
@@ -108,7 +104,7 @@ object PolygonPaletteComponent:
           selectPolygon(validatedSides)
         }
       },
-      child <-- displaySides.map(sides => polygonSvg(sides)),
+      child <-- displaySides.map(sides => PolygonSvg.regularPreview(sides)),
       input(
         tpe := "number",
         className := "polygon-label-input",
@@ -138,28 +134,8 @@ object PolygonPaletteComponent:
           selectPolygon(sides)
         }
       },
-      polygonSvg(sides),
+      PolygonSvg.regularPreview(sides),
       div(className := "polygon-label", sides.toString)
-    )
-
-  private def polygonSvg(sides: Int): Element =
-    val size = 40
-    val center = Point(size / 2.0, size / 2.0)
-    val radius = size * 0.35
-
-    val points = regularPolygonPoints(sides, radius, center)
-      .map(p => s"${p.x},${p.y}").mkString(" ")
-
-    svg.svg(
-      svg.width := size.toString,
-      svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size",
-      svg.polygon(
-        svg.points := points,
-        svg.fill := "currentColor",
-        svg.stroke := "currentColor",
-        svg.strokeWidth := "1"
-      )
     )
 
   // ---------- Irregular polygon slot ----------
@@ -207,7 +183,7 @@ object PolygonPaletteComponent:
       ),
       // preview
       child <-- EditorState.recentIrregularPolygon.signal.map {
-        case Some(angles) => irregularPolygonSvg(angles)
+        case Some(angles) => PolygonSvg.irregularPreview(angles)
         case None =>
           svg.svg(
             svg.width := "40",
@@ -236,80 +212,4 @@ object PolygonPaletteComponent:
   private[components] def bigIrregularWithHead(angles: Vector[AngleDegree]): Element =
     val size = 220
     val pad = 12.0
-
-    // compute polygon points in local unit-edges like in thumbnail
-    def unitPoints(a: Vector[AngleDegree]): Vector[Point] =
-      val turns = a.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-      Geometry.walkUnitEdges(turns)
-
-    val basePts = unitPoints(angles)
-    val (scale, offX, offY) =
-      fitPointsToSquare(basePts, size, pad)
-
-    def toStr(point: Point) =
-      val sx = offX + point.x * scale
-      val sy = offY + point.y * scale
-      f"$sx%.3f,$sy%.3f"
-
-    val pointsStr = basePts.map(toStr).mkString(" ")
-
-    // render the highlighted head edge as a line on top
-    def edgeLine(i: Int): Element =
-      val n = basePts.size
-      val a = basePts(i % n)
-      val b = basePts((i + 1) % n)
-      val ax = offX + a._1 * scale
-      val ay = offY + a._2 * scale
-      val bx = offX + b._1 * scale
-      val by = offY + b._2 * scale
-      svg.line(
-        svg.x1 := f"$ax%.3f", svg.y1 := f"$ay%.3f",
-        svg.x2 := f"$bx%.3f", svg.y2 := f"$by%.3f",
-        svg.stroke := "#ff6b6b",
-        svg.strokeWidth := "4",
-        svg.strokeLineCap := "round",
-        svg.pointerEvents := "none"
-      )
-
-    svg.svg(
-      svg.width := size.toString,
-      svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size",
-      svg.polygon(
-        svg.points := pointsStr,
-        svg.fill := "currentColor",
-        svg.stroke := "currentColor",
-        svg.strokeWidth := "1.5"
-      ),
-      edgeLine(((1 % basePts.size) + basePts.size) % basePts.size)
-    )
-
-  // Render the irregular polygon preview from AngleDegree vector (unit edges)
-  private def irregularPolygonSvg(anglesDeg: Vector[AngleDegree]): Element =
-    val size = 40
-    val pad = 4.0
-
-    // Walk edges of length 1, turning by exterior angles (180 - interior)
-    val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-    val pts = walkUnitEdges(turns)
-
-    val (scale, offX, offY) =
-      fitPointsToSquare(pts, size, pad)
-
-    val svgPoints = pts.map { point =>
-      val sx = offX + point.x * scale
-      val sy = offY + point.y * scale
-      f"$sx%.3f,$sy%.3f"
-    }.mkString(" ")
-
-    svg.svg(
-      svg.width := size.toString,
-      svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size",
-      svg.polygon(
-        svg.points := svgPoints,
-        svg.fill := "currentColor",
-        svg.stroke := "currentColor",
-        svg.strokeWidth := "1"
-      )
-    )
+    PolygonSvg.irregularBigWithHead(angles, size, pad)

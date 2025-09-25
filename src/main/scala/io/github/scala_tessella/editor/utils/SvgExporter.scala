@@ -5,6 +5,7 @@ import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorSta
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
+import io.github.scala_tessella.editor.utils.SvgDsl
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
@@ -59,8 +60,8 @@ object SvgExporter:
     val labelsXml = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
     val metadataXml = generateMetadataXml(tiling)
 
-    val sWidth = f"$width%1.4f"
-    val sHeight = f"$height%1.4f"
+    val sWidth = SvgDsl.fmt4(width)
+    val sHeight = SvgDsl.fmt4(height)
 
     s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tess="https://github.com/scala-tessella/tessella" width="$sWidth" height="$sHeight" viewBox="0 0 $sWidth $sHeight" xmlns="http://www.w3.org/2000/svg">
        |  <rect width="100%" height="100%" fill="white"/>
@@ -72,21 +73,13 @@ object SvgExporter:
   private [utils] def pointsString(nodes: Seq[VertexId], coordinates: Map[VertexId, BigPoint], scale: Double, offsetX: Double, offsetY: Double): String =
     val points = nodes.map(coordinates).map(_.toPoint)
     transformPointsForSvg(points, scale, offsetX, offsetY)
-      .map { case (x, y) =>
-        val xFormatted = BigDecimal(x).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
-        val yFormatted = BigDecimal(y).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
-        s"$xFormatted,$yFormatted"
-      }
+      .map { SvgDsl.fmt6Point }
       .mkString(" ")
 
   private def pointsString(vertices: Seq[Vertex], scale: Double, offsetX: Double, offsetY: Double): String =
     val points = vertices.map(_.coords.toPoint)
     transformPointsForSvg(points, scale, offsetX, offsetY)
-      .map { case (x, y) =>
-        val xFormatted = BigDecimal(x).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
-        val yFormatted = BigDecimal(y).setScale(6, scala.math.BigDecimal.RoundingMode.HALF_UP)
-        s"$xFormatted,$yFormatted"
-      }
+      .map { SvgDsl.fmt6Point }
       .mkString(" ")
 
   private [utils] def generatePolygonsXml(tiling: TilingDCEL, scale: Double, offsetX: Double, offsetY: Double, strokeWidth: Double): String =
