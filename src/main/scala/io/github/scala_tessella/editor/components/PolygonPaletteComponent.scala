@@ -8,6 +8,7 @@ import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.editor.components.IconsSVG.plusIcon
 
 object PolygonPaletteComponent:
 
@@ -176,10 +177,7 @@ object PolygonPaletteComponent:
             EditorState.showIrregularPolygonPopup.set(true)
           }
         },
-        svg.svg(
-          svg.width := "12", svg.height := "12", svg.viewBox := "0 -4 24 24",
-          svg.path(svg.d := "M12 5v14M5 12h14", svg.stroke := "currentColor", svg.fill := "none", svg.strokeWidth := "2", svg.strokeLineCap := "round")
-        )
+        plusIcon
       ),
       // preview
       child <-- EditorState.recentIrregularPolygon.signal.map {

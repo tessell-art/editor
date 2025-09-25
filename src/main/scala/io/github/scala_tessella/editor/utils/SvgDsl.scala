@@ -12,18 +12,20 @@ object SvgDsl:
     val strokeWidthMedium = "1.5"
 
   // Common svg root with width/height/viewBox
-  def root(size: Int): Element =
+  def root(size: Int)(content: Mod[Element]*): Element =
     svg.svg(
       svg.width := size.toString,
       svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size"
+      svg.viewBox := s"0 0 $size $size",
+      content
     )
 
-  def rootWH(width: Double, height: Double): Element =
+  def rootWH(width: Double, height: Double)(content: Mod[Element]*): Element =
     svg.svg(
       svg.width := f"$width%1.4f",
       svg.height := f"$height%1.4f",
-      svg.viewBox := s"0 0 ${f"$width%1.4f"} ${f"$height%1.4f"}"
+      svg.viewBox := s"0 0 ${f"$width%1.4f"} ${f"$height%1.4f"}",
+      content
     )
 
   // Polygon from already-scaled points to string

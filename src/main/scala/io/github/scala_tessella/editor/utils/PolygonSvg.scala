@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L.{*, given}
-import SvgDsl.{polygon, fmt3}
+import SvgDsl.{polygon, fmt3, root}
 import Geometry.{Point, fitPointsToSquare, regularPolygonPoints, walkUnitEdges}
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 
@@ -12,10 +12,7 @@ object PolygonSvg:
     val (scale, offX, offY) = fitPointsToSquare(points, size, pad)
     val scaled = points.map(p => Point(offX + p.x * scale, offY + p.y * scale))
     val pointsStr = SvgDsl.toPointsString(scaled)
-    svg.svg(
-      svg.width := size.toString,
-      svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size",
+    root(size)(
       SvgDsl.polygon(pointsStr, strokeW = strokeW)
     )
 
@@ -25,10 +22,7 @@ object PolygonSvg:
     val radius = size * radiusFactor
     val pts = regularPolygonPoints(sides, radius, center)
     val pointsStr = SvgDsl.toPointsString(pts)
-    svg.svg(
-      svg.width := size.toString,
-      svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size",
+    root(size)(
       polygon(pointsStr)
     )
 
@@ -49,10 +43,7 @@ object PolygonSvg:
     val headIdx = ((1 % basePts.size) + basePts.size) % basePts.size
     val a = basePts(headIdx)
     val b = basePts((headIdx + 1) % basePts.size)
-    svg.svg(
-      svg.width := size.toString,
-      svg.height := size.toString,
-      svg.viewBox := s"0 0 $size $size",
+    root(size)(
       SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
         svg.x1 := fmt3(sx(a)), svg.y1 := fmt3(sy(a)),
