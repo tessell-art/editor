@@ -111,21 +111,42 @@ object ErrorOperations:
 
   private def ensureToastContainer(): dom.HTMLElement =
     val existing = dom.document.getElementById("toast-container")
-    if existing != null then existing.asInstanceOf[dom.HTMLElement]
+    if existing != null then
+      // Safely narrow using a runtime check
+      existing match
+        case el: dom.HTMLElement => el
+        case _                   =>
+          // If somehow an element with the same id but wrong type exists, recreate safely
+          createToastContainer()
     else
-      val container = dom.document.createElement("div").asInstanceOf[dom.HTMLElement]
-      container.id = "toast-container"
-      // Inline base styles to avoid dependency on app CSS
-      container.setAttribute(
-        "style",
-        "position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none;"
-      )
-      dom.document.body.appendChild(container): Unit
-      container
+      createToastContainer()
+
+  private def createToastContainer(): dom.HTMLElement =
+    val container = dom.document.createElement("div") match
+      case el: dom.HTMLElement => el
+      case el                  =>
+        // Fallback: set basic attributes using Element API, then return as HTMLElement via pattern match (it will be HTMLElement in browsers)
+        el.asInstanceOf[dom.HTMLElement]
+    container.id = "toast-container"
+    // Inline base styles to avoid dependency on app CSS
+    container.setAttribute(
+      "style",
+      "position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none;"
+    )
+    dom.document.body.appendChild(container): Unit
+    container
 
   private def showToast(text: String, severity: Severity, durationMs: Int): Unit =
     val container = ensureToastContainer()
-    val toast     = dom.document.createElement("div").asInstanceOf[dom.HTMLDivElement]
+
+    val toast = dom.document.createElement("div") match
+      case el: dom.HTMLDivElement => el
+      case el: dom.HTMLElement    =>
+        // Upgrade generic HTMLElement to HTMLDivElement if the browser provides it, else use HTMLElement
+        el.asInstanceOf[dom.HTMLDivElement]
+      case el                     =>
+        el.asInstanceOf[dom.HTMLDivElement]
+
     toast.setAttribute("role", "status")
     toast.setAttribute("aria-live", "polite")
     toast.className = "editor-toast"
@@ -159,9 +180,9 @@ object ErrorOperations:
     }: Unit
 
     // Auto-dismiss
-    val timeoutId = dom.window.setTimeout(() => removeToast(toast), durationMs)
-    // Clear timeout if removed early
-    toast.addEventListener("transitionend", (_: dom.Event) => ()) // placeholder (kept for extensibility)
+    dom.window.setTimeout(() => removeToast(toast), durationMs): Unit
+    // Keep a placeholder listener for future extensibility
+    toast.addEventListener("transitionend", (_: dom.Event) => ()): Unit
 
   private def removeToast(toast: dom.HTMLDivElement): Unit =
     // Animate out then remove
