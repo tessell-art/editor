@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
+import com.raquo.laminar.api.L._
 import org.scalajs.dom
 import org.scalajs.dom.{Blob, BlobPropertyBag}
 
@@ -11,10 +12,15 @@ object FileDownloader:
     val blobPropertyBag = new BlobPropertyBag { `type` = mimeType }
     val blob            = new Blob(js.Array(content), blobPropertyBag)
     val url             = dom.URL.createObjectURL(blob)
-    val a               = dom.document.createElement("a").asInstanceOf[dom.html.Anchor]
-    a.href = url
-    a.download = filename
-    dom.document.body.appendChild(a): Unit
-    a.click()
-    dom.document.body.removeChild(a): Unit
+    // Create a Laminar anchor with proper attributes, then click it
+    val anchorEl        = a(
+      href     := url,
+      download := filename,
+      // keep it out of flow; not strictly necessary to mount
+      display  := "none"
+    ).ref
+
+    dom.document.body.appendChild(anchorEl): Unit
+    anchorEl.click()
+    dom.document.body.removeChild(anchorEl): Unit
     dom.URL.revokeObjectURL(url)
