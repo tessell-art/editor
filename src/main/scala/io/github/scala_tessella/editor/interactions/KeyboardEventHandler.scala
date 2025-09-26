@@ -13,6 +13,14 @@ import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout} // d
 
 object KeyboardEventHandler:
 
+  private inline def isMac: Boolean =
+    // Uses platform to detect macOS reliably across Chrome/Safari/Firefox
+    dom.window.navigator.platform.toLowerCase.contains("mac")
+
+  private inline def primaryMod(e: KeyboardEvent): Boolean =
+    // Command on macOS, Ctrl elsewhere
+    if isMac then e.metaKey else e.ctrlKey
+
   def keyboardEventHandlers: Binder[HtmlElement] =
     // Gate the stream using the processing signal without calling .now() per keydown
     windowEvents(_.onKeyDown)
@@ -77,34 +85,34 @@ object KeyboardEventHandler:
 
     if !targetIsInput then
       event.key match
-        case "r" | "R"                              =>
+        case "r" | "R"                                  =>
           event.preventDefault()
           enqueueRotate(+15) // debounced
-        case "e" | "E"                              =>
+        case "e" | "E"                                  =>
           event.preventDefault()
           enqueueRotate(-15) // debounced
-        case "Z" if event.ctrlKey && event.shiftKey =>
+        case "Z" if primaryMod(event) && event.shiftKey =>
           event.preventDefault()
           UndoManager.redo()
-        case "z" if event.ctrlKey                   =>
+        case "z" if primaryMod(event)                   =>
           event.preventDefault()
           UndoManager.undo()
-        case "s" if event.ctrlKey                   =>
+        case "s" if primaryMod(event)                   =>
           event.preventDefault()
           // Use the snapshots captured above
           if hasFileName && !currentTiling.isEmpty then
             SvgExporter.saveTilingToSVG()
-        case "+" | "="                              =>
+        case "+" | "="                                  =>
           event.preventDefault()
           enqueueZoom(1.1) // debounced
-        case "-" | "_"                              =>
+        case "-" | "_"                                  =>
           event.preventDefault()
           enqueueZoom(1.0 / 1.1) // debounced
-        case "Escape"                               =>
+        case "Escape"                                   =>
           event.preventDefault()
           clearAllSelections()
-        case "Delete" | "Backspace"                 =>
+        case "Delete" | "Backspace"                     =>
           event.preventDefault()
           // Future deletion logic can be added here
           ()
-        case _                                      => ()
+        case _                                          => ()

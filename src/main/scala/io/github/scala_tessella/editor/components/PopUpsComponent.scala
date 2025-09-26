@@ -31,10 +31,14 @@ object PopUpsComponent:
 
   private val closeGuidePopup: Observer[dom.MouseEvent] = closePopup(EditorState.showGuidePopup)
 
+  // Primary modifier label: Cmd on macOS, Ctrl elsewhere
+  private val primaryModLabel: String =
+    if dom.window.navigator.platform.toLowerCase.contains("mac") then "Cmd" else "Ctrl"
+
   private[components] def guidePopup(): Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showGuidePopup.signal.map(if (_) "flex" else "none"),
+      display <-- EditorState.showGuidePopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeGuidePopup,
       div(
         className := "popup-content",
@@ -151,9 +155,9 @@ object PopUpsComponent:
               b("Labels: ON"),
               " to show the node labels (numbers) of the underlying graph, each node a vertex."
             )
-//            li(
-//              "Dual: use ", b("View → Show Dual"), " to show the dual of the tessellation."
-//            )
+            //            li(
+            //              "Dual: use ", b("View → Show Dual"), " to show the dual of the tessellation."
+            //            )
           ),
           h3("Styling"),
           ul(
@@ -228,7 +232,7 @@ object PopUpsComponent:
   private[components] def shortcutsPopup(): Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showShortcutsPopup.signal.map(if (_) "flex" else "none"),
+      display <-- EditorState.showShortcutsPopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeShortcutsPopup,
       div(
         className := "popup-content",
@@ -252,15 +256,15 @@ object PopUpsComponent:
             tbody(
               tr(
                 td("Undo"),
-                td(kbd("Ctrl"), " + ", kbd("Z"))
+                td(kbd(primaryModLabel), " + ", kbd("Z"))
               ),
               tr(
                 td("Redo"),
-                td(kbd("Ctrl"), " + ", kbd("Shift"), " + ", kbd("Z"))
+                td(kbd(primaryModLabel), " + ", kbd("Shift"), " + ", kbd("Z"))
               ),
               tr(
                 td("Save"),
-                td(kbd("Ctrl"), " + ", kbd("S"))
+                td(kbd(primaryModLabel), " + ", kbd("S"))
               ),
               tr(
                 td("Deselect All"),
@@ -293,7 +297,7 @@ object PopUpsComponent:
   private[components] def helpPopup(): Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showAboutPopup.signal.map(if (_) "flex" else "none"),
+      display <-- EditorState.showAboutPopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeAboutPopup,
       div(
         className := "popup-content",
@@ -371,17 +375,7 @@ object PopUpsComponent:
         button(
           className := "popup-close-btn",
           onClick --> closeIrregularPopup,
-          // reuse the simple 'X' icon inline
-          svg.svg(
-            svg.width       := "24",
-            svg.height      := "24",
-            svg.viewBox     := "0 0 24 24",
-            svg.fill        := "none",
-            svg.stroke      := "currentColor",
-            svg.strokeWidth := "2",
-            svg.path(svg.d := "M 18 6 L 6 18"),
-            svg.path(svg.d := "M 6 6 L 18 18")
-          )
+          closeIcon
         ),
         h2("Adjust attachment edge"),
         div(
