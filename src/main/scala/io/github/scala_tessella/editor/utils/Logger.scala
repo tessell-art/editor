@@ -41,8 +41,11 @@ object Logger:
     // Vite: import.meta.env.MODE (safe access)
     val viteMode: Option[String] =
       try
-        val env = js.`import`.meta.selectDynamic("env")
-        env.selectDynamic("MODE").asInstanceOf[UndefOr[String]].toOption
+        val env                 = js.`import`.meta.selectDynamic("env")
+        val modeU: UndefOr[Any] = env.selectDynamic("MODE")
+        modeU.toOption.collect { case s: String =>
+          s
+        }
       catch case _: Throwable => None
 
     // Node-like: process.env.NODE_ENV (safe access; do not store global in a val)
