@@ -110,79 +110,71 @@ object ErrorOperations:
   // --- Minimal toast/snackbar implementation (non-blocking UI) ---
 
   private def ensureToastContainer(): dom.HTMLElement =
-    val existing = dom.document.getElementById("toast-container")
-    if existing != null then
-      // Safely narrow using a runtime check
-      existing match
-        case el: dom.HTMLElement => el
-        case _                   =>
-          // If somehow an element with the same id but wrong type exists, recreate safely
-          createToastContainer()
-    else
-      createToastContainer()
+    Option(dom.document.getElementById("toast-container")) match
+      case Some(el: dom.HTMLElement) => el
+      case _                         => createToastContainer()
 
   private def createToastContainer(): dom.HTMLElement =
-    val container = dom.document.createElement("div") match
-      case el: dom.HTMLElement => el
-      case el                  =>
-        // Fallback: set basic attributes using Element API, then return as HTMLElement via pattern match (it will be HTMLElement in browsers)
-        el.asInstanceOf[dom.HTMLElement]
-    container.id = "toast-container"
-    // Inline base styles to avoid dependency on app CSS
-    container.setAttribute(
-      "style",
-      "position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none;"
-    )
-    dom.document.body.appendChild(container): Unit
-    container
+    dom.document.createElement("div") match
+      case container: dom.HTMLDivElement =>
+        container.id = "toast-container"
+        // Inline base styles to avoid dependency on app CSS
+        container.setAttribute(
+          "style",
+          "position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none;"
+        )
+        dom.document.body.appendChild(container): Unit
+        container
+      case _                             =>
+        // Fallback: attach to body directly if narrowing failed (should not happen for "div")
+        val fallback = dom.document.body
+        fallback
 
   private def showToast(text: String, severity: Severity, durationMs: Int): Unit =
     val container = ensureToastContainer()
 
-    val toast = dom.document.createElement("div") match
-      case el: dom.HTMLDivElement => el
-      case el: dom.HTMLElement    =>
-        // Upgrade generic HTMLElement to HTMLDivElement if the browser provides it, else use HTMLElement
-        el.asInstanceOf[dom.HTMLDivElement]
-      case el                     =>
-        el.asInstanceOf[dom.HTMLDivElement]
+    // Create div and safely narrow via pattern match
+    dom.document.createElement("div") match
+      case toast: dom.HTMLDivElement =>
+        toast.setAttribute("role", "status")
+        toast.setAttribute("aria-live", "polite")
+        toast.className = "editor-toast"
+        toast.textContent = text
+        toast.style.pointerEvents = "auto"
 
-    toast.setAttribute("role", "status")
-    toast.setAttribute("aria-live", "polite")
-    toast.className = "editor-toast"
-    toast.textContent = text
-    toast.style.pointerEvents = "auto"
+        // Basic styling with severity coloring
+        val (bg, fg, border) = severity match
+          case Severity.Info    => ("#263238", "#E0F7FA", "#4FC3F7")
+          case Severity.Warning => ("#3E2723", "#FFE0B2", "#FFB74D")
+          case Severity.Error   => ("#311920", "#FFCDD2", "#EF5350")
 
-    // Basic styling with severity coloring
-    val (bg, fg, border) = severity match
-      case Severity.Info    => ("#263238", "#E0F7FA", "#4FC3F7")
-      case Severity.Warning => ("#3E2723", "#FFE0B2", "#FFB74D")
-      case Severity.Error   => ("#311920", "#FFCDD2", "#EF5350")
+        toast.setAttribute(
+          "style",
+          s"""background:$bg;color:$fg;border:1px solid $border;border-radius:8px;
+             |padding:10px 12px;box-shadow:0 6px 16px rgba(0,0,0,0.3);
+             |max-width:420px;font:14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+             |white-space:pre-wrap;cursor:pointer;opacity:0;transform:translateY(8px);
+             |transition:opacity .15s ease, transform .15s ease;""".stripMargin
+        )
 
-    toast.setAttribute(
-      "style",
-      s"""background:$bg;color:$fg;border:1px solid $border;border-radius:8px;
-         |padding:10px 12px;box-shadow:0 6px 16px rgba(0,0,0,0.3);
-         |max-width:420px;font:14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-         |white-space:pre-wrap;cursor:pointer;opacity:0;transform:translateY(8px);
-         |transition:opacity .15s ease, transform .15s ease;""".stripMargin
-    )
+        // Click to dismiss early
+        toast.onclick = _ => removeToast(toast)
 
-    // Click to dismiss early
-    toast.onclick = _ => removeToast(toast)
+        container.appendChild(toast): Unit
 
-    container.appendChild(toast): Unit
+        // Animate in
+        dom.window.requestAnimationFrame { _ =>
+          toast.style.opacity = "1"
+          toast.style.transform = "translateY(0)"
+        }: Unit
 
-    // Animate in
-    dom.window.requestAnimationFrame { _ =>
-      toast.style.opacity = "1"
-      toast.style.transform = "translateY(0)"
-    }: Unit
+        // Auto-dismiss
+        dom.window.setTimeout(() => removeToast(toast), durationMs): Unit
+        // Keep a placeholder listener for future extensibility
+        toast.addEventListener("transitionend", (_: dom.Event) => ()): Unit
 
-    // Auto-dismiss
-    dom.window.setTimeout(() => removeToast(toast), durationMs): Unit
-    // Keep a placeholder listener for future extensibility
-    toast.addEventListener("transitionend", (_: dom.Event) => ()): Unit
+      case _ =>
+        () // If not an HTMLDivElement, do nothing safely
 
   private def removeToast(toast: dom.HTMLDivElement): Unit =
     // Animate out then remove
