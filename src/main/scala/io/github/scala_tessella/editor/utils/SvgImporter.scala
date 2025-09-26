@@ -70,11 +70,11 @@ object SvgImporter:
       val svgPolys                         = doc.querySelectorAll("#tiling-polygons polygon")
       val polyFills: List[(Int, Int, Int)] =
         (0 until svgPolys.length).flatMap { i =>
-          val el = svgPolys(i).asInstanceOf[dom.Element]
+          val el = svgPolys(i)
           parseColor(Option(el.getAttribute("fill")).getOrElse(""))
         }.toList
 
-      val metadataStr = tessElem.asInstanceOf[dom.Element].outerHTML
+      val metadataStr = tessElem.outerHTML
 
       TilingSVG.fromMetadata(metadataStr) match
         case Left(err)                 =>
@@ -85,7 +85,7 @@ object SvgImporter:
           EditorState.currentTiling.set(tiling)
 
           // Map SVG polygon colors to faces by order (export preserves this order)
-          val faces    = tiling.innerFaces.toList
+          val faces    = tiling.innerFaces
           val colorMap =
             faces
               .zip(polyFills) // zip truncates safely if lengths differ
@@ -99,7 +99,7 @@ object SvgImporter:
           AppState.fitTilingToCanvas()
           UndoManager.clearHistory()
     }.recover { case e: Throwable =>
-      // Friendlier, centralized message with remediation hint, via non-blocking toast
+      // Friendlier, centralized message with a remediation hint, via non-blocking toast
       val hint =
         "This SVG likely lacks Tessella DCEL metadata.\nUse File → Save SVG in this editor to produce importable files."
       ErrorOperations.showError(
