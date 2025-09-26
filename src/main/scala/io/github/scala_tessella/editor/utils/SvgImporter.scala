@@ -1,5 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
+import com.raquo.laminar.api.L._
+
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations
@@ -12,22 +14,26 @@ import scala.util.Try
 object SvgImporter:
 
   def trigger(): Unit =
-    val input = dom.document.createElement("input").asInstanceOf[dom.html.Input]
-    input.`type` = "file"
-    input.accept = ".svg,image/svg+xml"
-    input.onchange = _ => {
-      val file = input.files(0)
+    val inputEl = input(
+      tpe     := "file",
+      accept  := ".svg,image/svg+xml",
+      display := "none"
+    ).ref
+
+    dom.document.body.appendChild(inputEl): Unit
+    inputEl.onchange = _ => {
+      val file = inputEl.files(0)
       if file != null then
         val reader = new FileReader()
-        // The onload event for FileReader provides a ProgressEvent, not a UIEvent
         reader.onload = (_: ProgressEvent) => {
           val content = reader.result.toString
-          // Wrap the import logic in withLoadingState to manage the isProcessing flag
           AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name))
         }
         reader.readAsText(file)
+      // Clean up the temporary input element
+      dom.document.body.removeChild(inputEl): Unit
     }
-    input.click()
+    inputEl.click()
 
   private def parseColor(colorStr: String): Option[(Int, Int, Int)] =
     Option(colorStr).flatMap { s =>
