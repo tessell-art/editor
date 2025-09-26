@@ -22,14 +22,15 @@ object SvgImporter:
 
     dom.document.body.appendChild(inputEl): Unit
     inputEl.onchange = _ => {
-      val file = inputEl.files(0)
-      if file != null then
+      val fileOpt = Option(inputEl.files).flatMap(fs => Option(fs.item(0)))
+      fileOpt.foreach { file =>
         val reader = new FileReader()
         reader.onload = (_: ProgressEvent) => {
-          val content = reader.result.toString
+          val content = Option(reader.result).fold("")(_.toString)
           AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name))
         }
         reader.readAsText(file)
+      }
       // Clean up the temporary input element
       dom.document.body.removeChild(inputEl): Unit
     }
@@ -38,19 +39,19 @@ object SvgImporter:
   private def parseColor(colorStr: String): Option[(Int, Int, Int)] =
     Option(colorStr).flatMap { s =>
       val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
-      val result   = rgbRegex.exec(s)
-      if result != null && result.length == 4 then
-        for
-          // exec can return undefined for captures, so we convert to Option
-          rStr <- result(1).toOption
-          gStr <- result(2).toOption
-          bStr <- result(3).toOption
-          // Safely convert strings to integers
-          r    <- Try(rStr.toInt).toOption
-          g    <- Try(gStr.toInt).toOption
-          b    <- Try(bStr.toInt).toOption
-        yield (r, g, b)
-      else None
+      Option(rgbRegex.exec(s)).flatMap { result =>
+
+        if result.length == 4 then
+          for
+            rStr <- result(1).toOption
+            gStr <- result(2).toOption
+            bStr <- result(3).toOption
+            r    <- Try(rStr.toInt).toOption
+            g    <- Try(gStr.toInt).toOption
+            b    <- Try(bStr.toInt).toOption
+          yield (r, g, b)
+        else None
+      }
     }
 
   def importTilingFromSVG(svgContent: String, filename: String): Unit =
@@ -60,17 +61,17 @@ object SvgImporter:
 
       // Prefer namespace-aware selection for the tessella DCEL metadata
       val ns        = "https://github.com/scala-tessella/tessella"
-      val tessElems = doc.getElementsByTagNameNS(ns, "tessella-dcel")
+      val tessElems = Option(doc.getElementsByTagNameNS(ns, "tessella-dcel"))
+        .filter(_.length > 0)
+        .map(_.item(0))
 
       // Fallback for cases where namespace lookups might fail (e.g., missing prefix binding)
       val tessElem =
-        if tessElems != null && tessElems.length > 0 then
-          tessElems(0)
-        else
-          // Escape the colon in the CSS selector for namespaced elements
-          Option(doc.querySelector("metadata tessella\\:tessella-dcel")).getOrElse(
-            throw new Exception("No Tessella DCEL metadata found in the SVG.")
-          )
+        tessElems.orElse {
+          Option(doc.querySelector("metadata tessella\\:tessella-dcel"))
+        }.getOrElse(
+          throw new Exception("No Tessella DCEL metadata found in the SVG.")
+        )
 
       // Collect polygon fills (in order) to restore colors
       val svgPolys                         = doc.querySelectorAll("#tiling-polygons polygon")
