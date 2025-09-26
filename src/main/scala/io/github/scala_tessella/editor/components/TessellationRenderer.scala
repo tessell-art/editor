@@ -519,7 +519,6 @@ object TessellationRenderer:
                   intoFace = Some(faceId)
                 ))
               )
-          case null                      => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
 
@@ -601,7 +600,6 @@ object TessellationRenderer:
               (edge._1._1, edge._2._1),
               tiling
             )))
-          case null                                   => ()
       },
       onMouseLeave.compose(gate) --> { _ =>
 
