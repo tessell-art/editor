@@ -33,7 +33,7 @@ object PopUpsComponent:
 
   // Primary modifier label: Cmd on macOS, Ctrl elsewhere
   private val primaryModLabel: String =
-    if dom.window.navigator.platform.toLowerCase.contains("mac") then "Cmd" else "Ctrl"
+    if dom.window.navigator.platform.toLowerCase.contains("mac") then "⌘" else "Ctrl"
 
   private[components] def guidePopup(): Element =
     div(
