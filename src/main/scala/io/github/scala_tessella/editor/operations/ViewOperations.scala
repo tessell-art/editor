@@ -83,41 +83,43 @@ object ViewOperations:
     val viewBoxWidth  = canvasCenterX * 2.0
     val viewBoxHeight = canvasCenterY * 2.0
 
-    if (viewBoxWidth <= 0 || viewBoxHeight <= 0) return None
+    if viewBoxWidth <= 0 || viewBoxHeight <= 0 then
 
-    val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
-    rotatedCoords.maybeBounds.flatMap { bounds =>
-      val tilingWidth  = bounds.maxX - bounds.minX
-      val tilingHeight = bounds.maxY - bounds.minY
+      val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
+      rotatedCoords.maybeBounds.flatMap { bounds =>
+        val tilingWidth  = bounds.maxX - bounds.minX
+        val tilingHeight = bounds.maxY - bounds.minY
 
-      if tilingWidth <= 0 && tilingHeight <= 0 then None
-      else
-        val newScale                       = calculateNewScale(viewBoxWidth, viewBoxHeight, tilingWidth, tilingHeight, padding)
-        val (tilingCenterX, tilingCenterY) = calculateTilingCenter(bounds)
-        val (newPanX, newPanY)             =
-          calculateNewPan(viewBoxWidth, viewBoxHeight, tilingCenterX, tilingCenterY, newScale)
-        Some(createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY))
-    }
+        if tilingWidth <= 0 && tilingHeight <= 0 then None
+        else
+          val newScale                       = calculateNewScale(viewBoxWidth, viewBoxHeight, tilingWidth, tilingHeight, padding)
+          val (tilingCenterX, tilingCenterY) = calculateTilingCenter(bounds)
+          val (newPanX, newPanY)             =
+            calculateNewPan(viewBoxWidth, viewBoxHeight, tilingCenterX, tilingCenterY, newScale)
+          Some(createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY))
+      }
+    else
+      None
 
   def fitTilingToCanvas(): Unit =
     val tiling = EditorState.currentTiling.now()
-    if tiling.isEmpty then return
+    if !tiling.isEmpty then
 
-    val coords = tiling.boundaryVertices.map(_.coords.toPoint).map(_.scale(canvasScale))
-    if coords.isEmpty then return
+      val coords = tiling.boundaryVertices.map(_.coords.toPoint).map(_.scale(canvasScale))
+      if coords.nonEmpty then
 
-    EditorState.canvasElementRef.now().foreach { canvasElement =>
-      val canvasRect       = canvasElement.getBoundingClientRect()
-      val currentTransform = EditorState.viewTransform.now()
+        EditorState.canvasElementRef.now().foreach { canvasElement =>
+          val canvasRect       = canvasElement.getBoundingClientRect()
+          val currentTransform = EditorState.viewTransform.now()
 
-      calculateFitToCanvasTransform(
-        coords,
-        canvasRect.width,
-        canvasRect.height,
-        currentTransform,
-        padding = 40.0
-      ).foreach(EditorState.viewTransform.set)
-    }
+          calculateFitToCanvasTransform(
+            coords,
+            canvasRect.width,
+            canvasRect.height,
+            currentTransform,
+            padding = 40.0
+          ).foreach(EditorState.viewTransform.set)
+        }
 
   // Pure function to perform inverse transformation (screen to world)
   private[operations] def inverseTransform(

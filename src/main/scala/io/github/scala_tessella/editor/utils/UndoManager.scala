@@ -29,24 +29,24 @@ object UndoManager:
 
       // Don't save if the state hasn't actually changed
       if undoStack.nonEmpty && isStateEquivalent(undoStack.top, snapshot) then
-        return
+        ()
+      else
+        undoStack.push(snapshot)
 
-      undoStack.push(snapshot)
+        // A new action clears the redo history
+        redoStack.clear()
 
-      // A new action clears the redo history
-      redoStack.clear()
+        // Limit the stack size to MAX_UNDO_DEPTH
+        if undoStack.size > MAX_UNDO_DEPTH then
+          val tempStack = mutable.Stack[AppStateSnapshot]()
+          for (_ <- 0 until MAX_UNDO_DEPTH)
+            if undoStack.nonEmpty then
+              tempStack.push(undoStack.pop())
+          undoStack.clear()
+          while tempStack.nonEmpty do
+            undoStack.push(tempStack.pop())
 
-      // Limit the stack size to MAX_UNDO_DEPTH
-      if undoStack.size > MAX_UNDO_DEPTH then
-        val tempStack = mutable.Stack[AppStateSnapshot]()
-        for (_ <- 0 until MAX_UNDO_DEPTH)
-          if undoStack.nonEmpty then
-            tempStack.push(undoStack.pop())
-        undoStack.clear()
-        while tempStack.nonEmpty do
-          undoStack.push(tempStack.pop())
-
-      updateUndoRedoSignals()
+        updateUndoRedoSignals()
 
   // Undo the last operation
   def undo(): Unit =

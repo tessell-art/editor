@@ -24,45 +24,46 @@ object PolygonPlacementGeometry:
     val vertex2 = tiling.coordinates(edge._2).toPoint
 
     val (edgeLen, unitVector, midPoint) = edgeGeometrics(vertex1, vertex2)
-    if (edgeLen == 0) return Vector.empty
-
-    val (perpX, perpY, wasFlipped) =
-      determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
-
-    if angles.toSet.size == 1 then
-      val polygonSides                 = angles.size
-      val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
-
-      val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
-
-      val angleStep  = halfAngle * 2
-      val edgeAngle  = Math.atan2(unitVector.y, unitVector.x)
-      val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
-      val winding    = if wasFlipped then -1 else 1
-
-      generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
+    if edgeLen == 0 then
+      Vector.empty
     else
+      val (perpX, perpY, wasFlipped) =
+        determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
 
-      // Irregular polygon with unit edges and given internal angles.
-      val local = buildUnitEdgePolygon(angles)
+      if angles.toSet.size == 1 then
+        val polygonSides                 = angles.size
+        val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
 
-      // Compute transform: align local first edge to the actual perimeter edge
-      val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
-      val rotCos    = Math.cos(edgeAngle)
-      val rotSin    = Math.sin(edgeAngle)
+        val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
 
-      // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
-      val world = local.map { p =>
-        val scaled  = p.scale(edgeLen)
-        val rotated = Point(
-          scaled.x * rotCos - scaled.y * rotSin,
-          scaled.x * rotSin + scaled.y * rotCos
-        )
-        vertex1.plus(rotated)
-      }
+        val angleStep  = halfAngle * 2
+        val edgeAngle  = Math.atan2(unitVector.y, unitVector.x)
+        val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
+        val winding    = if wasFlipped then -1 else 1
 
-      // No additional inward offset needed for preview points; keep exact constructed vertices
-      world.map(tilingPointToCanvasView)
+        generateWireframeVertices(polygonSides, center, radius, startAngle, angleStep, winding)
+      else
+
+        // Irregular polygon with unit edges and given internal angles.
+        val local = buildUnitEdgePolygon(angles)
+
+        // Compute transform: align local first edge to the actual perimeter edge
+        val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
+        val rotCos    = Math.cos(edgeAngle)
+        val rotSin    = Math.sin(edgeAngle)
+
+        // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
+        val world = local.map { p =>
+          val scaled  = p.scale(edgeLen)
+          val rotated = Point(
+            scaled.x * rotCos - scaled.y * rotSin,
+            scaled.x * rotSin + scaled.y * rotCos
+          )
+          vertex1.plus(rotated)
+        }
+
+        // No additional inward offset needed for preview points; keep exact constructed vertices
+        world.map(tilingPointToCanvasView)
 
   /** Build polygon vertices in local space using unit edge length and given internal angles. */
   private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point] =
