@@ -80,6 +80,7 @@ object SvgImporter:
         case Left(err)                 =>
           throw new Error(s"Failed to parse Tessella DCEL metadata: ${err.message}")
         case Right(tiling: TilingDCEL) =>
+          AppState.clearMeasurements()
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
 
