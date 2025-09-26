@@ -56,7 +56,11 @@ object Logger:
             proc.selectDynamic("env")
           )
         then
-          proc.selectDynamic("env").selectDynamic("NODE_ENV").asInstanceOf[UndefOr[String]].toOption
+          val nodeU: UndefOr[Any] = proc.selectDynamic("env").selectDynamic("NODE_ENV")
+          val nodeOpt             = nodeU.toOption.collect { case s: String =>
+            s
+          }
+          nodeOpt
         else None
       catch case _: Throwable => None
 
