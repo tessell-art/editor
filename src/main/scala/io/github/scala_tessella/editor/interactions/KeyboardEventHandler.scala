@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.interactions
 
-import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
-import io.github.scala_tessella.editor.utils.SvgExporter
+import io.github.scala_tessella.editor.utils.{SvgExporter, UndoManager}
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 
@@ -85,10 +85,10 @@ object KeyboardEventHandler:
           enqueueRotate(-15) // debounced
         case "Z" if event.ctrlKey && event.shiftKey =>
           event.preventDefault()
-          AppState.redoObserver: Unit
+          UndoManager.redo()
         case "z" if event.ctrlKey                   =>
           event.preventDefault()
-          AppState.undoObserver: Unit
+          UndoManager.undo()
         case "s" if event.ctrlKey                   =>
           event.preventDefault()
           // Use the snapshots captured above
