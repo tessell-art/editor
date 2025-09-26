@@ -311,7 +311,7 @@ object PopUpsComponent:
         h1("Tessella"),
         p(
           className := "about-version",
-          "Editor v0.2.2"
+          "Editor v0.3.0"
         ),
         h2("Simple polygon tessellation editor"),
         div(
