@@ -42,3 +42,9 @@ object PolygonNameGenerator:
       ("Truncated trihexagonal", "(4.6.12)", "semiregular_4-6-12.svg"),
       ("Truncated hexagonal", "(3.12.12)", "semiregular_3-12-12.svg")
     )
+
+  def irregularNames: List[Template] =
+    List(
+      ("Penrose", "P1", "penrose_P1.svg"),
+      ("Penrose", "P3", "penrose_P3.svg")
+    )

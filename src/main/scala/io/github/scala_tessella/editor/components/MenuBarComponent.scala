@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{AppState, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.operations.ViewOperations
-import io.github.scala_tessella.editor.utils.PolygonNameGenerator.{Template, regularNames, semiRegularNames}
+import io.github.scala_tessella.editor.utils.PolygonNameGenerator._
 import io.github.scala_tessella.editor.utils.{
   DotExporter,
   SvgExporter,
@@ -146,7 +146,10 @@ object MenuBarComponent:
       dropdownLinks(regularNames),
       div(className := "menu-separator"),
       // Semiregular tilings
-      dropdownLinks(semiRegularNames)
+      dropdownLinks(semiRegularNames),
+      div(className := "menu-separator"),
+      // Semiregular tilings
+      dropdownLinks(irregularNames)
     )
 
   private def fileMenu(): Element =
