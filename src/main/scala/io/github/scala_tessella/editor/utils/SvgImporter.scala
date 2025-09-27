@@ -35,7 +35,7 @@ object SvgImporter:
     }
     inputEl.click()
 
-  private def parseColor(colorStr: String): Option[(Int, Int, Int)] =
+  private[utils] def parseColor(colorStr: String): Option[(Int, Int, Int)] =
     Option(colorStr).flatMap { s =>
       val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
       Option(rgbRegex.exec(s)).flatMap { result =>

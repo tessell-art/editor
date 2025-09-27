@@ -3,8 +3,8 @@ package io.github.scala_tessella.editor.utils
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
-import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.TilingBuilders._
+import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
+import io.github.scala_tessella.editor.utils.TilingBuilders.*
 import munit.FunSuite
 
 class UndoManagerSpec extends FunSuite with EditorStateFixture:
@@ -116,4 +116,55 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.currentTiling.now(), firstKeptTiling)
     // The discarded state is not restored
     assertNotEquals(EditorState.currentTiling.now(), discardedTiling)
+  }
+
+  private def reset(): Unit =
+    UndoManager.clearHistory()
+    // Ensure processing flag is false
+    EditorState.isProcessing.set(false)
+
+  test("maxUndoDepth exposes internal limit") {
+    assert(UndoManager.maxUndoDepth > 0)
+  }
+
+  test("saveState does not push equivalent consecutive snapshots") {
+    reset()
+    val s1         = AppStateSnapshot.fromCurrentState
+    UndoManager.saveState()
+    val undoCount1 = UndoManager.undoCount.now()
+    // No changes -> should not add a duplicate
+    UndoManager.saveState()
+    val undoCount2 = UndoManager.undoCount.now()
+    assert(undoCount2 == undoCount1)
+  }
+
+  test("undo/redo availability signals update and redo clears on new save") {
+    reset()
+    UndoManager.saveState()
+    UndoManager.saveState() // make at least one step available
+    assert(UndoManager.canUndo.now())
+    UndoManager.undo()
+    assert(UndoManager.canRedo.now())
+
+    // Pushing new state clears redo
+    UndoManager.saveState()
+    assert(!UndoManager.canRedo.now())
+  }
+
+  test("undo stack is capped to max depth") {
+    reset()
+    val cap = UndoManager.maxUndoDepth
+    (0 until (cap + 5)).foreach(_ => UndoManager.saveState())
+    assert(UndoManager.undoCount.now() <= cap)
+  }
+
+  test("getUndoPreview and getRedoPreview reflect stack state") {
+    reset()
+    assert(UndoManager.getUndoPreview.isEmpty)
+    assert(UndoManager.getRedoPreview.isEmpty)
+
+    UndoManager.saveState()
+    assert(UndoManager.getUndoPreview.exists(_.startsWith("Undo:")))
+    UndoManager.undo()
+    assert(UndoManager.getRedoPreview.nonEmpty)
   }
