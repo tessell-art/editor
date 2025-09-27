@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.Point2
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom
 import org.scalajs.dom.TouchEvent
 
@@ -13,13 +13,13 @@ object TouchEventHandler:
   private val initialScale         = Var[Option[Double]](None)
   private val initialAngle         = Var[Option[Double]](None)
   private val initialRotation      = Var[Option[Double]](None)
-  private val pinchAnchorPoint     = Var[Option[Point2]](None) // World coordinates
+  private val pinchAnchorPoint     = Var[Option[Point]](None) // World coordinates
 
   // For single-touch pan
-  private val lastPanPoint = Var[Option[Point2]](None)
+  private val lastPanPoint = Var[Option[Point]](None)
 
   // To distinguish tap from drag
-  private val touchStartPoint        = Var[Option[Point2]](None)
+  private val touchStartPoint        = Var[Option[Point]](None)
   private val isDragging             = Var[Boolean](false)
   private val DRAG_THRESHOLD_SQUARED = 25.0 // Using squared distance to avoid sqrt
 
@@ -27,7 +27,7 @@ object TouchEventHandler:
     val touches = event.touches
     if touches.length == 1 then
       val touch = touches(0)
-      val p     = Point2(touch.clientX, touch.clientY)
+      val p     = Point(touch.clientX, touch.clientY)
       touchStartPoint.set(Some(p))
       lastPanPoint.set(Some(p))
       isDragging.set(false)
@@ -54,7 +54,7 @@ object TouchEventHandler:
         val pointerY       =
           (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
 
-        val worldPoint = screenToWorld(Point2(pointerX, pointerY), currentTransform)
+        val worldPoint = screenToWorld(Point(pointerX, pointerY), currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
       }
     else
@@ -71,7 +71,7 @@ object TouchEventHandler:
 
       startPointOpt.foreach { startPoint =>
         val touch      = touches(0)
-        val touchPoint = Point2(touch.clientX, touch.clientY)
+        val touchPoint = Point(touch.clientX, touch.clientY)
         if !dragging then
           val drag = touchPoint - startPoint
           if drag.dot(drag) > DRAG_THRESHOLD_SQUARED then
@@ -122,7 +122,7 @@ object TouchEventHandler:
             val pointerY   =
               (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
             val pointer    =
-              Point2(pointerX, pointerY)
+              Point(pointerX, pointerY)
 
             val newPan = pointer - transformedPoint
 
@@ -161,7 +161,7 @@ object TouchEventHandler:
     val dy = touch2.clientY - touch1.clientY
     Math.toDegrees(Math.atan2(dy, dx))
 
-  private def screenToWorld(screen: Point2, transform: ViewTransform): Point2 =
+  private def screenToWorld(screen: Point, transform: ViewTransform): Point =
     val (pan, scale, rotationDegrees) =
       (transform.pan, transform.scale, transform.rotationDegrees)
     val rotRad                        = Math.toRadians(rotationDegrees)
@@ -180,13 +180,13 @@ object TouchEventHandler:
     val p3_y      = p2_x * sinInvRot + p2_y * cosInvRot
     val worldX    = p3_x + rotationCenter.xx
     val worldY    = p3_y + rotationCenter.yy
-    Point2(worldX, worldY)
+    Point(worldX, worldY)
 
   private def worldToScreenNoPan(
-      world: Point2,
-      scale: Double,
-      rotationDegrees: Double
-  ): Point2 =
+                                  world: Point,
+                                  scale: Double,
+                                  rotationDegrees: Double
+  ): Point =
     val rotRad         = Math.toRadians(rotationDegrees)
     val rotationCenter = EditorConfig.canvasCenter
 
@@ -199,4 +199,4 @@ object TouchEventHandler:
     val p2_y   = p1_x * sinRot + p1_y * cosRot
     val p3_x   = (p2_x + rotationCenter.xx) * scale
     val p3_y   = (p2_y + rotationCenter.yy) * scale
-    Point2(p3_x, p3_y)
+    Point(p3_x, p3_y)

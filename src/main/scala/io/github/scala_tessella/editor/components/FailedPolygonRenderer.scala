@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.FailedPolygonPlacement
-import io.github.scala_tessella.editor.utils.Geometry.Point2
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import io.github.scala_tessella.editor.utils.PolygonPlacementGeometry
 
 object FailedPolygonRenderer:
@@ -55,7 +55,7 @@ object FailedPolygonRenderer:
 //      case _: Exception => svg.g()
 //    }
 
-  private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[Point2] =
+  private def calculateWireframePoints(placement: FailedPolygonPlacement): Vector[Point] =
     PolygonPlacementGeometry.computeWireframePoints(
       placement.angles,
       placement.edge,

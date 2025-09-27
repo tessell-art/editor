@@ -3,13 +3,13 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.models.EditorConfig._
 import io.github.scala_tessella.editor.models.{EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point2, Radian}
+import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point, Radian}
 import io.github.scala_tessella.editor.utils.TessellationGeometry._
 
 object ViewOperations:
 
   // Pure function to transform coordinates based on rotation
-  private[operations] def transformCoordinates(coords: Iterable[Point2], rotationDegrees: Int): List[Point2] =
+  private[operations] def transformCoordinates(coords: Iterable[Point], rotationDegrees: Int): List[Point] =
     val rotationRad = AngleDegree(rotationDegrees).toBigRadian.toBigDecimal.toDouble
     coords.map(_.rotate(Radian(rotationRad))).toList
 
@@ -37,10 +37,10 @@ object ViewOperations:
 
   // Pure function to calculate new pan values to center the tiling
   private[operations] def calculateNewPan(
-      canvas: Point2,
-      tilingCenter: Point2,
-      newScale: Double
-  ): Point2 =
+                                           canvas: Point,
+                                           tilingCenter: Point,
+                                           newScale: Double
+  ): Point =
     val tilingCenterOnCanvas = tilingCenter + canvasCenter
     canvas / 2.0 - tilingCenterOnCanvas * newScale
 
@@ -48,7 +48,7 @@ object ViewOperations:
   private[operations] def createUpdatedViewTransform(
       currentTransform: ViewTransform,
       newScale: Double,
-      newPan: Point2
+      newPan: Point
   ): ViewTransform =
     currentTransform.copy(
       scale = newScale,
@@ -57,11 +57,11 @@ object ViewOperations:
 
   // Pure function to calculate the new view transform to fit the tiling to the canvas
   private[operations] def calculateFitToCanvasTransform(
-      coords: Iterable[Point2],
-      canvasWidth: Double,
-      canvasHeight: Double,
-      currentTransform: ViewTransform,
-      padding: Double
+                                                         coords: Iterable[Point],
+                                                         canvasWidth: Double,
+                                                         canvasHeight: Double,
+                                                         currentTransform: ViewTransform,
+                                                         padding: Double
   ): Option[ViewTransform] =
     // Use the viewBox dimensions for calculation, not the canvas element's actual dimensions,
     // because the pan and scale are applied within the SVG's viewBox coordinate system.
@@ -81,7 +81,7 @@ object ViewOperations:
           val newScale = calculateNewScale(viewBoxWidth, viewBoxHeight, tilingWidth, tilingHeight, padding)
           val newPan   =
             calculateNewPan(
-              Point2(viewBoxWidth, viewBoxHeight),
+              Point(viewBoxWidth, viewBoxHeight),
               bounds.center,
               newScale
             )
@@ -110,11 +110,11 @@ object ViewOperations:
 
   // Pure function to perform inverse transformation (screen to world)
   private[operations] def inverseTransform(
-      viewCenter: Point2,
-      pan: Point2,
-      scale: Double,
-      rotationRad: Double
-  ): Point2 =
+                                            viewCenter: Point,
+                                            pan: Point,
+                                            scale: Double,
+                                            rotationRad: Double
+  ): Point =
     // Inverse pan
     val afterInvPan = viewCenter - pan
 
@@ -130,15 +130,15 @@ object ViewOperations:
     val worldX = viewCenter.xx + intermediate.xx * cosInvRot - intermediate.yy * sinInvRot
     val worldY = viewCenter.yy + intermediate.xx * sinInvRot + intermediate.yy * cosInvRot
 
-    Point2(worldX, worldY)
+    Point(worldX, worldY)
 
   // Pure function to perform forward transformation (world to screen)
   private[operations] def forwardTransform(
-      world: Point2,
-      viewCenter: Point2,
-      scale: Double,
-      rotationRad: Double
-  ): Point2 =
+                                            world: Point,
+                                            viewCenter: Point,
+                                            scale: Double,
+                                            rotationRad: Double
+  ): Point =
     // Forward rotation
     val cosRot = Math.cos(rotationRad)
     val sinRot = Math.sin(rotationRad)
@@ -149,15 +149,15 @@ object ViewOperations:
     val afterRotY = viewCenter.yy + intermediate.xx * sinRot + intermediate.yy * cosRot
 
     // Forward scale
-    Point2(afterRotX, afterRotY) * scale
+    Point(afterRotX, afterRotY) * scale
 
   // Pure function to calculate new pan values after rotation
   private[operations] def calculateRotatedPan(
-      world: Point2,
-      viewCenter: Point2,
-      scale: Double,
-      newRotationRad: Double
-  ): Point2 =
+                                               world: Point,
+                                               viewCenter: Point,
+                                               scale: Double,
+                                               newRotationRad: Double
+  ): Point =
     val afterScale = forwardTransform(
       world,
       viewCenter,

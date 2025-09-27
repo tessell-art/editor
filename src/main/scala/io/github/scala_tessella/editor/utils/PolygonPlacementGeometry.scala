@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.{Point2, Radian, edgeGeometrics}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, edgeGeometrics}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
 
@@ -19,7 +19,7 @@ object PolygonPlacementGeometry:
       edge: (VertexId, VertexId),
       tiling: TilingDCEL,
       intoFace: Option[FaceId] = None
-  ): Vector[Point2] =
+  ): Vector[Point] =
     val vertex1 = tiling.coordinates(edge._1).toPoint
     val vertex2 = tiling.coordinates(edge._2).toPoint
 
@@ -34,7 +34,7 @@ object PolygonPlacementGeometry:
         val polygonSides                 = angles.size
         val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
 
-        val center = Point2(midPoint.xx + perpX * apothem, midPoint.yy + perpY * apothem)
+        val center = Point(midPoint.xx + perpX * apothem, midPoint.yy + perpY * apothem)
 
         val angleStep  = halfAngle * 2
         val edgeAngle  = Math.atan2(unitVector.yy, unitVector.xx)
@@ -61,12 +61,12 @@ object PolygonPlacementGeometry:
         world.map(tilingPointToCanvasView)
 
   /** Build polygon vertices in local space using unit edge length and given internal angles. */
-  private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point2] =
+  private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point] =
     if angles.isEmpty then Vector.empty
     else
-      var pts     = Vector.newBuilder[Point2]
+      var pts     = Vector.newBuilder[Point]
       var heading = 0.0 // radians
-      var curr    = Point2.origin
+      var curr    = Point.origin
 
       // first vertex
       pts += curr
@@ -77,7 +77,7 @@ object PolygonPlacementGeometry:
       angles.rotateLeft(1).foreach { a =>
         val nx   = curr.xx + cos(heading)
         val ny   = curr.yy + sin(heading)
-        val next = Point2(nx, ny)
+        val next = Point(nx, ny)
         pts += next
         curr = next
         heading = heading + (math.Pi - a.toBigRadian.toBigDecimal.toDouble)
@@ -141,15 +141,15 @@ object PolygonPlacementGeometry:
   /** Generates the vertex points for the wireframe polygon. */
   private def generateWireframeVertices(
       polygonSides: Int,
-      center: Point2,
+      center: Point,
       radius: Double,
       startAngle: Double,
       angleStep: AngleDegree,
       winding: Int
-  ): Vector[Point2] =
+  ): Vector[Point] =
     (0 until polygonSides).map { i =>
       val a  = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
       val px = center.xx + radius * cos(a)
       val py = center.yy + radius * sin(a)
-      tilingPointToCanvasView(Point2(px, py))
+      tilingPointToCanvasView(Point(px, py))
     }.toVector

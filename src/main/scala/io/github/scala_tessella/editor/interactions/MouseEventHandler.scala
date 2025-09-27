@@ -19,7 +19,7 @@ object MouseEventHandler:
     event.preventDefault()
     // Snapshot once
     EditorState.isDragging.set(true)
-    val point: Point2 = Point2(event.clientX, event.clientY)
+    val point: Point = Point(event.clientX, event.clientY)
     EditorState.dragStart.set(Some(point))
 
   def handleMouseMove(event: MouseEvent): Unit =
@@ -29,15 +29,15 @@ object MouseEventHandler:
 
     if dragging then
       dragStartOpt.foreach { start =>
-        val eventPoint    = Point2(event.clientX, event.clientY)
-        val delta: Point2 = eventPoint - start
+        val eventPoint    = Point(event.clientX, event.clientY)
+        val delta: Point = eventPoint - start
         EditorState.viewTransform.update(t =>
           t.copy(
             pan = t.pan + delta
           )
         )
         // Update the new "last" drag start once
-        val point: Point2 = Point2(event.clientX, event.clientY)
+        val point: Point = Point(event.clientX, event.clientY)
         EditorState.dragStart.set(Some(point))
       }
 
@@ -46,11 +46,11 @@ object MouseEventHandler:
     EditorState.isDragging.set(false)
     EditorState.dragStart.set(None)
 
-  private def getCanvasRelativePosition(event: WheelEvent): Option[Point2] =
+  private def getCanvasRelativePosition(event: WheelEvent): Option[Point] =
     // Snapshot once
     EditorState.canvasElementRef.now().map { canvasElement =>
       val rect = canvasElement.getBoundingClientRect()
-      Point2(
+      Point(
         event.clientX - rect.left,
         event.clientY - rect.top
       )
@@ -62,7 +62,7 @@ object MouseEventHandler:
     // Snapshot once per event
     val currentTransform = EditorState.viewTransform.now()
 
-    getCanvasRelativePosition(event).foreach { (mousePos: Point2) =>
+    getCanvasRelativePosition(event).foreach { (mousePos: Point) =>
       val scaleFactor = if (event.deltaY < 0) 1.1 else 0.9
       val newScale    = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
 

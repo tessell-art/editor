@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.utils.Geometry.Point2
+import io.github.scala_tessella.editor.utils.Geometry.Point
 
 object SvgDsl:
 
@@ -57,13 +57,13 @@ object SvgDsl:
   def fmt6(d: Double) =
     f"$d%1.6f"
 
-  def fmt3Point(point: Point2): String =
+  def fmt3Point(point: Point): String =
     s"${fmt3(point.xx)},${fmt3(point.yy)}"
 
-  def fmt6Point(point: Point2): String =
+  def fmt6Point(point: Point): String =
     s"${fmt6(point.xx)},${fmt6(point.yy)}"
 
-  def toPointsString(points: Seq[Point2], decimals: Int = 3): String =
+  def toPointsString(points: Seq[Point], decimals: Int = 3): String =
     points.map(fmt3Point).mkString(" ")
 
   // Simple line creator with defaults

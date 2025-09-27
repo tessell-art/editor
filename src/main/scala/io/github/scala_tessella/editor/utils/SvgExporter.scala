@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLab
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Geometry.{Point2, fitPointsToViewBox, transformPointsForSvg}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.SvgDsl
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import org.scalajs.dom
@@ -82,24 +82,24 @@ object SvgExporter:
       nodes: Seq[VertexId],
       coordinates: Map[VertexId, BigPoint],
       scale: Double,
-      offset: Point2
+      offset: Point
   ): String =
     val points = nodes.map(coordinates).map(_.toPoint)
     points.transformPointsForSvg(scale, offset)
       .map(SvgDsl.fmt6Point)
       .mkString(" ")
 
-  private def pointsString(vertices: Seq[Vertex], scale: Double, offset: Point2): String =
+  private def pointsString(vertices: Seq[Vertex], scale: Double, offset: Point): String =
     val points = vertices.map(_.coords.toPoint)
     points.transformPointsForSvg(scale, offset)
       .map(SvgDsl.fmt6Point)
       .mkString(" ")
 
   private[utils] def generatePolygonsXml(
-      tiling: TilingDCEL,
-      scale: Double,
-      offset: Point2,
-      strokeWidth: Double
+                                          tiling: TilingDCEL,
+                                          scale: Double,
+                                          offset: Point,
+                                          strokeWidth: Double
   ): String =
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
@@ -114,10 +114,10 @@ object SvgExporter:
        |  </g>""".stripMargin
 
   private[utils] def generatePerimeterXml(
-      tiling: TilingDCEL,
-      scale: Double,
-      offset: Point2,
-      strokeWidthPeri: Double
+                                           tiling: TilingDCEL,
+                                           scale: Double,
+                                           offset: Point,
+                                           strokeWidthPeri: Double
   ): String =
     val perimeterNodes = tiling.boundaryVertices
     if perimeterNodes.isEmpty then ""
@@ -151,7 +151,7 @@ object SvgExporter:
   private[utils] def generateLabelsXml(
       coordinates: Map[VertexId, BigPoint],
       scale: Double,
-      offset: Point2
+      offset: Point
   ): String =
     if coordinates.isEmpty then ""
     else

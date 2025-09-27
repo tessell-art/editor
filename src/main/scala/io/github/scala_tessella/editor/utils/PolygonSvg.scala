@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.utils
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.{
-  Point2,
+  Point,
   fitPointsToSquare,
   regularPolygonPoints,
   walkUnitEdges
@@ -14,10 +14,10 @@ object PolygonSvg:
 
   // Generic: render an arbitrary polygon preview fitted to a square
   def previewFitted(
-      points: Vector[Point2],
-      size: Int,
-      pad: Double,
-      strokeW: String = SvgDsl.Defaults.strokeWidthThin
+                     points: Vector[Point],
+                     size: Int,
+                     pad: Double,
+                     strokeW: String = SvgDsl.Defaults.strokeWidthThin
   ): Element =
     val (scale, offset) = points.fitPointsToSquare(size, pad)
     val scaled          = points.map(_.transform(scale, offset))
@@ -28,7 +28,7 @@ object PolygonSvg:
 
   // Regular polygon thumbnail (used in palette buttons)
   def regularPreview(sides: Int, size: Int = 40, radiusFactor: Double = 0.35): Element =
-    val center: Point2 = Point2(size / 2.0, size / 2.0)
+    val center: Point = Point(size / 2.0, size / 2.0)
     val radius         = size * radiusFactor
     val pts            = regularPolygonPoints(sides, radius, center)
     val pointsStr      = SvgDsl.toPointsString(pts)
@@ -48,7 +48,7 @@ object PolygonSvg:
     val basePts         = walkUnitEdges(turns)
     val (scale, offset) = basePts.fitPointsToSquare(size, pad)
 
-    def bigTransform(p: Point2): Point2 =
+    def bigTransform(p: Point): Point =
       p.transform(scale, offset)
 
     val pointsStr = basePts.map(p => SvgDsl.fmt3Point(bigTransform(p))).mkString(" ")
@@ -61,7 +61,7 @@ object PolygonSvg:
       else anglesDeg.last +: anglesDeg.init
 
     val angleLabels = basePts.zip(orderedAngles).map { case (point, angle) =>
-      val label: Point2          = bigTransform(point) + Point2(4.0, -4.0)
+      val label: Point          = bigTransform(point) + Point(4.0, -4.0)
       svg.text(
         svg.x          := fmt3(label.xx),
         svg.y          := fmt3(label.yy),

@@ -4,7 +4,7 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.Geometry.{LineSegment2, Point2}
+import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.ring_seq.RingSeq.{isRotationOrReflectionOf, slidingO}
 
@@ -39,8 +39,8 @@ object SelectionOperations:
         val distance                   = point.point.distanceTo(start.point)
         EditorState.measurementResult.set(Some(distance))
         val maybeAngle: Option[Double] = endOpt.map(clickable =>
-          val angle1          = LineSegment2(start.point, clickable.point).horizontalAngle
-          val angle2          = LineSegment2(start.point, point.point).horizontalAngle
+          val angle1          = LineSegment(start.point, clickable.point).horizontalAngle
+          val angle2          = LineSegment(start.point, point.point).horizontalAngle
           val diffRad: Double = (angle2 - angle1).toDouble
           // Normalize the difference to be within the [0, 2*PI) range
           val TAU             = 2 * Math.PI
@@ -192,7 +192,7 @@ object SelectionOperations:
               val midPoints          = edges.map { edge =>
                 val p1 = edge(0)._2
                 val p2 = edge(1)._2
-                ClickablePoint(LineSegment2(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
+                ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
               }
 
               val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
@@ -200,7 +200,7 @@ object SelectionOperations:
               }
               val centerX      = vertices.map(_.xx).sum / vertices.size
               val centerY      = vertices.map(_.yy).sum / vertices.size
-              val centerPoint  = ClickablePoint(Point2(centerX, centerY), Anchor.Center(face.id))
+              val centerPoint  = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
               EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
 
