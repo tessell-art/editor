@@ -121,16 +121,9 @@ object ViewOperations:
     // Inverse scale
     val afterInvScale = afterInvPan / scale
 
-    // Inverse rotation
-    val cosInvRot = Math.cos(-rotationRad)
-    val sinInvRot = Math.sin(-rotationRad)
-
     val intermediate = afterInvScale - viewCenter
 
-    val worldX = viewCenter.xx + intermediate.xx * cosInvRot - intermediate.yy * sinInvRot
-    val worldY = viewCenter.yy + intermediate.xx * sinInvRot + intermediate.yy * cosInvRot
-
-    Point(worldX, worldY)
+    viewCenter + intermediate.rotate(Radian(-rotationRad))
 
   // Pure function to perform forward transformation (world to screen)
   private[operations] def forwardTransform(
