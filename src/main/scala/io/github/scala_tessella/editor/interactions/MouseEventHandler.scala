@@ -29,7 +29,7 @@ object MouseEventHandler:
 
     if dragging then
       dragStartOpt.foreach { start =>
-        val eventPoint    = Point(event.clientX, event.clientY)
+        val eventPoint   = Point(event.clientX, event.clientY)
         val delta: Point = eventPoint - start
         EditorState.viewTransform.update(t =>
           t.copy(

@@ -183,9 +183,9 @@ object TouchEventHandler:
     Point(worldX, worldY)
 
   private def worldToScreenNoPan(
-                                  world: Point,
-                                  scale: Double,
-                                  rotationDegrees: Double
+      world: Point,
+      scale: Double,
+      rotationDegrees: Double
   ): Point =
     val rotRad         = Math.toRadians(rotationDegrees)
     val rotationCenter = EditorConfig.canvasCenter

@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
+import com.raquo.laminar.modifiers.KeySetter
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
@@ -15,10 +16,10 @@ import io.github.scala_tessella.editor.models.{
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
-import io.github.scala_tessella.editor.utils.ColorUtils._
+import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, normalizeDeltaAngle}
-import io.github.scala_tessella.editor.utils.TessellationGeometry._
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 
@@ -53,13 +54,10 @@ object TessellationRenderer:
 
   private def renderDualTessellation(tiling: TilingDCEL): List[Element] =
     generateDualLines(tiling).map { case (midPoint, center) =>
-      val point1            = tilingPointToCanvasView(midPoint.toPoint)
-      val point2            = tilingPointToCanvasView(center.toPoint)
+      val point1        = tilingPointToCanvasView(midPoint.toPoint)
+      val point2        = tilingPointToCanvasView(center.toPoint)
       svg.line(
-        svg.x1            := point1.xx.toString,
-        svg.y1            := point1.yy.toString,
-        svg.x2            := point2.xx.toString,
-        svg.y2            := point2.yy.toString,
+        lineCoords(point1, point2),
         svg.stroke        := "red",
         svg.strokeWidth   := "1",
         svg.pointerEvents := "none"
@@ -405,15 +403,20 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
+  def lineCoords(point1: Point, point2: Point): Seq[KeySetter.SvgAttrSetter[String]] =
+    Seq(
+      svg.x1 := point1.xx.toString,
+      svg.y1 := point1.yy.toString,
+      svg.x2 := point2.xx.toString,
+      svg.y2 := point2.yy.toString
+    )
+
   private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point): Element =
     val point1 = tilingPointToCanvasView(start.point)
     val point2 = tilingPointToCanvasView(end)
 
     svg.line(
-      svg.x1            := point1.xx.toString,
-      svg.y1            := point1.yy.toString,
-      svg.x2            := point2.xx.toString,
-      svg.y2            := point2.yy.toString,
+      lineCoords(point1, point2),
       svg.stroke        := "#ffffff",
       svg.strokeWidth   := "1",
       svg.className     := "previous-measurement-line",
@@ -425,10 +428,7 @@ object TessellationRenderer:
     val point2 = tilingPointToCanvasView(end.point)
 
     svg.line(
-      svg.x1              := point1.xx.toString,
-      svg.y1              := point1.yy.toString,
-      svg.x2              := point2.xx.toString,
-      svg.y2              := point2.yy.toString,
+      lineCoords(point1, point2),
       svg.stroke          := "#ffffff",
       svg.strokeWidth     := "2",
       svg.strokeDashArray := "5, 5",
@@ -485,10 +485,7 @@ object TessellationRenderer:
     val verticesPair = (edge._1._1, edge._2._1)
 
     val interactionArea = svg.line(
-      svg.x1            := point1.xx.toString,
-      svg.y1            := point1.yy.toString,
-      svg.x2            := point2.xx.toString,
-      svg.y2            := point2.yy.toString,
+      lineCoords(point1, point2),
       svg.stroke        := transparent,
       svg.strokeWidth   := "10",
       svg.strokeLineCap := "round",
@@ -538,10 +535,7 @@ object TessellationRenderer:
     )
 
     val visibleLine = svg.line(
-      svg.x1            := point1.xx.toString,
-      svg.y1            := point1.yy.toString,
-      svg.x2            := point2.xx.toString,
-      svg.y2            := point2.yy.toString,
+      lineCoords(point1, point2),
       svg.stroke        := "#20A4BE",
       svg.strokeWidth   := "3",
       svg.strokeLineCap := "round",
@@ -570,10 +564,7 @@ object TessellationRenderer:
 
     // A wider, transparent line for easier interaction, especially on touch devices
     val interactionArea = svg.line(
-      svg.x1            := point1.xx.toString,
-      svg.y1            := point1.yy.toString,
-      svg.x2            := point2.xx.toString,
-      svg.y2            := point2.yy.toString,
+      lineCoords(point1, point2),
       svg.stroke        := transparent,
       svg.strokeWidth   := "12", // Increased width for a larger touch target
       svg.strokeLineCap := "round",
@@ -615,10 +606,7 @@ object TessellationRenderer:
 
     // The visible line that the user sees
     val visibleLine = svg.line(
-      svg.x1            := point1.xx.toString,
-      svg.y1            := point1.yy.toString,
-      svg.x2            := point2.xx.toString,
-      svg.y2            := point2.yy.toString,
+      lineCoords(point1, point2),
       svg.stroke        := "#ff9500",
       svg.strokeWidth   := "4",
       svg.strokeLineCap := "round",
