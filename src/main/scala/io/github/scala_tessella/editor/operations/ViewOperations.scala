@@ -130,34 +130,19 @@ object ViewOperations:
       world: Point,
       viewCenter: Point,
       scale: Double,
-      rotationRad: Double
+      rotation: Radian
   ): Point =
-    // Forward rotation
-    val cosRot = Math.cos(rotationRad)
-    val sinRot = Math.sin(rotationRad)
-
     val intermediate = world - viewCenter
-
-    val afterRotX = viewCenter.xx + intermediate.xx * cosRot - intermediate.yy * sinRot
-    val afterRotY = viewCenter.yy + intermediate.xx * sinRot + intermediate.yy * cosRot
-
-    // Forward scale
-    Point(afterRotX, afterRotY) * scale
+    (viewCenter + intermediate.rotate(rotation)) * scale
 
   // Pure function to calculate new pan values after rotation
   private[operations] def calculateRotatedPan(
       world: Point,
       viewCenter: Point,
       scale: Double,
-      newRotationRad: Double
+      newRotation: Radian
   ): Point =
-    val afterScale = forwardTransform(
-      world,
-      viewCenter,
-      scale,
-      newRotationRad
-    )
-
+    val afterScale = forwardTransform(world, viewCenter, scale, newRotation)
     viewCenter - afterScale
 
   def rotateView(delta: Int): Unit =
@@ -185,7 +170,7 @@ object ViewOperations:
       world,
       viewCenter,
       scale,
-      newRotationRad
+      Radian(newRotationRad)
     )
 
     // Update the view transform
