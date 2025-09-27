@@ -62,7 +62,6 @@ object PolygonSvg:
       if (anglesDeg.isEmpty) Vector.empty
       else anglesDeg.last +: anglesDeg.init
 
-    Logger.debug(s"Labels: ${basePts.zip(orderedAngles)}")
     val angleLabels = basePts.zip(orderedAngles).map { case (point, angle) =>
       val labelX          = sx(point) + 4
       val labelY          = sy(point) - 4
