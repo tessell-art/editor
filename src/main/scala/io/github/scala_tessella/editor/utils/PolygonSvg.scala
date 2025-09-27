@@ -53,7 +53,7 @@ object PolygonSvg:
 
     def sy(p: Point2) = offY + p.yy * scale
 
-    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(sx(p), sy(p))).mkString(" ")
+    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(Point2(sx(p), sy(p)))).mkString(" ")
     val headIdx   = ((1 % basePts.size) + basePts.size) % basePts.size
     val a         = basePts(headIdx)
     val b         = basePts((headIdx + 1) % basePts.size)

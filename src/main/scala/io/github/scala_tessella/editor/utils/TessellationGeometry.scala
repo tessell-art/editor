@@ -15,7 +15,7 @@ object TessellationGeometry:
     * @return
     *   A tuple (Double, Double) representing the (x, y) on the canvas.
     */
-  def tilingPointToCanvasView(p: Point2): (Double, Double) =
+  def tilingPointToCanvasView(p: Point2): Point2 =
     transformPointToView(p, canvasScale, canvasCenterX, canvasCenterY)
 
   extension (bigPoint: BigPoint)

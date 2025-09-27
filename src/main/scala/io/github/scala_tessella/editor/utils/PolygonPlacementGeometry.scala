@@ -19,7 +19,7 @@ object PolygonPlacementGeometry:
       edge: (VertexId, VertexId),
       tiling: TilingDCEL,
       intoFace: Option[FaceId] = None
-  ): Vector[(Double, Double)] =
+  ): Vector[Point2] =
     val vertex1 = tiling.coordinates(edge._1).toPoint
     val vertex2 = tiling.coordinates(edge._2).toPoint
 
@@ -161,7 +161,7 @@ object PolygonPlacementGeometry:
       startAngle: Double,
       angleStep: AngleDegree,
       winding: Int
-  ): Vector[(Double, Double)] =
+  ): Vector[Point2] =
     (0 until polygonSides).map { i =>
       val a  = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
       val px = center.xx + radius * cos(a)

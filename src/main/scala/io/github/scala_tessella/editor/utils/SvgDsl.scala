@@ -57,14 +57,14 @@ object SvgDsl:
   def fmt6(d: Double) =
     f"$d%1.6f"
 
-  def fmt3Point(x: Double, y: Double): String =
-    s"${fmt3(x)},${fmt3(y)}"
+  def fmt3Point(point: Point2): String =
+    s"${fmt3(point.xx)},${fmt3(point.yy)}"
 
-  def fmt6Point(x: Double, y: Double): String =
-    s"${fmt6(x)},${fmt6(y)}"
+  def fmt6Point(point: Point2): String =
+    s"${fmt6(point.xx)},${fmt6(point.yy)}"
 
   def toPointsString(points: Seq[Point2], decimals: Int = 3): String =
-    points.map(p => fmt3Point(p.xx, p.yy)).mkString(" ")
+    points.map(fmt3Point).mkString(" ")
 
   // Simple line creator with defaults
   def line(
