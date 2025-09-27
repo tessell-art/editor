@@ -202,21 +202,22 @@ object Geometry:
     ): Seq[Point2] =
       points.map(_.transform(scale, offset))
 
-    /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
+    /** Compute view-box (width, height, offset) for a set of points with given scale and padding. */
     def fitPointsToViewBox(
         scale: Double,
         padding: Double
-    ): (Double, Double, Point2) =
+    ): (Double, Double, Point2) = {
+      val pointPadding = Point2(padding, padding)
       Bounds.fromPoints(points) match
-        case None    => (2 * padding, 2 * padding, Point2(padding, padding))
+        case None    => (2 * padding, 2 * padding, pointPadding)
         case Some(b) =>
           val width  = b.width * scale + 2 * padding
           val height = b.height * scale + 2 * padding
-          val offX   = -b.min.x * scale + padding
-          val offY   = -b.min.y * scale + padding
-          (width, height, Point2(offX, offY))
+          val off    = b.min * -scale + pointPadding
+          (width, height, off)
+    }
 
-    /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding.
+    /** Compute view-box transform (scale, offset) to fit points into a square of given size with padding.
       */
     def fitPointsToSquare(size: Double, padding: Double): (Double, Point2) =
       Bounds.fromPoints(points) match
