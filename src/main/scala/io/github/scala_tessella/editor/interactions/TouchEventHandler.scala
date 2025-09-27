@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
 import org.scalajs.dom
 import org.scalajs.dom.TouchEvent
 
@@ -168,19 +168,11 @@ object TouchEventHandler:
     val rotationCenter                = EditorConfig.canvasCenter
 
     // Inverse transform
-    val p1_x = (screen.xx - pan.xx) / scale
-    val p1_y = (screen.yy - pan.yy) / scale
+    val p1 = (screen - pan) / scale
+    val p2 = p1 - rotationCenter
+    val p3 = p2.rotate(Radian(-rotRad))
 
-    val p2_x      = p1_x - rotationCenter.xx
-    val p2_y      = p1_y - rotationCenter.yy
-    val invRotRad = -rotRad
-    val cosInvRot = Math.cos(invRotRad)
-    val sinInvRot = Math.sin(invRotRad)
-    val p3_x      = p2_x * cosInvRot - p2_y * sinInvRot
-    val p3_y      = p2_x * sinInvRot + p2_y * cosInvRot
-    val worldX    = p3_x + rotationCenter.xx
-    val worldY    = p3_y + rotationCenter.yy
-    Point(worldX, worldY)
+    p3 + rotationCenter
 
   private def worldToScreenNoPan(
       world: Point,
@@ -191,12 +183,6 @@ object TouchEventHandler:
     val rotationCenter = EditorConfig.canvasCenter
 
     // Forward transform (without pan)
-    val cosRot = Math.cos(rotRad)
-    val sinRot = Math.sin(rotRad)
-    val p1_x   = world.xx - rotationCenter.xx
-    val p1_y   = world.yy - rotationCenter.yy
-    val p2_x   = p1_x * cosRot - p1_y * sinRot
-    val p2_y   = p1_x * sinRot + p1_y * cosRot
-    val p3_x   = (p2_x + rotationCenter.xx) * scale
-    val p3_y   = (p2_y + rotationCenter.yy) * scale
-    Point(p3_x, p3_y)
+    val p1 = world - rotationCenter
+    val p2 = p1.rotate(Radian(rotRad))
+    (p2 + rotationCenter) * scale
