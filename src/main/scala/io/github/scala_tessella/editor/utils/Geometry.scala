@@ -57,6 +57,50 @@ object Geometry:
     def /(i: Int): Radian =
       r / Radian(i)
 
+  opaque type Point2 = (x: Double, y: Double)
+
+  extension (point: Point2)
+
+    def plus(that: Point2): Point2 =
+      (point.x + that.x, point.y + that.y)
+
+    @targetName("point2Plus")
+    def +(that: Point2): Point2 =
+      plus(that)
+
+    private def minus(that: Point2): Point2 =
+      (point.x - that.x, point.y - that.y)
+
+    @targetName("point2Minus")
+    private def -(that: Point2): Point2 =
+      minus(that)
+
+    def scale(factor: Double): Point2 =
+      (point.x * factor, point.y * factor)
+
+    /** Operator aliases for scalars */
+    @targetName("point2TimesScalar")
+    def *(k: Double): Point2 =
+      scale(k)
+
+    @targetName("point2DivideScalar")
+    def /(k: Double): Point2 =
+      (point.x / k, point.y / k)
+
+    def transform(scaleFactor: Double, offset: Point2): Point2 =
+      scale(scaleFactor) + offset
+
+    def rotate(theta: Radian): Point2 =
+      val cot: Double =
+        Math.cos(theta)
+      val sit: Double =
+        Math.sin(theta)
+      (point.x * cot - point.y * sit, point.x * sit + point.y * cot)
+
+    /** Rotate around an origin point */
+    def rotateAround(origin: Point2, theta: Radian): Point2 =
+      (point - origin).rotate(theta) + origin
+
   /** A point in the plane defined by its 2 Cartesian coordinates x and y */
   case class Point(x: Double, y: Double):
 
