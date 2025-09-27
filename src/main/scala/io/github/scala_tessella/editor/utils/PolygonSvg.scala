@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.{
   Point,
+  Radian,
   fitPointsToSquare,
   regularPolygonPoints,
   walkUnitEdges
@@ -14,10 +15,10 @@ object PolygonSvg:
 
   // Generic: render an arbitrary polygon preview fitted to a square
   def previewFitted(
-                     points: Vector[Point],
-                     size: Int,
-                     pad: Double,
-                     strokeW: String = SvgDsl.Defaults.strokeWidthThin
+      points: Vector[Point],
+      size: Int,
+      pad: Double,
+      strokeW: String = SvgDsl.Defaults.strokeWidthThin
   ): Element =
     val (scale, offset) = points.fitPointsToSquare(size, pad)
     val scaled          = points.map(_.transform(scale, offset))
@@ -29,22 +30,22 @@ object PolygonSvg:
   // Regular polygon thumbnail (used in palette buttons)
   def regularPreview(sides: Int, size: Int = 40, radiusFactor: Double = 0.35): Element =
     val center: Point = Point(size / 2.0, size / 2.0)
-    val radius         = size * radiusFactor
-    val pts            = regularPolygonPoints(sides, radius, center)
-    val pointsStr      = SvgDsl.toPointsString(pts)
+    val radius        = size * radiusFactor
+    val pts           = regularPolygonPoints(sides, radius, center)
+    val pointsStr     = SvgDsl.toPointsString(pts)
     root(size)(
       polygon(pointsStr)
     )
 
   // Irregular polygon from AngleDegree edges, unit walk + fit
   def irregularPreview(anglesDeg: Vector[AngleDegree], size: Int = 40, pad: Double = 4.0): Element =
-    val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
+    val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble).map(Radian(_))
     val pts   = walkUnitEdges(turns)
     previewFitted(pts, size, pad)
 
   // Big irregular with attaching edge overlay
   def irregularBigWithHead(anglesDeg: Vector[AngleDegree], size: Int = 220, pad: Double = 12.0): Element =
-    val turns           = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
+    val turns           = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble).map(Radian(_))
     val basePts         = walkUnitEdges(turns)
     val (scale, offset) = basePts.fitPointsToSquare(size, pad)
 

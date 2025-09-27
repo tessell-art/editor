@@ -249,7 +249,7 @@ object Geometry:
     if angles.isEmpty then Vector.empty
     else
       val pts         = Vector.newBuilder[Point]
-      var heading     = startHeading.toDouble
+      var heading     = startHeading
       var curr: Point = Point.origin
 
       // first vertex
@@ -287,8 +287,8 @@ object Geometry:
     (leftNormal, rightNormal)
 
   /** Calculate geometric properties of a regular polygon (apothem, circumradius). */
-  def regularPolygonMetrics(sides: Int, sideLength: Double): (Double, Double, Double) =
-    val halfAngle = Math.PI / sides
+  def regularPolygonMetrics(sides: Int, sideLength: Double): (Double, Double, Radian) =
+    val halfAngle = Radian.TAU_2 / sides
     val apothem   = sideLength / (2 * Math.tan(halfAngle))
     val radius    = sideLength / (2 * Math.sin(halfAngle))
     (apothem, radius, halfAngle)
@@ -296,7 +296,7 @@ object Geometry:
   /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
     * (including start).
     */
-  def walkUnitEdges(turns: Seq[Double]): Vector[Point] =
+  def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
     val origin  = Point.origin
     var x       = origin.x
     var y       = origin.y
