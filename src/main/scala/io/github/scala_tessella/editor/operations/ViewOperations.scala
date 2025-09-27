@@ -84,7 +84,8 @@ object ViewOperations:
     val viewBoxHeight = canvasCenterY * 2.0
 
     if viewBoxWidth <= 0 || viewBoxHeight <= 0 then
-
+      None
+    else
       val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
       rotatedCoords.maybeBounds.flatMap { bounds =>
         val tilingWidth  = bounds.maxX - bounds.minX
@@ -98,8 +99,6 @@ object ViewOperations:
             calculateNewPan(viewBoxWidth, viewBoxHeight, tilingCenterX, tilingCenterY, newScale)
           Some(createUpdatedViewTransform(currentTransform, newScale, newPanX, newPanY))
       }
-    else
-      None
 
   def fitTilingToCanvas(): Unit =
     val tiling = EditorState.currentTiling.now()
