@@ -113,7 +113,7 @@ object ViewOperations:
       viewCenter: Point,
       pan: Point,
       scale: Double,
-      rotationRad: Double
+      rotation: Radian
   ): Point =
     // Inverse pan
     val afterInvPan = viewCenter - pan
@@ -123,7 +123,7 @@ object ViewOperations:
 
     val intermediate = afterInvScale - viewCenter
 
-    viewCenter + intermediate.rotate(Radian(-rotationRad))
+    viewCenter + intermediate.rotate(Radian(0) - rotation)
 
   // Pure function to perform forward transformation (world to screen)
   private[operations] def forwardTransform(
@@ -173,7 +173,7 @@ object ViewOperations:
       viewCenter,
       pan,
       scale,
-      rotationRad
+      Radian(rotationRad)
     )
 
     // Calculate new rotation
