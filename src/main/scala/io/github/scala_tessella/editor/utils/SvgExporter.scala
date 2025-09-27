@@ -5,11 +5,11 @@ import io.github.scala_tessella.dcel.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
-import io.github.scala_tessella.editor.utils.ColorUtils._
+import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Geometry.{fitPointsToViewBox, transformPointsForSvg}
+import io.github.scala_tessella.editor.utils.Geometry.{Point2, fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.SvgDsl
-import io.github.scala_tessella.editor.utils.TessellationGeometry._
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import org.scalajs.dom
 
 import scala.math.BigDecimal.RoundingMode
@@ -57,13 +57,13 @@ object SvgExporter:
       val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
       val padding                               = 20.0
 
-      val (width, height, offsetX, offsetY) = fitPointsToViewBox(points, scale, padding)
+      val (width, height, offset) = fitPointsToViewBox(points, scale, padding)
 
-      val polygonsXml  = generatePolygonsXml(tiling, scale, offsetX, offsetY, strokeWidth)
-      val perimeterXml = generatePerimeterXml(tiling, scale, offsetX, offsetY, strokeWidthPeri)
+      val polygonsXml  = generatePolygonsXml(tiling, scale, offset, strokeWidth)
+      val perimeterXml = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)
       //    val dualXml = if showDual then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
       val dualXml      = ""
-      val labelsXml    = if showNodeLabels then generateLabelsXml(coordinates, scale, offsetX, offsetY) else ""
+      val labelsXml    = if showNodeLabels then generateLabelsXml(coordinates, scale, offset) else ""
       val metadataXml  = generateMetadataXml(tiling)
 
       val sWidth  = SvgDsl.fmt4(width)
@@ -82,31 +82,29 @@ object SvgExporter:
       nodes: Seq[VertexId],
       coordinates: Map[VertexId, BigPoint],
       scale: Double,
-      offsetX: Double,
-      offsetY: Double
+      offset: Point2
   ): String =
     val points = nodes.map(coordinates).map(_.toPoint)
-    transformPointsForSvg(points, scale, offsetX, offsetY)
+    points.transformPointsForSvg(scale, offset)
       .map(SvgDsl.fmt6Point)
       .mkString(" ")
 
-  private def pointsString(vertices: Seq[Vertex], scale: Double, offsetX: Double, offsetY: Double): String =
+  private def pointsString(vertices: Seq[Vertex], scale: Double, offset: Point2): String =
     val points = vertices.map(_.coords.toPoint)
-    transformPointsForSvg(points, scale, offsetX, offsetY)
+    points.transformPointsForSvg(scale, offset)
       .map(SvgDsl.fmt6Point)
       .mkString(" ")
 
   private[utils] def generatePolygonsXml(
       tiling: TilingDCEL,
       scale: Double,
-      offsetX: Double,
-      offsetY: Double,
+      offset: Point2,
       strokeWidth: Double
   ): String =
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
         val color    = AppState.getOrAssignPolygonColor(faceId).toRgbString
-        val points   = pointsString(faceVertices, scale, offsetX, offsetY)
+        val points   = pointsString(faceVertices, scale, offset)
         val nodesStr = "" // nodes.map(_.toString).mkString(",")
 
         s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" />"""
@@ -118,14 +116,13 @@ object SvgExporter:
   private[utils] def generatePerimeterXml(
       tiling: TilingDCEL,
       scale: Double,
-      offsetX: Double,
-      offsetY: Double,
+      offset: Point2,
       strokeWidthPeri: Double
   ): String =
     val perimeterNodes = tiling.boundaryVertices
     if perimeterNodes.isEmpty then ""
     else
-      val points   = pointsString(perimeterNodes, scale, offsetX, offsetY)
+      val points   = pointsString(perimeterNodes, scale, offset)
       val nodesStr = "" // perimeterNodes.map(_.toString).mkString(",")
 
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
@@ -154,14 +151,13 @@ object SvgExporter:
   private[utils] def generateLabelsXml(
       coordinates: Map[VertexId, BigPoint],
       scale: Double,
-      offsetX: Double,
-      offsetY: Double
+      offset: Point2
   ): String =
     if coordinates.isEmpty then ""
     else
       val nodesXml = coordinates.map { (node, vertex) =>
-        val labelX = (vertex.x * scale + offsetX + 4).setScale(4, RoundingMode.HALF_UP)
-        val labelY = (vertex.y * scale + offsetY - 4).setScale(4, RoundingMode.HALF_UP)
+        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
+        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)
         s"""    <text x="$labelX" y="$labelY" >${node.toString}</text>"""
       }.mkString("\n")
       s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">

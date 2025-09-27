@@ -195,6 +195,13 @@ object Geometry:
     def maybeBounds: Option[Bounds] =
       Bounds.fromPoints(points)
 
+    /** Transform points for SVG generation with proper scaling and offsets. */
+    def transformPointsForSvg(
+        scale: Double,
+        offset: Point2
+    ): Seq[Point2] =
+      points.map(_.transform(scale, offset))
+
   /** Creates points for a regular polygon. */
   def regularPolygonPoints(sides: Int, radius: Double, center: Point2 = Point2.origin): Seq[Point2] =
     (0 until sides).map { i =>
@@ -256,15 +263,15 @@ object Geometry:
       points: Seq[Point2],
       scale: Double,
       padding: Double
-  ): (Double, Double, Double, Double) =
+  ): (Double, Double, Point2) =
     Bounds.fromPoints(points) match
-      case None    => (2 * padding, 2 * padding, padding, padding)
+      case None    => (2 * padding, 2 * padding, Point2(padding, padding))
       case Some(b) =>
         val width  = b.width * scale + 2 * padding
         val height = b.height * scale + 2 * padding
         val offX   = -b.min.x * scale + padding
         val offY   = -b.min.y * scale + padding
-        (width, height, offX, offY)
+        (width, height, Point2(offX, offY))
 
   /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
     * (including start).
@@ -303,21 +310,6 @@ object Geometry:
   // ---------------------------------------
   // Coordinate transformation utilities
   // ---------------------------------------
-
-  /** Transform a point from tiling coordinates to canvas view coordinates using scale and offset. */
-  def transformPointToView(point: Point2, scale: Double, offsetX: Double, offsetY: Double): Point2 =
-    val transformed = point.transform(scale, (offsetX, offsetY))
-    Point2(transformed.x, transformed.y)
-
-  /** Transform points for SVG generation with proper scaling and offsets. */
-  def transformPointsForSvg(
-      points: Seq[Point2],
-      scale: Double,
-      offsetX: Double,
-      offsetY: Double
-  ): Seq[Point2] =
-    points.map(p => transformPointToView(p, scale, offsetX, offsetY))
-
   /** Compute the midpoint of two points. */
   def midpoint(p1: Point2, p2: Point2): Point2 =
     val segment: LineSegment2 = (p1, p2)

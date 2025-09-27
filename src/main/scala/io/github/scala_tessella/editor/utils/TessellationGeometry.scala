@@ -4,8 +4,6 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.editor.models.EditorConfig._
 import io.github.scala_tessella.editor.utils.Geometry.*
 
-//case class Bounds(minX: Double, maxX: Double, minY: Double, maxY: Double)
-
 object TessellationGeometry:
 
   /** Transforms a point from tiling coordinates to canvas view coordinates.
@@ -16,7 +14,7 @@ object TessellationGeometry:
     *   A tuple (Double, Double) representing the (x, y) on the canvas.
     */
   def tilingPointToCanvasView(p: Point2): Point2 =
-    transformPointToView(p, canvasScale, canvasCenterX, canvasCenterY)
+    p.transform(canvasScale, Point2(canvasCenterX, canvasCenterY))
 
   extension (bigPoint: BigPoint)
 
