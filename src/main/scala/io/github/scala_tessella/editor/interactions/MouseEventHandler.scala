@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.*
 import org.scalajs.dom.{MouseEvent, WheelEvent}
 
 import scala.math.{max, min}
@@ -19,7 +19,8 @@ object MouseEventHandler:
     event.preventDefault()
     // Snapshot once
     EditorState.isDragging.set(true)
-    EditorState.dragStart.set(Some(Point(event.clientX, event.clientY)))
+    val point: Point2 = Point2(event.clientX, event.clientY)
+    EditorState.dragStart.set(Some(point))
 
   def handleMouseMove(event: MouseEvent): Unit =
     // Snapshot once per event
@@ -28,16 +29,17 @@ object MouseEventHandler:
 
     if dragging then
       dragStartOpt.foreach { start =>
-        val deltaX = event.clientX - start.x
-        val deltaY = event.clientY - start.y
+        val deltaX        = event.clientX - start.xx
+        val deltaY        = event.clientY - start.yy
         EditorState.viewTransform.update(t =>
           t.copy(
             panX = t.panX + deltaX,
             panY = t.panY + deltaY
           )
         )
-        // Update new "last" drag start once
-        EditorState.dragStart.set(Some(Point(event.clientX, event.clientY)))
+        // Update the new "last" drag start once
+        val point: Point2 = Point2(event.clientX, event.clientY)
+        EditorState.dragStart.set(Some(point))
       }
 
   def handleMouseUp(event: MouseEvent): Unit =
@@ -45,11 +47,11 @@ object MouseEventHandler:
     EditorState.isDragging.set(false)
     EditorState.dragStart.set(None)
 
-  private def getCanvasRelativePosition(event: WheelEvent): Option[Point] =
+  private def getCanvasRelativePosition(event: WheelEvent): Option[Point2] =
     // Snapshot once
     EditorState.canvasElementRef.now().map { canvasElement =>
       val rect = canvasElement.getBoundingClientRect()
-      Point(
+      Point2(
         event.clientX - rect.left,
         event.clientY - rect.top
       )
@@ -61,17 +63,17 @@ object MouseEventHandler:
     // Snapshot once per event
     val currentTransform = EditorState.viewTransform.now()
 
-    getCanvasRelativePosition(event).foreach { mousePos =>
+    getCanvasRelativePosition(event).foreach { (mousePos: Point2) =>
       val scaleFactor = if (event.deltaY < 0) 1.1 else 0.9
       val newScale    = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
 
       // Calculate the world position that the mouse is pointing to before zoom
-      val worldX = (mousePos.x - currentTransform.panX) / currentTransform.scale
-      val worldY = (mousePos.y - currentTransform.panY) / currentTransform.scale
+      val worldX = (mousePos.xx - currentTransform.panX) / currentTransform.scale
+      val worldY = (mousePos.yy - currentTransform.panY) / currentTransform.scale
 
       // Calculate new pan to keep the world position under the mouse cursor
-      val newPanX = mousePos.x - worldX * newScale
-      val newPanY = mousePos.y - worldY * newScale
+      val newPanX = mousePos.xx - worldX * newScale
+      val newPanY = mousePos.yy - worldY * newScale
 
       EditorState.viewTransform.set(currentTransform.copy(
         scale = newScale,

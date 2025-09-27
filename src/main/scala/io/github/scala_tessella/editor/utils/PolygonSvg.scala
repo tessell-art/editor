@@ -1,9 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.{
-  Point,
+  Point2,
   fitPointsToSquare,
   regularPolygonPoints,
   walkUnitEdges
@@ -14,13 +14,13 @@ object PolygonSvg:
 
   // Generic: render an arbitrary polygon preview fitted to a square
   def previewFitted(
-      points: Vector[Point],
+      points: Vector[Point2],
       size: Int,
       pad: Double,
       strokeW: String = SvgDsl.Defaults.strokeWidthThin
   ): Element =
     val (scale, offX, offY) = fitPointsToSquare(points, size, pad)
-    val scaled              = points.map(p => Point(offX + p.x * scale, offY + p.y * scale))
+    val scaled              = points.map(p => Point2(offX + p.xx * scale, offY + p.yy * scale))
     val pointsStr           = SvgDsl.toPointsString(scaled)
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = strokeW)
@@ -28,10 +28,10 @@ object PolygonSvg:
 
   // Regular polygon thumbnail (used in palette buttons)
   def regularPreview(sides: Int, size: Int = 40, radiusFactor: Double = 0.35): Element =
-    val center    = Point(size / 2.0, size / 2.0)
-    val radius    = size * radiusFactor
-    val pts       = regularPolygonPoints(sides, radius, center)
-    val pointsStr = SvgDsl.toPointsString(pts)
+    val center: Point2 = Point2(size / 2.0, size / 2.0)
+    val radius         = size * radiusFactor
+    val pts            = regularPolygonPoints(sides, radius, center)
+    val pointsStr      = SvgDsl.toPointsString(pts)
     root(size)(
       polygon(pointsStr)
     )
@@ -49,9 +49,9 @@ object PolygonSvg:
     val (scale, offX, offY) =
       io.github.scala_tessella.editor.utils.Geometry.fitPointsToSquare(basePts, size, pad)
 
-    def sx(p: Point) = offX + p.x * scale
+    def sx(p: Point2) = offX + p.xx * scale
 
-    def sy(p: Point) = offY + p.y * scale
+    def sy(p: Point2) = offY + p.yy * scale
 
     val pointsStr = basePts.map(p => SvgDsl.fmt3Point(sx(p), sy(p))).mkString(" ")
     val headIdx   = ((1 % basePts.size) + basePts.size) % basePts.size

@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.Point2
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -88,7 +88,7 @@ object EditorState:
   val isDragging: Var[Boolean] = Var(false)
 
   /** Starting point of a drag operation */
-  val dragStart: Var[Option[Point]] = Var(None)
+  val dragStart: Var[Option[Point2]] = Var(None)
 
   /** Reference to the canvas DOM element */
   val canvasElementRef: Var[Option[dom.Element]] = Var(None)
@@ -140,7 +140,7 @@ object EditorState:
   val measurementEndPoint: Var[Option[ClickablePoint]] = Var(None)
 
   /** Previous ending point for measurement (for angle calculation) */
-  val measurementPreviousEndPoint: Var[Option[Point]] = Var(None)
+  val measurementPreviousEndPoint: Var[Option[Point2]] = Var(None)
 
   /** ID of the highlighted polygon during measurement/insertion */
   val highlightedPolygonId: Var[Option[FaceId]] = Var(None)

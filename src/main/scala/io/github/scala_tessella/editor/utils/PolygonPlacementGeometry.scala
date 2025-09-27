@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.{Point, edgeGeometrics}
+import io.github.scala_tessella.editor.utils.Geometry.{Point2, edgeGeometrics}
 import io.github.scala_tessella.editor.utils.TessellationGeometry._
 import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
 
@@ -28,16 +28,16 @@ object PolygonPlacementGeometry:
       Vector.empty
     else
       val (perpX, perpY, wasFlipped) =
-        determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
+        determineInwardNormal(tiling, edge, intoFace, (unitVector.xx, unitVector.yy))
 
       if angles.toSet.size == 1 then
         val polygonSides                 = angles.size
         val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
 
-        val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
+        val center = Point2(midPoint.xx + perpX * apothem, midPoint.yy + perpY * apothem)
 
         val angleStep  = halfAngle * 2
-        val edgeAngle  = Math.atan2(unitVector.y, unitVector.x)
+        val edgeAngle  = Math.atan2(unitVector.yy, unitVector.xx)
         val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
         val winding    = if wasFlipped then -1 else 1
 
@@ -48,16 +48,16 @@ object PolygonPlacementGeometry:
         val local = buildUnitEdgePolygon(angles)
 
         // Compute transform: align local first edge to the actual perimeter edge
-        val edgeAngle = Math.atan2(unitVector.y, unitVector.x)
+        val edgeAngle = Math.atan2(unitVector.yy, unitVector.xx)
         val rotCos    = Math.cos(edgeAngle)
         val rotSin    = Math.sin(edgeAngle)
 
         // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
         val world = local.map { p =>
           val scaled  = p.scale(edgeLen)
-          val rotated = Point(
-            scaled.x * rotCos - scaled.y * rotSin,
-            scaled.x * rotSin + scaled.y * rotCos
+          val rotated = Point2(
+            scaled.xx * rotCos - scaled.yy * rotSin,
+            scaled.xx * rotSin + scaled.yy * rotCos
           )
           vertex1.plus(rotated)
         }
@@ -66,12 +66,12 @@ object PolygonPlacementGeometry:
         world.map(tilingPointToCanvasView)
 
   /** Build polygon vertices in local space using unit edge length and given internal angles. */
-  private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point] =
+  private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point2] =
     if angles.isEmpty then Vector.empty
     else
-      var pts     = Vector.newBuilder[Point]
+      var pts     = Vector.newBuilder[Point2]
       var heading = 0.0 // radians
-      var curr    = Point(0.0, 0.0)
+      var curr    = Point2.origin
 
       // first vertex
       pts += curr
@@ -80,9 +80,9 @@ object PolygonPlacementGeometry:
       // 1) advance one unit in current heading to create next vertex
       // 2) then turn by the exterior angle (PI - interior)
       angles.rotateLeft(1).foreach { a =>
-        val nx   = curr.x + cos(heading)
-        val ny   = curr.y + sin(heading)
-        val next = Point(nx, ny)
+        val nx   = curr.xx + cos(heading)
+        val ny   = curr.yy + sin(heading)
+        val next = Point2(nx, ny)
         pts += next
         curr = next
         heading = heading + (math.Pi - a.toBigRadian.toBigDecimal.toDouble)
@@ -94,13 +94,13 @@ object PolygonPlacementGeometry:
       if built.size >= 2 then built.dropRight(1) else built
 
   /** Calculates basic geometric properties of an edge. */
-  private def computeEdgeGeometrics(vertex1: Point, vertex2: Point): (Double, Double, Double, Point) =
-    val ex       = vertex2.x - vertex1.x
-    val ey       = vertex2.y - vertex1.y
+  private def computeEdgeGeometrics(vertex1: Point2, vertex2: Point2): (Double, Double, Double, Point2) =
+    val ex       = vertex2.xx - vertex1.xx
+    val ey       = vertex2.yy - vertex1.yy
     val edgeLen  = sqrt(ex * ex + ey * ey)
     val ux       = if edgeLen == 0 then 0.0 else ex / edgeLen
     val uy       = if edgeLen == 0 then 0.0 else ey / edgeLen
-    val midPoint = Point((vertex1.x + vertex2.x) / 2, (vertex1.y + vertex2.y) / 2)
+    val midPoint = Point2((vertex1.xx + vertex2.xx) / 2, (vertex1.yy + vertex2.yy) / 2)
     (edgeLen, ux, uy, midPoint)
 
   /** Determines the inward-pointing normal vector for an edge relative to a face. */
@@ -156,7 +156,7 @@ object PolygonPlacementGeometry:
   /** Generates the vertex points for the wireframe polygon. */
   private def generateWireframeVertices(
       polygonSides: Int,
-      center: Point,
+      center: Point2,
       radius: Double,
       startAngle: Double,
       angleStep: AngleDegree,
@@ -164,7 +164,7 @@ object PolygonPlacementGeometry:
   ): Vector[(Double, Double)] =
     (0 until polygonSides).map { i =>
       val a  = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
-      val px = center.x + radius * cos(a)
-      val py = center.y + radius * sin(a)
-      tilingPointToCanvasView(Point(px, py))
+      val px = center.xx + radius * cos(a)
+      val py = center.yy + radius * sin(a)
+      tilingPointToCanvasView(Point2(px, py))
     }.toVector

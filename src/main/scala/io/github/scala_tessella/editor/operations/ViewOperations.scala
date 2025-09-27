@@ -3,13 +3,13 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.models.EditorConfig._
 import io.github.scala_tessella.editor.models.{EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point, Radian}
+import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point2, Radian}
 import io.github.scala_tessella.editor.utils.TessellationGeometry._
 
 object ViewOperations:
 
   // Pure function to transform coordinates based on rotation
-  private[operations] def transformCoordinates(coords: Iterable[Point], rotationDegrees: Int): List[Point] =
+  private[operations] def transformCoordinates(coords: Iterable[Point2], rotationDegrees: Int): List[Point2] =
     val rotationRad = AngleDegree(rotationDegrees).toBigRadian.toBigDecimal.toDouble
     coords.map(_.rotate(Radian(rotationRad))).toList
 
@@ -37,9 +37,8 @@ object ViewOperations:
 
   // Pure function to calculate tiling center
   private[operations] def calculateTilingCenter(bounds: Bounds): (Double, Double) =
-    val tilingCenterX = (bounds.minX + bounds.maxX) / 2.0
-    val tilingCenterY = (bounds.minY + bounds.maxY) / 2.0
-    (tilingCenterX, tilingCenterY)
+    val c = bounds.center
+    (c.xx, c.yy)
 
   // Pure function to calculate new pan values to center the tiling
   private[operations] def calculateNewPan(
@@ -72,7 +71,7 @@ object ViewOperations:
 
   // Pure function to calculate the new view transform to fit the tiling to the canvas
   private[operations] def calculateFitToCanvasTransform(
-      coords: Iterable[Point],
+      coords: Iterable[Point2],
       canvasWidth: Double,
       canvasHeight: Double,
       currentTransform: ViewTransform,
@@ -88,8 +87,8 @@ object ViewOperations:
     else
       val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
       rotatedCoords.maybeBounds.flatMap { bounds =>
-        val tilingWidth  = bounds.maxX - bounds.minX
-        val tilingHeight = bounds.maxY - bounds.minY
+        val tilingWidth  = bounds.width
+        val tilingHeight = bounds.height
 
         if tilingWidth <= 0 && tilingHeight <= 0 then None
         else

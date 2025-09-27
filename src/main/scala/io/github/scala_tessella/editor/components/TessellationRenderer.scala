@@ -17,7 +17,7 @@ import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.utils.ColorUtils._
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, normalizeDeltaAngle}
+import io.github.scala_tessella.editor.utils.Geometry.{Point2, Radian, normalizeDeltaAngle}
 import io.github.scala_tessella.editor.utils.TessellationGeometry._
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
@@ -370,7 +370,7 @@ object TessellationRenderer:
 
   private def renderMeasurementAngleArc(
       start: ClickablePoint,
-      previousEnd: Point,
+      previousEnd: Point2,
       end: ClickablePoint
   ): Element =
     val (cx, cy) = tilingPointToCanvasView(start.point)
@@ -403,7 +403,7 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-  private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point): Element =
+  private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point2): Element =
     val (x1, y1) = tilingPointToCanvasView(start.point)
     val (x2, y2) = tilingPointToCanvasView(end)
 

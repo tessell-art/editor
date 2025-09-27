@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations._
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.Point2
 import io.github.scala_tessella.editor.utils.UndoManager
 
 // Case class to represent a failed polygon placement
@@ -26,7 +26,7 @@ enum Anchor:
   case Center(faceId: FaceId)
   case MidPoint(startVertexId: VertexId, endVertexId: VertexId)
 
-case class ClickablePoint(point: Point, anchor: Anchor)
+case class ClickablePoint(point: Point2, anchor: Anchor)
 
 // Editor mode enumeration
 enum EditorMode:
