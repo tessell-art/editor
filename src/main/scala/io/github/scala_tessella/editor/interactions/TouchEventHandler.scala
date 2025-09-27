@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.interactions
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
+import io.github.scala_tessella.editor.utils.Geometry.Point2
 import org.scalajs.dom
 import org.scalajs.dom.TouchEvent
 
@@ -167,21 +168,20 @@ object TouchEventHandler:
     val (panX, panY, scale, rotationDegrees) =
       (transform.panX, transform.panY, transform.scale, transform.rotationDegrees)
     val rotRad                               = Math.toRadians(rotationDegrees)
-    val rotationCenterX                      = EditorConfig.canvasCenterX
-    val rotationCenterY                      = EditorConfig.canvasCenterY
+    val rotationCenter                       = EditorConfig.canvasCenter
 
     // Inverse transform
     val p1_x      = (screenX - panX) / scale
     val p1_y      = (screenY - panY) / scale
-    val p2_x      = p1_x - rotationCenterX
-    val p2_y      = p1_y - rotationCenterY
+    val p2_x      = p1_x - rotationCenter.xx
+    val p2_y      = p1_y - rotationCenter.yy
     val invRotRad = -rotRad
     val cosInvRot = Math.cos(invRotRad)
     val sinInvRot = Math.sin(invRotRad)
     val p3_x      = p2_x * cosInvRot - p2_y * sinInvRot
     val p3_y      = p2_x * sinInvRot + p2_y * cosInvRot
-    val worldX    = p3_x + rotationCenterX
-    val worldY    = p3_y + rotationCenterY
+    val worldX    = p3_x + rotationCenter.xx
+    val worldY    = p3_y + rotationCenter.yy
     (worldX, worldY)
 
   private def worldToScreenNoPan(
@@ -190,17 +190,16 @@ object TouchEventHandler:
       scale: Double,
       rotationDegrees: Double
   ): (Double, Double) =
-    val rotRad          = Math.toRadians(rotationDegrees)
-    val rotationCenterX = EditorConfig.canvasCenterX
-    val rotationCenterY = EditorConfig.canvasCenterY
+    val rotRad         = Math.toRadians(rotationDegrees)
+    val rotationCenter = EditorConfig.canvasCenter
 
     // Forward transform (without pan)
     val cosRot = Math.cos(rotRad)
     val sinRot = Math.sin(rotRad)
-    val p1_x   = worldX - rotationCenterX
-    val p1_y   = worldY - rotationCenterY
+    val p1_x   = worldX - rotationCenter.xx
+    val p1_y   = worldY - rotationCenter.yy
     val p2_x   = p1_x * cosRot - p1_y * sinRot
     val p2_y   = p1_x * sinRot + p1_y * cosRot
-    val p3_x   = (p2_x + rotationCenterX) * scale
-    val p3_y   = (p2_y + rotationCenterY) * scale
+    val p3_x   = (p2_x + rotationCenter.xx) * scale
+    val p3_y   = (p2_y + rotationCenter.yy) * scale
     (p3_x, p3_y)

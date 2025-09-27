@@ -48,8 +48,8 @@ object ViewOperations:
       tilingCenterY: Double,
       newScale: Double
   ): (Double, Double) =
-    val tilingCenterOnCanvasX = tilingCenterX + canvasCenterX
-    val tilingCenterOnCanvasY = tilingCenterY + canvasCenterY
+    val tilingCenterOnCanvasX = tilingCenterX + canvasCenter.xx
+    val tilingCenterOnCanvasY = tilingCenterY + canvasCenter.yy
 
     val newPanX = canvasWidth / 2.0 - tilingCenterOnCanvasX * newScale
     val newPanY = canvasHeight / 2.0 - tilingCenterOnCanvasY * newScale
@@ -79,8 +79,8 @@ object ViewOperations:
   ): Option[ViewTransform] =
     // Use the viewBox dimensions for calculation, not the canvas element's actual dimensions,
     // because the pan and scale are applied within the SVG's viewBox coordinate system.
-    val viewBoxWidth  = canvasCenterX * 2.0
-    val viewBoxHeight = canvasCenterY * 2.0
+    val viewBoxWidth  = canvasCenter.xx * 2.0
+    val viewBoxHeight = canvasCenter.yy * 2.0
 
     if viewBoxWidth <= 0 || viewBoxHeight <= 0 then
       None
@@ -203,8 +203,8 @@ object ViewOperations:
     val panY             = currentTransform.panY
     val rotationRad      = AngleDegree(currentTransform.rotationDegrees).toBigRadian.toBigDecimal.toDouble
 
-    val viewCenterX = canvasCenterX
-    val viewCenterY = canvasCenterY
+    val viewCenterX = canvasCenter.xx
+    val viewCenterY = canvasCenter.yy
 
     // Convert view center to world coordinates
     val (worldX, worldY) = inverseTransform(
