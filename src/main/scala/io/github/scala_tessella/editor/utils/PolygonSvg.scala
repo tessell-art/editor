@@ -19,9 +19,9 @@ object PolygonSvg:
       pad: Double,
       strokeW: String = SvgDsl.Defaults.strokeWidthThin
   ): Element =
-    val (scale, offX, offY) = fitPointsToSquare(points, size, pad)
-    val scaled              = points.map(p => Point2(offX + p.xx * scale, offY + p.yy * scale))
-    val pointsStr           = SvgDsl.toPointsString(scaled)
+    val (scale, offset) = fitPointsToSquare(points, size, pad)
+    val scaled          = points.map(_.transform(scale, offset))
+    val pointsStr       = SvgDsl.toPointsString(scaled)
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = strokeW)
     )
@@ -44,16 +44,14 @@ object PolygonSvg:
 
   // Big irregular with attaching edge overlay
   def irregularBigWithHead(anglesDeg: Vector[AngleDegree], size: Int = 220, pad: Double = 12.0): Element =
-    val turns               = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
-    val basePts             = walkUnitEdges(turns)
-    val (scale, offX, offY) =
-      io.github.scala_tessella.editor.utils.Geometry.fitPointsToSquare(basePts, size, pad)
+    val turns           = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
+    val basePts         = walkUnitEdges(turns)
+    val (scale, offset) = fitPointsToSquare(basePts, size, pad)
 
-    def sx(p: Point2) = offX + p.xx * scale
+    def bigTransform(p: Point2): Point2 =
+      p.transform(scale, offset)
 
-    def sy(p: Point2) = offY + p.yy * scale
-
-    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(Point2(sx(p), sy(p)))).mkString(" ")
+    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(bigTransform(p))).mkString(" ")
     val headIdx   = ((1 % basePts.size) + basePts.size) % basePts.size
     val a         = basePts(headIdx)
     val b         = basePts((headIdx + 1) % basePts.size)
@@ -63,11 +61,10 @@ object PolygonSvg:
       else anglesDeg.last +: anglesDeg.init
 
     val angleLabels = basePts.zip(orderedAngles).map { case (point, angle) =>
-      val labelX          = sx(point) + 4
-      val labelY          = sy(point) - 4
+      val label: Point2          = bigTransform(point) + Point2(4.0, -4.0)
       svg.text(
-        svg.x          := fmt3(labelX),
-        svg.y          := fmt3(labelY),
+        svg.x          := fmt3(label.xx),
+        svg.y          := fmt3(label.yy),
         svg.fontSize   := "12",
         svg.fontFamily := "monospace",
         svg.fill       := "red",
@@ -75,14 +72,15 @@ object PolygonSvg:
         s"${angle.toRational.toDouble}°"
       )
     }
-
+    val a2          = bigTransform(a)
+    val b2          = bigTransform(b)
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
-        svg.x1            := fmt3(sx(a)),
-        svg.y1            := fmt3(sy(a)),
-        svg.x2            := fmt3(sx(b)),
-        svg.y2            := fmt3(sy(b)),
+        svg.x1            := fmt3(a2.xx),
+        svg.y1            := fmt3(a2.yy),
+        svg.x2            := fmt3(b2.xx),
+        svg.y2            := fmt3(b2.yy),
         svg.stroke        := "#00C853",
         svg.strokeWidth   := "6",
         svg.strokeLineCap := "round",

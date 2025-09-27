@@ -285,16 +285,16 @@ object Geometry:
 
   /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding.
     */
-  def fitPointsToSquare(points: Seq[Point2], size: Double, padding: Double): (Double, Double, Double) =
+  def fitPointsToSquare(points: Seq[Point2], size: Double, padding: Double): (Double, Point2) =
     Bounds.fromPoints(points) match
-      case None    => (1.0, 0.0, 0.0)
+      case None    => (1.0, Point2.origin)
       case Some(b) =>
         val w     = Math.max(1e-6, b.width)
         val h     = Math.max(1e-6, b.height)
         val scale = (size - 2 * padding) / Math.max(w, h)
         val offX  = (size - scale * w) / 2.0 - scale * b.min.x
         val offY  = (size - scale * h) / 2.0 - scale * b.min.y
-        (scale, offX, offY)
+        (scale, Point2(offX, offY))
 
   /** Normalize delta angle to (-PI, PI]. */
   def normalizeDeltaAngle(a2: Radian, a1: Radian): Radian =
