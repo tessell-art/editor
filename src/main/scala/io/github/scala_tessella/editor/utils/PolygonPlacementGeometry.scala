@@ -2,11 +2,11 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.{Point2, edgeGeometrics}
-import io.github.scala_tessella.editor.utils.TessellationGeometry._
+import io.github.scala_tessella.editor.utils.Geometry.{Point2, Radian, edgeGeometrics}
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
 
-import scala.math._
+import scala.math.*
 
 /** Shared geometry utilities to compute the exact placement (screen points) of a regular polygon attached to
   * a given edge. If intoFace is provided, the polygon is oriented towards that face's interior.
@@ -48,18 +48,13 @@ object PolygonPlacementGeometry:
         val local = buildUnitEdgePolygon(angles)
 
         // Compute transform: align local first edge to the actual perimeter edge
-        val edgeAngle = Math.atan2(unitVector.yy, unitVector.xx)
-        val rotCos    = Math.cos(edgeAngle)
-        val rotSin    = Math.sin(edgeAngle)
+        val edgeAngle = Radian(Math.atan2(unitVector.yy, unitVector.xx))
 
         // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
         val world = local.map { p =>
           val scaled  = p.scale(edgeLen)
-          val rotated = Point2(
-            scaled.xx * rotCos - scaled.yy * rotSin,
-            scaled.xx * rotSin + scaled.yy * rotCos
-          )
-          vertex1.plus(rotated)
+          val rotated = scaled.rotate(edgeAngle)
+          vertex1 + rotated
         }
 
         // No additional inward offset needed for preview points; keep exact constructed vertices

@@ -35,11 +35,6 @@ object ViewOperations:
     val scaleY                              = (canvasHeight - padding * 2) / safeTilingHeight
     Math.min(scaleX, scaleY)
 
-  // Pure function to calculate tiling center
-  private[operations] def calculateTilingCenter(bounds: Bounds): (Double, Double) =
-    val c = bounds.center
-    (c.xx, c.yy)
-
   // Pure function to calculate new pan values to center the tiling
   private[operations] def calculateNewPan(
       canvas: Point2,
@@ -83,12 +78,11 @@ object ViewOperations:
 
         if tilingWidth <= 0 && tilingHeight <= 0 then None
         else
-          val newScale                       = calculateNewScale(viewBoxWidth, viewBoxHeight, tilingWidth, tilingHeight, padding)
-          val (tilingCenterX, tilingCenterY) = calculateTilingCenter(bounds)
-          val newPan                         =
+          val newScale = calculateNewScale(viewBoxWidth, viewBoxHeight, tilingWidth, tilingHeight, padding)
+          val newPan   =
             calculateNewPan(
               Point2(viewBoxWidth, viewBoxHeight),
-              Point2(tilingCenterX, tilingCenterY),
+              bounds.center,
               newScale
             )
           Some(createUpdatedViewTransform(currentTransform, newScale, newPan))
