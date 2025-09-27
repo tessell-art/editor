@@ -306,23 +306,3 @@ object Geometry:
   /** Normalize delta angle to (-PI, PI]. */
   def normalizeDeltaAngle(a2: Radian, a1: Radian): Radian =
     Radian.normalizeDelta(a2 - a1)
-
-  // ---------------------------------------
-  // Coordinate transformation utilities
-  // ---------------------------------------
-  /** Compute the midpoint of two points. */
-  def midpoint(p1: Point2, p2: Point2): Point2 =
-    val segment: LineSegment2 = (p1, p2)
-    segment.midPoint
-
-  /** Compute distance between two points. */
-  def distance(p1: Point2, p2: Point2): Double =
-    p1.distanceTo(p2)
-
-  /** Compute the angle from one point to another. */
-  def angleBetweenPoints(from: Point2, to: Point2): Radian =
-    val segment: LineSegment2 = (from, to)
-    segment.horizontalAngle
-//    val dx = to.x - from.x
-//    val dy = to.y - from.y
-//    Radian((Math.atan2(dy, dx) + Radian.TAU) % Radian.TAU)

@@ -88,16 +88,6 @@ object PolygonPlacementGeometry:
       val built = pts.result()
       if built.size >= 2 then built.dropRight(1) else built
 
-  /** Calculates basic geometric properties of an edge. */
-  private def computeEdgeGeometrics(vertex1: Point2, vertex2: Point2): (Double, Double, Double, Point2) =
-    val ex       = vertex2.xx - vertex1.xx
-    val ey       = vertex2.yy - vertex1.yy
-    val edgeLen  = sqrt(ex * ex + ey * ey)
-    val ux       = if edgeLen == 0 then 0.0 else ex / edgeLen
-    val uy       = if edgeLen == 0 then 0.0 else ey / edgeLen
-    val midPoint = Point2((vertex1.xx + vertex2.xx) / 2, (vertex1.yy + vertex2.yy) / 2)
-    (edgeLen, ux, uy, midPoint)
-
   /** Determines the inward-pointing normal vector for an edge relative to a face. */
   private def determineInwardNormal(
       tiling: TilingDCEL,
