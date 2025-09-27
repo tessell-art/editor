@@ -6,13 +6,10 @@ import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorUtils.*
-import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.Geometry.{Point, fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.SvgDsl
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import org.scalajs.dom
-
-import scala.math.BigDecimal.RoundingMode
 
 object SvgExporter:
 
@@ -96,10 +93,10 @@ object SvgExporter:
       .mkString(" ")
 
   private[utils] def generatePolygonsXml(
-                                          tiling: TilingDCEL,
-                                          scale: Double,
-                                          offset: Point,
-                                          strokeWidth: Double
+      tiling: TilingDCEL,
+      scale: Double,
+      offset: Point,
+      strokeWidth: Double
   ): String =
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
@@ -114,10 +111,10 @@ object SvgExporter:
        |  </g>""".stripMargin
 
   private[utils] def generatePerimeterXml(
-                                           tiling: TilingDCEL,
-                                           scale: Double,
-                                           offset: Point,
-                                           strokeWidthPeri: Double
+      tiling: TilingDCEL,
+      scale: Double,
+      offset: Point,
+      strokeWidthPeri: Double
   ): String =
     val perimeterNodes = tiling.boundaryVertices
     if perimeterNodes.isEmpty then ""
@@ -127,26 +124,26 @@ object SvgExporter:
 
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
-  private[utils] def generateDualTessellationXml(
-      tiling: TilingDCEL,
-      scale: Double,
-      offsetX: Double,
-      offsetY: Double
-  ): String =
-    val dualLines = generateDualLines(tiling)
-    if dualLines.isEmpty then ""
-    else
-      val dualLinesXml = dualLines.map { case (midPoint, center) =>
-        val x1 = (midPoint.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-        val y1 = (midPoint.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-        val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-        val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-
-        s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" />"""
-      }.mkString("\n")
-      s"""  <g id="dual-tessellation" stroke="red" stroke-width="1">
-         |$dualLinesXml
-         |  </g>""".stripMargin
+//  private[utils] def generateDualTessellationXml(
+//      tiling: TilingDCEL,
+//      scale: Double,
+//      offsetX: Double,
+//      offsetY: Double
+//  ): String =
+//    val dualLines = generateDualLines(tiling)
+//    if dualLines.isEmpty then ""
+//    else
+//      val dualLinesXml = dualLines.map { case (midPoint, center) =>
+//        val x1 = (midPoint.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+//        val y1 = (midPoint.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
+//        val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
+//        val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
+//
+//        s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" />"""
+//      }.mkString("\n")
+//      s"""  <g id="dual-tessellation" stroke="red" stroke-width="1">
+//         |$dualLinesXml
+//         |  </g>""".stripMargin
 
   private[utils] def generateLabelsXml(
       coordinates: Map[VertexId, BigPoint],
@@ -156,9 +153,12 @@ object SvgExporter:
     if coordinates.isEmpty then ""
     else
       val nodesXml = coordinates.map { (node, vertex) =>
-        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
-        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)
-        s"""    <text x="$labelX" y="$labelY" >${node.toString}</text>"""
+
+        val point = vertex.toPoint.transform(scale, offset + Point(4.0, -4.0))
+
+//        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
+//        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)
+        s"""    <text x="${SvgDsl.fmt6(point.xx)}" y="${SvgDsl.fmt6(point.yy)}" >${node.toString}</text>"""
       }.mkString("\n")
       s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
          |$nodesXml
