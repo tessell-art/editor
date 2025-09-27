@@ -369,9 +369,9 @@ object TessellationRenderer:
     renderMeasurementPoint(p, isStartPoint = false)
 
   private def renderMeasurementAngleArc(
-                                         start: ClickablePoint,
-                                         previousEnd: Point,
-                                         end: ClickablePoint
+      start: ClickablePoint,
+      previousEnd: Point,
+      end: ClickablePoint
   ): Element =
     val point  = tilingPointToCanvasView(start.point)
     val radius = 25.0
@@ -387,7 +387,9 @@ object TessellationRenderer:
     val endArcX   = point.xx + radius * Math.cos(angle2)
     val endArcY   = point.yy + radius * Math.sin(angle2)
 
-    val deltaAngle = normalizeDeltaAngle(Radian(angle2), Radian(angle1))
+    val deltaAngle =
+      Radian(angle2).normalizeDeltaAngle(Radian(angle1))
+//      normalizeDeltaAngle(Radian(angle2), Radian(angle1))
 
     val largeArcFlag = 0
     val sweepFlag    = if deltaAngle.toDouble > 0 then 1 else 0

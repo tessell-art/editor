@@ -23,23 +23,30 @@ object Geometry:
     val TAU: Radian   = Radian(6.283185307179586)
     val TAU_2: Radian = Radian(Math.PI)
 
-    /** Normalize any angle to [0, TAU) */
-    def normalize(a: Radian): Radian =
-      val t = a % TAU
-      if t < 0 then t + TAU else t
-
-    /** Normalize delta angle to (-PI, PI] */
-    def normalizeDelta(a: Radian): Radian =
-      var d = a % TAU
-      if d <= -TAU_2 then d += TAU
-      if d > TAU_2 then d -= TAU
-      d
-
   extension (r: Radian)
 
     /** @return the underlying `Double` */
     def toDouble: Double =
       r
+
+    /** Normalize any angle to [0, TAU) */
+    def normalize: Radian =
+      val t = r % Radian.TAU
+      if t < 0 then t + Radian.TAU else t
+
+    /** Normalize delta angle to (-PI, PI] */
+    def normalizeDelta: Radian =
+      val d = r % Radian.TAU
+      if d <= -Radian.TAU_2 then
+        d + Radian.TAU
+      else if d > Radian.TAU_2 then
+        d - Radian.TAU
+      else
+        d
+
+    /** Normalize delta angle to (-PI, PI]. */
+    def normalizeDeltaAngle(other: Radian): Radian =
+      (r - other).normalizeDelta
 
     @targetName("plus")
     def +(that: Radian): Radian =
@@ -302,7 +309,3 @@ object Geometry:
       heading = heading + t
     }
     pts.toVector
-
-  /** Normalize delta angle to (-PI, PI]. */
-  def normalizeDeltaAngle(a2: Radian, a1: Radian): Radian =
-    Radian.normalizeDelta(a2 - a1)
