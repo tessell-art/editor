@@ -93,11 +93,11 @@ object Geometry:
     def +(that: Point2): Point2 =
       plus(that)
 
-    private def minus(that: Point2): Point2 =
+    def minus(that: Point2): Point2 =
       (point.x - that.x, point.y - that.y)
 
     @targetName("point2Minus")
-    private def -(that: Point2): Point2 =
+    def -(that: Point2): Point2 =
       minus(that)
 
     def scale(factor: Double): Point2 =

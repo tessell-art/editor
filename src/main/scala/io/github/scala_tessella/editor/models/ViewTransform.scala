@@ -1,10 +1,11 @@
 package io.github.scala_tessella.editor.models
 
+import io.github.scala_tessella.editor.utils.Geometry.Point2
+
 case class ViewTransform(
     scale: Double = 1.0,
     rotationDegrees: Int = 0,
-    panX: Double = 0.0,
-    panY: Double = 0.0
+    pan: Point2 = Point2.origin
 ):
   // Helper method to normalize rotation to 0-359 degrees
   def normalizeRotation(degrees: Int): Int =

@@ -13,13 +13,13 @@ object TouchEventHandler:
   private val initialScale         = Var[Option[Double]](None)
   private val initialAngle         = Var[Option[Double]](None)
   private val initialRotation      = Var[Option[Double]](None)
-  private val pinchAnchorPoint     = Var[Option[(Double, Double)]](None) // World coordinates
+  private val pinchAnchorPoint     = Var[Option[Point2]](None) // World coordinates
 
   // For single-touch pan
-  private val lastPanPoint = Var[Option[(Double, Double)]](None)
+  private val lastPanPoint = Var[Option[Point2]](None)
 
   // To distinguish tap from drag
-  private val touchStartPoint        = Var[Option[(Double, Double)]](None)
+  private val touchStartPoint        = Var[Option[Point2]](None)
   private val isDragging             = Var[Boolean](false)
   private val DRAG_THRESHOLD_SQUARED = 25.0 // Using squared distance to avoid sqrt
 
@@ -27,7 +27,7 @@ object TouchEventHandler:
     val touches = event.touches
     if touches.length == 1 then
       val touch = touches(0)
-      val p     = (touch.clientX, touch.clientY)
+      val p     = Point2(touch.clientX, touch.clientY)
       touchStartPoint.set(Some(p))
       lastPanPoint.set(Some(p))
       isDragging.set(false)
@@ -54,7 +54,7 @@ object TouchEventHandler:
         val pointerY       =
           (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
 
-        val worldPoint = screenToWorld(pointerX, pointerY, currentTransform)
+        val worldPoint = screenToWorld(Point2(pointerX, pointerY), currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
       }
     else
@@ -70,25 +70,23 @@ object TouchEventHandler:
       val lastPanOpt    = lastPanPoint.now()
 
       startPointOpt.foreach { startPoint =>
-        val touch = touches(0)
+        val touch      = touches(0)
+        val touchPoint = Point2(touch.clientX, touch.clientY)
         if !dragging then
-          val dx = touch.clientX - startPoint._1
-          val dy = touch.clientY - startPoint._2
-          if dx * dx + dy * dy > DRAG_THRESHOLD_SQUARED then
+          val drag = touchPoint - startPoint
+          if drag.dot(drag) > DRAG_THRESHOLD_SQUARED then
             isDragging.set(true)
 
         if isDragging.now() then
           event.preventDefault()
           lastPanOpt.foreach { lastPoint =>
-            val panDx = touch.clientX - lastPoint._1
-            val panDy = touch.clientY - lastPoint._2
+            val panD = touchPoint - lastPoint
             EditorState.viewTransform.update(t =>
               t.copy(
-                panX = t.panX + panDx,
-                panY = t.panY + panDy
+                pan = t.pan + panD
               )
             )
-            lastPanPoint.set(Some((touch.clientX, touch.clientY)))
+            lastPanPoint.set(Some(touchPoint))
           }
       }
     else if touches.length == 2 then
@@ -112,8 +110,7 @@ object TouchEventHandler:
           val newRotation   = initRotation + rotationDelta
 
           // Calculate new pan to keep anchor point under the gesture center
-          val (worldX, worldY) = anchorPoint
-          val transformedPoint = worldToScreenNoPan(worldX, worldY, newScale, newRotation)
+          val transformedPoint = worldToScreenNoPan(anchorPoint, newScale, newRotation)
 
           val gestureCenterX = (touch1.clientX + touch2.clientX) / 2
           val gestureCenterY = (touch1.clientY + touch2.clientY) / 2
@@ -124,14 +121,14 @@ object TouchEventHandler:
               (gestureCenterX - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
             val pointerY   =
               (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
+            val pointer    =
+              Point2(pointerX, pointerY)
 
-            val newPanX = pointerX - transformedPoint._1
-            val newPanY = pointerY - transformedPoint._2
+            val newPan = pointer - transformedPoint
 
             EditorState.viewTransform.update(_.copy(
               scale = newScale,
-              panX = newPanX,
-              panY = newPanY
+              pan = newPan
             ).withRotation(newRotation.toInt))
           }
         case _                                                                                            => // State wasn't correctly initialized
@@ -164,15 +161,16 @@ object TouchEventHandler:
     val dy = touch2.clientY - touch1.clientY
     Math.toDegrees(Math.atan2(dy, dx))
 
-  private def screenToWorld(screenX: Double, screenY: Double, transform: ViewTransform): (Double, Double) =
-    val (panX, panY, scale, rotationDegrees) =
-      (transform.panX, transform.panY, transform.scale, transform.rotationDegrees)
-    val rotRad                               = Math.toRadians(rotationDegrees)
-    val rotationCenter                       = EditorConfig.canvasCenter
+  private def screenToWorld(screen: Point2, transform: ViewTransform): Point2 =
+    val (pan, scale, rotationDegrees) =
+      (transform.pan, transform.scale, transform.rotationDegrees)
+    val rotRad                        = Math.toRadians(rotationDegrees)
+    val rotationCenter                = EditorConfig.canvasCenter
 
     // Inverse transform
-    val p1_x      = (screenX - panX) / scale
-    val p1_y      = (screenY - panY) / scale
+    val p1_x = (screen.xx - pan.xx) / scale
+    val p1_y = (screen.yy - pan.yy) / scale
+
     val p2_x      = p1_x - rotationCenter.xx
     val p2_y      = p1_y - rotationCenter.yy
     val invRotRad = -rotRad
@@ -182,24 +180,23 @@ object TouchEventHandler:
     val p3_y      = p2_x * sinInvRot + p2_y * cosInvRot
     val worldX    = p3_x + rotationCenter.xx
     val worldY    = p3_y + rotationCenter.yy
-    (worldX, worldY)
+    Point2(worldX, worldY)
 
   private def worldToScreenNoPan(
-      worldX: Double,
-      worldY: Double,
+      world: Point2,
       scale: Double,
       rotationDegrees: Double
-  ): (Double, Double) =
+  ): Point2 =
     val rotRad         = Math.toRadians(rotationDegrees)
     val rotationCenter = EditorConfig.canvasCenter
 
     // Forward transform (without pan)
     val cosRot = Math.cos(rotRad)
     val sinRot = Math.sin(rotRad)
-    val p1_x   = worldX - rotationCenter.xx
-    val p1_y   = worldY - rotationCenter.yy
+    val p1_x   = world.xx - rotationCenter.xx
+    val p1_y   = world.yy - rotationCenter.yy
     val p2_x   = p1_x * cosRot - p1_y * sinRot
     val p2_y   = p1_x * sinRot + p1_y * cosRot
     val p3_x   = (p2_x + rotationCenter.xx) * scale
     val p3_y   = (p2_y + rotationCenter.yy) * scale
-    (p3_x, p3_y)
+    Point2(p3_x, p3_y)
