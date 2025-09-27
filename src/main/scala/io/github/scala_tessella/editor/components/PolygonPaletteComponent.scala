@@ -231,5 +231,5 @@ object PolygonPaletteComponent:
   // Big preview that highlights the head edge
   private[components] def bigIrregularWithHead(angles: Vector[AngleDegree]): Element =
     val size = 220
-    val pad  = 12.0
+    val pad  = 30.0
     PolygonSvg.irregularBigWithHead(angles, size, pad)

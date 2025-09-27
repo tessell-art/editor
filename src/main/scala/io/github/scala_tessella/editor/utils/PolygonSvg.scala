@@ -48,12 +48,35 @@ object PolygonSvg:
     val basePts             = walkUnitEdges(turns)
     val (scale, offX, offY) =
       io.github.scala_tessella.editor.utils.Geometry.fitPointsToSquare(basePts, size, pad)
-    def sx(p: Point)        = offX + p.x * scale
-    def sy(p: Point)        = offY + p.y * scale
-    val pointsStr           = basePts.map(p => SvgDsl.fmt3Point(sx(p), sy(p))).mkString(" ")
-    val headIdx             = ((1 % basePts.size) + basePts.size) % basePts.size
-    val a                   = basePts(headIdx)
-    val b                   = basePts((headIdx + 1) % basePts.size)
+
+    def sx(p: Point) = offX + p.x * scale
+
+    def sy(p: Point) = offY + p.y * scale
+
+    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(sx(p), sy(p))).mkString(" ")
+    val headIdx   = ((1 % basePts.size) + basePts.size) % basePts.size
+    val a         = basePts(headIdx)
+    val b         = basePts((headIdx + 1) % basePts.size)
+
+    val orderedAngles =
+      if (anglesDeg.isEmpty) Vector.empty
+      else anglesDeg.last +: anglesDeg.init
+
+    Logger.debug(s"Labels: ${basePts.zip(orderedAngles)}")
+    val angleLabels = basePts.zip(orderedAngles).map { case (point, angle) =>
+      val labelX          = sx(point) + 4
+      val labelY          = sy(point) - 4
+      svg.text(
+        svg.x          := fmt3(labelX),
+        svg.y          := fmt3(labelY),
+        svg.fontSize   := "12",
+        svg.fontFamily := "monospace",
+        svg.fill       := "red",
+        svg.textAnchor := "start",
+        s"${angle.toRational.toDouble}°"
+      )
+    }
+
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
@@ -65,5 +88,8 @@ object PolygonSvg:
         svg.strokeWidth   := "6",
         svg.strokeLineCap := "round",
         svg.pointerEvents := "none"
+      ),
+      svg.g(
+        angleLabels
       )
     )
