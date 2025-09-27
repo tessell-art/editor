@@ -57,7 +57,7 @@ object SvgExporter:
       val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
       val padding                               = 20.0
 
-      val (width, height, offset) = fitPointsToViewBox(points, scale, padding)
+      val (width, height, offset) = points.fitPointsToViewBox(scale, padding)
 
       val polygonsXml  = generatePolygonsXml(tiling, scale, offset, strokeWidth)
       val perimeterXml = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)

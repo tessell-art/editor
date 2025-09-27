@@ -19,7 +19,7 @@ object PolygonSvg:
       pad: Double,
       strokeW: String = SvgDsl.Defaults.strokeWidthThin
   ): Element =
-    val (scale, offset) = fitPointsToSquare(points, size, pad)
+    val (scale, offset) = points.fitPointsToSquare(size, pad)
     val scaled          = points.map(_.transform(scale, offset))
     val pointsStr       = SvgDsl.toPointsString(scaled)
     root(size)(
@@ -46,7 +46,7 @@ object PolygonSvg:
   def irregularBigWithHead(anglesDeg: Vector[AngleDegree], size: Int = 220, pad: Double = 12.0): Element =
     val turns           = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
     val basePts         = walkUnitEdges(turns)
-    val (scale, offset) = fitPointsToSquare(basePts, size, pad)
+    val (scale, offset) = basePts.fitPointsToSquare(size, pad)
 
     def bigTransform(p: Point2): Point2 =
       p.transform(scale, offset)

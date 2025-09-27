@@ -202,6 +202,33 @@ object Geometry:
     ): Seq[Point2] =
       points.map(_.transform(scale, offset))
 
+    /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
+    def fitPointsToViewBox(
+        scale: Double,
+        padding: Double
+    ): (Double, Double, Point2) =
+      Bounds.fromPoints(points) match
+        case None    => (2 * padding, 2 * padding, Point2(padding, padding))
+        case Some(b) =>
+          val width  = b.width * scale + 2 * padding
+          val height = b.height * scale + 2 * padding
+          val offX   = -b.min.x * scale + padding
+          val offY   = -b.min.y * scale + padding
+          (width, height, Point2(offX, offY))
+
+    /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding.
+      */
+    def fitPointsToSquare(size: Double, padding: Double): (Double, Point2) =
+      Bounds.fromPoints(points) match
+        case None    => (1.0, Point2.origin)
+        case Some(b) =>
+          val w     = Math.max(1e-6, b.width)
+          val h     = Math.max(1e-6, b.height)
+          val scale = (size - 2 * padding) / Math.max(w, h)
+          val offX  = (size - scale * w) / 2.0 - scale * b.min.x
+          val offY  = (size - scale * h) / 2.0 - scale * b.min.y
+          (scale, Point2(offX, offY))
+
   /** Creates points for a regular polygon. */
   def regularPolygonPoints(sides: Int, radius: Double, center: Point2 = Point2.origin): Seq[Point2] =
     (0 until sides).map { i =>
@@ -258,21 +285,6 @@ object Geometry:
     val radius    = sideLength / (2 * Math.sin(halfAngle))
     (apothem, radius, halfAngle)
 
-  /** Compute view-box (width, height, offX, offY) for a set of points with given scale and padding. */
-  def fitPointsToViewBox(
-      points: Seq[Point2],
-      scale: Double,
-      padding: Double
-  ): (Double, Double, Point2) =
-    Bounds.fromPoints(points) match
-      case None    => (2 * padding, 2 * padding, Point2(padding, padding))
-      case Some(b) =>
-        val width  = b.width * scale + 2 * padding
-        val height = b.height * scale + 2 * padding
-        val offX   = -b.min.x * scale + padding
-        val offY   = -b.min.y * scale + padding
-        (width, height, Point2(offX, offY))
-
   /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
     * (including start).
     */
@@ -289,19 +301,6 @@ object Geometry:
       heading = heading + t
     }
     pts.toVector
-
-  /** Compute view-box transform (scale, offX, offY) to fit points into a square of given size with padding.
-    */
-  def fitPointsToSquare(points: Seq[Point2], size: Double, padding: Double): (Double, Point2) =
-    Bounds.fromPoints(points) match
-      case None    => (1.0, Point2.origin)
-      case Some(b) =>
-        val w     = Math.max(1e-6, b.width)
-        val h     = Math.max(1e-6, b.height)
-        val scale = (size - 2 * padding) / Math.max(w, h)
-        val offX  = (size - scale * w) / 2.0 - scale * b.min.x
-        val offY  = (size - scale * h) / 2.0 - scale * b.min.y
-        (scale, Point2(offX, offY))
 
   /** Normalize delta angle to (-PI, PI]. */
   def normalizeDeltaAngle(a2: Radian, a1: Radian): Radian =
