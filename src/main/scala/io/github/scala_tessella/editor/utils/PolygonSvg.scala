@@ -42,7 +42,7 @@ object PolygonSvg:
     val pts   = walkUnitEdges(turns)
     previewFitted(pts, size, pad)
 
-  // Big irregular with head line overlay
+  // Big irregular with attaching edge overlay
   def irregularBigWithHead(anglesDeg: Vector[AngleDegree], size: Int = 220, pad: Double = 12.0): Element =
     val turns               = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble)
     val basePts             = walkUnitEdges(turns)
@@ -61,8 +61,8 @@ object PolygonSvg:
         svg.y1            := fmt3(sy(a)),
         svg.x2            := fmt3(sx(b)),
         svg.y2            := fmt3(sy(b)),
-        svg.stroke        := "#ff6b6b",
-        svg.strokeWidth   := "4",
+        svg.stroke        := "#00C853",
+        svg.strokeWidth   := "6",
         svg.strokeLineCap := "round",
         svg.pointerEvents := "none"
       )

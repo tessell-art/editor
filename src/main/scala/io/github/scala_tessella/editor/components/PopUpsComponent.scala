@@ -377,7 +377,7 @@ object PopUpsComponent:
           onClick --> closeIrregularPopup,
           closeIcon
         ),
-        h2("Adjust attachment edge"),
+        h2("Adjust attaching edge"),
         div(
           className := "popup-text-scrollable",
           child.maybe <-- EditorState.recentIrregularPolygon.signal.map {
