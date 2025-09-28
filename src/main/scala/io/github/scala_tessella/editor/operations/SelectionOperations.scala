@@ -39,8 +39,8 @@ object SelectionOperations:
         val distance                   = point.point.distanceTo(start.point)
         EditorState.measurementResult.set(Some(distance))
         val maybeAngle: Option[Double] = endOpt.map(clickable =>
-          val angle1          = LineSegment(start.point, clickable.point).horizontalAngle
-          val angle2          = LineSegment(start.point, point.point).horizontalAngle
+          val angle1          = LineSegment(start.point, clickable.point).horizontalAngleNormalized
+          val angle2          = LineSegment(start.point, point.point).horizontalAngleNormalized
           val diffRad: Double = (angle2 - angle1).toDouble
           // Normalize the difference to be within the [0, 2*PI) range
           val TAU             = 2 * Math.PI

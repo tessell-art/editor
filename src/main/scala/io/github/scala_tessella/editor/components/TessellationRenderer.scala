@@ -377,8 +377,8 @@ object TessellationRenderer:
     val p1 = previousEnd
     val p2 = end.point
 
-    val angle1 = start.point.angleTo(p1).toDouble
-    val angle2 = start.point.angleTo(p2).toDouble
+    val angle1 = start.point.angleToNormalized(p1).toDouble
+    val angle2 = start.point.angleToNormalized(p2).toDouble
 
     val startArcX = point.xx + radius * Math.cos(angle1)
     val startArcY = point.yy + radius * Math.sin(angle1)

@@ -133,16 +133,19 @@ object Geometry:
     def rotateAround(origin: Point, theta: Radian): Point =
       (point - origin).rotate(theta) + origin
 
-    /** Calculates the horizontal angle between two points */
     def angleTo(other: Point): Radian =
       (point, other).horizontalAngle
+
+    /** Calculates the horizontal angle between two points */
+    def angleToNormalized(other: Point): Radian =
+      (point, other).horizontalAngleNormalized
 
     def distanceTo(other: Point): Double =
       (point, other).length
 
     /** New point moved to align with reference to two other points */
     def alignWithStart(first: Point, second: Point): Point =
-      (point - first).rotate(Radian.TAU - first.angleTo(second))
+      (point - first).rotate(Radian.TAU - first.angleToNormalized(second))
 
     /** Get the length (magnitude) of this point as a vector */
     def magnitude: Double =
@@ -177,9 +180,12 @@ object Geometry:
       if len == 0 then Point.origin
       else (segment.dx / len, segment.dy / len)
 
-    /** Computes the horizontal angle of the line segment in [0, TAU) */
     def horizontalAngle: Radian =
-      Radian(Math.atan2(dy, dx)).normalize
+      Radian(Math.atan2(dy, dx))
+
+    /** Computes the horizontal angle of the line segment in [0, TAU) */
+    def horizontalAngleNormalized: Radian =
+      horizontalAngle.normalize
 
   case class Bounds(min: Point, max: Point):
     def width: Double = max.x - min.x
@@ -230,11 +236,11 @@ object Geometry:
       Bounds.fromPoints(points) match
         case None    => (1.0, Point.origin)
         case Some(b) =>
-          val w     = Math.max(1e-6, b.width)
-          val h     = Math.max(1e-6, b.height)
-          val scale = (size - 2 * padding) / Math.max(w, h)
-          val offX  = (size - scale * w) / 2.0 - scale * b.min.x
-          val offY  = (size - scale * h) / 2.0 - scale * b.min.y
+          val width  = Math.max(1e-6, b.width)
+          val height = Math.max(1e-6, b.height)
+          val scale  = (size - 2 * padding) / Math.max(width, height)
+          val offX   = (size - scale * width) / 2.0 - scale * b.min.x
+          val offY   = (size - scale * height) / 2.0 - scale * b.min.y
           (scale, Point(offX, offY))
 
   /** Creates points for a regular polygon. */
