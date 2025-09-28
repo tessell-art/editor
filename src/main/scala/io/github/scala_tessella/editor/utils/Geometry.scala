@@ -17,6 +17,9 @@ object Geometry:
     def apply(d: Double): Radian =
       d
 
+    def fromDegrees(degrees: Double): Radian =
+      Math.toRadians(degrees)
+
     /** @see
       *   [[https://tauday.com/]]
       */
@@ -28,6 +31,9 @@ object Geometry:
     /** @return the underlying `Double` */
     def toDouble: Double =
       r
+
+    def toDegrees: Double =
+      Math.toDegrees(r)
 
     /** Normalize any angle to [0, TAU) */
     def normalize: Radian =
@@ -115,9 +121,17 @@ object Geometry:
     def *(k: Double): Point =
       scale(k)
 
+    @targetName("pointTimes")
+    def *(that: Point): Point =
+      (point.x * that.x, point.y * that.y)
+
     @targetName("point2DivideScalar")
     def /(k: Double): Point =
       (point.x / k, point.y / k)
+
+    @targetName("pointDivide")
+    def /(that: Point): Point =
+      (point.x / that.x, point.y / that.y)
 
     def transform(scaleFactor: Double, offset: Point): Point =
       scale(scaleFactor) + offset
@@ -159,18 +173,25 @@ object Geometry:
 
     /** Compute the dot product with another point (treating both as vectors) */
     def dot(that: Point): Double =
-      point.x * that.x + point.y * that.y
+      val product = point * that
+      product.x + product.y
 
   extension (segment: LineSegment)
 
+    def p1: Point =
+      segment.p1
+
+    def p2: Point =
+      segment.p2
+
     def dx: Double =
-      segment.p2.x - segment.p1.x
+      p2.x - p1.x
 
     def dy: Double =
-      segment.p2.y - segment.p1.y
+      p2.y - p1.y
 
     def midPoint: Point =
-      (segment.p1 + segment.p2) / 2.0
+      (p1 + p2) / 2.0
 
     def length: Double =
       Math.hypot(dx, dy)
@@ -178,7 +199,7 @@ object Geometry:
     def unitVector: Point =
       val len = segment.length
       if len == 0 then Point.origin
-      else (segment.dx / len, segment.dy / len)
+      else (dx / len, dy / len)
 
     def horizontalAngle: Radian =
       Radian(Math.atan2(dy, dx))

@@ -3,16 +3,15 @@ package io.github.scala_tessella.editor.interactions
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point, Radian}
-import org.scalajs.dom
-import org.scalajs.dom.{Touch, TouchEvent}
+import org.scalajs.dom.{DOMRect, Touch, TouchEvent}
 
 object TouchEventHandler:
 
   // For pinch-zoom and rotate
   private val initialTouchDistance = Var[Option[Double]](None)
   private val initialScale         = Var[Option[Double]](None)
-  private val initialAngle         = Var[Option[Double]](None)
-  private val initialRotation      = Var[Option[Double]](None)
+  private val initialAngle         = Var[Option[Radian]](None)
+  private val initialRotation      = Var[Option[Radian]](None)
   private val pinchAnchorPoint     = Var[Option[Point]](None) // World coordinates
 
   // For single-touch pan
@@ -27,6 +26,14 @@ object TouchEventHandler:
 
     def toPoint: Point =
       Point(touch.clientX, touch.clientY)
+
+  extension (domRect: DOMRect)
+
+    def toSegment: LineSegment =
+      LineSegment(
+        Point(domRect.left, domRect.top),
+        Point(domRect.width, domRect.height)
+      )
 
   def handleTouchStart(event: TouchEvent): Unit =
     val touches = event.touches
@@ -46,22 +53,20 @@ object TouchEventHandler:
       val segment     = LineSegment(touchPoint1, touchPoint2)
 
       initialTouchDistance.set(Some(segment.length))
-      initialAngle.set(Some(getAngle(touch1, touch2)))
+      initialAngle.set(Some(segment.horizontalAngle))
 
       val currentTransform = EditorState.viewTransform.now()
       initialScale.set(Some(currentTransform.scale))
-      initialRotation.set(Some(currentTransform.rotationDegrees))
+      initialRotation.set(Some(Radian.fromDegrees(currentTransform.rotationDegrees)))
 
-      // Set anchor point for zooming
+      // Set an anchor point for zooming
       EditorState.canvasElementRef.now().foreach { canvasElement =>
         val canvasRect    = canvasElement.getBoundingClientRect()
+        val rect          = canvasRect.toSegment
         val gestureCenter = segment.midPoint
-        val pointerX      =
-          (gestureCenter.xx - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
-        val pointerY      =
-          (gestureCenter.yy - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
-
-        val worldPoint = screenToWorld(Point(pointerX, pointerY), currentTransform)
+        val pointer       =
+          (gestureCenter - rect.p1) * (EditorConfig.canvasEnd / rect.p2)
+        val worldPoint    = screenToWorld(pointer, currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
       }
     else
@@ -115,7 +120,7 @@ object TouchEventHandler:
           // New scale and rotation based on initial state
           val newDistance   = segment.length
           val newScale      = if (initialDist > 0) initScale * (newDistance / initialDist) else initScale
-          val newAngle      = getAngle(touch1, touch2)
+          val newAngle      = segment.horizontalAngleNormalized
           val rotationDelta = newAngle - initAngle
           val newRotation   = initRotation + rotationDelta
 
@@ -125,20 +130,18 @@ object TouchEventHandler:
           val gestureCenter = segment.midPoint
 
           EditorState.canvasElementRef.now().foreach { canvasElement =>
-            val canvasRect = canvasElement.getBoundingClientRect()
-            val pointerX   =
-              (gestureCenter.xx - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
-            val pointerY   =
-              (gestureCenter.yy - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
-            val pointer    =
-              Point(pointerX, pointerY)
+            val canvasRect    = canvasElement.getBoundingClientRect()
+            val rect          = canvasRect.toSegment
+            val gestureCenter = segment.midPoint
+            val pointer       =
+              (gestureCenter - rect.p1) * (EditorConfig.canvasEnd / rect.p2)
 
             val newPan = pointer - transformedPoint
 
             EditorState.viewTransform.update(_.copy(
               scale = newScale,
               pan = newPan
-            ).withRotation(newRotation.toInt))
+            ).withRotation(newRotation.toDegrees.toInt))
           }
         case _                                                                                            => // State wasn't correctly initialized
 
@@ -160,33 +163,27 @@ object TouchEventHandler:
     touchStartPoint.set(None)
     isDragging.set(false)
 
-  private def getAngle(touch1: dom.Touch, touch2: dom.Touch): Double =
-    val dx = touch2.clientX - touch1.clientX
-    val dy = touch2.clientY - touch1.clientY
-    Math.toDegrees(Math.atan2(dy, dx))
-
   private def screenToWorld(screen: Point, transform: ViewTransform): Point =
     val (pan, scale, rotationDegrees) =
       (transform.pan, transform.scale, transform.rotationDegrees)
-    val rotRad                        = Math.toRadians(rotationDegrees)
+    val rotRad                        = Radian.fromDegrees(rotationDegrees)
     val rotationCenter                = EditorConfig.canvasCenter
 
     // Inverse transform
     val p1 = (screen - pan) / scale
     val p2 = p1 - rotationCenter
-    val p3 = p2.rotate(Radian(-rotRad))
+    val p3 = p2.rotate(rotRad * -1)
 
     p3 + rotationCenter
 
   private def worldToScreenNoPan(
       world: Point,
       scale: Double,
-      rotationDegrees: Double
+      rotation: Radian
   ): Point =
-    val rotRad         = Math.toRadians(rotationDegrees)
     val rotationCenter = EditorConfig.canvasCenter
 
     // Forward transform (without pan)
     val p1 = world - rotationCenter
-    val p2 = p1.rotate(Radian(rotRad))
+    val p2 = p1.rotate(rotation)
     (p2 + rotationCenter) * scale
