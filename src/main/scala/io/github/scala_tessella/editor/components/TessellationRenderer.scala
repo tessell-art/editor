@@ -18,7 +18,7 @@ import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, normalizeDeltaAngle}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, normalizeDeltaAngle}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
@@ -377,22 +377,19 @@ object TessellationRenderer:
     val p1 = previousEnd
     val p2 = end.point
 
-    val angle1 = start.point.angleToNormalized(p1).toDouble
-    val angle2 = start.point.angleToNormalized(p2).toDouble
+    val angle1 = start.point.angleTo(p1)
+    val angle2 = start.point.angleTo(p2)
 
-    val startArcX = point.xx + radius * Math.cos(angle1)
-    val startArcY = point.yy + radius * Math.sin(angle1)
-    val endArcX   = point.xx + radius * Math.cos(angle2)
-    val endArcY   = point.yy + radius * Math.sin(angle2)
+    val startArc = point.offsetPolar(radius, angle1)
+    val endArc   = point.offsetPolar(radius, angle2)
 
-    val deltaAngle =
-      Radian(angle2).normalizeDeltaAngle(Radian(angle1))
-//      normalizeDeltaAngle(Radian(angle2), Radian(angle1))
+    val deltaAngle = angle2.normalizeDeltaAngle(angle1)
 
     val largeArcFlag = 0
     val sweepFlag    = if deltaAngle.toDouble > 0 then 1 else 0
 
-    val dAttribute = s"M $startArcX $startArcY A $radius $radius 0 $largeArcFlag $sweepFlag $endArcX $endArcY"
+    val dAttribute =
+      s"M ${startArc.xx} ${startArc.yy} A $radius $radius 0 $largeArcFlag $sweepFlag ${endArc.xx} ${endArc.yy}"
 
     svg.path(
       svg.d             := dAttribute,

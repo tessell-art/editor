@@ -147,6 +147,9 @@ object Geometry:
     def rotateAround(origin: Point, theta: Radian): Point =
       (point - origin).rotate(theta) + origin
 
+    def offsetPolar(radius: Double, theta: Radian): Point =
+      (point.x + radius * Math.cos(theta), point.y + radius * Math.sin(theta))
+
     def angleTo(other: Point): Radian =
       (point, other).horizontalAngle
 
