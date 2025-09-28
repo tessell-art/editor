@@ -2,9 +2,9 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
+import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point, Radian}
 import org.scalajs.dom
-import org.scalajs.dom.TouchEvent
+import org.scalajs.dom.{Touch, TouchEvent}
 
 object TouchEventHandler:
 
@@ -23,21 +23,29 @@ object TouchEventHandler:
   private val isDragging             = Var[Boolean](false)
   private val DRAG_THRESHOLD_SQUARED = 25.0 // Using squared distance to avoid sqrt
 
+  extension (touch: Touch)
+
+    def toPoint: Point =
+      Point(touch.clientX, touch.clientY)
+
   def handleTouchStart(event: TouchEvent): Unit =
     val touches = event.touches
     if touches.length == 1 then
-      val touch = touches(0)
-      val p     = Point(touch.clientX, touch.clientY)
-      touchStartPoint.set(Some(p))
-      lastPanPoint.set(Some(p))
+      val touch      = touches(0)
+      val touchPoint = touch.toPoint
+      touchStartPoint.set(Some(touchPoint))
+      lastPanPoint.set(Some(touchPoint))
       isDragging.set(false)
     else if touches.length == 2 then
       event.preventDefault()
       isDragging.set(true)
-      val touch1 = touches(0)
-      val touch2 = touches(1)
+      val touch1      = touches(0)
+      val touch2      = touches(1)
+      val touchPoint1 = touch1.toPoint
+      val touchPoint2 = touch2.toPoint
+      val segment     = LineSegment(touchPoint1, touchPoint2)
 
-      initialTouchDistance.set(Some(getDistance(touch1, touch2)))
+      initialTouchDistance.set(Some(segment.length))
       initialAngle.set(Some(getAngle(touch1, touch2)))
 
       val currentTransform = EditorState.viewTransform.now()
@@ -46,13 +54,12 @@ object TouchEventHandler:
 
       // Set anchor point for zooming
       EditorState.canvasElementRef.now().foreach { canvasElement =>
-        val canvasRect     = canvasElement.getBoundingClientRect()
-        val gestureCenterX = (touch1.clientX + touch2.clientX) / 2
-        val gestureCenterY = (touch1.clientY + touch2.clientY) / 2
-        val pointerX       =
-          (gestureCenterX - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
-        val pointerY       =
-          (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
+        val canvasRect    = canvasElement.getBoundingClientRect()
+        val gestureCenter = segment.midPoint
+        val pointerX      =
+          (gestureCenter.xx - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
+        val pointerY      =
+          (gestureCenter.yy - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
 
         val worldPoint = screenToWorld(Point(pointerX, pointerY), currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
@@ -71,7 +78,7 @@ object TouchEventHandler:
 
       startPointOpt.foreach { startPoint =>
         val touch      = touches(0)
-        val touchPoint = Point(touch.clientX, touch.clientY)
+        val touchPoint = touch.toPoint
         if !dragging then
           val drag = touchPoint - startPoint
           if drag.dot(drag) > DRAG_THRESHOLD_SQUARED then
@@ -99,12 +106,15 @@ object TouchEventHandler:
       (initDistOpt, initScaleOpt, initAngleOpt, initRotationOpt, anchorOpt) match
         case (Some(initialDist), Some(initScale), Some(initAngle), Some(initRotation), Some(anchorPoint)) =>
           event.preventDefault()
-          val touch1 = touches(0)
-          val touch2 = touches(1)
+          val touch1      = touches(0)
+          val touch2      = touches(1)
+          val touchPoint1 = touch1.toPoint
+          val touchPoint2 = touch2.toPoint
+          val segment     = LineSegment(touchPoint1, touchPoint2)
 
           // New scale and rotation based on initial state
-          val newDist       = getDistance(touch1, touch2)
-          val newScale      = if (initialDist > 0) initScale * (newDist / initialDist) else initScale
+          val newDistance   = segment.length
+          val newScale      = if (initialDist > 0) initScale * (newDistance / initialDist) else initScale
           val newAngle      = getAngle(touch1, touch2)
           val rotationDelta = newAngle - initAngle
           val newRotation   = initRotation + rotationDelta
@@ -112,15 +122,14 @@ object TouchEventHandler:
           // Calculate new pan to keep anchor point under the gesture center
           val transformedPoint = worldToScreenNoPan(anchorPoint, newScale, newRotation)
 
-          val gestureCenterX = (touch1.clientX + touch2.clientX) / 2
-          val gestureCenterY = (touch1.clientY + touch2.clientY) / 2
+          val gestureCenter = segment.midPoint
 
           EditorState.canvasElementRef.now().foreach { canvasElement =>
             val canvasRect = canvasElement.getBoundingClientRect()
             val pointerX   =
-              (gestureCenterX - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
+              (gestureCenter.xx - canvasRect.left) * (EditorConfig.canvasViewBoxWidth / canvasRect.width)
             val pointerY   =
-              (gestureCenterY - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
+              (gestureCenter.yy - canvasRect.top) * (EditorConfig.canvasViewBoxHeight / canvasRect.height)
             val pointer    =
               Point(pointerX, pointerY)
 
@@ -150,11 +159,6 @@ object TouchEventHandler:
     lastPanPoint.set(None)
     touchStartPoint.set(None)
     isDragging.set(false)
-
-  private def getDistance(touch1: dom.Touch, touch2: dom.Touch): Double =
-    val dx = touch1.clientX - touch2.clientX
-    val dy = touch1.clientY - touch2.clientY
-    Math.sqrt(dx * dx + dy * dy)
 
   private def getAngle(touch1: dom.Touch, touch2: dom.Touch): Double =
     val dx = touch2.clientX - touch1.clientX

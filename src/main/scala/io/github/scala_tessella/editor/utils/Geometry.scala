@@ -179,7 +179,7 @@ object Geometry:
 
     /** Computes the horizontal angle of the line segment in [0, TAU) */
     def horizontalAngle: Radian =
-      Radian((Math.atan2(dy, dx) + Radian.TAU) % Radian.TAU)
+      Radian(Math.atan2(dy, dx)).normalize
 
   case class Bounds(min: Point, max: Point):
     def width: Double = max.x - min.x
