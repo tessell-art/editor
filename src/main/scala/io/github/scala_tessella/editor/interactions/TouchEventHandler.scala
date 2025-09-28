@@ -117,10 +117,10 @@ object TouchEventHandler:
           val touchPoint2 = touch2.toPoint
           val segment     = LineSegment(touchPoint1, touchPoint2)
 
-          // New scale and rotation based on initial state
+          // New scale and rotation based on the initial state
           val newDistance   = segment.length
           val newScale      = if (initialDist > 0) initScale * (newDistance / initialDist) else initScale
-          val newAngle      = segment.horizontalAngleNormalized
+          val newAngle      = segment.horizontalAngle.normalize
           val rotationDelta = newAngle - initAngle
           val newRotation   = initRotation + rotationDelta
 

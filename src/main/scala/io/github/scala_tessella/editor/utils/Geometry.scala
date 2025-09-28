@@ -204,10 +204,6 @@ object Geometry:
     def horizontalAngle: Radian =
       Radian(Math.atan2(dy, dx))
 
-    /** Computes the horizontal angle of the line segment in [0, TAU) */
-    def horizontalAngleNormalized: Radian =
-      horizontalAngle.normalize
-
   case class Bounds(min: Point, max: Point):
     def width: Double = max.x - min.x
 
