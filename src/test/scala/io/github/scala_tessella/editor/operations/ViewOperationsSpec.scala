@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.models.ViewTransform
-import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point}
+import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point, Radian}
 import munit.FunSuite
 
 import scala.math.Pi
@@ -19,10 +19,10 @@ class ViewOperationsSpec extends FunSuite:
   test("transformCoordinates should rotate points correctly") {
     val points  = List(Point(1, 0), Point(0, 1))
     val rotated = ViewOperations.transformCoordinates(points, 90)
-    assert(Math.abs(rotated.head.x.toDouble - 0.0) < delta)
-    assert(Math.abs(rotated.head.y.toDouble - 1.0) < delta)
-    assert(Math.abs(rotated(1).x.toDouble - -1.0) < delta)
-    assert(Math.abs(rotated(1).y.toDouble - 0.0) < delta)
+    assert(Math.abs(rotated.head.xx - 0.0) < delta)
+    assert(Math.abs(rotated.head.yy - 1.0) < delta)
+    assert(Math.abs(rotated(1).xx - -1.0) < delta)
+    assert(Math.abs(rotated(1).yy - 0.0) < delta)
   }
 
   test("transformCoordinates should handle zero rotation") {
@@ -73,34 +73,33 @@ class ViewOperationsSpec extends FunSuite:
   }
 
   test("calculateTilingCenter should return the center of the bounds") {
-    val bounds             = Bounds(minX = 10, minY = 20, maxX = 90, maxY = 80)
-    val (centerX, centerY) = ViewOperations.calculateTilingCenter(bounds)
-    assertEquals(centerX, 50.0, delta)
-    assertEquals(centerY, 50.0, delta)
+    val bounds = Bounds(Point(10, 20), Point(90, 80))
+    val center = bounds.center
+    assertEquals(center.xx, 50.0, delta)
+    assertEquals(center.yy, 50.0, delta)
   }
 
   test("createUpdatedViewTransform should update scale and pan") {
-    val initialTransform = ViewTransform(scale = 1.0, panX = 0, panY = 0, rotationDegrees = 0)
+    val initialTransform = ViewTransform(scale = 1.0, pan = Point.origin, rotationDegrees = 0)
     val updatedTransform = ViewOperations.createUpdatedViewTransform(
       initialTransform,
       newScale = 2.0,
-      newPanX = 100,
-      newPanY = -100
+      newPan = Point(100, -100)
     )
     assertEquals(updatedTransform.scale, 2.0, delta)
-    assertEquals(updatedTransform.panX, 100.0, delta)
-    assertEquals(updatedTransform.panY, -100.0, delta)
+    assertEquals(updatedTransform.pan.xx, 100.0, delta)
+    assertEquals(updatedTransform.pan.yy, -100.0, delta)
     assertEquals(updatedTransform.rotationDegrees, 0) // Should not change
   }
 
   test("inverseTransform should correctly calculate world coordinates for the view center") {
-    val (viewCenterX, viewCenterY) = (400.0, 300.0)
-    val (panX, panY)               = (50.0, -50.0)
-    val scale                      = 2.0
-    val rotationRad                = Pi / 2 // 90 degrees
+    val viewCenter  = Point(400.0, 300.0)
+    val pan         = Point(50.0, -50.0)
+    val scale       = 2.0
+    val rotationRad = Radian.TAU_2 / 2 // 90 degrees
 
-    val (worldX, worldY) =
-      ViewOperations.inverseTransform(viewCenterX, viewCenterY, panX, panY, scale, rotationRad)
+    val world =
+      ViewOperations.inverseTransform(viewCenter, pan, scale, rotationRad)
 
     // Manual calculation:
     // 1. Inverse Pan: (400-50, 300-(-50)) = (350, 350)
@@ -111,18 +110,18 @@ class ViewOperationsSpec extends FunSuite:
     //                          y' = -225*sin(-90) + (-125)*cos(-90) = -225*(-1) + (-125)*0 = 225
     //    Final world point: (400 + (-125), 300 + 225) = (275, 525)
 
-    assertEquals(worldX, 275.0, delta)
-    assertEquals(worldY, 525.0, delta)
+    assertEquals(world.xx, 275.0, delta)
+    assertEquals(world.yy, 525.0, delta)
   }
 
   test("forwardTransform should correctly calculate screen coordinates") {
-    val (worldX, worldY)           = (275.0, 525.0)
-    val (viewCenterX, viewCenterY) = (400.0, 300.0)
-    val scale                      = 2.0
-    val rotationRad                = Pi / 2 // 90 degrees
+    val world       = Point(275.0, 525.0)
+    val viewCenter  = Point(400.0, 300.0)
+    val scale       = 2.0
+    val rotationRad = Radian.TAU_2 / 2 // 90 degrees
 
-    val (screenX, screenY) =
-      ViewOperations.forwardTransform(worldX, worldY, viewCenterX, viewCenterY, scale, rotationRad)
+    val screen =
+      ViewOperations.forwardTransform(world, viewCenter, scale, rotationRad)
 
     // Manual calculation:
     // 1. Forward Rotation (rotate by 90 deg around viewCenter(400,300)):
@@ -132,28 +131,28 @@ class ViewOperationsSpec extends FunSuite:
     //    After rotation point: (400 + (-225), 300 + (-125)) = (175, 175)
     // 2. Forward Scale: (175*2, 175*2) = (350, 350)
 
-    assertEquals(screenX, 350.0, delta)
-    assertEquals(screenY, 350.0, delta)
+    assertEquals(screen.xx, 350.0, delta)
+    assertEquals(screen.yy, 350.0, delta)
   }
 
   test("calculateRotatedPan should compute pan to keep a point stationary during rotation") {
-    val (worldX, worldY)           = (275.0, 525.0)
-    val (viewCenterX, viewCenterY) = (400.0, 300.0)
-    val scale                      = 2.0
-    val newRotationRad             = Pi / 2 // 90 degrees
+    val world          = Point(275.0, 525.0)
+    val viewCenter     = Point(400.0, 300.0)
+    val scale          = 2.0
+    val newRotationRad = Radian.TAU_2 / 2 // 90 degrees
 
     // After forward transform (rotation and scale), the point (worldX, worldY) moves to (350, 350) on screen, without pan.
     // We want it to be at (viewCenterX, viewCenterY) = (400, 300).
     // So, screen = pan + transformed => (400, 300) = (panX, panY) + (350, 350)
     // pan = (400-350, 300-350) = (50, -50)
 
-    val (panX, panY) =
-      ViewOperations.calculateRotatedPan(worldX, worldY, viewCenterX, viewCenterY, scale, newRotationRad)
-    assertEquals(panX, 50.0, delta)
-    assertEquals(panY, -50.0, delta)
+    val pan =
+      ViewOperations.calculateRotatedPan(world, viewCenter, scale, newRotationRad)
+    assertEquals(pan.xx, 50.0, delta)
+    assertEquals(pan.yy, -50.0, delta)
   }
 
-  val initialTransform: ViewTransform = ViewTransform(1.0, 0, 0.0, 0)
+  val initialTransform: ViewTransform = ViewTransform(1.0, 0, Point.origin)
   val testCanvasWidth                 = 800.0
   val testCanvasHeight                = 600.0
   val padding                         = 50.0
@@ -185,8 +184,8 @@ class ViewOperationsSpec extends FunSuite:
     // tilingCenterOnCanvasY = 45 + 300 = 345
     // newPanX = 400 - 460 * 7.0 = 400 - 3220 = -2820
     // newPanY = 300 - 345 * 7.0 = 300 - 2415 = -2115
-    assertEquals(transform.panX, -2820.0, delta)
-    assertEquals(transform.panY, -2115.0, delta)
+    assertEquals(transform.pan.xx, -2820.0, delta)
+    assertEquals(transform.pan.yy, -2115.0, delta)
     assertEquals(transform.rotationDegrees, 0)
   }
 
@@ -269,7 +268,7 @@ class ViewOperationsSpec extends FunSuite:
     // tilingCenterOnCanvasY = 60 + 300 = 360
     // newPanX = 400 - 355 * 5.0 = 400 - 1775 = -1375
     // newPanY = 300 - 360 * 5.0 = 300 - 1800 = -1500
-    assertEquals(transform.panX, -1375.0, delta)
-    assertEquals(transform.panY, -1500.0, delta)
+    assertEquals(transform.pan.xx, -1375.0, delta)
+    assertEquals(transform.pan.yy, -1500.0, delta)
     assertEquals(transform.rotationDegrees, 90)
   }

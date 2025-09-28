@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.models
 
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import munit.FunSuite
 
 class ViewTransformSpec extends FunSuite:
@@ -8,8 +9,7 @@ class ViewTransformSpec extends FunSuite:
     val transform = ViewTransform()
     assertEquals(transform.scale, 1.0)
     assertEquals(transform.rotationDegrees, 0)
-    assertEquals(transform.panX, 0.0)
-    assertEquals(transform.panY, 0.0)
+    assertEquals(transform.pan, Point.origin)
   }
 
   test("normalizeRotation should handle positive angles correctly") {
@@ -42,23 +42,21 @@ class ViewTransformSpec extends FunSuite:
   }
 
   test("withRotation should preserve other properties") {
-    val transform = ViewTransform(scale = 2.0, panX = 10.0, panY = 20.0)
+    val transform = ViewTransform(scale = 2.0, pan = Point(10.0, 20.0))
     val rotated   = transform.withRotation(45)
 
     assertEquals(rotated.scale, 2.0)
-    assertEquals(rotated.panX, 10.0)
-    assertEquals(rotated.panY, 20.0)
+    assertEquals(rotated.pan, Point(10.0, 20.0))
     assertEquals(rotated.rotationDegrees, 45)
   }
 
   test("copy should work correctly") {
-    val original = ViewTransform(scale = 1.5, rotationDegrees = 90, panX = 5.0, panY = 10.0)
+    val original = ViewTransform(scale = 1.5, rotationDegrees = 90, pan = Point(5.0, 10.0))
     val copied   = original.copy(scale = 2.0)
 
     assertEquals(copied.scale, 2.0)
     assertEquals(copied.rotationDegrees, 90)
-    assertEquals(copied.panX, 5.0)
-    assertEquals(copied.panY, 10.0)
+    assertEquals(copied.pan, Point(5.0, 10.0))
   }
 
   test("multiple rotation operations should work correctly") {
