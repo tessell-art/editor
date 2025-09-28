@@ -5,8 +5,6 @@ import io.github.scala_tessella.editor.models.ViewTransform
 import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point, Radian}
 import munit.FunSuite
 
-import scala.math.Pi
-
 class ViewOperationsSpec extends FunSuite:
 
   private val delta = 1e-9

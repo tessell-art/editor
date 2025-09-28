@@ -10,7 +10,7 @@ class GeometrySpec extends FunSuite:
 
   test("Point.rotate should rotate points correctly around origin") {
     val point   = Point(1, 0)
-    val rotated = point.rotate(Radian.TAU_2)
+    val rotated = point.rotate(Radian.TAU_2 / 2)
 
     // Use a more lenient epsilon for floating point comparisons
     assert(Math.abs(rotated.xx) < epsilon, s"Expected ~0, got ${rotated.xx}")
@@ -19,7 +19,7 @@ class GeometrySpec extends FunSuite:
 
   test("Point.rotate should handle negative angles") {
     val point   = Point(0, 1)
-    val rotated = point.rotate(Radian(-Pi / 2))
+    val rotated = point.rotate(Radian.TAU_2 / -2)
 
     assertEquals(rotated.xx, 1.0, epsilon)
     assert(Math.abs(rotated.yy) < epsilon, s"Expected ~0, got ${rotated.yy}")
