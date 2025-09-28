@@ -65,8 +65,8 @@ object ViewOperations:
   ): Option[ViewTransform] =
     // Use the viewBox dimensions for calculation, not the canvas element's actual dimensions,
     // because the pan and scale are applied within the SVG's viewBox coordinate system.
-    val viewBoxWidth  = canvasCenter.xx * 2.0
-    val viewBoxHeight = canvasCenter.yy * 2.0
+    val viewBoxWidth  = canvasCenter.x * 2.0
+    val viewBoxHeight = canvasCenter.y * 2.0
 
     if viewBoxWidth <= 0 || viewBoxHeight <= 0 then
       None

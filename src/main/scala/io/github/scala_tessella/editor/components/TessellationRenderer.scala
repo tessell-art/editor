@@ -155,7 +155,7 @@ object TessellationRenderer:
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
         val pointStrings = faceVertices.map(vertex =>
           val point = tilingPointToCanvasView(vertex.coords.toPoint)
-          s"${point.xx},${point.yy}"
+          s"${point.x},${point.y}"
         )
         (faceId, pointStrings.mkString(" "))
       }
@@ -281,8 +281,8 @@ object TessellationRenderer:
       val point = tilingPointToCanvasView(vertex)
 
       // Offset the label slightly from the vertex to avoid overlap
-      val offsetX = point.xx + 4
-      val offsetY = point.yy - 4
+      val offsetX = point.x + 4
+      val offsetY = point.y - 4
 
       svg.text(
         svg.x                := offsetX.toString,
@@ -318,8 +318,8 @@ object TessellationRenderer:
     val point = tilingPointToCanvasView(p.point)
 
     svg.circle(
-      svg.cx            := point.xx.toString,
-      svg.cy            := point.yy.toString,
+      svg.cx            := point.x.toString,
+      svg.cy            := point.y.toString,
       svg.r             := "4",
       svg.fill          := "#ff9500",
       svg.stroke        := "black",
@@ -350,8 +350,8 @@ object TessellationRenderer:
     val point = tilingPointToCanvasView(p.point)
 
     svg.circle(
-      svg.cx          := point.xx.toString,
-      svg.cy          := point.yy.toString,
+      svg.cx          := point.x.toString,
+      svg.cy          := point.y.toString,
       svg.r           := "5",
       svg.fill        := (if isStartPoint then "#00C853" else "#D50000"),
       svg.stroke      := "black",
@@ -389,7 +389,7 @@ object TessellationRenderer:
     val sweepFlag    = if deltaAngle.toDouble > 0 then 1 else 0
 
     val dAttribute =
-      s"M ${startArc.xx} ${startArc.yy} A $radius $radius 0 $largeArcFlag $sweepFlag ${endArc.xx} ${endArc.yy}"
+      s"M ${startArc.x} ${startArc.y} A $radius $radius 0 $largeArcFlag $sweepFlag ${endArc.x} ${endArc.y}"
 
     svg.path(
       svg.d             := dAttribute,
@@ -402,10 +402,10 @@ object TessellationRenderer:
 
   def lineCoords(point1: Point, point2: Point): Seq[KeySetter.SvgAttrSetter[String]] =
     Seq(
-      svg.x1 := point1.xx.toString,
-      svg.y1 := point1.yy.toString,
-      svg.x2 := point2.xx.toString,
-      svg.y2 := point2.yy.toString
+      svg.x1 := point1.x.toString,
+      svg.y1 := point1.y.toString,
+      svg.x2 := point2.x.toString,
+      svg.y2 := point2.y.toString
     )
 
   private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point): Element =

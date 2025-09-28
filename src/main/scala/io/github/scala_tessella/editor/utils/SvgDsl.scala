@@ -58,10 +58,10 @@ object SvgDsl:
     f"$d%1.6f"
 
   def fmt3Point(point: Point): String =
-    s"${fmt3(point.xx)},${fmt3(point.yy)}"
+    s"${fmt3(point.x)},${fmt3(point.y)}"
 
   def fmt6Point(point: Point): String =
-    s"${fmt6(point.xx)},${fmt6(point.yy)}"
+    s"${fmt6(point.x)},${fmt6(point.y)}"
 
   def toPointsString(points: Seq[Point], decimals: Int = 3): String =
     points.map(fmt3Point).mkString(" ")

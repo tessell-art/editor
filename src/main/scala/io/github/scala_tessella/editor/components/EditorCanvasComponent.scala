@@ -178,7 +178,7 @@ object EditorCanvasComponent:
   private def contentGroup(): Element =
     svg.g(
       svg.transform <-- EditorState.viewTransform.signal.map(transform =>
-        s"translate(${transform.pan.xx}, ${transform.pan.yy}) scale(${transform.scale}) rotate(${transform.rotationDegrees} 400 300)"
+        s"translate(${transform.pan.x}, ${transform.pan.y}) scale(${transform.scale}) rotate(${transform.rotationDegrees} 400 300)"
       ),
 
       // Grid pattern

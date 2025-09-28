@@ -93,10 +93,10 @@ object Geometry:
 
   extension (point: Point)
 
-    def xx: Double =
+    def x: Double =
       point.x
 
-    def yy: Double =
+    def y: Double =
       point.y
 
     def plus(that: Point): Point =

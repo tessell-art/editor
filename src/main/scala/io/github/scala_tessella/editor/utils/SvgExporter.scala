@@ -158,7 +158,7 @@ object SvgExporter:
 
 //        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
 //        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)
-        s"""    <text x="${SvgDsl.fmt4(point.xx)}" y="${SvgDsl.fmt4(point.yy)}" >${node.toString}</text>"""
+        s"""    <text x="${SvgDsl.fmt4(point.x)}" y="${SvgDsl.fmt4(point.y)}" >${node.toString}</text>"""
       }.mkString("\n")
       s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
          |$nodesXml

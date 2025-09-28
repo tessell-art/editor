@@ -198,8 +198,8 @@ object SelectionOperations:
               val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
                 ClickablePoint(point, Anchor.Vertex(vertexId))
               }
-              val centerX      = vertices.map(_.xx).sum / vertices.size
-              val centerY      = vertices.map(_.yy).sum / vertices.size
+              val centerX      = vertices.map(_.x).sum / vertices.size
+              val centerY      = vertices.map(_.y).sum / vertices.size
               val centerPoint  = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
               EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)

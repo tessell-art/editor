@@ -64,8 +64,8 @@ object PolygonSvg:
     val angleLabels = basePts.zip(orderedAngles).map { case (point, angle) =>
       val label: Point          = bigTransform(point) + Point(4.0, -4.0)
       svg.text(
-        svg.x          := fmt3(label.xx),
-        svg.y          := fmt3(label.yy),
+        svg.x          := fmt3(label.x),
+        svg.y          := fmt3(label.y),
         svg.fontSize   := "12",
         svg.fontFamily := "monospace",
         svg.fill       := "red",
@@ -78,10 +78,10 @@ object PolygonSvg:
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
-        svg.x1            := fmt3(a2.xx),
-        svg.y1            := fmt3(a2.yy),
-        svg.x2            := fmt3(b2.xx),
-        svg.y2            := fmt3(b2.yy),
+        svg.x1            := fmt3(a2.x),
+        svg.y1            := fmt3(a2.y),
+        svg.x2            := fmt3(b2.x),
+        svg.y2            := fmt3(b2.y),
         svg.stroke        := "#00C853",
         svg.strokeWidth   := "6",
         svg.strokeLineCap := "round",

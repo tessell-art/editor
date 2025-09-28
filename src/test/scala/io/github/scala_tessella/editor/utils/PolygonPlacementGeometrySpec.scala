@@ -18,7 +18,7 @@ class PolygonPlacementGeometrySpec extends FunSuite:
     )
     assert(pts.size == 3)
     // Should not be collinear with the edge (has non-zero Y for at least one)
-    assert(pts.exists(_.yy != 0.0))
+    assert(pts.exists(_.y != 0.0))
   }
 
   test("computeWireframePoints handles irregular polygon angles size N producing N points") {

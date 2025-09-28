@@ -28,16 +28,16 @@ object PolygonPlacementGeometry:
       Vector.empty
     else
       val (perpX, perpY, wasFlipped) =
-        determineInwardNormal(tiling, edge, intoFace, (unitVector.xx, unitVector.yy))
+        determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
 
       if angles.toSet.size == 1 then
         val polygonSides                 = angles.size
         val (apothem, radius, halfAngle) = computePolygonGeometrics(polygonSides, edgeLen)
 
-        val center = Point(midPoint.xx + perpX * apothem, midPoint.yy + perpY * apothem)
+        val center = Point(midPoint.x + perpX * apothem, midPoint.y + perpY * apothem)
 
         val angleStep  = halfAngle * 2
-        val edgeAngle  = Math.atan2(unitVector.yy, unitVector.xx)
+        val edgeAngle  = Math.atan2(unitVector.y, unitVector.x)
         val startAngle = computeVertexStartAngle(edgeAngle, wasFlipped, polygonSides, halfAngle)
         val winding    = if wasFlipped then -1 else 1
 
@@ -48,7 +48,7 @@ object PolygonPlacementGeometry:
         val local = buildUnitEdgePolygon(angles)
 
         // Compute transform: align local first edge to the actual perimeter edge
-        val edgeAngle = Radian(Math.atan2(unitVector.yy, unitVector.xx))
+        val edgeAngle = Radian(Math.atan2(unitVector.y, unitVector.x))
 
         // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
         val world = local.map { p =>
@@ -75,8 +75,8 @@ object PolygonPlacementGeometry:
       // 1) advance one unit in current heading to create next vertex
       // 2) then turn by the exterior angle (PI - interior)
       angles.rotateLeft(1).foreach { a =>
-        val nx   = curr.xx + cos(heading)
-        val ny   = curr.yy + sin(heading)
+        val nx   = curr.x + cos(heading)
+        val ny   = curr.y + sin(heading)
         val next = Point(nx, ny)
         pts += next
         curr = next
@@ -149,7 +149,7 @@ object PolygonPlacementGeometry:
   ): Vector[Point] =
     (0 until polygonSides).map { i =>
       val a  = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
-      val px = center.xx + radius * cos(a)
-      val py = center.yy + radius * sin(a)
+      val px = center.x + radius * cos(a)
+      val py = center.y + radius * sin(a)
       tilingPointToCanvasView(Point(px, py))
     }.toVector
