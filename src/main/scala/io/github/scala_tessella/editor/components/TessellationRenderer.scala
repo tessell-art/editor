@@ -16,6 +16,7 @@ import io.github.scala_tessella.editor.models.{
 import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
+import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
 import io.github.scala_tessella.editor.utils.ColorUtils.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.Geometry.{Point, normalizeDeltaAngle}
@@ -166,7 +167,7 @@ object TessellationRenderer:
     }
 
     val perimeterEdges =
-      tiling.boundaryVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList.zipWithIndex.map {
+      tiling.boundaryVertices.map(_.toCoords).slidingO(2).toList.zipWithIndex.map {
         (vs, index) =>
 
           renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index")
@@ -453,7 +454,7 @@ object TessellationRenderer:
     if tiling.isEmpty then Nil
     else
       tiling.innerFacesVertices.flatMap { (faceId, faceVertices) =>
-        val edges = faceVertices.map(vertex => (vertex.id, vertex.coords)).slidingO(2).toList
+        val edges = faceVertices.map(_.toCoords).slidingO(2).toList
         edges.zipWithIndex.map { case (pair, idx) =>
           renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
         }
@@ -464,22 +465,21 @@ object TessellationRenderer:
     if tiling.isEmpty then Nil
     else
       val faceVertices =
-        tiling.findInnerFaceVertices(faceId).toOption.get.map(vertex => (vertex.id, vertex.coords)).toVector
+        tiling.findInnerFaceVertices(faceId).toOption.get.map(_.toCoords).toVector
       val edges        = faceVertices.slidingO(2).toList
       edges.zipWithIndex.map { case (pair, idx) =>
         renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
       }
 
   private def renderInteriorEdge(
-      edge: ((VertexId, BigPoint), (VertexId, BigPoint)),
+      edge: (VertexCoord, VertexCoord),
       faceId: FaceId,
       id: String
   ): Element =
-    val v1           = edge._1._2.toPoint
-    val v2           = edge._2._2.toPoint
-    val point1       = tilingPointToCanvasView(v1)
-    val point2       = tilingPointToCanvasView(v2)
-    val verticesPair = (edge._1._1, edge._2._1)
+    val v1     = edge._1.point
+    val v2     = edge._2.point
+    val point1 = tilingPointToCanvasView(v1)
+    val point2 = tilingPointToCanvasView(v2)
 
     val interactionArea = svg.line(
       lineCoords(point1, point2),
@@ -499,7 +499,7 @@ object TessellationRenderer:
                 Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
                   0,
                   angles,
-                  verticesPair,
+                  edge,
                   tiling,
                   intoFace = Some(faceId)
                 ))
@@ -510,7 +510,7 @@ object TessellationRenderer:
                 Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
                   0,
                   RegularPolygon(sides).angles,
-                  verticesPair,
+                  edge,
                   tiling,
                   intoFace = Some(faceId)
                 ))
@@ -525,7 +525,7 @@ object TessellationRenderer:
 
         EditorState.activeTool.now() match
           case Some(Tool.Inserter) =>
-            TessellationOperations.attemptPolygonInsertion(verticesPair._1, verticesPair._2)
+            TessellationOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
             EditorState.previewPlacement.set(None)
           case _                   => ()
       }
@@ -547,12 +547,12 @@ object TessellationRenderer:
     )
 
   private def renderPerimeterEdge(
-      edge: ((VertexId, BigPoint), (VertexId, BigPoint)),
+      edge: (VertexCoord, VertexCoord),
       edgeIndex: Int,
       id: String
   ): Element =
-    val vertex1    = edge._1._2.toPoint
-    val vertex2    = edge._2._2.toPoint
+    val vertex1    = edge._1.point
+    val vertex2    = edge._2.point
     val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
 
     // Convert tessella coordinates to canvas coordinates
@@ -587,7 +587,7 @@ object TessellationRenderer:
             EditorState.previewPlacement.set(Some(FailedPolygonPlacement(
               edgeIndex,
               angles,
-              (edge._1._1, edge._2._1),
+              edge,
               tiling
             )))
       },

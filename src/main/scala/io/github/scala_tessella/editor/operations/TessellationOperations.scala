@@ -1,15 +1,25 @@
 package io.github.scala_tessella.editor.operations
 
+import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, ValidationError, VertexId}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, ValidationError, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
+import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.editor.utils.{Logger, UndoManager}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 object TessellationOperations:
+
+  type VertexCoord = (id: VertexId, point: Point)
+
+  extension (vertex: Vertex)
+
+    def toCoords: VertexCoord =
+      (vertex.id, vertex.coords.toPoint)
 
   def selectPolygon(sides: Int): Unit =
     ifNotProcessing:
@@ -95,16 +105,16 @@ object TessellationOperations:
       case (_, Some(_), true)               =>
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
       case (tiling, maybeSides, _)          =>
-        val perimeterEdges = tiling.boundaryVertices.map(_.id).slidingO(2).toList
+        val perimeterEdges = tiling.boundaryVertices.map(_.toCoords).slidingO(2).toList
         val op             = () =>
           try
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
               if maybeSides.isDefined then
-                tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head, RegularPolygon(maybeSides.get))
+                tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head.id, RegularPolygon(maybeSides.get))
               else
                 val angles = EditorState.recentIrregularPolygon.now().get
-                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head, SimplePolygon(angles))
+                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head.id, SimplePolygon(angles))
             else
               Left(ValidationError("Invalid edge index"))
           catch
@@ -170,13 +180,15 @@ object TessellationOperations:
           onFailure = error => {
             val curr        = currentTiling.now()
             val maybeFaceId = findFaceContainingEdge(curr, startVertexId, endVertexId)
+            val startCoords = tiling.findVertex(startVertexId).toOption.get.toCoords
+            val endCoords   = tiling.findVertex(endVertexId).toOption.get.toCoords
             if maybeSides.isDefined then
               val placementOpt =
                 Some(
                   FailedPolygonPlacement(
                     edgeIndex = 0, // not needed for interior wireframe
                     angles = RegularPolygon(maybeSides.get).angles,
-                    edge = (startVertexId, endVertexId),
+                    edge = (startCoords, endCoords),
                     tiling = curr,
                     intoFace = maybeFaceId
                   )
@@ -191,7 +203,7 @@ object TessellationOperations:
                   FailedPolygonPlacement(
                     edgeIndex = 0, // not needed for interior wireframe
                     angles = EditorState.recentIrregularPolygon.now().get,
-                    edge = (startVertexId, endVertexId),
+                    edge = (startCoords, endCoords),
                     tiling = curr,
                     intoFace = maybeFaceId
                   )

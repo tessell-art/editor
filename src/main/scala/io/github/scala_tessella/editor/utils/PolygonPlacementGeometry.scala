@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, edgeGeometrics, buildUnitEdgePolygon}
+import io.github.scala_tessella.dcel.BigDecimalGeometry.{AngleDegree, BigPoint}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, Vertex, VertexId}
+import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, buildUnitEdgePolygon, edgeGeometrics}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
@@ -16,19 +17,19 @@ object PolygonPlacementGeometry:
   /** Compute canvas coordinates of the wireframe points for a placement preview/failure. */
   def computeWireframePoints(
       angles: Vector[AngleDegree],
-      edge: (VertexId, VertexId),
+      edge: (VertexCoord, VertexCoord),
       tiling: TilingDCEL,
       intoFace: Option[FaceId] = None
   ): Vector[Point] =
-    val vertex1 = tiling.coordinates(edge._1).toPoint
-    val vertex2 = tiling.coordinates(edge._2).toPoint
+    val vertex1 = edge._1.point
+    val vertex2 = edge._2.point
 
     val (edgeLen, unitVector, midPoint) = edgeGeometrics(vertex1, vertex2)
     if edgeLen == 0 then
       Vector.empty
     else
       val (perpX, perpY, wasFlipped) =
-        determineInwardNormal(tiling, edge, intoFace, (unitVector.x, unitVector.y))
+        determineInwardNormal(tiling, (edge._1.id, edge._2.id), intoFace, (unitVector.x, unitVector.y))
 
       if angles.toSet.size == 1 then
         val polygonSides                 = angles.size

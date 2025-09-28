@@ -1,10 +1,11 @@
 package io.github.scala_tessella.editor.models
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.operations._
+import io.github.scala_tessella.editor.operations.*
+import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.utils.Geometry.Point
 import io.github.scala_tessella.editor.utils.UndoManager
 
@@ -12,7 +13,7 @@ import io.github.scala_tessella.editor.utils.UndoManager
 case class FailedPolygonPlacement(
     edgeIndex: Int,
     angles: Vector[AngleDegree],
-    edge: (VertexId, VertexId),
+    edge: (VertexCoord, VertexCoord),
     tiling: TilingDCEL,
     intoFace: Option[FaceId] = None
 )
