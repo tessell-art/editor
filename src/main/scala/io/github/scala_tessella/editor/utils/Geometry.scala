@@ -267,6 +267,23 @@ object Geometry:
       center + Point.createPolar(radius, angle)
     }
 
+  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
+    * (including start).
+    */
+  def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
+    val origin  = Point.origin
+    var x       = origin.x
+    var y       = origin.y
+    var heading = 0.0 // radians
+    val pts     = collection.mutable.ArrayBuffer[Point](origin)
+    turns.foreach { t =>
+      x = x + Math.cos(heading)
+      y = y + Math.sin(heading)
+      pts += Point(x, y)
+      heading = heading + t
+    }
+    pts.toVector
+
   /** Build polygon vertices using unit edge length and given internal angles. */
   def buildUnitEdgePolygon(angles: Seq[Radian], startHeading: Radian = Radian(0)): Vector[Point] =
     if angles.isEmpty then Vector.empty
@@ -294,7 +311,7 @@ object Geometry:
       }
 
       // We now have N+1 points with the last equal to the first only for closed perfect polygons.
-      // For preview we want exactly N vertices, so drop the last step-produced point.
+      // For preview, we want exactly N vertices, so drop the last step-produced point.
       val built = pts.result()
       if built.size >= 2 then built.dropRight(1) else built
 
@@ -315,20 +332,3 @@ object Geometry:
     val apothem   = sideLength / (2 * Math.tan(halfAngle))
     val radius    = sideLength / (2 * Math.sin(halfAngle))
     (apothem, radius, halfAngle)
-
-  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
-    * (including start).
-    */
-  def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
-    val origin  = Point.origin
-    var x       = origin.x
-    var y       = origin.y
-    var heading = 0.0 // radians
-    val pts     = collection.mutable.ArrayBuffer[Point](origin)
-    turns.foreach { t =>
-      x = x + Math.cos(heading)
-      y = y + Math.sin(heading)
-      pts += Point(x, y)
-      heading = heading + t
-    }
-    pts.toVector

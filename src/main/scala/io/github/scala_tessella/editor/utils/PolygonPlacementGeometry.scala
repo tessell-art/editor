@@ -2,9 +2,9 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, edgeGeometrics}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian, edgeGeometrics, buildUnitEdgePolygon}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
-import io.github.scala_tessella.ring_seq.RingSeq.{rotateLeft, slidingO}
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 import scala.math.*
 
@@ -45,7 +45,7 @@ object PolygonPlacementGeometry:
       else
 
         // Irregular polygon with unit edges and given internal angles.
-        val local = buildUnitEdgePolygon(angles)
+        val local = buildUnitEdgePolygon(angles.map(_.toBigRadian.toBigDecimal.toDouble).map(Radian(_)))
 
         // Compute transform: align local first edge to the actual perimeter edge
         val edgeAngle = Radian(Math.atan2(unitVector.y, unitVector.x))
@@ -59,34 +59,6 @@ object PolygonPlacementGeometry:
 
         // No additional inward offset needed for preview points; keep exact constructed vertices
         world.map(tilingPointToCanvasView)
-
-  /** Build polygon vertices in local space using unit edge length and given internal angles. */
-  private def buildUnitEdgePolygon(angles: Vector[AngleDegree]): Vector[Point] =
-    if angles.isEmpty then Vector.empty
-    else
-      var pts     = Vector.newBuilder[Point]
-      var heading = 0.0 // radians
-      var curr    = Point.origin
-
-      // first vertex
-      pts += curr
-
-      // For each interior angle:
-      // 1) advance one unit in current heading to create next vertex
-      // 2) then turn by the exterior angle (PI - interior)
-      angles.rotateLeft(1).foreach { a =>
-        val nx   = curr.x + cos(heading)
-        val ny   = curr.y + sin(heading)
-        val next = Point(nx, ny)
-        pts += next
-        curr = next
-        heading = heading + (math.Pi - a.toBigRadian.toBigDecimal.toDouble)
-      }
-
-      // We now have N+1 points with the last equal to the first only for closed perfect polygons.
-      // For preview we want exactly N vertices, so drop the last step-produced point.
-      val built = pts.result()
-      if built.size >= 2 then built.dropRight(1) else built
 
   /** Determines the inward-pointing normal vector for an edge relative to a face. */
   private def determineInwardNormal(
@@ -132,24 +104,22 @@ object PolygonPlacementGeometry:
       wasFlipped: Boolean,
       polygonSides: Int,
       halfAngle: AngleDegree
-  ): Double =
+  ): Radian =
     val isOdd                   = polygonSides % 2 == 1
     val baseOffset: AngleDegree = AngleDegree(90) - halfAngle
     val oddHalfStep             = if isOdd && !wasFlipped then halfAngle else AngleDegree(0)
-    edgeAngle + (baseOffset + oddHalfStep).toBigRadian.toBigDecimal.toDouble
+    Radian(edgeAngle + (baseOffset + oddHalfStep).toBigRadian.toBigDecimal.toDouble)
 
   /** Generates the vertex points for the wireframe polygon. */
   private def generateWireframeVertices(
       polygonSides: Int,
       center: Point,
       radius: Double,
-      startAngle: Double,
+      startAngle: Radian,
       angleStep: AngleDegree,
       winding: Int
   ): Vector[Point] =
     (0 until polygonSides).map { i =>
-      val a  = startAngle + (angleStep * winding * i).toBigRadian.toBigDecimal.toDouble
-      val px = center.x + radius * cos(a)
-      val py = center.y + radius * sin(a)
-      tilingPointToCanvasView(Point(px, py))
+      val theta = startAngle + Radian((angleStep * winding * i).toBigRadian.toBigDecimal.toDouble)
+      tilingPointToCanvasView(center.offsetPolar(radius, theta))
     }.toVector
