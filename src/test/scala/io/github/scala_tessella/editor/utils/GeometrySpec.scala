@@ -38,8 +38,8 @@ class GeometrySpec extends FunSuite:
     val right  = Point(1, 0)
     val up     = Point(0, 1)
 
-    assertEquals(origin.angleToNormalized(right).toDouble, 0.0, epsilon)
-    assertEquals(origin.angleToNormalized(up).toDouble, Pi / 2, epsilon)
+    assertEquals(origin.angleTo(right).toDouble, 0.0, epsilon)
+    assertEquals(origin.angleTo(up).toDouble, Pi / 2, epsilon)
   }
 
   test("normalizeDeltaAngle should handle angle wrapping") {

@@ -39,7 +39,7 @@ object EditorCanvasComponent:
               case (Some(distance), None, _)            => distanceString(distance)
               case (Some(distance), Some(angle), isRad) =>
                 val angleText    =
-                  if isRad then f"Angle: $angle%.6f rad" else f"Angle: ${angle * 180 / Math.PI}%.2f°"
+                  if isRad then f"Angle: ${angle.toDouble}%.6f rad" else f"Angle: ${angle.toDegrees}%.2f°"
                 val distancePart = distanceString(distance)
                 span(
                   span(

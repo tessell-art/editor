@@ -150,19 +150,16 @@ object Geometry:
     def offsetPolar(radius: Double, theta: Radian): Point =
       (point.x + radius * Math.cos(theta), point.y + radius * Math.sin(theta))
 
+    /** Calculates the horizontal angle between two points */
     def angleTo(other: Point): Radian =
       (point, other).horizontalAngle
-
-    /** Calculates the horizontal angle between two points */
-    def angleToNormalized(other: Point): Radian =
-      (point, other).horizontalAngleNormalized
 
     def distanceTo(other: Point): Double =
       (point, other).length
 
     /** New point moved to align with reference to two other points */
     def alignWithStart(first: Point, second: Point): Point =
-      (point - first).rotate(Radian.TAU - first.angleToNormalized(second))
+      (point - first).rotate(Radian.TAU - first.angleTo(second))
 
     /** Get the length (magnitude) of this point as a vector */
     def magnitude: Double =

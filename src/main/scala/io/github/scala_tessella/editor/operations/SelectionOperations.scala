@@ -4,7 +4,7 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point, Radian}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.ring_seq.RingSeq.{isRotationOrReflectionOf, slidingO}
 
@@ -41,14 +41,12 @@ object SelectionOperations:
         val maybeAngle: Option[Double] = endOpt.map(clickable =>
           val angle1          = LineSegment(start.point, clickable.point).horizontalAngleNormalized
           val angle2          = LineSegment(start.point, point.point).horizontalAngleNormalized
-          val diffRad: Double = (angle2 - angle1).toDouble
           // Normalize the difference to be within the [0, 2*PI) range
-          val TAU             = 2 * Math.PI
-          val normalizedAngle = (diffRad % TAU + TAU) % TAU
+          val diffRad: Double = (angle2 - angle1).normalize.toDouble
           // The angle is the smaller of the two conjugate angles, which is in [0, PI]
-          Math.min(normalizedAngle, TAU - normalizedAngle)
+          Math.min(diffRad, Radian.TAU.toDouble - diffRad)
         )
-        EditorState.measurementAngle.set(maybeAngle)
+        EditorState.measurementAngle.set(maybeAngle.map(Radian(_)))
 
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     ifNotProcessing:

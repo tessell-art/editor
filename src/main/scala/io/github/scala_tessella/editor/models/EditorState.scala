@@ -1,9 +1,9 @@
 package io.github.scala_tessella.editor.models
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -152,7 +152,7 @@ object EditorState:
   val measurementResult: Var[Option[Double]] = Var(None)
 
   /** Measurement result (angle) */
-  val measurementAngle: Var[Option[Double]] = Var(None)
+  val measurementAngle: Var[Option[Radian]] = Var(None)
 
   /** Whether the angle measurement result is shown in radians or degrees */
   val isAngleShownInRad: Var[Boolean] = Var(true)
