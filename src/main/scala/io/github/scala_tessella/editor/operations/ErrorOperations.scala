@@ -126,14 +126,14 @@ object ErrorOperations:
         dom.document.body.appendChild(container): Unit
         container
       case _                             =>
-        // Fallback: attach to body directly if narrowing failed (should not happen for "div")
+        // Fallback: attach to the body directly if narrowing failed (should not happen for "div")
         val fallback = dom.document.body
         fallback
 
   private def showToast(text: String, severity: Severity, durationMs: Int): Unit =
     val container = ensureToastContainer()
 
-    // Create div and safely narrow via pattern match
+    // Create a div and safely narrow via pattern match
     dom.document.createElement("div") match
       case toast: dom.HTMLDivElement =>
         toast.setAttribute("role", "status")

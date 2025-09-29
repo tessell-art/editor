@@ -94,7 +94,7 @@ object TessellationOperations:
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
 
-  // Handle perimeter edge click with polygon growth
+  // Handle perimeter-edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
     (currentTiling.now(), EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
       case (tiling, _, _) if tiling.isEmpty =>

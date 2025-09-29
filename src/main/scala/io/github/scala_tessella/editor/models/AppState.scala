@@ -76,17 +76,6 @@ object AppState:
         case EditorMode.Delete => EditorMode.Select
       }
 
-//  /**
-//   * Toggles between STRICT and CROSSING strictness modes for the tiling.
-//   * Does nothing if the editor is currently processing an operation.
-//   */
-//  def toggleStrictness(): Unit =
-//    ifNotProcessing:
-//      strictness.update {
-//        case Strictness.STRICT => Strictness.CROSSING
-//        case _                 => Strictness.STRICT
-//      }
-
   /** Toggles the visibility of node labels. Does nothing if the editor is currently processing an operation.
     */
   def toggleNodeLabels(): Unit =
