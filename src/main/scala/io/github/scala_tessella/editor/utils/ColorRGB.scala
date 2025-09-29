@@ -19,10 +19,10 @@ object ColorRGB:
       color.blue
 
     def toRgb: String =
-      s"rgb(${color.r},${color.g},${color.b})"
+      s"rgb($r,$g,$b)"
 
     def toRgba: String =
-      s"rgba(${color.r},${color.g},${color.b},1)"
+      s"rgba($r,$g,$b,1)"
 
     def toHex: String =
-      f"#${color.r}%02x${color.g}%02x${color.b}%02x"
+      f"#$r%02x$g%02x$b%02x"
