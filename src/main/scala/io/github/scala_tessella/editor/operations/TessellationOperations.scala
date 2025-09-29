@@ -1,6 +1,5 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, ValidationError, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
