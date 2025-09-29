@@ -48,20 +48,26 @@ object SvgDsl:
 //    val fy = f"$y%1.${decimals}f"
 //    s"$fx,$fy"
 
-  def fmt3(d: Double) =
-    f"$d%1.3f"
+  def fmt(d: Double, decimal: Int): String =
+    String.format(s"%1.${decimal}f", double2Double(d))
 
-  def fmt4(d: Double) =
-    f"$d%1.4f"
+  def fmt3(d: Double): String =
+    fmt(d, 3)
 
-  def fmt6(d: Double) =
-    f"$d%1.6f"
+  def fmt4(d: Double): String =
+    fmt(d, 4)
+
+  def fmt6(d: Double): String =
+    fmt(d, 6)
+
+  def fmtPoint(point: Point, decimal: Int): String =
+    s"${fmt(point.x, decimal)},${fmt(point.y, decimal)}"
 
   def fmt3Point(point: Point): String =
-    s"${fmt3(point.x)},${fmt3(point.y)}"
+    fmtPoint(point, 3)
 
   def fmt6Point(point: Point): String =
-    s"${fmt6(point.x)},${fmt6(point.y)}"
+    fmtPoint(point, 6)
 
   def toPointsString(points: Seq[Point], decimals: Int = 3): String =
     points.map(fmt3Point).mkString(" ")
