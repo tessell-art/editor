@@ -35,7 +35,7 @@ object SvgImporter:
     }
     inputEl.click()
 
-  private[utils] def parseColor(colorStr: String): Option[(Int, Int, Int)] =
+  private[utils] def parseColor(colorStr: String): Option[ColorRGB] =
     Option(colorStr).flatMap { s =>
       val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
       Option(rgbRegex.exec(s)).flatMap { result =>
@@ -48,7 +48,7 @@ object SvgImporter:
             r    <- Try(rStr.toInt).toOption
             g    <- Try(gStr.toInt).toOption
             b    <- Try(bStr.toInt).toOption
-          yield (r, g, b)
+          yield ColorRGB(r, g, b)
         else None
       }
     }
@@ -73,8 +73,8 @@ object SvgImporter:
         )
 
       // Collect polygon fills (in order) to restore colors
-      val svgPolys                         = doc.querySelectorAll("#tiling-polygons polygon")
-      val polyFills: List[(Int, Int, Int)] =
+      val svgPolys                  = doc.querySelectorAll("#tiling-polygons polygon")
+      val polyFills: List[ColorRGB] =
         (0 until svgPolys.length).flatMap { i =>
           val el = svgPolys(i)
           parseColor(Option(el.getAttribute("fill")).getOrElse(""))
@@ -95,8 +95,8 @@ object SvgImporter:
           val colorMap =
             faces
               .zip(polyFills) // zip truncates safely if lengths differ
-              .map { case (face, (r, g, b)) =>
-                face.id -> ColorRGB(r, g, b)
+              .map { case (face, rgb) =>
+                face.id -> rgb
               }
               .toMap
           EditorState.polygonColors.set(colorMap)
