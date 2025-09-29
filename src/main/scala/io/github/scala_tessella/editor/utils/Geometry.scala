@@ -265,12 +265,6 @@ object Geometry:
       center + Point.createPolar(radius, angle)
     }
 
-//  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
-//    * (including start).
-//    */
-//  def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
-//    buildUnitEdgePolygon(turns)
-
   /** Build polygon vertices using unit edge length and given internal angles. */
   def buildUnitEdgePolygon(angles: Seq[Radian]): Vector[Point] =
     val origin  = Point.origin
