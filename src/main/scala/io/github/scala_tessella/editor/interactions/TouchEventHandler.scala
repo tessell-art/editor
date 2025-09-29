@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.interactions
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point, Radian}
-import org.scalajs.dom.{DOMRect, Touch, TouchEvent}
+import org.scalajs.dom.{DOMRect, Touch, TouchEvent, TouchList}
 
 object TouchEventHandler:
 
@@ -35,6 +35,9 @@ object TouchEventHandler:
         Point(domRect.width, domRect.height)
       )
 
+  private def segmentFromTouchPair(touches: TouchList) =
+    LineSegment(touches(0).toPoint, touches(1).toPoint)
+
   def handleTouchStart(event: TouchEvent): Unit =
     val touches = event.touches
     if touches.length == 1 then
@@ -46,11 +49,7 @@ object TouchEventHandler:
     else if touches.length == 2 then
       event.preventDefault()
       isDragging.set(true)
-      val touch1      = touches(0)
-      val touch2      = touches(1)
-      val touchPoint1 = touch1.toPoint
-      val touchPoint2 = touch2.toPoint
-      val segment     = LineSegment(touchPoint1, touchPoint2)
+      val segment = segmentFromTouchPair(touches)
 
       initialTouchDistance.set(Some(segment.length))
       initialAngle.set(Some(segment.horizontalAngle))
@@ -111,11 +110,7 @@ object TouchEventHandler:
       (initDistOpt, initScaleOpt, initAngleOpt, initRotationOpt, anchorOpt) match
         case (Some(initialDist), Some(initScale), Some(initAngle), Some(initRotation), Some(anchorPoint)) =>
           event.preventDefault()
-          val touch1      = touches(0)
-          val touch2      = touches(1)
-          val touchPoint1 = touch1.toPoint
-          val touchPoint2 = touch2.toPoint
-          val segment     = LineSegment(touchPoint1, touchPoint2)
+          val segment = segmentFromTouchPair(touches)
 
           // New scale and rotation based on the initial state
           val newDistance   = segment.length
