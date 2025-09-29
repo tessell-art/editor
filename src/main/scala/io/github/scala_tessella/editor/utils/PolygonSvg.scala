@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.utils.Geometry.{
   Radian,
   fitPointsToSquare,
   regularPolygonPoints,
-  walkUnitEdges
+  buildUnitEdgePolygon
 }
 import io.github.scala_tessella.editor.utils.SvgDsl.{fmt3, polygon, root}
 
@@ -40,13 +40,13 @@ object PolygonSvg:
   // Irregular polygon from AngleDegree edges, unit walk + fit
   def irregularPreview(anglesDeg: Vector[AngleDegree], size: Int = 40, pad: Double = 4.0): Element =
     val turns = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble).map(Radian(_))
-    val pts   = walkUnitEdges(turns)
+    val pts   = buildUnitEdgePolygon(turns)
     previewFitted(pts, size, pad)
 
   // Big irregular with attaching edge overlay
   def irregularBigWithHead(anglesDeg: Vector[AngleDegree], size: Int = 220, pad: Double = 12.0): Element =
     val turns           = anglesDeg.map(_.supplement.toBigRadian.toBigDecimal.toDouble).map(Radian(_))
-    val basePts         = walkUnitEdges(turns)
+    val basePts         = buildUnitEdgePolygon(turns)
     val (scale, offset) = basePts.fitPointsToSquare(size, pad)
 
     def bigTransform(p: Point): Point =

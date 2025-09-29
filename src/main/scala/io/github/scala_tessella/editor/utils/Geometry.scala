@@ -265,27 +265,26 @@ object Geometry:
       center + Point.createPolar(radius, angle)
     }
 
-  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
-    * (including start).
-    */
-  def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
+//  /** Walks a sequence of unit-length edges turning by given angles (in radians), returning vertices
+//    * (including start).
+//    */
+//  def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
 //    buildUnitEdgePolygon(turns)
+
+  /** Build polygon vertices using unit edge length and given internal angles. */
+  def buildUnitEdgePolygon(angles: Seq[Radian]): Vector[Point] =
     val origin  = Point.origin
     var x       = origin.x
     var y       = origin.y
     var heading = 0.0 // radians
     val pts     = collection.mutable.ArrayBuffer[Point](origin)
-    turns.foreach { t =>
+    angles.foreach { t =>
       x = x + Math.cos(heading)
       y = y + Math.sin(heading)
       pts += Point(x, y)
       heading = heading + t
     }
     pts.toVector
-
-  /** Build polygon vertices using unit edge length and given internal angles. */
-  def buildUnitEdgePolygon(angles: Seq[Radian], startHeading: Radian = Radian(0)): Vector[Point] =
-    walkUnitEdges(angles)
 
   /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
   def edgeGeometrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
