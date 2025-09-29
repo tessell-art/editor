@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.ColorRGB
 import munit.FunSuite
 
 class ColorOperationsSpec extends FunSuite with EditorStateFixture:
@@ -10,7 +11,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
   override def beforeEach(context: BeforeEach): Unit = {
     super.beforeEach(context)
     // Suite-specific test defaults
-    EditorState.fillColor.set((255, 0, 0))
+    EditorState.fillColor.set(ColorRGB(255, 0, 0))
   }
 
   val F1: FaceId = FaceId("F1")
