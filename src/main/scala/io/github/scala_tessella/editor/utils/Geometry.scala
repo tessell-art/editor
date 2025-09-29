@@ -230,7 +230,7 @@ object Geometry:
     ): Seq[Point] =
       points.map(_.transform(scale, offset))
 
-    /** Compute view-box (width, height, offset) for a set of points with given scale and padding. */
+    /** Compute the view-box (width, height, offset) for a set of points with given scale and padding. */
     def fitPointsToViewBox(
         scale: Double,
         padding: Double

@@ -146,7 +146,7 @@ object EditorCanvasComponent:
         // HTML placeholder text is now inside the wrapper
         div(
           child.text <-- EditorState.viewTransform.signal.map(t =>
-            f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}%.0f°"
+            f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}°"
           ),
           className := "zoom-rotation"
         )

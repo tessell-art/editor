@@ -86,21 +86,6 @@ object CanvasControlComponent:
             "Activate measure mode to calculate the distance between two points",
             IconsSVG.rulerIcon
           ),
-//          button(
-//            child.text <-- EditorState.editorMode.signal.map {
-//              case EditorMode.Select => "Mode: Select"
-//              case EditorMode.Delete => "Mode: Delete"
-//            },
-//            className := "toggle-btn",
-//            cls.toggle("mode-select") <-- EditorState.editorMode.signal.map(_ == EditorMode.Select),
-//            cls.toggle("mode-delete") <-- EditorState.editorMode.signal.map(_ == EditorMode.Delete),
-//            cls.toggle("active") <-- EditorState.editorMode.signal.map(_ == EditorMode.Delete),
-//            onClick --> { _ => AppState.toggleEditorMode() },
-//            title <-- EditorState.editorMode.signal.map {
-//              case EditorMode.Select => "Click to switch to Delete mode"
-//              case EditorMode.Delete => "Click to switch to Select mode"
-//            }
-//          ),
           button(
             child.text <-- EditorState.showNodeLabels.signal.map(show =>
               if show then "Labels: ON" else "Labels: OFF"
@@ -116,16 +101,6 @@ object CanvasControlComponent:
               if show then "Click to hide the node labels" else "Click to show the node labels"
             }
           ),
-//          button(
-//            child.text <-- EditorState.strictness.signal.map(s => s"Validation: ${if s == Strictness.STRICT then "ON" else "OFF"}"),
-//            className := "toggle-btn responsive-control",
-//            cls.toggle("active") <-- EditorState.strictness.signal.map(_ == Strictness.STRICT),
-//            onClick --> { _ => AppState.toggleStrictness() },
-//            title <-- EditorState.strictness.signal.map {
-//              case Strictness.STRICT => "Validation ON: adding a polygon touching and crossing the edges of the perimeter is not allowed. Click to switch OFF."
-//              case _                 => "Validation OFF: without validation it is possible to add a polygon that would invalidate the tessellation. Click to switch ON."
-//            }
-//          ),
           UndoComponent.element
         )
       )
