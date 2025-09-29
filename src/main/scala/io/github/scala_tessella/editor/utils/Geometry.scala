@@ -1,7 +1,5 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.ring_seq.RingSeq.rotateLeft
-
 import scala.annotation.targetName
 
 /** Planar geometry simplified toolbox */
@@ -271,6 +269,7 @@ object Geometry:
     * (including start).
     */
   def walkUnitEdges(turns: Seq[Radian]): Vector[Point] =
+//    buildUnitEdgePolygon(turns)
     val origin  = Point.origin
     var x       = origin.x
     var y       = origin.y
@@ -286,34 +285,7 @@ object Geometry:
 
   /** Build polygon vertices using unit edge length and given internal angles. */
   def buildUnitEdgePolygon(angles: Seq[Radian], startHeading: Radian = Radian(0)): Vector[Point] =
-    if angles.isEmpty then Vector.empty
-    else
-      val pts         = Vector.newBuilder[Point]
-      var heading     = startHeading
-      var curr: Point = Point.origin
-
-      // first vertex
-      pts += curr
-
-      // Rotate the angle sequence to start from the second angle
-//      val rotatedAngles = if angles.size > 1 then angles.tail ++ angles.take(1) else angles
-
-      // For each interior angle:
-      // 1) advance one unit in current heading to create next vertex
-      // 2) then turn by the exterior angle (PI - interior)
-      angles.rotateLeft(1).foreach { a =>
-        val nx   = curr.x + Math.cos(heading)
-        val ny   = curr.y + Math.sin(heading)
-        val next = (nx, ny)
-        pts += next
-        curr = next
-        heading = heading + (Math.PI - a)
-      }
-
-      // We now have N+1 points with the last equal to the first only for closed perfect polygons.
-      // For preview, we want exactly N vertices, so drop the last step-produced point.
-      val built = pts.result()
-      if built.size >= 2 then built.dropRight(1) else built
+    walkUnitEdges(angles)
 
   /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
   def edgeGeometrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
