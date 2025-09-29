@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.utils.Geometry.Point
-import io.github.scala_tessella.editor.utils.UndoManager
+import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
 
 // Case class to represent a failed polygon placement
 case class FailedPolygonPlacement(
@@ -153,7 +153,7 @@ object AppState:
     * @param color
     *   The color to apply (RGB tuple)
     */
-  def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
+  def applyColorToSelectedPolygons(color: ColorRGB): Unit =
     ColorOperations.applyColorToSelectedPolygons(color)
 
   /** Gets the color for a polygon or assigns a new one if it doesn't have one.
@@ -162,7 +162,7 @@ object AppState:
     * @return
     *   The color of the polygon (RGB tuple)
     */
-  def getOrAssignPolygonColor(faceId: FaceId): (Int, Int, Int) =
+  def getOrAssignPolygonColor(faceId: FaceId): ColorRGB =
     ColorOperations.getOrAssignPolygonColor(faceId)
 
   /** Shows an error message with optional details about failed operations.

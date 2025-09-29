@@ -95,8 +95,8 @@ object SvgImporter:
           val colorMap =
             faces
               .zip(polyFills) // zip truncates safely if lengths differ
-              .map { case (face, rgb) =>
-                face.id -> rgb
+              .map { case (face, (r, g, b)) =>
+                face.id -> ColorRGB(r, g, b)
               }
               .toMap
           EditorState.polygonColors.set(colorMap)

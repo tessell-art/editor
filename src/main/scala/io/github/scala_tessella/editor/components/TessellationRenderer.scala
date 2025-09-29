@@ -17,7 +17,8 @@ import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPol
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
-import io.github.scala_tessella.editor.utils.ColorUtils.*
+import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.Geometry.{Point, normalizeDeltaAngle}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
@@ -74,7 +75,7 @@ object TessellationRenderer:
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(faceId))
 
     val rgbSignal = EditorState.polygonColors.signal.map {
-      _.getOrElse(faceId, (200, 200, 200)).toRgbString
+      _.getOrElse(faceId, ColorRGB(200, 200, 200)).toRgb
     }
 
     // Check if this polygon should be hidden due to failed deletion

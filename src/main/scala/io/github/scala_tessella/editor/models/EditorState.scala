@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
 import org.scalajs.dom
 
@@ -66,16 +67,16 @@ object EditorState:
   //
 
   /** Current fill color (RGB tuple) */
-  val fillColor: Var[(Int, Int, Int)] = Var((76, 175, 80))
+  val fillColor: Var[ColorRGB] = Var(ColorRGB(76, 175, 80))
 
   /** Map of polygon tags to their colors */
-  val polygonColors: Var[Map[FaceId, (Int, Int, Int)]] = Var(Map.empty)
+  val polygonColors: Var[Map[FaceId, ColorRGB]] = Var(Map.empty)
 
   /** Whether the color picker is visible */
   val showColorPicker: Var[Boolean] = Var(false)
 
   /** Temporary color being edited in the color picker */
-  val tempColor: Var[(Int, Int, Int)] = Var(fillColor.now())
+  val tempColor: Var[ColorRGB] = Var(fillColor.now())
 
   //
   // UI STATE

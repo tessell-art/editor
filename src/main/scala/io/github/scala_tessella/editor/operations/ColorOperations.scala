@@ -3,11 +3,11 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.UndoManager
+import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
 
 object ColorOperations:
 
-  def applyColorToSelectedPolygons(color: (Int, Int, Int)): Unit =
+  def applyColorToSelectedPolygons(color: ColorRGB): Unit =
     ifNotProcessing:
       val selectedIds = EditorState.selectedTilingPolygons.now()
       if selectedIds.nonEmpty then
@@ -20,7 +20,7 @@ object ColorOperations:
           }
         }
 
-  def getOrAssignPolygonColor(faceId: FaceId): (Int, Int, Int) =
+  def getOrAssignPolygonColor(faceId: FaceId): ColorRGB =
     EditorState.polygonColors.now().get(faceId) match
       case Some(rgb) => rgb
       case None      =>

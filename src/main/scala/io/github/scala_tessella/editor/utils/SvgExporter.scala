@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
-import io.github.scala_tessella.editor.utils.ColorUtils.*
+import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.Geometry.{Point, fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.SvgDsl
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
@@ -100,7 +100,7 @@ object SvgExporter:
   ): String =
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
-        val color    = AppState.getOrAssignPolygonColor(faceId).toRgbString
+        val color    = AppState.getOrAssignPolygonColor(faceId).toRgb
         val points   = pointsString(faceVertices, scale, offset)
         val nodesStr = "" // nodes.map(_.toString).mkString(",")
 
