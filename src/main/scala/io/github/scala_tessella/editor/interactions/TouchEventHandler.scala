@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.interactions
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point, Radian}
+import org.scalajs.dom
 import org.scalajs.dom.{DOMRect, Touch, TouchEvent, TouchList}
 
 object TouchEventHandler:
@@ -38,6 +39,12 @@ object TouchEventHandler:
   private def segmentFromTouchPair(touches: TouchList) =
     LineSegment(touches(0).toPoint, touches(1).toPoint)
 
+  private def getPointer(canvasElement: dom.Element, segment: LineSegment) =
+    val canvasRect    = canvasElement.getBoundingClientRect()
+    val rect          = canvasRect.toSegment
+    val gestureCenter = segment.midPoint
+    (gestureCenter - rect.p1) * (EditorConfig.canvasEnd / rect.p2)
+
   def handleTouchStart(event: TouchEvent): Unit =
     val touches = event.touches
     if touches.length == 1 then
@@ -60,12 +67,8 @@ object TouchEventHandler:
 
       // Set an anchor point for zooming
       EditorState.canvasElementRef.now().foreach { canvasElement =>
-        val canvasRect    = canvasElement.getBoundingClientRect()
-        val rect          = canvasRect.toSegment
-        val gestureCenter = segment.midPoint
-        val pointer       =
-          (gestureCenter - rect.p1) * (EditorConfig.canvasEnd / rect.p2)
-        val worldPoint    = screenToWorld(pointer, currentTransform)
+        val pointer    = getPointer(canvasElement, segment)
+        val worldPoint = screenToWorld(pointer, currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
       }
     else
@@ -125,14 +128,8 @@ object TouchEventHandler:
           val gestureCenter = segment.midPoint
 
           EditorState.canvasElementRef.now().foreach { canvasElement =>
-            val canvasRect    = canvasElement.getBoundingClientRect()
-            val rect          = canvasRect.toSegment
-            val gestureCenter = segment.midPoint
-            val pointer       =
-              (gestureCenter - rect.p1) * (EditorConfig.canvasEnd / rect.p2)
-
-            val newPan = pointer - transformedPoint
-
+            val pointer = getPointer(canvasElement, segment)
+            val newPan  = pointer - transformedPoint
             EditorState.viewTransform.update(_.copy(
               scale = newScale,
               pan = newPan
