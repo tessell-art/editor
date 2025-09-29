@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.VertexId
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import munit.FunSuite
 
 class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
@@ -52,7 +53,13 @@ class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
   }
 
   test("showError should set failed placement") {
-    val placement = FailedPolygonPlacement(0, Vector.empty, (VertexId(""), VertexId("")), null, None)
+    val placement = FailedPolygonPlacement(
+      0,
+      Vector.empty,
+      ((VertexId(""), Point.origin), (VertexId(""), Point.origin)),
+      null,
+      None
+    )
     ErrorOperations.showError("test", placement = Some(placement), asToast = false)
 
     assertEquals(EditorState.failedPlacement.now(), Some(placement))

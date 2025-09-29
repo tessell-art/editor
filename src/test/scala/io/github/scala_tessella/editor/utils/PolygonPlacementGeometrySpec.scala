@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.utils
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
+import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
 import munit.FunSuite
 
 class PolygonPlacementGeometrySpec extends FunSuite:
@@ -12,7 +13,7 @@ class PolygonPlacementGeometrySpec extends FunSuite:
     val angles = Vector.fill(3)(AngleDegree(60))
     val pts    = PolygonPlacementGeometry.computeWireframePoints(
       angles,
-      (VertexId("V1"), VertexId("V2")),
+      ((VertexId("V1"), Point.origin), (VertexId("V2"), Point(1, 0))),
       tiling,
       Some(FaceId("F1"))
     )
@@ -24,11 +25,14 @@ class PolygonPlacementGeometrySpec extends FunSuite:
   test("computeWireframePoints handles irregular polygon angles size N producing N points") {
     val angles = Vector(AngleDegree(60), AngleDegree(120), AngleDegree(60), AngleDegree(120))
     val tiling = TilingDCEL.createSimplePolygon(SimplePolygon(angles)).toOption.get
+    println(tiling.innerFacesVertices)
     val pts    = PolygonPlacementGeometry.computeWireframePoints(
       angles,
-      (VertexId("V1"), VertexId("V2")),
+      ((VertexId("V1"), Point.origin), (VertexId("V2"), Point(1, 0))),
       tiling,
       Some(FaceId("F1"))
     )
+    println(pts)
+    println(pts.size)
     assert(pts.size == angles.size)
   }

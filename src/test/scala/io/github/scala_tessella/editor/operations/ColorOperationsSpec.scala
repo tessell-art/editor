@@ -22,7 +22,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     // Given
     val selectedIds = Set(F1, F2)
     EditorState.selectedTilingPolygons.set(selectedIds)
-    val color       = (100, 150, 200)
+    val color       = ColorRGB(100, 150, 200)
     EditorState.fillColor.set(color)
 
     // When
@@ -36,10 +36,10 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("applyColorToSelectedPolygons should not change colors of unselected polygons") {
     // Given
-    EditorState.polygonColors.set(Map(F3 -> (0, 0, 255)))
+    EditorState.polygonColors.set(Map(F3 -> ColorRGB(0, 0, 255)))
     val selectedIds = Set(F1)
     EditorState.selectedTilingPolygons.set(selectedIds)
-    val color       = (100, 150, 200)
+    val color       = ColorRGB(100, 150, 200)
 
     // When
     ColorOperations.applyColorToSelectedPolygons(color)
@@ -47,15 +47,15 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     // Then
     val colors = EditorState.polygonColors.now()
     assertEquals(colors.get(F1), Some(color))
-    assertEquals(colors.get(F3), Some((0, 0, 255))) // Should be unchanged
+    assertEquals(colors.get(F3), Some(ColorRGB(0, 0, 255))) // Should be unchanged
   }
 
   test("applyColorToSelectedPolygons should do nothing if no polygons are selected") {
     // Given
-    val initialColors = Map(F3 -> (0, 0, 255))
+    val initialColors = Map(F3 -> ColorRGB(0, 0, 255))
     EditorState.polygonColors.set(initialColors)
     EditorState.selectedTilingPolygons.set(Set.empty)
-    val color         = (100, 150, 200)
+    val color         = ColorRGB(100, 150, 200)
 
     // When
     ColorOperations.applyColorToSelectedPolygons(color)
@@ -66,7 +66,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("getOrAssignPolygonColor should return existing color if available") {
     // Given
-    val existingColor = (123, 45, 67)
+    val existingColor = ColorRGB(123, 45, 67)
     EditorState.polygonColors.set(Map(F1 -> existingColor))
 
     // When

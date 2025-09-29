@@ -46,7 +46,7 @@ object PolygonPlacementGeometry:
       else
 
         // Irregular polygon with unit edges and given internal angles.
-        val local = buildUnitEdgePolygon(angles.map(_.toBigRadian.toBigDecimal.toDouble).map(Radian(_)))
+        val local = buildUnitEdgePolygon(angles.map(_.toBigRadian.toBigDecimal.toDouble).map(Radian(_))).init
 
         // Compute transform: align local first edge to the actual perimeter edge
         val edgeAngle = Radian(Math.atan2(unitVector.y, unitVector.x))
