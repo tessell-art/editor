@@ -13,7 +13,7 @@ object TessellationGeometry:
     *   The transformed point on the canvas.
     */
   def tilingPointToCanvasView(point: Point): Point =
-    point.transform(canvasScale, canvasCenter)
+    point.scaleAndTranslate(canvasScale, canvasCenter)
 
   extension (bigPoint: BigPoint)
 

@@ -29,7 +29,7 @@ object Geometry:
         scale: Double,
         offset: Point
     ): Seq[Point] =
-      points.map(_.transform(scale, offset))
+      points.map(_.scaleAndTranslate(scale, offset))
 
     /** Compute the view-box (width, height, offset) for a set of points with given scale and padding. */
     def fitPointsToViewBox(
@@ -63,7 +63,7 @@ object Geometry:
   def regularPolygonPoints(sides: Int, radius: Double, center: Point = Point.origin): Seq[Point] =
     (0 until sides).map { i =>
       val angle = (Radian.TAU * i / sides) - Radian.TAU_2 // Start from the top
-      center + Point.createPolar(radius, angle)
+      center + Point.fromPolar(radius, angle)
     }
 
   /** Build polygon vertices using unit edge length and given internal angles. */

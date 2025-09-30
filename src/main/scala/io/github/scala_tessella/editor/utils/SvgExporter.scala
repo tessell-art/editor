@@ -154,7 +154,7 @@ object SvgExporter:
     else
       val nodesXml = coordinates.map { (node, vertex) =>
 
-        val point = vertex.toPoint.transform(scale, offset + Point(4.0, -4.0))
+        val point = vertex.toPoint.scaleAndTranslate(scale, offset + Point(4.0, -4.0))
 
 //        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
 //        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)

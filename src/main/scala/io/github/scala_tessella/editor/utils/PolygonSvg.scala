@@ -20,7 +20,7 @@ object PolygonSvg:
       strokeW: String = SvgDsl.Defaults.strokeWidthThin
   ): Element =
     val (scale, offset) = points.fitPointsToSquare(size, pad)
-    val scaled          = points.map(_.transform(scale, offset))
+    val scaled          = points.map(_.scaleAndTranslate(scale, offset))
     val pointsStr       = SvgDsl.toPointsString(scaled)
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = strokeW)
@@ -49,7 +49,7 @@ object PolygonSvg:
     val (scale, offset) = basePts.fitPointsToSquare(size, pad)
 
     def bigTransform(p: Point): Point =
-      p.transform(scale, offset)
+      p.scaleAndTranslate(scale, offset)
 
     val pointsStr = basePts.map(p => SvgDsl.fmt3Point(bigTransform(p))).mkString(" ")
     val headIdx   = ((1 % basePts.size) + basePts.size) % basePts.size

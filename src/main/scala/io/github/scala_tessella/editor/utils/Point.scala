@@ -6,22 +6,22 @@ opaque type Point = (x: Double, y: Double)
 
 object Point:
 
-  def apply(x: Double, y: Double): Point =
+  inline def apply(x: Double, y: Double): Point =
     (x, y)
 
-  def origin: Point =
+  inline def origin: Point =
     (0.0, 0.0)
 
   /** Creates a point from polar coordinates */
-  def createPolar(rho: Double, theta: Radian): Point =
+  def fromPolar(rho: Double, theta: Radian): Point =
     (rho * Math.cos(theta.toDouble), rho * Math.sin(theta.toDouble))
 
   extension (point: Point)
 
-    def x: Double =
+    inline def x: Double =
       point.x
 
-    def y: Double =
+    inline def y: Double =
       point.y
 
     def plus(that: Point): Point =
@@ -58,7 +58,7 @@ object Point:
     def /(that: Point): Point =
       (point.x / that.x, point.y / that.y)
 
-    def transform(scaleFactor: Double, offset: Point): Point =
+    def scaleAndTranslate(scaleFactor: Double, offset: Point): Point =
       scale(scaleFactor) + offset
 
     def rotate(theta: Radian): Point =
@@ -98,5 +98,13 @@ object Point:
 
     /** Compute the dot product with another point (treating both as vectors) */
     def dot(that: Point): Double =
-      val product = point * that
-      product.x + product.y
+      point.x * that.x + point.y * that.y
+
+    /** Perpendicular vector rotated 90° CCW */
+    def perp: Point =
+      (-point.y, point.x)
+
+    /** Projection of this vector onto axis */
+    def projectOn(axis: Point): Point =
+      val u = axis.normalized
+      u * dot(u)
