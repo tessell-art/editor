@@ -4,10 +4,10 @@ import com.raquo.laminar.api.L._
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations
+import io.github.scala_tessella.editor.utils.ColorRGB.parseColor
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
 
-import scala.scalajs.js.RegExp
 import scala.util.Try
 
 object SvgImporter:
@@ -34,24 +34,6 @@ object SvgImporter:
       dom.document.body.removeChild(inputEl): Unit
     }
     inputEl.click()
-
-  private[utils] def parseColor(colorStr: String): Option[ColorRGB] =
-    Option(colorStr).flatMap { s =>
-      val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
-      Option(rgbRegex.exec(s)).flatMap { result =>
-
-        if result.length == 4 then
-          for
-            rStr <- result(1).toOption
-            gStr <- result(2).toOption
-            bStr <- result(3).toOption
-            r    <- Try(rStr.toInt).toOption
-            g    <- Try(gStr.toInt).toOption
-            b    <- Try(bStr.toInt).toOption
-          yield ColorRGB(r, g, b)
-        else None
-      }
-    }
 
   def importTilingFromSVG(svgContent: String, filename: String): Unit =
     Try {

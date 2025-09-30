@@ -1,21 +1,42 @@
 package io.github.scala_tessella.editor.utils
 
+import scala.scalajs.js.RegExp
+import scala.util.Try
+
 opaque type ColorRGB = (red: Int, green: Int, blue: Int)
 
 object ColorRGB:
 
-  def apply(red: Int, green: Int, blue: Int): ColorRGB =
+  inline def apply(red: Int, green: Int, blue: Int): ColorRGB =
     (red, green, blue)
+
+  def parseColor(colorStr: String): Option[ColorRGB] =
+    Option(colorStr).flatMap { s =>
+      val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
+      Option(rgbRegex.exec(s)).flatMap { result =>
+
+        if result.length == 4 then
+          for
+            rStr <- result(1).toOption
+            gStr <- result(2).toOption
+            bStr <- result(3).toOption
+            r    <- Try(rStr.toInt).toOption
+            g    <- Try(gStr.toInt).toOption
+            b    <- Try(bStr.toInt).toOption
+          yield ColorRGB(r, g, b)
+        else None
+      }
+    }
 
   extension (color: ColorRGB)
 
-    def r: Int =
+    inline def r: Int =
       color.red
 
-    def g: Int =
+    inline def g: Int =
       color.green
 
-    def b: Int =
+    inline def b: Int =
       color.blue
 
     def toRgb: String =
