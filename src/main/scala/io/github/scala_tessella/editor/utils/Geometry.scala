@@ -5,69 +5,6 @@ import scala.annotation.targetName
 /** Planar geometry simplified toolbox */
 object Geometry:
 
-  /** Standard unit of angular measure */
-  opaque type Radian = Double
-
-  /** Companion object for [[Radian]] */
-  object Radian:
-
-    /** Create a [[Radian]] from a `Double` */
-    def apply(d: Double): Radian =
-      d
-
-    def fromDegrees(degrees: Double): Radian =
-      Math.toRadians(degrees)
-
-    /** @see
-      *   [[https://tauday.com/]]
-      */
-    val TAU: Radian   = Radian(6.283185307179586)
-    val TAU_2: Radian = Radian(Math.PI)
-
-  extension (r: Radian)
-
-    /** @return the underlying `Double` */
-    def toDouble: Double =
-      r
-
-    def toDegrees: Double =
-      Math.toDegrees(r)
-
-    /** Normalize any angle to [0, TAU) */
-    def normalize: Radian =
-      val t = r % Radian.TAU
-      if t < 0 then t + Radian.TAU else t
-
-    /** Normalize delta angle to (-PI, PI] */
-    def normalizeDelta: Radian =
-      val d = r % Radian.TAU
-      if d <= -Radian.TAU_2 then
-        d + Radian.TAU
-      else if d > Radian.TAU_2 then
-        d - Radian.TAU
-      else
-        d
-
-    /** Normalize delta angle to (-PI, PI]. */
-    def normalizeDeltaAngle(other: Radian): Radian =
-      (r - other).normalizeDelta
-
-    @targetName("plus")
-    def +(that: Radian): Radian =
-      r + that
-
-    @targetName("minus")
-    def -(that: Radian): Radian =
-      r - that
-
-    @targetName("times")
-    def *(i: Int): Radian =
-      r * Radian(i)
-
-    @targetName("divide")
-    def /(i: Int): Radian =
-      r / Radian(i)
-
   opaque type Point = (x: Double, y: Double)
 
   object Point:
@@ -80,7 +17,7 @@ object Geometry:
 
     /** Creates a point from polar coordinates */
     def createPolar(rho: Double, theta: Radian): Point =
-      (rho * Math.cos(theta), rho * Math.sin(theta))
+      (rho * Math.cos(theta.toDouble), rho * Math.sin(theta.toDouble))
 
   opaque type LineSegment = (p1: Point, p2: Point)
 
@@ -136,9 +73,9 @@ object Geometry:
 
     def rotate(theta: Radian): Point =
       val cot: Double =
-        Math.cos(theta)
+        Math.cos(theta.toDouble)
       val sit: Double =
-        Math.sin(theta)
+        Math.sin(theta.toDouble)
       (point.x * cot - point.y * sit, point.x * sit + point.y * cot)
 
     /** Rotate around an origin point */
@@ -146,7 +83,7 @@ object Geometry:
       (point - origin).rotate(theta) + origin
 
     def offsetPolar(radius: Double, theta: Radian): Point =
-      (point.x + radius * Math.cos(theta), point.y + radius * Math.sin(theta))
+      (point.x + radius * Math.cos(theta.toDouble), point.y + radius * Math.sin(theta.toDouble))
 
     /** Calculates the horizontal angle between two points */
     def angleTo(other: Point): Radian =
@@ -276,7 +213,7 @@ object Geometry:
       x = x + Math.cos(heading)
       y = y + Math.sin(heading)
       pts += Point(x, y)
-      heading = heading + t
+      heading = heading + t.toDouble
     }
     pts.toVector
 
@@ -294,6 +231,6 @@ object Geometry:
   /** Calculate geometric properties of a regular polygon (apothem, circumradius). */
   def regularPolygonMetrics(sides: Int, sideLength: Double): (Double, Double, Radian) =
     val halfAngle = Radian.TAU_2 / sides
-    val apothem   = sideLength / (2 * Math.tan(halfAngle))
-    val radius    = sideLength / (2 * Math.sin(halfAngle))
+    val apothem   = sideLength / (2 * Math.tan(halfAngle.toDouble))
+    val radius    = sideLength / (2 * Math.sin(halfAngle.toDouble))
     (apothem, radius, halfAngle)

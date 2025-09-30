@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.models.EditorConfig._
 import io.github.scala_tessella.editor.models.{EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
+import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Radian
 import io.github.scala_tessella.editor.utils.TessellationGeometry._
 
 object ViewOperations:

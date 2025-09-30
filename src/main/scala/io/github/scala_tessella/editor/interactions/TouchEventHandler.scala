@@ -2,7 +2,8 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point, Radian}
+import io.github.scala_tessella.editor.utils.Geometry.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.Radian
 import org.scalajs.dom
 import org.scalajs.dom.{DOMRect, Touch, TouchEvent, TouchList}
 

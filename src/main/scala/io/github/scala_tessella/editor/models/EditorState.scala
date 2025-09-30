@@ -3,8 +3,8 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
-import io.github.scala_tessella.editor.utils.ColorRGB
-import io.github.scala_tessella.editor.utils.Geometry.{Point, Radian}
+import io.github.scala_tessella.editor.utils.{ColorRGB, Radian}
+import io.github.scala_tessella.editor.utils.Geometry.Point
 import org.scalajs.dom
 
 import scala.scalajs.js
