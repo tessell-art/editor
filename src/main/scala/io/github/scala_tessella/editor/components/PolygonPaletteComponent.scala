@@ -1,13 +1,14 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.components.IconsSVG.plusIcon
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import io.github.scala_tessella.editor.operations.TessellationOperations._
-import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, PolygonSvg}
+import io.github.scala_tessella.editor.operations.TessellationOperations.*
+import io.github.scala_tessella.editor.utils.{LineSegment, Point, PolygonNameGenerator, PolygonSvg}
+import io.github.scala_tessella.editor.utils.SvgDsl.*
 
 object PolygonPaletteComponent:
 
@@ -206,14 +207,9 @@ object PolygonPaletteComponent:
         case Some(angles) => PolygonSvg.irregularPreview(angles)
         case None         =>
           svg.svg(
-            svg.width   := "40",
-            svg.height  := "40",
-            svg.viewBox := "0 0 40 40",
+            viewBoxCoords(Point(40, 40)),
             svg.rect(
-              svg.x      := "8",
-              svg.y      := "8",
-              svg.width  := "24",
-              svg.height := "24",
+              rectCoords(LineSegment(Point(8, 8), Point(24, 24))),
               svg.fill   := "none",
               svg.stroke := "currentColor"
             )

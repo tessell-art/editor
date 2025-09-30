@@ -15,17 +15,13 @@ object SvgDsl:
   // Common svg root with width/height/viewBox
   def root(size: Int)(content: Mod[Element]*): Element =
     svg.svg(
-      svg.width   := size.toString,
-      svg.height  := size.toString,
-      svg.viewBox := s"0 0 $size $size",
+      viewBoxCoords(Point(size, size)),
       content
     )
 
-  def rootWH(width: Double, height: Double)(content: Mod[Element]*): Element =
+  def rootWH(point: Point)(content: Mod[Element]*): Element =
     svg.svg(
-      svg.width   := f"$width%1.4f",
-      svg.height  := f"$height%1.4f",
-      svg.viewBox := s"0 0 ${f"$width%1.4f"} ${f"$height%1.4f"}",
+      viewBoxCoords(point),
       content
     )
 
@@ -87,12 +83,17 @@ object SvgDsl:
       svg.y := point.y.toString
     )
 
+  def widthHeightCoords(point: Point): Seq[KeySetter.SvgAttrSetter[String]] =
+    Seq(
+      svg.width  := point.x.toString,
+      svg.height := point.y.toString
+    )
+
   def rectCoords(segment: LineSegment): Seq[KeySetter.SvgAttrSetter[String]] =
-    textCoords(segment.p1) ++
-      Seq(
-        svg.width  := segment.p2.x.toString,
-        svg.height := segment.p2.y.toString
-      )
+    textCoords(segment.p1) ++ widthHeightCoords(segment.p2)
+
+  def viewBoxCoords(point: Point): Seq[KeySetter.SvgAttrSetter[String]] =
+    widthHeightCoords(point) :+ (svg.viewBox := s"0 0 ${point.x} ${point.y}")
 
   def circleCoordsRadius(point: Point, radius: Int): Seq[KeySetter.SvgAttrSetter[String]] =
     Seq(

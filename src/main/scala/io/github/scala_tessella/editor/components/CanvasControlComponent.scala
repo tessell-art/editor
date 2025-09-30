@@ -1,8 +1,10 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{AppState, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
+import io.github.scala_tessella.editor.utils.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.SvgDsl.*
 
 object CanvasControlComponent:
 
@@ -37,13 +39,9 @@ object CanvasControlComponent:
           button(
             "Fill ",
             svg.svg(
-              svg.width  := "24",
-              svg.height := "24",
+              widthHeightCoords(Point(24, 24)),
               svg.rect(
-                svg.width  := "18",
-                svg.height := "18",
-                svg.x      := "2",
-                svg.y      := "2",
+                rectCoords(LineSegment(Point(2, 2), Point(18, 18))),
                 svg.fill <-- EditorState.fillColor.signal.map { case (r, g, b) =>
                   f"rgb($r,$g,$b)"
                 }
