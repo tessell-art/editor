@@ -9,7 +9,7 @@ opaque type Radian = Double
 object Radian:
 
   /** Create a [[Radian]] from a `Double` */
-  def apply(d: Double): Radian =
+  inline def apply(d: Double): Radian =
     d
 
   def fromDegrees(degrees: Double): Radian =
@@ -18,13 +18,13 @@ object Radian:
   /** @see
     *   [[https://tauday.com/]]
     */
-  val TAU: Radian   = Radian(6.283185307179586)
   val TAU_2: Radian = Radian(Math.PI)
+  val TAU: Radian   = TAU_2 * 2
 
   extension (r: Radian)
 
     /** @return the underlying `Double` */
-    def toDouble: Double =
+    inline def toDouble: Double =
       r
 
     def toDegrees: Double =
