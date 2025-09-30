@@ -4,15 +4,15 @@ opaque type LineSegment = (p1: Point, p2: Point)
 
 object LineSegment:
 
-  def apply(p1: Point, p2: Point): LineSegment =
+  inline def apply(p1: Point, p2: Point): LineSegment =
     (p1, p2)
 
   extension (segment: LineSegment)
 
-    def p1: Point =
+    inline def p1: Point =
       segment.p1
 
-    def p2: Point =
+    inline def p2: Point =
       segment.p2
 
     def dx: Double =
