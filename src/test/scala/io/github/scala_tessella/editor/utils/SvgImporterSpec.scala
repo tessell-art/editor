@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-import SvgImporter.parseColor
+import io.github.scala_tessella.editor.utils.SvgImporter.parseColor
 import munit.FunSuite
 
 class SvgImporterSpec extends FunSuite:

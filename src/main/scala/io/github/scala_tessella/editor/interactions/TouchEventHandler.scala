@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.interactions
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.utils.{LineSegment, Point, Radian}
 import org.scalajs.dom

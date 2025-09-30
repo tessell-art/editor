@@ -1,11 +1,11 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
 import io.github.scala_tessella.editor.utils.ColorRGB
-import io.github.scala_tessella.editor.utils.ColorRGB.*
+import io.github.scala_tessella.editor.utils.ColorRGB._
 
 object ColorPickerPopupComponent:
   def element(isOpen: Var[Boolean], tempColor: Var[ColorRGB]): Element =

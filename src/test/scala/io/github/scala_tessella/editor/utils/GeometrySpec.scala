@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.utils.Geometry._
 import munit.FunSuite
+
 import scala.math.Pi
 
 class GeometrySpec extends FunSuite:

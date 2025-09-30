@@ -2,7 +2,6 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.editor.models.EditorConfig._
-import io.github.scala_tessella.editor.utils.Geometry.*
 
 object TessellationGeometry:
 

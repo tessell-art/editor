@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import com.raquo.laminar.modifiers.KeySetter
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
@@ -17,11 +17,10 @@ import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPol
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
-import io.github.scala_tessella.editor.utils.ColorRGB
-import io.github.scala_tessella.editor.utils.ColorRGB.*
+import io.github.scala_tessella.editor.utils.ColorRGB._
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Point
-import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.TessellationGeometry._
+import io.github.scala_tessella.editor.utils.{ColorRGB, Point}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 

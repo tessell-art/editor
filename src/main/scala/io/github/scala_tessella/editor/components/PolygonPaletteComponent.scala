@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.components.IconsSVG.plusIcon

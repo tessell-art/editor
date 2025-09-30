@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
+import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.utils.Point
 import munit.FunSuite
 

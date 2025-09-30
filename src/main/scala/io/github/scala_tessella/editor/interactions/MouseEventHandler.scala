@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.interactions
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.Point
 import org.scalajs.dom.{MouseEvent, WheelEvent}

@@ -4,11 +4,11 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.utils.Geometry.{buildUnitEdgePolygon, edgeGeometrics}
-import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.TessellationGeometry._
 import io.github.scala_tessella.editor.utils.{Point, Radian}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
-import scala.math.*
+import scala.math._
 
 /** Shared geometry utilities to compute the exact placement (screen points) of a regular polygon attached to
   * a given edge. If intoFace is provided, the polygon is oriented towards that face's interior.

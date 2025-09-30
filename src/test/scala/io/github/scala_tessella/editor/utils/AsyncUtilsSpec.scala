@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.utils
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
