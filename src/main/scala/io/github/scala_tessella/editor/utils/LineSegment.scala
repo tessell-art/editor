@@ -30,7 +30,7 @@ object LineSegment:
     def unitVector: Point =
       val len = segment.length
       if len == 0 then Point.origin
-      else Point(segment.dx / len, segment.dy / len)
+      else Point(dx / len, dy / len)
 
     def horizontalAngle: Radian =
       Radian(Math.atan2(dy, dx))
