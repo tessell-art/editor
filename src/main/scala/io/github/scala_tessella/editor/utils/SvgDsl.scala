@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
+import com.raquo.laminar.modifiers.KeySetter
 import io.github.scala_tessella.editor.utils.Point
 
 object SvgDsl:
@@ -72,20 +73,30 @@ object SvgDsl:
   def toPointsString(points: Seq[Point], decimals: Int = 3): String =
     points.map(fmtPoint(_, decimals)).mkString(" ")
 
-  // Simple line creator with defaults
-  def line(
-      x1: Double,
-      y1: Double,
-      x2: Double,
-      y2: Double,
-      stroke: String = Defaults.stroke,
-      strokeW: String = Defaults.strokeWidthThin
-  ): Element          =
-    svg.line(
-      svg.x1          := fmt3(x1),
-      svg.y1          := fmt3(y1),
-      svg.x2          := fmt3(x2),
-      svg.y2          := fmt3(y2),
-      svg.stroke      := stroke,
-      svg.strokeWidth := strokeW
+  def lineCoords(segment: LineSegment): Seq[KeySetter.SvgAttrSetter[String]] =
+    Seq(
+      svg.x1 := segment.p1.x.toString,
+      svg.y1 := segment.p1.y.toString,
+      svg.x2 := segment.p2.x.toString,
+      svg.y2 := segment.p2.y.toString
+    )
+
+  def textCoords(point: Point): Seq[KeySetter.SvgAttrSetter[String]] =
+    Seq(
+      svg.x := point.x.toString,
+      svg.y := point.y.toString
+    )
+
+  def rectCoords(segment: LineSegment): Seq[KeySetter.SvgAttrSetter[String]] =
+    textCoords(segment.p1) ++
+      Seq(
+        svg.width  := segment.p2.x.toString,
+        svg.height := segment.p2.y.toString
+      )
+
+  def circleCoordsRadius(point: Point, radius: Int): Seq[KeySetter.SvgAttrSetter[String]] =
+    Seq(
+      svg.cx := point.x.toString,
+      svg.cy := point.y.toString,
+      svg.r  := radius.toString
     )

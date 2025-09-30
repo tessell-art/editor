@@ -1,8 +1,10 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.interactions.{MouseEventHandler, TouchEventHandler}
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.SvgDsl.{rectCoords, textCoords}
 
 object EditorCanvasComponent:
 
@@ -166,10 +168,7 @@ object EditorCanvasComponent:
 
   private def background(): Element =
     svg.rect(
-      svg.x           := "0",
-      svg.y           := "0",
-      svg.width       := "800",
-      svg.height      := "600",
+      rectCoords(LineSegment(Point(0, 0), Point(800, 600))),
       svg.fill        := "#1a1a1a",
       svg.stroke      := "#333",
       svg.strokeWidth := "2"
@@ -202,11 +201,10 @@ object EditorCanvasComponent:
       }
     )
 
-  private def createSvgText(x: String, y: String, fontSize: String, fill: String, content: String): Element =
+  private def createSvgText(point: Point, fontSize: Int, fill: String, content: String): Element =
     svg.text(
-      svg.x          := x,
-      svg.y          := y,
-      svg.fontSize   := fontSize,
+      textCoords(point),
+      svg.fontSize   := fontSize.toString,
       svg.fill       := fill,
       svg.textAnchor := "middle",
       svg.fontFamily := "Arial, sans-serif",
@@ -215,8 +213,8 @@ object EditorCanvasComponent:
 
   private def canvasMessage(title: String, subTitle: String): Element =
     svg.g(
-      createSvgText("425", "250", "18", "#888", title),
-      createSvgText("425", "280", "14", "#666", subTitle)
+      createSvgText(Point(425, 250), 18, "#888", title),
+      createSvgText(Point(425, 280), 14, "#666", subTitle)
     )
 
   private def noTessellationMessage(): Element =

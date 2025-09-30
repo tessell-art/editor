@@ -1,13 +1,13 @@
 package io.github.scala_tessella.editor.utils
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.{
   buildUnitEdgePolygon,
   fitPointsToSquare,
   regularPolygonPoints
 }
-import io.github.scala_tessella.editor.utils.SvgDsl.{fmt3, polygon, root}
+import io.github.scala_tessella.editor.utils.SvgDsl.{lineCoords, polygon, root, textCoords}
 import io.github.scala_tessella.editor.utils.{Point, Radian}
 
 object PolygonSvg:
@@ -61,10 +61,9 @@ object PolygonSvg:
       else anglesDeg.last +: anglesDeg.init
 
     val angleLabels = basePts.zip(orderedAngles).map { case (point, angle) =>
-      val label: Point          = bigTransform(point) + Point(4.0, -4.0)
+      val label: Point   = bigTransform(point) + Point(4.0, -4.0)
       svg.text(
-        svg.x          := fmt3(label.x),
-        svg.y          := fmt3(label.y),
+        textCoords(label),
         svg.fontSize   := "12",
         svg.fontFamily := "monospace",
         svg.fill       := "red",
@@ -77,10 +76,7 @@ object PolygonSvg:
     root(size)(
       SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
-        svg.x1            := fmt3(a2.x),
-        svg.y1            := fmt3(a2.y),
-        svg.x2            := fmt3(b2.x),
-        svg.y2            := fmt3(b2.y),
+        lineCoords(LineSegment(a2, b2)),
         svg.stroke        := "#00C853",
         svg.strokeWidth   := "6",
         svg.strokeLineCap := "round",

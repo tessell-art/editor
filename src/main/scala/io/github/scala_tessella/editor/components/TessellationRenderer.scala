@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L._
-import com.raquo.laminar.modifiers.KeySetter
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.Polygon.RegularPolygon
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, Vertex, VertexId}
@@ -17,10 +16,11 @@ import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPol
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
-import io.github.scala_tessella.editor.utils.ColorRGB._
+import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.TessellationGeometry._
-import io.github.scala_tessella.editor.utils.{ColorRGB, Point}
+import io.github.scala_tessella.editor.utils.SvgDsl.{circleCoordsRadius, lineCoords, textCoords}
+import io.github.scala_tessella.editor.utils.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.{ColorRGB, LineSegment, Point}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 
@@ -58,7 +58,7 @@ object TessellationRenderer:
       val point1        = tilingPointToCanvasView(midPoint.toPoint)
       val point2        = tilingPointToCanvasView(center.toPoint)
       svg.line(
-        lineCoords(point1, point2),
+        lineCoords(LineSegment(point1, point2)),
         svg.stroke        := "red",
         svg.strokeWidth   := "1",
         svg.pointerEvents := "none"
@@ -282,12 +282,10 @@ object TessellationRenderer:
       val point = tilingPointToCanvasView(vertex)
 
       // Offset the label slightly from the vertex to avoid overlap
-      val offsetX = point.x + 4
-      val offsetY = point.y - 4
+      val offset = point + Point(4, -4)
 
       svg.text(
-        svg.x                := offsetX.toString,
-        svg.y                := offsetY.toString,
+        textCoords(offset),
         svg.fontSize <-- EditorState.viewTransform.signal.map(transform =>
           // Scale the font size with zoom but keep it readable
           val baseFontSize = 12
@@ -297,7 +295,7 @@ object TessellationRenderer:
         // Counter-rotate the text to keep it readable
         svg.transform <-- EditorState.viewTransform.signal.map(transform =>
           // Rotate around the text position to counter the canvas rotation
-          s"rotate(${-transform.rotationDegrees} $offsetX $offsetY)"
+          s"rotate(${-transform.rotationDegrees} ${offset.x} ${offset.y})"
         ),
         svg.fill             := "#ffeb3b", // Bright yellow for visibility
         svg.fontFamily       := "monospace",
@@ -319,9 +317,7 @@ object TessellationRenderer:
     val point = tilingPointToCanvasView(p.point)
 
     svg.circle(
-      svg.cx            := point.x.toString,
-      svg.cy            := point.y.toString,
-      svg.r             := "4",
+      circleCoordsRadius(point, 4),
       svg.fill          := "#ff9500",
       svg.stroke        := "black",
       svg.strokeWidth   := "1",
@@ -351,14 +347,12 @@ object TessellationRenderer:
     val point = tilingPointToCanvasView(p.point)
 
     svg.circle(
-      svg.cx          := point.x.toString,
-      svg.cy          := point.y.toString,
-      svg.r           := "5",
+      circleCoordsRadius(point, 5),
       svg.fill        := (if isStartPoint then "#00C853" else "#D50000"),
       svg.stroke      := "black",
       svg.strokeWidth := "1",
       svg.className   := s"measurement-${if isStartPoint then "start" else "end"}-point",
-      onClick.preventDefault.mapTo(p) --> (point => AppState.handlePointClickForMeasurement(point))
+      onClick.preventDefault.mapTo(p) --> AppState.handlePointClickForMeasurement
     )
 
   private def renderMeasurementStartPoint(p: ClickablePoint): Element =
@@ -401,20 +395,12 @@ object TessellationRenderer:
       svg.pointerEvents := "none"
     )
 
-  def lineCoords(point1: Point, point2: Point): Seq[KeySetter.SvgAttrSetter[String]] =
-    Seq(
-      svg.x1 := point1.x.toString,
-      svg.y1 := point1.y.toString,
-      svg.x2 := point2.x.toString,
-      svg.y2 := point2.y.toString
-    )
-
   private def renderPreviousMeasurementLine(start: ClickablePoint, end: Point): Element =
     val point1 = tilingPointToCanvasView(start.point)
     val point2 = tilingPointToCanvasView(end)
 
     svg.line(
-      lineCoords(point1, point2),
+      lineCoords(LineSegment(point1, point2)),
       svg.stroke        := "#ffffff",
       svg.strokeWidth   := "1",
       svg.className     := "previous-measurement-line",
@@ -426,7 +412,7 @@ object TessellationRenderer:
     val point2 = tilingPointToCanvasView(end.point)
 
     svg.line(
-      lineCoords(point1, point2),
+      lineCoords(LineSegment(point1, point2)),
       svg.stroke          := "#ffffff",
       svg.strokeWidth     := "2",
       svg.strokeDashArray := "5, 5",
@@ -463,7 +449,7 @@ object TessellationRenderer:
     val point2 = tilingPointToCanvasView(v2)
 
     val interactionArea = svg.line(
-      lineCoords(point1, point2),
+      lineCoords(LineSegment(point1, point2)),
       svg.stroke        := transparent,
       svg.strokeWidth   := "10",
       svg.strokeLineCap := "round",
@@ -513,7 +499,7 @@ object TessellationRenderer:
     )
 
     val visibleLine = svg.line(
-      lineCoords(point1, point2),
+      lineCoords(LineSegment(point1, point2)),
       svg.stroke        := "#20A4BE",
       svg.strokeWidth   := "3",
       svg.strokeLineCap := "round",
@@ -542,7 +528,7 @@ object TessellationRenderer:
 
     // A wider, transparent line for easier interaction, especially on touch devices
     val interactionArea = svg.line(
-      lineCoords(point1, point2),
+      lineCoords(LineSegment(point1, point2)),
       svg.stroke        := transparent,
       svg.strokeWidth   := "12", // Increased width for a larger touch target
       svg.strokeLineCap := "round",
@@ -584,7 +570,7 @@ object TessellationRenderer:
 
     // The visible line that the user sees
     val visibleLine = svg.line(
-      lineCoords(point1, point2),
+      lineCoords(LineSegment(point1, point2)),
       svg.stroke        := "#ff9500",
       svg.strokeWidth   := "4",
       svg.strokeLineCap := "round",
