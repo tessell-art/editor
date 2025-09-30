@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.utils.Geometry._
+import io.github.scala_tessella.editor.utils.Geometry.*
 import munit.FunSuite
 
 import scala.math.Pi

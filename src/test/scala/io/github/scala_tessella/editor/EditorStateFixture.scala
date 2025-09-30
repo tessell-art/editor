@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor
 
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models._
+import io.github.scala_tessella.editor.models.*
 import munit.FunSuite
 
 // Mixin for test suites to get robust state isolation.
