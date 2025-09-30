@@ -48,8 +48,8 @@ object SvgDsl:
 //    val fy = f"$y%1.${decimals}f"
 //    s"$fx,$fy"
 
-  def fmt(d: Double, decimal: Int): String =
-    String.format(s"%1.${decimal}f", double2Double(d))
+  def fmt(d: Double, decimals: Int): String =
+    String.format(s"%1.${decimals}f", double2Double(d))
 
   def fmt3(d: Double): String =
     fmt(d, 3)
@@ -60,8 +60,8 @@ object SvgDsl:
   def fmt6(d: Double): String =
     fmt(d, 6)
 
-  def fmtPoint(point: Point, decimal: Int): String =
-    s"${fmt(point.x, decimal)},${fmt(point.y, decimal)}"
+  def fmtPoint(point: Point, decimals: Int): String =
+    s"${fmt(point.x, decimals)},${fmt(point.y, decimals)}"
 
   def fmt3Point(point: Point): String =
     fmtPoint(point, 3)
@@ -70,7 +70,7 @@ object SvgDsl:
     fmtPoint(point, 6)
 
   def toPointsString(points: Seq[Point], decimals: Int = 3): String =
-    points.map(fmt3Point).mkString(" ")
+    points.map(fmtPoint(_, decimals)).mkString(" ")
 
   // Simple line creator with defaults
   def line(
