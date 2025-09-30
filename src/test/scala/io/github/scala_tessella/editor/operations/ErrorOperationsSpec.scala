@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.VertexId
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Point
 import munit.FunSuite
 
 class ErrorOperationsSpec extends FunSuite with EditorStateFixture:

@@ -1,150 +1,14 @@
 package io.github.scala_tessella.editor.utils
 
-import scala.annotation.targetName
-
 /** Planar geometry simplified toolbox */
 object Geometry:
-
-  opaque type Point = (x: Double, y: Double)
-
-  object Point:
-
-    def apply(x: Double, y: Double): Point =
-      (x, y)
-
-    def origin: Point =
-      (0.0, 0.0)
-
-    /** Creates a point from polar coordinates */
-    def createPolar(rho: Double, theta: Radian): Point =
-      (rho * Math.cos(theta.toDouble), rho * Math.sin(theta.toDouble))
-
-  opaque type LineSegment = (p1: Point, p2: Point)
-
-  object LineSegment:
-
-    def apply(p1: Point, p2: Point): LineSegment =
-      (p1, p2)
-
-  extension (point: Point)
-
-    def x: Double =
-      point.x
-
-    def y: Double =
-      point.y
-
-    def plus(that: Point): Point =
-      (point.x + that.x, point.y + that.y)
-
-    @targetName("point2Plus")
-    def +(that: Point): Point =
-      plus(that)
-
-    def minus(that: Point): Point =
-      (point.x - that.x, point.y - that.y)
-
-    @targetName("point2Minus")
-    def -(that: Point): Point =
-      minus(that)
-
-    def scale(factor: Double): Point =
-      (point.x * factor, point.y * factor)
-
-    /** Operator aliases for scalars */
-    @targetName("point2TimesScalar")
-    def *(k: Double): Point =
-      scale(k)
-
-    @targetName("pointTimes")
-    def *(that: Point): Point =
-      (point.x * that.x, point.y * that.y)
-
-    @targetName("point2DivideScalar")
-    def /(k: Double): Point =
-      (point.x / k, point.y / k)
-
-    @targetName("pointDivide")
-    def /(that: Point): Point =
-      (point.x / that.x, point.y / that.y)
-
-    def transform(scaleFactor: Double, offset: Point): Point =
-      scale(scaleFactor) + offset
-
-    def rotate(theta: Radian): Point =
-      val cot: Double =
-        Math.cos(theta.toDouble)
-      val sit: Double =
-        Math.sin(theta.toDouble)
-      (point.x * cot - point.y * sit, point.x * sit + point.y * cot)
-
-    /** Rotate around an origin point */
-    def rotateAround(origin: Point, theta: Radian): Point =
-      (point - origin).rotate(theta) + origin
-
-    def offsetPolar(radius: Double, theta: Radian): Point =
-      (point.x + radius * Math.cos(theta.toDouble), point.y + radius * Math.sin(theta.toDouble))
-
-    /** Calculates the horizontal angle between two points */
-    def angleTo(other: Point): Radian =
-      (point, other).horizontalAngle
-
-    def distanceTo(other: Point): Double =
-      (point, other).length
-
-    /** New point moved to align with reference to two other points */
-    def alignWithStart(first: Point, second: Point): Point =
-      (point - first).rotate(Radian.TAU - first.angleTo(second))
-
-    /** Get the length (magnitude) of this point as a vector */
-    def magnitude: Double =
-      Math.hypot(point.x, point.y)
-
-    /** Normalize this point to unit length */
-    def normalized: Point =
-      val mag = magnitude
-      val eps = 1e-12
-      if mag < eps then (0, 0) else (point.x / mag, point.y / mag)
-
-    /** Compute the dot product with another point (treating both as vectors) */
-    def dot(that: Point): Double =
-      val product = point * that
-      product.x + product.y
-
-  extension (segment: LineSegment)
-
-    def p1: Point =
-      segment.p1
-
-    def p2: Point =
-      segment.p2
-
-    def dx: Double =
-      p2.x - p1.x
-
-    def dy: Double =
-      p2.y - p1.y
-
-    def midPoint: Point =
-      (p1 + p2) / 2.0
-
-    def length: Double =
-      Math.hypot(dx, dy)
-
-    def unitVector: Point =
-      val len = segment.length
-      if len == 0 then Point.origin
-      else (dx / len, dy / len)
-
-    def horizontalAngle: Radian =
-      Radian(Math.atan2(dy, dx))
 
   case class Bounds(min: Point, max: Point):
     def width: Double = max.x - min.x
 
     def height: Double = max.y - min.y
 
-    def diagonal: LineSegment = (min, max)
+    def diagonal: LineSegment = LineSegment(min, max)
 
     def center: Point = diagonal.midPoint
 
@@ -154,7 +18,7 @@ object Geometry:
       else
         val xs = points.map(_.x)
         val ys = points.map(_.y)
-        Some(Bounds((xs.min, ys.min), (xs.max, ys.max)))
+        Some(Bounds(Point(xs.min, ys.min), Point(xs.max, ys.max)))
 
   extension (points: Seq[Point])
     def maybeBounds: Option[Bounds] =
@@ -219,13 +83,13 @@ object Geometry:
 
   /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
   def edgeGeometrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
-    val segment: LineSegment = (vertex1, vertex2)
+    val segment: LineSegment = LineSegment(vertex1, vertex2)
     (segment.length, segment.unitVector, segment.midPoint)
 
   /** Generate perpendicular (normal) vectors to a given unit vector. Returns (left normal, right normal). */
   def perpendicularVectors(unitVector: Point): (Point, Point) =
-    val leftNormal  = (-unitVector.y, unitVector.x) // Normal for CCW traversal
-    val rightNormal = (unitVector.y, -unitVector.x) // Normal for CW traversal
+    val leftNormal  = Point(-unitVector.y, unitVector.x) // Normal for CCW traversal
+    val rightNormal = Point(unitVector.y, -unitVector.x) // Normal for CW traversal
     (leftNormal, rightNormal)
 
   /** Calculate geometric properties of a regular polygon (apothem, circumradius). */

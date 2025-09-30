@@ -6,8 +6,7 @@ import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
-import io.github.scala_tessella.editor.utils.Geometry.Point
-import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
+import io.github.scala_tessella.editor.utils.{ColorRGB, Point, UndoManager}
 
 // Case class to represent a failed polygon placement
 case class FailedPolygonPlacement(

@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.editor.utils.Geometry.{Bounds, Point, maybeBounds}
+import io.github.scala_tessella.editor.utils.Geometry.{Bounds, maybeBounds}
+import io.github.scala_tessella.editor.utils.Point
 import munit.FunSuite
 
 class TessellationGeometrySpec extends FunSuite {

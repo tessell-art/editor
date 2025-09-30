@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Point
 import munit.FunSuite
 
 class ViewTransformSpec extends FunSuite:

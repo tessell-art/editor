@@ -3,12 +3,11 @@ package io.github.scala_tessella.editor.utils
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.utils.Geometry.{
-  Point,
   fitPointsToSquare,
   regularPolygonPoints,
   buildUnitEdgePolygon
 }
-import io.github.scala_tessella.editor.utils.Radian
+import io.github.scala_tessella.editor.utils.{Point, Radian}
 import io.github.scala_tessella.editor.utils.SvgDsl.{fmt3, polygon, root}
 
 object PolygonSvg:

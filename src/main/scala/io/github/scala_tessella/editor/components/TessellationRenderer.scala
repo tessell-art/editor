@@ -20,7 +20,7 @@ import io.github.scala_tessella.editor.operations.TessellationOperations.{Vertex
 import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Point
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent

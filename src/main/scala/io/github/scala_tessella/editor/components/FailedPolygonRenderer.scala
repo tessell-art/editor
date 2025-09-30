@@ -2,8 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.FailedPolygonPlacement
-import io.github.scala_tessella.editor.utils.Geometry.Point
-import io.github.scala_tessella.editor.utils.PolygonPlacementGeometry
+import io.github.scala_tessella.editor.utils.{Point, PolygonPlacementGeometry}
 
 object FailedPolygonRenderer:
 

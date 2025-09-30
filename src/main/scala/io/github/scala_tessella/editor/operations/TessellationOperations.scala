@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, ValidationError, Verte
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.Geometry.Point
+import io.github.scala_tessella.editor.utils.Point
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
 import io.github.scala_tessella.editor.utils.{Logger, UndoManager}
