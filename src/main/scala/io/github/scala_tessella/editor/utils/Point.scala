@@ -104,6 +104,15 @@ object Point:
     def perp: Point =
       (-point.y, point.x)
 
+    /** Perpendicular vector rotated 90° CW */
+    def perpCW: Point =
+      (point.y, -point.x)
+
+    /** Generate perpendicular (normal) vectors to a given unit vector. Returns (left normal, right normal).
+      */
+    def perpendicularVectors: (Point, Point) =
+      (perp, perpCW)
+
     /** Projection of this vector onto axis */
     def projectOn(axis: Point): Point =
       val u = axis.normalized

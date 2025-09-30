@@ -86,12 +86,6 @@ object Geometry:
     val segment: LineSegment = LineSegment(vertex1, vertex2)
     (segment.length, segment.unitVector, segment.midPoint)
 
-  /** Generate perpendicular (normal) vectors to a given unit vector. Returns (left normal, right normal). */
-  def perpendicularVectors(unitVector: Point): (Point, Point) =
-    val leftNormal  = Point(-unitVector.y, unitVector.x) // Normal for CCW traversal
-    val rightNormal = Point(unitVector.y, -unitVector.x) // Normal for CW traversal
-    (leftNormal, rightNormal)
-
   /** Calculate geometric properties of a regular polygon (apothem, circumradius). */
   def regularPolygonMetrics(sides: Int, sideLength: Double): (Double, Double, Radian) =
     val halfAngle = Radian.TAU_2 / sides
