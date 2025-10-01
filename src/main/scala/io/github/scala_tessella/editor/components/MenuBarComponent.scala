@@ -1,16 +1,11 @@
 package io.github.scala_tessella.editor.components
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.models.{AppState, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.operations.ViewOperations
-import io.github.scala_tessella.editor.utils.PolygonNameGenerator._
-import io.github.scala_tessella.editor.utils.{
-  DotExporter,
-  SvgExporter,
-  SvgImporter,
-  TemplateLoader,
-  UndoManager
-}
+import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
+import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter, TemplateLoader}
+import io.github.scala_tessella.editor.utils.UndoManager
 
 import scala.math.{max, min}
 

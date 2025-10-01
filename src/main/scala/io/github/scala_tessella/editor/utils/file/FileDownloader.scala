@@ -1,6 +1,6 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.file
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import org.scalajs.dom
 import org.scalajs.dom.{Blob, BlobPropertyBag}
 

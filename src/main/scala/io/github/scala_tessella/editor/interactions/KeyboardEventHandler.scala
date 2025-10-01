@@ -4,7 +4,8 @@ import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
-import io.github.scala_tessella.editor.utils.{SvgExporter, UndoManager}
+import io.github.scala_tessella.editor.utils.file.SvgExporter
+import io.github.scala_tessella.editor.utils.UndoManager
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 

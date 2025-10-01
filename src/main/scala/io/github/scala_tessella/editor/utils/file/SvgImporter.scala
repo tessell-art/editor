@@ -1,10 +1,11 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.file
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations
 import io.github.scala_tessella.editor.utils.ColorRGB.parseColor
+import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, UndoManager}
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
 

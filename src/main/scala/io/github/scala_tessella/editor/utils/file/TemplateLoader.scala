@@ -1,6 +1,7 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.file
 
-import io.github.scala_tessella.editor.utils.SvgImporter.importTilingFromSVG
+import io.github.scala_tessella.editor.utils.AsyncUtils
+import io.github.scala_tessella.editor.utils.file.SvgImporter.importTilingFromSVG
 import org.scalajs.dom
 
 import scala.concurrent.{ExecutionContext, Future}

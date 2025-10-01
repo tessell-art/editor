@@ -1,10 +1,10 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.file
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
 import io.github.scala_tessella.dcel.{TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.Point
+import io.github.scala_tessella.editor.utils.{Point, TilingBuilders}
 import munit.FunSuite
 
 class SvgExporterSpec extends FunSuite with EditorStateFixture:
