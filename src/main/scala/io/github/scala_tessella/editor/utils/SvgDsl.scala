@@ -27,13 +27,13 @@ object SvgDsl:
 
   // Polygon from already-scaled points to string
   def polygon(
-      pointsStr: String,
+      points: Seq[Point],
       fill: String = Defaults.fill,
       stroke: String = Defaults.stroke,
       strokeW: String = Defaults.strokeWidthThin
-  ): Element      =
+  ): Element        =
     svg.polygon(
-      svg.points      := pointsStr,
+      polygonCoords(points),
       svg.fill        := fill,
       svg.stroke      := stroke,
       svg.strokeWidth := strokeW
@@ -68,6 +68,11 @@ object SvgDsl:
 
   def toPointsString(points: Seq[Point], decimals: Int = 3): String =
     points.map(fmtPoint(_, decimals)).mkString(" ")
+
+  def polygonCoords(points: Seq[Point]): Seq[KeySetter.SvgAttrSetter[String]] =
+    Seq(
+      svg.points := toPointsString(points)
+    )
 
   def lineCoords(segment: LineSegment): Seq[KeySetter.SvgAttrSetter[String]] =
     Seq(

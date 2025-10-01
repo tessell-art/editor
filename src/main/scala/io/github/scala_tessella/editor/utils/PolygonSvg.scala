@@ -21,9 +21,8 @@ object PolygonSvg:
   ): Element =
     val (scale, offset) = points.fitPointsToSquare(size, pad)
     val scaled          = points.map(_.scaleAndTranslate(scale, offset))
-    val pointsStr       = SvgDsl.toPointsString(scaled)
     root(size)(
-      SvgDsl.polygon(pointsStr, strokeW = strokeW)
+      SvgDsl.polygon(scaled, strokeW = strokeW)
     )
 
   // Regular polygon thumbnail (used in palette buttons)
@@ -31,9 +30,8 @@ object PolygonSvg:
     val center: Point = Point(size / 2.0, size / 2.0)
     val radius        = size * radiusFactor
     val pts           = regularPolygonPoints(sides, radius, center)
-    val pointsStr     = SvgDsl.toPointsString(pts)
     root(size)(
-      polygon(pointsStr)
+      polygon(pts)
     )
 
   // Irregular polygon from AngleDegree edges, unit walk + fit
@@ -51,10 +49,10 @@ object PolygonSvg:
     def bigTransform(p: Point): Point =
       p.scaleAndTranslate(scale, offset)
 
-    val pointsStr = basePts.map(p => SvgDsl.fmt3Point(bigTransform(p))).mkString(" ")
-    val headIdx   = ((1 % basePts.size) + basePts.size) % basePts.size
-    val a         = basePts(headIdx)
-    val b         = basePts((headIdx + 1) % basePts.size)
+    val points  = basePts.map(bigTransform)
+    val headIdx = ((1 % basePts.size) + basePts.size) % basePts.size
+    val a       = basePts(headIdx)
+    val b       = basePts((headIdx + 1) % basePts.size)
 
     val orderedAngles =
       if (anglesDeg.isEmpty) Vector.empty
@@ -74,7 +72,7 @@ object PolygonSvg:
     val a2          = bigTransform(a)
     val b2          = bigTransform(b)
     root(size)(
-      SvgDsl.polygon(pointsStr, strokeW = SvgDsl.Defaults.strokeWidthMedium),
+      SvgDsl.polygon(points, strokeW = SvgDsl.Defaults.strokeWidthMedium),
       svg.line(
         lineCoords(LineSegment(a2, b2)),
         svg.stroke        := "#00C853",
