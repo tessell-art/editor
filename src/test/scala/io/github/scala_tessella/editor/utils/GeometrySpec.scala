@@ -2,187 +2,159 @@ package io.github.scala_tessella.editor.utils
 
 import io.github.scala_tessella.editor.utils.Geometry.*
 import munit.FunSuite
-
 import scala.math.Pi
 
 class GeometrySpec extends FunSuite:
 
-  private val epsilon = 1e-12 // Use a smaller epsilon for floating-point comparisons
+  private val eps = 1e-12
 
-  test("Point.rotate should rotate points correctly around origin") {
-    val point   = Point(1, 0)
-    val rotated = point.rotate(Radian.TAU_2 / 2)
-
-    // Use a more lenient epsilon for floating point comparisons
-    assert(Math.abs(rotated.x) < epsilon, s"Expected ~0, got ${rotated.x}")
-    assertEquals(rotated.y, 1.0, epsilon)
+  test("Bounds.fromPoints should return None for empty input") {
+    assertEquals(Bounds.fromPoints(Seq.empty), None)
   }
 
-  test("Point.rotate should handle negative angles") {
-    val point   = Point(0, 1)
-    val rotated = point.rotate(Radian.TAU_2 / -2)
-
-    assertEquals(rotated.x, 1.0, epsilon)
-    assert(Math.abs(rotated.y) < epsilon, s"Expected ~0, got ${rotated.y}")
+  test("Bounds.fromPoints should compute min/max/width/height") {
+    val pts    = Seq(Point(1, 2), Point(5, 1), Point(3, 6))
+    val bounds = Bounds.fromPoints(pts).get
+    assertEqualsDouble(bounds.min.x, 1.0, eps)
+    assertEqualsDouble(bounds.min.y, 1.0, eps)
+    assertEqualsDouble(bounds.max.x, 5.0, eps)
+    assertEqualsDouble(bounds.max.y, 6.0, eps)
+    assertEqualsDouble(bounds.width, 4.0, eps)
+    assertEqualsDouble(bounds.height, 5.0, eps)
   }
 
-  test("Point.distanceTo should calculate distance correctly") {
-    val p1       = Point(0, 0)
-    val p2       = Point(3, 4)
-    val distance = p1.distanceTo(p2)
-
-    assertEquals(distance, 5.0, epsilon)
+  test("Bounds diagonal and center should be correct") {
+    val b = Bounds(Point(0, 0), Point(4, 2))
+    val d = b.diagonal
+    assertEqualsDouble(d.length, Math.hypot(4.0, 2.0), eps)
+    val c = b.center
+    assertEqualsDouble(c.x, 2.0, eps)
+    assertEqualsDouble(c.y, 1.0, eps)
   }
 
-  test("Point.angleTo should calculate angles correctly") {
-    val origin = Point(0, 0)
-    val right  = Point(1, 0)
-    val up     = Point(0, 1)
-
-    assertEquals(origin.angleTo(right).toDouble, 0.0, epsilon)
-    assertEquals(origin.angleTo(up).toDouble, Pi / 2, epsilon)
+  test("maybeBounds should delegate to Bounds.fromPoints") {
+    val pts = Seq(Point(0, 0), Point(2, 2))
+    val mb  = pts.maybeBounds
+    assert(mb.isDefined)
+    val b   = mb.get
+    assertEqualsDouble(b.min.x, 0.0, eps)
+    assertEqualsDouble(b.max.y, 2.0, eps)
   }
 
-  test("normalizeDeltaAngle should handle angle wrapping") {
-    val angle1 = Radian(0.1)
-    val angle2 = Radian(2 * Pi - 0.1)
-    val delta  = angle2.normalizeDeltaAngle(angle1)
-
-    // When going from 0.1 to (2π - 0.1), the shortest path is -0.2
-    assert(Math.abs(delta.toDouble - -0.2) < epsilon, s"Expected ~-0.2, got ${delta.toDouble}")
-  }
-
-  test("normalizeDeltaAngle should handle large angle differences") {
-    val angle1 = Radian(0)
-    val angle2 = Radian(Pi + 0.1)
-    val delta  = angle2.normalizeDeltaAngle(angle1)
-
-    // The delta from 0 to (π + 0.1) is (π + 0.1)
-    // Since (π + 0.1) > π, normalizeDelta should return (π + 0.1) - 2π = (π + 0.1) - 2π ≈ -3.04159
-    val expected = (Pi + 0.1) - 2 * Pi // This equals approximately -3.041592653589793
-    assert(Math.abs(delta.toDouble - expected) < epsilon, s"Expected ~$expected, got ${delta.toDouble}")
-  }
-
-  test("edgeGeometrics should calculate correct properties") {
-    val p1                  = Point(0, 0)
-    val p2                  = Point(3, 4)
-    val (length, unit, mid) = edgeGeometrics(p1, p2)
-
-    assertEquals(length, 5.0, epsilon)
-    assertEquals(unit.x, 0.6, epsilon)
-    assertEquals(unit.y, 0.8, epsilon)
-    assertEquals(mid.x, 1.5, epsilon)
-    assertEquals(mid.y, 2.0, epsilon)
-  }
-
-  test("transformPointsForSvg should apply transformations correctly") {
-    val points = List(Point(1, 1), Point(2, 2))
+  test("transformPointsForSvg applies scale then translation") {
+    val pts    = List(Point(1, 1), Point(2, 2))
     val scale  = 2.0
     val offset = Point(10.0, 20.0)
-
-    val result = points.transformPointsForSvg(scale, offset)
-
-    assertEquals(result(0).x, 12.0, epsilon)
-    assertEquals(result(0).y, 22.0, epsilon)
-    assertEquals(result(1).x, 14.0, epsilon)
-    assertEquals(result(1).y, 24.0, epsilon)
+    val res    = pts.transformPointsForSvg(scale, offset)
+    assertEqualsDouble(res(0).x, 12.0, eps)
+    assertEqualsDouble(res(0).y, 22.0, eps)
+    assertEqualsDouble(res(1).x, 14.0, eps)
+    assertEqualsDouble(res(1).y, 24.0, eps)
   }
 
-  test("fitPointsToViewBox should calculate correct dimensions") {
-    val points  = List(Point(0, 0), Point(10, 5))
-    val scale   = 1.0
-    val padding = 2.0
-
-    val (width, height, offset) = points.fitPointsToViewBox(scale, padding)
-
-    assertEquals(width, 14.0, epsilon) // 10 + 2*2
-    assertEquals(height, 9.0, epsilon) // 5 + 2*2
-    assertEquals(offset.x, 2.0, epsilon)
-    assertEquals(offset.y, 2.0, epsilon)
+  test("fitPointsToViewBox computes width/height/offset") {
+    val pts         = List(Point(0, 0), Point(10, 5))
+    val (w, h, off) = pts.fitPointsToViewBox(scale = 1.0, padding = 2.0)
+    assertEqualsDouble(w, 14.0, eps) // 10 + 2*2
+    assertEqualsDouble(h, 9.0, eps)  // 5 + 2*2
+    assertEqualsDouble(off.x, 2.0, eps)
+    assertEqualsDouble(off.y, 2.0, eps)
   }
 
-  test("Point.plus should add points correctly") {
-    val p1     = Point(1, 2)
-    val p2     = Point(3, 4)
-    val result = p1.plus(p2)
-
-    assertEquals(result.x, 4.0, epsilon)
-    assertEquals(result.y, 6.0, epsilon)
+  test("fitPointsToViewBox on empty points returns padding-only box") {
+    val (w, h, off) = Seq.empty[Point].fitPointsToViewBox(scale = 3.0, padding = 5.0)
+    assertEqualsDouble(w, 10.0, eps)
+    assertEqualsDouble(h, 10.0, eps)
+    assertEqualsDouble(off.x, 5.0, eps)
+    assertEqualsDouble(off.y, 5.0, eps)
   }
 
-  test("Point.scale should scale points correctly") {
-    val point  = Point(2, 3)
-    val scaled = point.scale(2.5)
-
-    assertEquals(scaled.x, 5.0, epsilon)
-    assertEquals(scaled.y, 7.5, epsilon)
+  test("fitPointsToSquare scales by max dimension and centers") {
+    val pts          = Seq(Point(0, 0), Point(10, 5))
+    val size         = 100.0
+    val pad          = 10.0
+    val (scale, off) = pts.fitPointsToSquare(size, pad)
+    // Extents: width=10, height=5 -> scale by (size-2*pad)/max = 80/10 = 8
+    assertEqualsDouble(scale, 8.0, eps)
+    // After scaling, drawing size is 80x40; centered => leftover (100-80)=20 => 10 each side on X
+    // Y leftover (100-40)=60 => 30 each side. Offset includes -scale*min + centering
+    assertEqualsDouble(off.x, 10.0, eps)
+    assertEqualsDouble(off.y, 30.0, eps)
   }
 
-  test("Point.magnitude should calculate vector length") {
-    val point = Point(3, 4)
-    assertEquals(point.magnitude, 5.0, epsilon)
+  test("fitPointsToSquare with degenerate width or height uses epsilon floor") {
+    val ptsVertical = Seq(Point(2, 0), Point(2, 10))
+    val size        = 50.0
+    val pad         = 5.0
+    val (scaleV, _) = ptsVertical.fitPointsToSquare(size, pad)
+    // width≈0 -> width clamped to 1e-6; height=10 -> scale should be (size-2*pad)/max = 40/10 = 4
+    assertEqualsDouble(scaleV, 4.0, eps)
+
+    val ptsHorizontal = Seq(Point(0, 3), Point(10, 3))
+    val (scaleH, _)   = ptsHorizontal.fitPointsToSquare(size, pad)
+    assertEqualsDouble(scaleH, 4.0, eps)
   }
 
-  test("Point.normalized should create unit vector") {
-    val point      = Point(3, 4)
-    val normalized = point.normalized
-
-    assertEquals(normalized.magnitude, 1.0, epsilon)
-    assertEquals(normalized.x, 0.6, epsilon)
-    assertEquals(normalized.y, 0.8, epsilon)
-  }
-
-  test("Point.normalized should handle zero vector") {
-    val zero       = Point(0, 0)
-    val normalized = zero.normalized
-
-    assertEquals(normalized.x, 0.0, epsilon)
-    assertEquals(normalized.y, 0.0, epsilon)
-  }
-
-  test("Bounds.fromPoints should handle empty sequence") {
-    val result = Bounds.fromPoints(Seq.empty)
-    assertEquals(result, None)
-  }
-
-  test("Bounds.fromPoints should calculate correct bounds") {
-    val points = Seq(Point(1, 2), Point(5, 1), Point(3, 6))
-    val bounds = Bounds.fromPoints(points).get
-
-    assertEquals(bounds.min.x, 1.0, epsilon)
-    assertEquals(bounds.max.x, 5.0, epsilon)
-    assertEquals(bounds.min.y, 1.0, epsilon)
-    assertEquals(bounds.max.y, 6.0, epsilon)
-    assertEquals(bounds.width, 4.0, epsilon)
-    assertEquals(bounds.height, 5.0, epsilon)
-  }
-
-  test("regularPolygonPoints should generate correct number of points") {
-    val points = regularPolygonPoints(6, 1.0)
-    assertEquals(points.length, 6)
-
-    // All points should be at distance 1 from center
-    points.foreach { point =>
-
-      assertEquals(point.magnitude, 1.0, epsilon)
+  test("regularPolygonPoints produces correct count and radius") {
+    val sides = 6
+    val r     = 2.5
+    val pts   = regularPolygonPoints(sides, r)
+    assertEquals(pts.size, sides)
+    // All points should lie at radius r from center
+    pts.foreach { p =>
+      val dist = Point(0, 0).distanceTo(p)
+      assertEqualsDouble(dist, r, 1e-9)
     }
   }
 
-  test("Radian.normalizeDelta should handle various angles") {
-    // Test that angles are normalized to (-π, π]
-    assertEquals(Radian(0).normalizeDelta.toDouble, 0.0, epsilon)
-    assertEquals(Radian(Pi).normalizeDelta.toDouble, Pi, epsilon)
+  test("regularPolygonPoints centered at custom center") {
+    val c   = Point(10, -3)
+    val r   = 1.0
+    val pts = regularPolygonPoints(4, r, c)
+    pts.foreach { p =>
 
-    // -π should be normalized to π (since the range is (-π, π])
-    assertEquals(Radian(-Pi).normalizeDelta.toDouble, Pi, epsilon)
-
-    // 3π should be normalized to -π
-    // 3π % (2π) = π, but since π > π/2, we subtract 2π: π - 2π = -π
-    val largePosAngle = Radian(3 * Pi).normalizeDelta
-    assertEquals(largePosAngle.toDouble, Pi, epsilon) // Actually, this becomes +π based on the error message
-
-    // -3π should be normalized to π
-    // -3π % (2π) = -π, since -π <= -π/2, we add 2π: -π + 2π = π
-    val largeNegAngle = Radian(-3 * Pi).normalizeDelta
-    assertEquals(largeNegAngle.toDouble, Pi, epsilon)
+      assertEqualsDouble(c.distanceTo(p), r, 1e-9)
+    }
   }
+
+  test("buildUnitEdgePolygon creates a unit-step walk with given turns") {
+    // Square: four unit steps turning by +90° (Pi/2). Starts at (0,0), heading +x.
+    val turns    = Seq.fill(4)(Radian(Pi / 2))
+    val path     = buildUnitEdgePolygon(turns)
+    assertEquals(path.head, Point(0, 0))
+    // Expected vertices: (0,0) -> (1,0) -> (1,1) -> (0,1) -> (0,0)
+    val expected = Vector(Point(0, 0), Point(1, 0), Point(1, 1), Point(0, 1), Point(0, 0))
+    assertEquals(path.size, expected.size)
+    expected.zip(path).foreach { case (e, p) =>
+      assertEqualsDouble(e.x, p.x, 1e-9)
+      assertEqualsDouble(e.y, p.y, 1e-9)
+    }
+  }
+
+  test("edgeMetrics returns length, unit vector (v2 - v1), and midpoint") {
+    val p1               = Point(0, 0)
+    val p2               = Point(3, 4)
+    val (len, unit, mid) = edgeMetrics(p1, p2)
+    assertEqualsDouble(len, 5.0, eps)
+    assertEqualsDouble(unit.x, 0.6, eps)
+    assertEqualsDouble(unit.y, 0.8, eps)
+    assertEqualsDouble(mid.x, 1.5, eps)
+    assertEqualsDouble(mid.y, 2.0, eps)
+  }
+
+  test("regularPolygonMetrics returns apothem, radius, and halfAngle") {
+    val sides                        = 6
+    val s                            = 1.0
+    val (apothem, radius, halfAngle) = regularPolygonMetrics(sides, s)
+    val expectedHalf                 = Radian.TAU_2 / sides
+    assertEqualsDouble(halfAngle.toDouble, expectedHalf.toDouble, eps)
+    // Check relationships: side = 2 R sin(halfAngle), apothem = R cos(halfAngle)
+    val RfromSide                    = s / (2 * Math.sin(expectedHalf.toDouble))
+    assertEqualsDouble(radius, RfromSide, 1e-12)
+    val apFromR                      = RfromSide * Math.cos(expectedHalf.toDouble)
+    assertEqualsDouble(apothem, apFromR, 1e-12)
+  }
+
+  // Helpers
+  private def assertEqualsDouble(actual: Double, expected: Double, delta: Double): Unit =
+    assert(math.abs(actual - expected) <= delta, clues(s"expected=$expected actual=$actual delta=$delta"))

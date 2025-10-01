@@ -82,7 +82,7 @@ object Geometry:
     pts.toVector
 
   /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
-  def edgeGeometrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
+  def edgeMetrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
     val segment: LineSegment = LineSegment(vertex1, vertex2)
     (segment.length, segment.unitVector, segment.midPoint)
 

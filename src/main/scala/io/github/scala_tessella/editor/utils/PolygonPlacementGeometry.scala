@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.utils
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
-import io.github.scala_tessella.editor.utils.Geometry.{buildUnitEdgePolygon, edgeGeometrics}
+import io.github.scala_tessella.editor.utils.Geometry.{buildUnitEdgePolygon, edgeMetrics}
 import io.github.scala_tessella.editor.utils.TessellationGeometry._
 import io.github.scala_tessella.editor.utils.{Point, Radian}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
@@ -25,7 +25,7 @@ object PolygonPlacementGeometry:
     val vertex1 = edge._1.point
     val vertex2 = edge._2.point
 
-    val (edgeLen, unitVector, midPoint) = edgeGeometrics(vertex1, vertex2)
+    val (edgeLen, unitVector, midPoint) = edgeMetrics(vertex1, vertex2)
     if edgeLen == 0 then
       Vector.empty
     else
