@@ -17,7 +17,6 @@ import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
-import io.github.scala_tessella.editor.utils.DualTessellation.generateDualLines
 import io.github.scala_tessella.editor.utils.SvgDsl.{circleCoordsRadius, lineCoords, textCoords}
 import io.github.scala_tessella.editor.utils.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.{ColorRGB, LineSegment, Point}
@@ -52,18 +51,6 @@ object TessellationRenderer:
       )
     )
   )
-
-  private def renderDualTessellation(tiling: TilingDCEL): List[Element] =
-    generateDualLines(tiling).map { case (midPoint, center) =>
-      val point1        = tilingPointToCanvasView(midPoint.toPoint)
-      val point2        = tilingPointToCanvasView(center.toPoint)
-      svg.line(
-        lineCoords(LineSegment(point1, point2)),
-        svg.stroke        := "red",
-        svg.strokeWidth   := "1",
-        svg.pointerEvents := "none"
-      )
-    }
 
   // Helper: extract FaceId from "tiling-poly-<faceId>"
   private def polygonIdToFaceId(polygonId: String): Option[FaceId] =
@@ -184,12 +171,6 @@ object TessellationRenderer:
             case _                 => List.empty
         }
 
-    val dualDisplay = children <-- EditorState.showDual.signal.map { isVisible =>
-
-      if (isVisible && !tiling.isEmpty) renderDualTessellation(tiling)
-      else List.empty
-    }
-
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
 
       if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
@@ -261,7 +242,6 @@ object TessellationRenderer:
       tilingPolygons,
       perimeterEdges,
       interiorEdgesOverlay,
-      dualDisplay,
       nodeLabels,
       failedPolygonWireframe,
       previewPolygonWireframe,
