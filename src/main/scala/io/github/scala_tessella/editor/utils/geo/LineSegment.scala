@@ -1,4 +1,4 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.geo
 
 opaque type LineSegment = (p1: Point, p2: Point)
 

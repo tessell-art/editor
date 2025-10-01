@@ -2,8 +2,8 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.editor.models.ViewTransform
-import io.github.scala_tessella.editor.utils.Geometry.Bounds
-import io.github.scala_tessella.editor.utils.{Point, Radian}
+import io.github.scala_tessella.editor.utils.geo.Geometry.Bounds
+import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import munit.FunSuite
 
 class ViewOperationsSpec extends FunSuite:

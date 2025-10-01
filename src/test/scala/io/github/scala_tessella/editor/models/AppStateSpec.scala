@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.models
 
 import io.github.scala_tessella.dcel.{FaceId, VertexId}
 import io.github.scala_tessella.editor.EditorStateFixture
-import io.github.scala_tessella.editor.utils.{Point, Radian}
+import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import munit.FunSuite
 
 class AppStateSpec extends FunSuite with EditorStateFixture:

@@ -1,7 +1,8 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.geo
 
-import io.github.scala_tessella.editor.utils.Geometry.*
+import io.github.scala_tessella.editor.utils.geo.Geometry.*
 import munit.FunSuite
+
 import scala.math.Pi
 
 class GeometrySpec extends FunSuite:

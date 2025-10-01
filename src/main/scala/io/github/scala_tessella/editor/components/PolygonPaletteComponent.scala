@@ -7,7 +7,8 @@ import io.github.scala_tessella.editor.components.IconsSVG.plusIcon
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations.*
-import io.github.scala_tessella.editor.utils.{LineSegment, Point, PolygonNameGenerator, PolygonSvg}
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.{PolygonNameGenerator, PolygonSvg}
 import io.github.scala_tessella.editor.utils.SvgDsl.*
 
 object PolygonPaletteComponent:

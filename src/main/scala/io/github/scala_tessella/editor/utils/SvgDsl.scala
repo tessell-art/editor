@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.modifiers.KeySetter
-import io.github.scala_tessella.editor.utils.Point
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object SvgDsl:
 

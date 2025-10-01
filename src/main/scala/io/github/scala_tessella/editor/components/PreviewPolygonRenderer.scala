@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
-import io.github.scala_tessella.editor.utils.PolygonPlacementGeometry
+import io.github.scala_tessella.editor.utils.geo.PolygonPlacementGeometry
 
 /** Renders the hover preview of the polygon to be inserted. */
 object PreviewPolygonRenderer:

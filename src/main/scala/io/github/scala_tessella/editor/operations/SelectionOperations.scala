@@ -4,8 +4,8 @@ import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.FaceId
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.TessellationGeometry.toPoint
-import io.github.scala_tessella.editor.utils.{LineSegment, Point, Radian}
+import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
 import io.github.scala_tessella.ring_seq.RingSeq.{isRotationOrReflectionOf, slidingO}
 
 object SelectionOperations:

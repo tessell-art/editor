@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.editor.utils.Point
+import io.github.scala_tessella.editor.utils.geo.Point
 
 case class ViewTransform(
     scale: Double = 1.0,

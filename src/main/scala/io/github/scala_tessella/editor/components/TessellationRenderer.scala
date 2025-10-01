@@ -18,8 +18,9 @@ import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.{circleCoordsRadius, lineCoords, textCoords}
-import io.github.scala_tessella.editor.utils.TessellationGeometry.*
-import io.github.scala_tessella.editor.utils.{ColorRGB, LineSegment, Point}
+import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 

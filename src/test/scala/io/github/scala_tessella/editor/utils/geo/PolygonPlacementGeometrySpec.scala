@@ -1,9 +1,9 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.geo
 
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
 import io.github.scala_tessella.dcel.Polygon.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
-import io.github.scala_tessella.editor.utils.Point
+import io.github.scala_tessella.editor.utils.geo.Point
 import munit.FunSuite
 
 class PolygonPlacementGeometrySpec extends FunSuite:

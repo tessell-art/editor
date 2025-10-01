@@ -6,9 +6,10 @@ import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
-import io.github.scala_tessella.editor.utils.Geometry.{fitPointsToViewBox, transformPointsForSvg}
-import io.github.scala_tessella.editor.utils.TessellationGeometry.*
-import io.github.scala_tessella.editor.utils.{AsyncUtils, Point, SvgDsl}
+import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
+import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
+import io.github.scala_tessella.editor.utils.geo.Point
+import io.github.scala_tessella.editor.utils.{AsyncUtils, SvgDsl}
 import org.scalajs.dom
 
 object SvgExporter:

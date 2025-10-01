@@ -1,4 +1,4 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.utils.geo
 
 import munit.FunSuite
 

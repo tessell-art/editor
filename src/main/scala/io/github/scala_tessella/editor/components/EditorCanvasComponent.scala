@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.interactions.{MouseEventHandler, TouchEventHandler}
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.SvgDsl.{rectCoords, textCoords}
 
 object EditorCanvasComponent:

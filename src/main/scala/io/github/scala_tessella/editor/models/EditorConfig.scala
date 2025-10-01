@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.editor.utils.{LineSegment, Point}
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object EditorConfig:
   // Canvas ViewBox dimensions

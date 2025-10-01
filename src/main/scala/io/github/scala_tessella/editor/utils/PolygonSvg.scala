@@ -2,13 +2,13 @@ package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.editor.utils.Geometry.{
+import io.github.scala_tessella.editor.utils.geo.Geometry.{
   buildUnitEdgePolygon,
   fitPointsToSquare,
   regularPolygonPoints
 }
 import io.github.scala_tessella.editor.utils.SvgDsl.{lineCoords, polygon, root, textCoords}
-import io.github.scala_tessella.editor.utils.{Point, Radian}
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
 
 object PolygonSvg:
 
