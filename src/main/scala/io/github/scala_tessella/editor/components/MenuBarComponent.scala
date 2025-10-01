@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.editor.components.popup.*
 import io.github.scala_tessella.editor.models.{AppState, EditorState, ViewTransform}
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
@@ -51,10 +52,10 @@ object MenuBarComponent:
         // Pass both the signal and the Var to the switcher
         themeSwitcher(effectiveTheme, userThemePreference)
       ),
-      PopUpsComponent.irregularPolygonPopup(),
-      PopUpsComponent.guidePopup(),
-      PopUpsComponent.shortcutsPopup(),
-      PopUpsComponent.helpPopup()
+      IrregularPolygonPopup.element,
+      GuidePopup.element,
+      ShortcutsPopup.element,
+      AboutPopup.element
     )
 
   // A helper to create a top-level menu item like "File", "Edit"
