@@ -6,11 +6,11 @@ opaque type Point = (x: Double, y: Double)
 
 object Point:
 
+  val origin: Point =
+    (0.0, 0.0)
+
   inline def apply(x: Double, y: Double): Point =
     (x, y)
-
-  inline def origin: Point =
-    (0.0, 0.0)
 
   /** Creates a point from polar coordinates */
   def fromPolar(rho: Double, theta: Radian): Point =
