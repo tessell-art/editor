@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils
 
-import io.github.scala_tessella.dcel.Polygon.RegularPolygon
+import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.TilingDCEL
 
 object TilingBuilders:

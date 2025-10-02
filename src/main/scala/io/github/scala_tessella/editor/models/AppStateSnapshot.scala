@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL}
+import io.github.scala_tessella.dcel.geometry.AngleDegree
+import io.github.scala_tessella.dcel.structure.FaceId
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.ColorRGB
 
 // Represents a snapshot of the application state that can be undone

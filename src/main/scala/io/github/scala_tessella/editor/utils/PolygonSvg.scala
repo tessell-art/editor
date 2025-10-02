@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.editor.utils.geo.Geometry.{
   buildUnitEdgePolygon,
   fitPointsToSquare,

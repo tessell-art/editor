@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, VertexId}
+import io.github.scala_tessella.dcel.geometry.AngleDegree
+import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations._

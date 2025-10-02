@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.editor.models.ViewTransform
 import io.github.scala_tessella.editor.utils.geo.Geometry.Bounds
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}

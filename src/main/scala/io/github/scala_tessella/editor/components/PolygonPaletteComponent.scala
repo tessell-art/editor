@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.api.features.unitArrows
-import io.github.scala_tessella.dcel.BigDecimalGeometry.AngleDegree
+import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.editor.components.IconsSVG.plusIcon
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate

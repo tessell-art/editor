@@ -1,9 +1,9 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
-import io.github.scala_tessella.dcel.Polygon.RegularPolygon
-import io.github.scala_tessella.dcel.{FaceId, TilingDCEL, Vertex, VertexId}
+import io.github.scala_tessella.dcel.geometry.{BigPoint, RegularPolygon}
+import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.editor.models.{
   AppState,
   ClickablePoint,

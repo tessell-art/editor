@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.utils.file
 
-import io.github.scala_tessella.dcel.BigDecimalGeometry.BigPoint
+import io.github.scala_tessella.dcel.geometry.BigPoint
 import io.github.scala_tessella.dcel.TilingSVG.toMetadata
-import io.github.scala_tessella.dcel.{TilingDCEL, Vertex, VertexId}
+import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*

@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.FaceId
+import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
