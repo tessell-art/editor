@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils.file
 
 import io.github.scala_tessella.dcel.geometry.BigPoint
-import io.github.scala_tessella.dcel.TilingSVG.toMetadata
+import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}

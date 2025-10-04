@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.utils.file
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.{TilingDCEL, TilingSVG}
+import io.github.scala_tessella.dcel.conversion.TilingSVG
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations
 import io.github.scala_tessella.editor.utils.ColorRGB.parseColor
