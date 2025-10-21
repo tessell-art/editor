@@ -43,9 +43,16 @@ object PolygonNameGenerator:
       ("Truncated hexagonal", "(3.12.12)", "semiregular_3-12-12.svg")
     )
 
+  /** @see
+    *   https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker/
+    *   https://tilings.math.uni-bielefeld.de/substitution/darb-i-imam-shrine/
+    *   https://tilings.math.uni-bielefeld.de/substitution/penrose-pentagon-boat-star/
+    *   https://tilings.math.uni-bielefeld.de/substitution/penrose-rhomb/
+    */
   def irregularNames: List[Template] =
     List(
       ("Ammann-Beenker", "A5", "ammann_A5.svg"),
+      ("Darb-I Imam", "derived", "darb-i_imam.svg"),
       ("Penrose", "P1", "penrose_P1.svg"),
       ("Penrose", "P3", "penrose_P3.svg")
     )
