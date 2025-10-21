@@ -45,6 +45,7 @@ object PolygonNameGenerator:
 
   def irregularNames: List[Template] =
     List(
+      ("Ammann-Beenker", "A5", "ammann_A5.svg"),
       ("Penrose", "P1", "penrose_P1.svg"),
       ("Penrose", "P3", "penrose_P3.svg")
     )
