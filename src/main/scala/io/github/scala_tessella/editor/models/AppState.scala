@@ -8,7 +8,9 @@ import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.geo.Point
-import io.github.scala_tessella.editor.utils.{ColorRGB, Logger, UndoManager}
+import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, Logger, UndoManager}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 // Case class to represent a failed polygon placement
 case class FailedPolygonPlacement(
@@ -91,19 +93,25 @@ object AppState:
       val next = !showUniformity.now()
       showUniformity.set(next)
       if next && uniformityMap.now().isEmpty then
-        // Compute uniformity lazily on first enable
-        val tiling                               = currentTiling.now()
-        // Replace this placeholder with the real computation once available
-        // Expected: Map[VertexId, Int] where Int is the class/id for each uniform vertex
-        val computed: Option[Map[VertexId, Int]] =
-          if tiling.isEmpty then None
-          else
-            // TODO: call real uniformity computation
-            val classes  = tiling.uniformityTree.flattenLeaves
-            val indexMap = classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
-            Logger.debug(s"Computed uniformity map: $indexMap")
-            Some(indexMap)
-        uniformityMap.set(computed)
+        // Compute uniformity lazily on first enable, but do it asynchronously with loading state
+        val tiling = currentTiling.now()
+
+        AsyncUtils
+          .withLoadingState { () =>
+            // Expected: Map[VertexId, Int] where Int is the class/id for each uniform vertex
+            if tiling.isEmpty then None
+            else
+              val classes  = tiling.uniformityTree.flattenLeaves
+              val indexMap =
+                classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
+              Logger.debug(s"Computed uniformity map: $indexMap")
+              Some(indexMap)
+          }
+          .foreach { computed =>
+            // Only apply if uniformity is still requested
+            if showUniformity.now() then
+              uniformityMap.set(computed)
+          }
 
   /** Checks if the current tiling is empty.
     * @return
