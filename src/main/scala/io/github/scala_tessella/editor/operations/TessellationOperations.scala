@@ -77,7 +77,10 @@ object TessellationOperations:
   def attemptFaceDeletion(faceId: FaceId): Unit =
     val op = () => currentTiling.now().maybeDeleteFace(faceId)
     OperationRunner.runTilingOp(op)(
-      onSuccess = (),
+      onSuccess =
+        EditorState.showUniformity.set(false)
+        EditorState.uniformityMap.set(None)
+      ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
     )
 
@@ -85,7 +88,10 @@ object TessellationOperations:
   def attemptVertexDeletion(vertexId: VertexId): Unit =
     val op = () => currentTiling.now().maybeDeleteVertex(vertexId)
     OperationRunner.runTilingOp(op)(
-      onSuccess = (),
+      onSuccess =
+        EditorState.showUniformity.set(false)
+        EditorState.uniformityMap.set(None)
+      ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
     )
 
@@ -93,7 +99,10 @@ object TessellationOperations:
   def attemptEdgeDeletion(startVertexId: VertexId, endVertexId: VertexId): Unit =
     val op = () => currentTiling.now().maybeDeleteEdge(startVertexId, endVertexId)
     OperationRunner.runTilingOp(op)(
-      onSuccess = (),
+      onSuccess =
+        EditorState.showUniformity.set(false)
+        EditorState.uniformityMap.set(None)
+      ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
 
@@ -124,7 +133,10 @@ object TessellationOperations:
 
         OperationRunner.runTilingOp(op)(
           onSuccess =
-            EditorState.selectedPerimeterEdges.set(Set.empty),
+            EditorState.showUniformity.set(false)
+            EditorState.uniformityMap.set(None)
+            EditorState.selectedPerimeterEdges.set(Set.empty)
+          ,
           onFailure = err =>
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
@@ -178,7 +190,10 @@ object TessellationOperations:
 
         OperationRunner.runTilingOp(op)(
           onSuccess =
-            EditorState.selectedPerimeterEdges.set(Set.empty),
+            EditorState.showUniformity.set(false)
+            EditorState.uniformityMap.set(None)
+            EditorState.selectedPerimeterEdges.set(Set.empty)
+          ,
           onFailure = error => {
             val curr        = currentTiling.now()
             val maybeFaceId = findFaceContainingEdge(curr, startVertexId, endVertexId)

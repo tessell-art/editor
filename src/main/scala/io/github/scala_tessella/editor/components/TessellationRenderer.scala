@@ -311,16 +311,26 @@ object TessellationRenderer:
 
     def uniformColorMap: Map[Int, String] =
       Map(
-        0 -> "yellow",
-        1 -> "orange",
-        2 -> "violet",
-        3 -> "green",
-        4 -> "brown",
-        5 -> "pink",
-        6 -> "deeppink",
-        7 -> "darkkhaki",
-        8 -> "blueviolet",
-        9 -> "lime"
+        0  -> "yellow",
+        1  -> "orange",
+        2  -> "violet",
+        3  -> "green",
+        4  -> "brown",
+        5  -> "pink",
+        6  -> "deeppink",
+        7  -> "darkkhaki",
+        8  -> "blueviolet",
+        9  -> "lime",
+        10 -> "lightgreen",
+        11 -> "lightblue",
+        12 -> "lightcoral",
+        13 -> "lightseagreen",
+        14 -> "lightskyblue",
+        15 -> "lightsalmon",
+        16 -> "lightpink",
+        17 -> "lightgoldenrodyellow",
+        18 -> "lightgray",
+        19 -> "slategray"
       )
 
     val uniformityMap = EditorState.uniformityMap.now()
