@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.components.popup
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.buildinfo.BuildInfo
 
 object AboutPopup:
 
@@ -32,7 +33,7 @@ object AboutPopup:
         h1("Tessella"),
         p(
           className := "about-version",
-          "Editor v0.3.0"
+          s"Editor v${BuildInfo.version}"
         ),
         h2("Simple polygon tessellation editor"),
         div(

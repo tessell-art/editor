@@ -11,7 +11,7 @@ lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
     scalaVersion := "3.7.3",
-    version := "0.3.0",
+    version := "0.3.1",
     name := "Tessella Editor",
 
     // Tell Scala.js that this is an application with a main method
@@ -54,5 +54,20 @@ lazy val editor = project.in(file("."))
     ),
 
     // MUnit test framework
-    testFrameworks += new TestFramework("munit.Framework")
+    testFrameworks += new TestFramework("munit.Framework"),
+
+    // Generate a Scala object with the app version from SBT `version`
+    Compile / sourceGenerators += Def.task {
+      val out = (Compile / sourceManaged).value / "io" / "github" / "scala_tessella" / "editor" / "buildinfo"
+      val file = out / "BuildInfo.scala"
+      IO.write(
+        file,
+        s"""package io.github.scala_tessella.editor.buildinfo
+           |object BuildInfo {
+           |  val version: String = "${version.value}"
+           |}
+           |""".stripMargin
+      )
+      Seq(file)
+    }.taskValue
   )
