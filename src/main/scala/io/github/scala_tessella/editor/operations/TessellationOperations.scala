@@ -44,6 +44,8 @@ object TessellationOperations:
         UndoManager.saveState()
 
       currentTiling.set(TilingDCEL.empty)
+      EditorState.showUniformity.set(false)
+      EditorState.uniformityMap.set(None)
       EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)

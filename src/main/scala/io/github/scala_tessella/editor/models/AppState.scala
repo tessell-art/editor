@@ -1,14 +1,14 @@
 package io.github.scala_tessella.editor.models
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
-import io.github.scala_tessella.editor.operations._
+import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.geo.Point
-import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
+import io.github.scala_tessella.editor.utils.{ColorRGB, Logger, UndoManager}
 
 // Case class to represent a failed polygon placement
 case class FailedPolygonPlacement(
@@ -83,12 +83,27 @@ object AppState:
     ifNotProcessing:
       showNodeLabels.update(!_)
 
-  /** Toggles the visibility of the dual tessellation. Does nothing if the editor is currently processing an
+  /** Toggles the visibility of the uniformity data. Does nothing if the editor is currently processing an
     * operation.
     */
   def toggleShowUniformity(): Unit =
     ifNotProcessing:
-      showUniformity.update(!_)
+      val next = !showUniformity.now()
+      showUniformity.set(next)
+      if next && uniformityMap.now().isEmpty then
+        // Compute uniformity lazily on first enable
+        val tiling                               = currentTiling.now()
+        // Replace this placeholder with the real computation once available
+        // Expected: Map[VertexId, Int] where Int is the class/id for each uniform vertex
+        val computed: Option[Map[VertexId, Int]] =
+          if tiling.isEmpty then None
+          else
+            // TODO: call real uniformity computation
+            val classes  = tiling.uniformityTree.flattenLeaves
+            val indexMap = classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
+            Logger.debug(s"Computed uniformity map: $indexMap")
+            Some(indexMap)
+        uniformityMap.set(computed)
 
   /** Checks if the current tiling is empty.
     * @return
