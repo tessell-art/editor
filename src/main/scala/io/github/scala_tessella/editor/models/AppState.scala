@@ -86,9 +86,9 @@ object AppState:
   /** Toggles the visibility of the dual tessellation. Does nothing if the editor is currently processing an
     * operation.
     */
-  def toggleShowDual(): Unit =
+  def toggleShowUniformity(): Unit =
     ifNotProcessing:
-      showDual.update(!_)
+      showUniformity.update(!_)
 
   /** Checks if the current tiling is empty.
     * @return

@@ -44,8 +44,8 @@ object EditorState:
   /** Whether node labels should be shown */
   val showNodeLabels: Var[Boolean] = Var(false)
 
-  /** Whether the dual tessellation should be shown */
-  val showDual: Var[Boolean] = Var(false)
+  /** Whether uniformity should be shown */
+  val showUniformity: Var[Boolean] = Var(false)
 
   /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
   val userThemePreference: Var[Option[String]] = Var(None)

@@ -65,6 +65,12 @@ object TessellationRenderer:
       _.getOrElse(faceId, ColorRGB(200, 200, 200)).toRgb
     }
 
+    val opacity = EditorState.showUniformity.signal.map {
+      showUni =>
+
+        if showUni then "0.0" else "1.0"
+    }
+
     // Check if this polygon should be hidden due to failed deletion
     val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
       case Some(failedDel) => failedDel.faceId == faceId
@@ -93,6 +99,7 @@ object TessellationRenderer:
     val basePolygon = svg.polygon(
       svg.points := pointsStr, // static, precomputed
       svg.fill <-- rgbSignal, // reactive (color changes)
+      svg.fillOpacity <-- opacity, // reactive (uniformity)
       svg.stroke <-- strokeColorSignal, // reactive
       svg.strokeWidth <-- strokeWidthSignal, // reactive
       svg.className <-- EditorState.editorMode.signal.map {
@@ -175,6 +182,11 @@ object TessellationRenderer:
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
 
       if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
+    }
+
+    val nodeUniformity = children <-- EditorState.showUniformity.signal.map { showUni =>
+//      if showUni then renderUniformity(tiling.coordinates) else List.empty
+      List.empty
     }
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
@@ -293,6 +305,46 @@ object TessellationRenderer:
         vertexId.value
       )
     }
+
+  private def renderUniformity(coordinates: Map[VertexId, BigPoint]): List[Element] =
+    ???
+//    coordinates.toList.map { (vertexId, bigPoint) =>
+//      val vertex = bigPoint.toPoint
+//
+//      // Convert tessella coordinates to canvas coordinates
+//      val point = tilingPointToCanvasView(vertex)
+//
+//      // Offset the label slightly from the vertex to avoid overlap
+//      val offset = point + Point(4, -4)
+//
+//      svg.text(
+//        textCoords(offset),
+//        svg.fontSize <-- EditorState.viewTransform.signal.map(transform =>
+//          // Scale the font size with zoom but keep it readable
+//          val baseFontSize = 12
+//          val scaledSize   = (baseFontSize / transform.scale).max(8).min(20)
+//          scaledSize.toString
+//        ),
+//        // Counter-rotate the text to keep it readable
+//        svg.transform <-- EditorState.viewTransform.signal.map(transform =>
+//          // Rotate around the text position to counter the canvas rotation
+//          s"rotate(${-transform.rotationDegrees} ${offset.x} ${offset.y})"
+//        ),
+//        svg.fill             := "#ffeb3b", // Bright yellow for visibility
+//        svg.fontFamily       := "monospace",
+//        svg.fontWeight       := "bold",
+//        svg.textAnchor       := "start",
+//        svg.dominantBaseline := "middle",
+//        svg.className        := "node-label",
+//        // Add stroke for better readability
+//        svg.stroke           := "#000",
+//        svg.strokeWidth <-- EditorState.viewTransform.signal.map(transform =>
+//          (0.5 / transform.scale).max(0.2).min(1.0).toString
+//        ),
+//        svg.paintOrder       := "stroke fill",
+//        vertexId.value
+//      )
+//    }
 
   private def renderClickablePoint(p: ClickablePoint): Element =
     val point = tilingPointToCanvasView(p.point)

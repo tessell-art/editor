@@ -50,7 +50,7 @@ trait EditorStateFixture:
     // Reset view and toggles
     EditorState.viewTransform.set(ViewTransform())
     EditorState.showNodeLabels.set(false)
-    EditorState.showDual.set(false)
+    EditorState.showUniformity.set(false)
 
   override def afterEach(context: AfterEach): Unit =
     // Restore the structural snapshot
@@ -83,6 +83,6 @@ trait EditorStateFixture:
     EditorState.measurementAngle.set(None)
 
     EditorState.showNodeLabels.set(false)
-    EditorState.showDual.set(false)
+    EditorState.showUniformity.set(false)
 
     saved = None

@@ -4,7 +4,7 @@ import io.github.scala_tessella.dcel.geometry.BigPoint
 import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models.EditorState.{showDual, showNodeLabels}
+import io.github.scala_tessella.editor.models.EditorState.{showUniformity, showNodeLabels}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
@@ -25,7 +25,7 @@ object SvgExporter:
         if newName.nonEmpty then
           AsyncUtils.withLoadingState { () =>
             val finalName  = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
-            val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showDual.now())
+            val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showUniformity.now())
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.currentFileName.set(Some(finalName))
           }: Unit
@@ -37,7 +37,7 @@ object SvgExporter:
       EditorState.currentFileName.now().foreach { fileName =>
         val tiling = EditorState.currentTiling.now()
         if !tiling.isEmpty then
-          val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showDual.now())
+          val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showUniformity.now())
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
       }
     ): Unit

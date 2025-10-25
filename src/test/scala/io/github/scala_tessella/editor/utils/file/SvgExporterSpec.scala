@@ -221,7 +221,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
   test("should not include dual tessellation when showDual is false") {
     val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
-    EditorState.showDual.set(false)
+    EditorState.showUniformity.set(false)
     assert(!result.contains("<g id=\"dual-tessellation\""))
   }
 
