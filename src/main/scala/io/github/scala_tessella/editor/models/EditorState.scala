@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.models
 
-import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
-import io.github.scala_tessella.dcel.structure.FaceId
+import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.ColorRGB
@@ -46,6 +46,8 @@ object EditorState:
 
   /** Whether uniformity should be shown */
   val showUniformity: Var[Boolean] = Var(false)
+
+  val uniformityMap: Var[Option[Map[VertexId, Int]]] = Var(None)
 
   /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
   val userThemePreference: Var[Option[String]] = Var(None)
