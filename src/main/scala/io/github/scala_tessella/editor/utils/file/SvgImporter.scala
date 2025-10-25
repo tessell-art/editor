@@ -71,6 +71,8 @@ object SvgImporter:
           throw new Error(s"Failed to parse Tessella DCEL metadata: ${err.message}")
         case Right(tiling: TilingDCEL) =>
           AppState.clearMeasurements()
+          EditorState.showUniformity.set(false)
+          EditorState.uniformityMap.set(None)
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
 
@@ -84,7 +86,6 @@ object SvgImporter:
               }
               .toMap
           EditorState.polygonColors.set(colorMap)
-
           EditorState.currentFileName.set(Some(filename))
           AppState.fitTilingToCanvas()
           UndoManager.clearHistory()
