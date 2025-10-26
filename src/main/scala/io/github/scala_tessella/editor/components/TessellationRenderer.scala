@@ -184,10 +184,12 @@ object TessellationRenderer:
       if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
     }
 
-    val nodeUniformity = children <-- EditorState.showUniformity.signal.map { showUni =>
+    val nodeUniformity = children <-- EditorState.showUniformity.signal
+      .combineWith(EditorState.uniformityMap.signal)
+      .map { (showUni, uniOpt) =>
 
-      if showUni then renderUniformity(tiling.coordinates) else List.empty
-    }
+        if showUni && uniOpt.nonEmpty then renderUniformity(tiling.coordinates) else List.empty
+      }
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
@@ -327,7 +329,7 @@ object TessellationRenderer:
         13 -> "lightseagreen",
         14 -> "lightskyblue",
         15 -> "lightsalmon",
-        16 -> "lightpink",
+        16 -> "yellowgreen",
         17 -> "lightgoldenrodyellow",
         18 -> "lightgray",
         19 -> "slategray"
@@ -351,7 +353,7 @@ object TessellationRenderer:
           val color = uniformColorMap.getOrElse(uni(vertexId), "black")
 
           svg.circle(
-            circleCoordsRadius(point, 20),
+            circleCoordsRadius(point, 16),
             svg.fill        := color,
             svg.stroke      := color,
             svg.strokeWidth := "1"

@@ -90,28 +90,36 @@ object AppState:
     */
   def toggleShowUniformity(): Unit =
     ifNotProcessing:
-      val next = !showUniformity.now()
-      showUniformity.set(next)
-      if next && uniformityMap.now().isEmpty then
-        // Compute uniformity lazily on first enable, but do it asynchronously with loading state
-        val tiling = currentTiling.now()
+      val currentlyShown = showUniformity.now()
+      if currentlyShown then
+        // Turning OFF: hide immediately
+        showUniformity.set(false)
+      else
+        // Turning ON
+        val existing = uniformityMap.now()
+        if existing.nonEmpty then
+          // Already computed: show immediately
+          showUniformity.set(true)
+        else
+          // Compute first, then show
+          val tiling = currentTiling.now()
+          AsyncUtils
+            .withLoadingState { () =>
 
-        AsyncUtils
-          .withLoadingState { () =>
-            // Expected: Map[VertexId, Int] where Int is the class/id for each uniform vertex
-            if tiling.isEmpty then None
-            else
-              val classes  = tiling.uniformityTree.flattenLeaves
-              val indexMap =
-                classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
-              Logger.debug(s"Computed uniformity map: $indexMap")
-              Some(indexMap)
-          }
-          .foreach { computed =>
-            // Only apply if uniformity is still requested
-            if showUniformity.now() then
-              uniformityMap.set(computed)
-          }
+              if tiling.isEmpty then None
+              else
+                val classes  = tiling.uniformityTree.flattenLeaves
+                val indexMap =
+                  classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
+                Logger.debug(s"Computed uniformity map: $indexMap")
+                Some(indexMap)
+            }
+            .foreach { computed =>
+              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
+              if !showUniformity.now() then
+                uniformityMap.set(computed)
+                showUniformity.set(true)
+            }
 
   /** Checks if the current tiling is empty.
     * @return
