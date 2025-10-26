@@ -188,7 +188,7 @@ object TessellationRenderer:
       .combineWith(EditorState.uniformityMap.signal)
       .map { (showUni, uniOpt) =>
 
-        if showUni && uniOpt.nonEmpty then renderUniformity(tiling.coordinates) else List.empty
+        if showUni && uniOpt.nonEmpty then renderUniformity(tiling.coordinates, uniOpt.get) else List.empty
       }
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
@@ -309,7 +309,10 @@ object TessellationRenderer:
       )
     }
 
-  private def renderUniformity(coordinates: Map[VertexId, BigPoint]): List[Element] =
+  private def renderUniformity(
+      coordinates: Map[VertexId, BigPoint],
+      uniMap: Map[VertexId, Int]
+  ): List[Element] =
 
     def uniformColorMap: Map[Int, String] =
       Map(
@@ -335,31 +338,25 @@ object TessellationRenderer:
         19 -> "slategray"
       )
 
-    val uniformityMap = EditorState.uniformityMap.now()
-    if uniformityMap.isEmpty then List.empty
-    else
-      val uni = uniformityMap.get
+    coordinates.toList
+      .filter { (vertexId, _) =>
 
-      coordinates.toList
-        .filter { (vertexId, _) =>
+        uniMap.contains(vertexId)
+      }
+      .map { (vertexId, bigPoint) =>
+        val vertex = bigPoint.toPoint
 
-          uni.contains(vertexId)
-        }
-        .map { (vertexId, bigPoint) =>
-          val vertex = bigPoint.toPoint
+        // Convert tessella coordinates to canvas coordinates
+        val point = tilingPointToCanvasView(vertex)
+        val color = uniformColorMap.getOrElse(uniMap(vertexId), "black")
 
-          // Convert tessella coordinates to canvas coordinates
-          val point = tilingPointToCanvasView(vertex)
-          val color = uniformColorMap.getOrElse(uni(vertexId), "black")
-
-          svg.circle(
-            circleCoordsRadius(point, 16),
-            svg.fill        := color,
-            svg.stroke      := color,
-            svg.strokeWidth := "1"
-          )
-
-        }
+        svg.circle(
+          circleCoordsRadius(point, 16),
+          svg.fill        := color,
+          svg.stroke      := color,
+          svg.strokeWidth := "1"
+        )
+      }
 
   private def renderClickablePoint(p: ClickablePoint): Element =
     val point = tilingPointToCanvasView(p.point)
