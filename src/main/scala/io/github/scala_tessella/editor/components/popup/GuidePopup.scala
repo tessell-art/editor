@@ -130,6 +130,11 @@ object GuidePopup:
               "You can switch ",
               b("Labels: ON"),
               " to show the node labels (numbers) of the underlying graph, each node a vertex."
+            ),
+            li(
+              "You can use ",
+              b("View → Show uniformity"),
+              " to show dots marking nodes with the same adjacent pattern."
             )
           ),
           h3("Styling"),
