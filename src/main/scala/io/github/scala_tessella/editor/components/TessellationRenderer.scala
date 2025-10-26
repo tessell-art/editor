@@ -17,7 +17,12 @@ import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
-import io.github.scala_tessella.editor.utils.SvgDsl.{circleCoordsRadius, lineCoords, textCoords}
+import io.github.scala_tessella.editor.utils.SvgDsl.{
+  circleCoordsRadius,
+  lineCoords,
+  textCoords,
+  uniformColorMap
+}
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.ColorRGB
@@ -313,30 +318,6 @@ object TessellationRenderer:
       coordinates: Map[VertexId, BigPoint],
       uniMap: Map[VertexId, Int]
   ): List[Element] =
-
-    def uniformColorMap: Map[Int, String] =
-      Map(
-        0  -> "yellow",
-        1  -> "orange",
-        2  -> "violet",
-        3  -> "green",
-        4  -> "brown",
-        5  -> "pink",
-        6  -> "deeppink",
-        7  -> "darkkhaki",
-        8  -> "blueviolet",
-        9  -> "lime",
-        10 -> "lightgreen",
-        11 -> "lightblue",
-        12 -> "lightcoral",
-        13 -> "lightseagreen",
-        14 -> "lightskyblue",
-        15 -> "lightsalmon",
-        16 -> "yellowgreen",
-        17 -> "lightgoldenrodyellow",
-        18 -> "lightgray",
-        19 -> "slategray"
-      )
 
     coordinates.toList
       .filter { (vertexId, _) =>
