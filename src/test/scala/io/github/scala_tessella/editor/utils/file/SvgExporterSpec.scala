@@ -179,12 +179,12 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
   test("should return empty string for empty tiling") {
     val emptyTiling = TilingDCEL.empty
 
-    val result = SvgExporter.generateSvgContent(emptyTiling, showNodeLabels = false, showDual = false)
+    val result = SvgExporter.generateSvgContent(emptyTiling, showNodeLabels = false, showUniformity = false)
     assertEquals(result, "")
   }
 
   test("should generate complete SVG structure") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showUniformity = false)
 
     assert(result.contains("<svg"))
     assert(result.contains("</svg>"))
@@ -195,20 +195,20 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
   }
 
   test("should include white background") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showUniformity = false)
 
     assert(result.contains("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>"))
   }
 
   test("should include labels when showNodeLabels is true") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = true, showDual = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = true, showUniformity = false)
     EditorState.showNodeLabels.set(true)
     assert(result.contains("<text"))
     assert(result.contains(">V1<"))
   }
 
   test("should not include labels when showNodeLabels is false") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showUniformity = false)
     EditorState.showNodeLabels.set(false)
     assert(!result.contains("<text"))
   }
@@ -220,13 +220,13 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
 //  }
 
   test("should not include dual tessellation when showDual is false") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showUniformity = false)
     EditorState.showUniformity.set(false)
     assert(!result.contains("<g id=\"dual-tessellation\""))
   }
 
   test("should calculate correct dimensions and offsets") {
-    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = false)
+    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showUniformity = false)
     assert(result.contains("width=\"90.0"))
     assert(result.contains("height=\"90.0"))
   }

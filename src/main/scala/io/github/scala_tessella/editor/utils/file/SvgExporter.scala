@@ -4,9 +4,10 @@ import io.github.scala_tessella.dcel.geometry.BigPoint
 import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models.EditorState.{showUniformity, showNodeLabels}
+import io.github.scala_tessella.editor.models.EditorState.{showNodeLabels, showUniformity}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
+import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.Point
@@ -45,7 +46,7 @@ object SvgExporter:
   private[utils] def generateSvgContent(
       tiling: TilingDCEL,
       showNodeLabels: Boolean,
-      showDual: Boolean
+      showUniformity: Boolean
   ): String =
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then
@@ -58,12 +59,11 @@ object SvgExporter:
 
       val (width, height, offset) = points.fitPointsToViewBox(scale, padding)
 
-      val polygonsXml  = generatePolygonsXml(tiling, scale, offset, strokeWidth)
-      val perimeterXml = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)
-      //    val dualXml = if showDual then generateDualTessellationXml(tiling, coordinates, scale, offsetX, offsetY) else ""
-      val dualXml      = ""
-      val labelsXml    = if showNodeLabels then generateLabelsXml(coordinates, scale, offset) else ""
-      val metadataXml  = generateMetadataXml(tiling)
+      val polygonsXml   = generatePolygonsXml(tiling, scale, offset, strokeWidth)
+      val perimeterXml  = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)
+      val uniformityXml = if showUniformity then generateUniformityXml(coordinates, scale, offset) else ""
+      val labelsXml     = if showNodeLabels then generateLabelsXml(coordinates, scale, offset) else ""
+      val metadataXml   = generateMetadataXml(tiling)
 
       val sWidth  = SvgDsl.fmt4(width)
       val sHeight = SvgDsl.fmt4(height)
@@ -71,7 +71,7 @@ object SvgExporter:
       s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tess="https://github.com/scala-tessella/tessella" width="$sWidth" height="$sHeight" viewBox="0 0 $sWidth $sHeight" xmlns="http://www.w3.org/2000/svg">
          |  <rect width="100%" height="100%" fill="white"/>
          |$perimeterXml
-         |$polygonsXml${if showDual then s"\n$dualXml" else ""}${
+         |$polygonsXml${if showUniformity then s"\n$uniformityXml" else ""}${
           if showNodeLabels then s"\n$labelsXml" else ""
         }
          |$metadataXml
@@ -126,26 +126,31 @@ object SvgExporter:
 
       s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
 
-//  private[utils] def generateDualTessellationXml(
-//      tiling: TilingDCEL,
-//      scale: Double,
-//      offsetX: Double,
-//      offsetY: Double
-//  ): String =
-//    val dualLines = generateDualLines(tiling)
-//    if dualLines.isEmpty then ""
-//    else
-//      val dualLinesXml = dualLines.map { case (midPoint, center) =>
-//        val x1 = (midPoint.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-//        val y1 = (midPoint.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-//        val x2 = (center.x * scale + offsetX).setScale(6, RoundingMode.HALF_UP)
-//        val y2 = (center.y * scale + offsetY).setScale(6, RoundingMode.HALF_UP)
-//
-//        s"""    <line x1="$x1" y1="$y1" x2="$x2" y2="$y2" />"""
-//      }.mkString("\n")
-//      s"""  <g id="dual-tessellation" stroke="red" stroke-width="1">
-//         |$dualLinesXml
-//         |  </g>""".stripMargin
+  private[utils] def generateUniformityXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val uniMap   = EditorState.uniformityMap.now().getOrElse(Map.empty)
+      val nodesXml = coordinates
+        .filter { (vertexId, _) =>
+
+          uniMap.contains(vertexId)
+        }
+        .map { (vertexId, vertex) =>
+
+          val point = vertex.toPoint.scaleAndTranslate(scale, offset)
+          val color = uniformColorMap.getOrElse(uniMap(vertexId), "black")
+
+          s"""    <circle cx="${SvgDsl.fmt4(point.x)}" cy="${SvgDsl.fmt4(
+              point.y
+            )}" r="16" stroke="$color" fill="$color" />"""
+        }.mkString("\n")
+      s"""  <g id="node-uniformity" stroke-width="1" >
+         |$nodesXml
+         |  </g>""".stripMargin
 
   private[utils] def generateLabelsXml(
       coordinates: Map[VertexId, BigPoint],
@@ -154,13 +159,13 @@ object SvgExporter:
   ): String =
     if coordinates.isEmpty then ""
     else
-      val nodesXml = coordinates.map { (node, vertex) =>
+      val nodesXml = coordinates.map { (vertexId, bigPoint) =>
 
-        val point = vertex.toPoint.scaleAndTranslate(scale, offset + Point(4.0, -4.0))
+        val point = bigPoint.toPoint.scaleAndTranslate(scale, offset + Point(4.0, -4.0))
 
 //        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
 //        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)
-        s"""    <text x="${SvgDsl.fmt4(point.x)}" y="${SvgDsl.fmt4(point.y)}" >${node.toString}</text>"""
+        s"""    <text x="${SvgDsl.fmt4(point.x)}" y="${SvgDsl.fmt4(point.y)}" >${vertexId.toString}</text>"""
       }.mkString("\n")
       s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
          |$nodesXml
