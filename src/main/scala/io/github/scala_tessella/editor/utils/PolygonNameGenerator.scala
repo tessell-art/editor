@@ -33,14 +33,14 @@ object PolygonNameGenerator:
 
   def semiRegularNames: List[Template] =
     List(
-      ("Snub square", "(3.3.4.3.4)", "semiregular_3-3-4-3-4.svg"),
-      ("Elongated triangular", "(3.3.3.4.4)", "semiregular_3-3-3-4-4.svg"),
       ("Snub hexagonal", "(3.3.3.3.6)", "semiregular_3-3-3-3-6.svg"),
-      ("Truncated triangular", "(3.6.3.6)", "semiregular_3-6-3-6.svg"),
+      ("Elongated triangular", "(3.3.3.4.4)", "semiregular_3-3-3-4-4.svg"),
+      ("Snub square", "(3.3.4.3.4)", "semiregular_3-3-4-3-4.svg"),
       ("Rhombitrihexagonal", "(3.4.6.4)", "semiregular_3-4-6-4.svg"),
-      ("Truncated square", "(4.8.8)", "semiregular_4-8-8.svg"),
+      ("Truncated triangular", "(3.6.3.6)", "semiregular_3-6-3-6.svg"),
+      ("Truncated hexagonal", "(3.12.12)", "semiregular_3-12-12.svg"),
       ("Truncated trihexagonal", "(4.6.12)", "semiregular_4-6-12.svg"),
-      ("Truncated hexagonal", "(3.12.12)", "semiregular_3-12-12.svg")
+      ("Truncated square", "(4.8.8)", "semiregular_4-8-8.svg")
     )
 
   /** @see
@@ -53,7 +53,9 @@ object PolygonNameGenerator:
     List(
       ("Ammann-Beenker", "A5", "ammann_A5.svg"),
       ("Darb-I Imam", "derived", "darb-i_imam.svg"),
+      ("Domino", "", "domino.svg"),
+      ("Godrèche-Lançon-Billard", "", "godrèche.svg"),
+      ("Patch", "", "patch.svg"),
       ("Penrose", "P1", "penrose_P1.svg"),
-      ("Penrose", "P3", "penrose_P3.svg"),
-      ("Godrèche-Lançon-Billard", "", "godrèche.svg")
+      ("Penrose", "P3", "penrose_P3.svg")
     )

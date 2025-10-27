@@ -139,12 +139,33 @@ object MenuBarComponent:
     subMenuItem(
       "New from Template...",
       // Regular tilings
-      dropdownLinks(regularNames),
+      regularMenu(),
       div(className := "menu-separator"),
       // Semiregular tilings
-      dropdownLinks(semiRegularNames),
+      semiRegularMenu(),
       div(className := "menu-separator"),
-      // Semiregular tilings
+      // Aperiodic tilings
+      aperiodicMenu()
+    )
+
+  private def regularMenu(): Element =
+    subMenuItem(
+      "Regular...",
+      // Regular tilings
+      dropdownLinks(regularNames)
+    )
+
+  private def semiRegularMenu(): Element =
+    subMenuItem(
+      "Semi Regular...",
+      // Semi regular tilings
+      dropdownLinks(semiRegularNames)
+    )
+
+  private def aperiodicMenu(): Element =
+    subMenuItem(
+      "Aperiodic...",
+      // Aperiodic tilings
       dropdownLinks(irregularNames)
     )
 
