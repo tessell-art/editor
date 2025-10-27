@@ -54,5 +54,6 @@ object PolygonNameGenerator:
       ("Ammann-Beenker", "A5", "ammann_A5.svg"),
       ("Darb-I Imam", "derived", "darb-i_imam.svg"),
       ("Penrose", "P1", "penrose_P1.svg"),
-      ("Penrose", "P3", "penrose_P3.svg")
+      ("Penrose", "P3", "penrose_P3.svg"),
+      ("Godrèche-Lançon-Billard", "", "godrèche.svg")
     )
