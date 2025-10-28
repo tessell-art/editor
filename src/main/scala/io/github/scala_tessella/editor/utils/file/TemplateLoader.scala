@@ -11,9 +11,9 @@ object TemplateLoader:
 
   private given ExecutionContext = ExecutionContext.global
 
-  def loadTemplate(fileName: String): Unit =
+  def loadTemplate(directory: String, fileName: String): Unit =
     // Assumes templates are in the /public/templates/ directory
-    val url = s"templates/$fileName"
+    val url = s"templates/$directory/$fileName"
     dom.fetch(url).toFuture
       .flatMap { response =>
 

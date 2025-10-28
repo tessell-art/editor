@@ -127,11 +127,11 @@ object MenuBarComponent:
       )
     )
 
-  private def dropdownLinks(templates: List[Template]): List[Element] =
+  private def dropdownLinks(directory: String, templates: List[Template]): List[Element] =
     templates.map(template =>
       dropdownLink(
         s"${template.name} ${template.pattern}",
-        () => TemplateLoader.loadTemplate(template.filename)
+        () => TemplateLoader.loadTemplate(directory, template.filename)
       )
     )
 
@@ -152,21 +152,21 @@ object MenuBarComponent:
     subMenuItem(
       "Regular...",
       // Regular tilings
-      dropdownLinks(regularNames)
+      dropdownLinks("regular", regularNames)
     )
 
   private def semiRegularMenu(): Element =
     subMenuItem(
       "Semi Regular...",
       // Semi regular tilings
-      dropdownLinks(semiRegularNames)
+      dropdownLinks("semiregular", semiRegularNames)
     )
 
   private def aperiodicMenu(): Element =
     subMenuItem(
       "Aperiodic...",
       // Aperiodic tilings
-      dropdownLinks(irregularNames)
+      dropdownLinks("aperiodic", irregularNames)
     )
 
   private def fileMenu(): Element =
