@@ -33,6 +33,123 @@ object IconsSVG:
       )
     )
 
+  private[components] def quadrupleIcon: Element =
+    createIcon("0 0 34.535 34.546")(
+      svg.g(
+        svg.transform        := "translate(-60.118 -68.204)",
+        svg.stroke           := "currentColor",
+        svg.strokeLineJoin   := "round",
+        svg.strokeMiterLimit := "16",
+        svg.rect(
+          svg.x           := "61.388",
+          svg.y           := "69.478",
+          svg.width       := "16",
+          svg.height      := "16",
+          svg.fill        := "none",
+          svg.strokeWidth := "1.0"
+        ),
+        svg.rect(
+          svg.x           := "61.383",
+          svg.y           := "85.488",
+          svg.width       := "16",
+          svg.height      := "16",
+          svg.fillOpacity := "1.0",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "1.0"
+        ),
+        svg.rect(
+          svg.x           := "77.38",
+          svg.y           := "69.477",
+          svg.width       := "16",
+          svg.height      := "16",
+          svg.fill        := "none",
+          svg.strokeWidth := "1.0"
+        ),
+        svg.rect(
+          svg.x           := "77.382",
+          svg.y           := "85.479",
+          svg.width       := "16",
+          svg.height      := "16",
+          svg.fill        := "none",
+          svg.strokeWidth := "1.0"
+        ),
+        svg.path(
+          svg.d           := "m65.25 70.958-2.4539 5.6317 1.605-5.2e-4v7.3765h1.6999v-7.3776l1.6057-5.2e-4z",
+          svg.fillOpacity := "1.0",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.46226"
+        ),
+        svg.path(
+          svg.d           := "m91.889 70.958-5.7174 2.247 1.1352 1.1345-5.216 5.216 1.202 1.202 5.2167-5.2167 1.1358 1.1351z",
+          svg.fillOpacity := "1.0",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.46226"
+        ),
+        svg.path(
+          svg.d           := "m91.889 97.63-5.6317-2.4539 5.2e-4 1.605h-7.3765v1.6999h7.3776l5.2e-4 1.6058z",
+          svg.fillOpacity := "1.0",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.46226"
+        ),
+        svg.circle(
+          svg.cx          := "61.406",
+          svg.cy          := "101.46",
+          svg.r           := "1",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.52917"
+        ),
+        svg.circle(
+          svg.cx          := "61.383",
+          svg.cy          := "69.485",
+          svg.r           := "1",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.52917"
+        ),
+        svg.circle(
+          svg.cx          := "93.388",
+          svg.cy          := "69.469",
+          svg.r           := "1",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.52917"
+        ),
+        svg.circle(
+          svg.cx          := "93.388",
+          svg.cy          := "101.49",
+          svg.r           := "1",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.52917"
+        ),
+        svg.circle(
+          svg.cx          := "77.378",
+          svg.cy          := "85.465",
+          svg.r           := ".5",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.26458"
+        ),
+        svg.circle(
+          svg.cx          := "77.385",
+          svg.cy          := "101.49",
+          svg.r           := ".5",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.26458"
+        ),
+        svg.circle(
+          svg.cx          := "61.404",
+          svg.cy          := "85.472",
+          svg.r           := ".5",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.26458"
+        ),
+        svg.circle(
+          svg.cx          := "61.414",
+          svg.cy          := "101.47",
+          svg.r           := ".5",
+          svg.fillRule    := "evenodd",
+          svg.strokeWidth := "0.26458"
+        )
+      )
+    )
+
   private[components] def rulerIcon: Element =
     createIcon("0 0 256 256")(
       svg.g(
