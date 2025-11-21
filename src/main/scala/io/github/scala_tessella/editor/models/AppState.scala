@@ -138,6 +138,12 @@ object AppState:
 
   /** Clears the current tiling and all measurements.
     */
+  def quadruplicateTiling(): Unit =
+    clearMeasurements()
+    TessellationOperations.attemptQuadruplication()
+
+  /** Clears the current tiling and all measurements.
+    */
   def clearTiling(): Unit =
     clearMeasurements()
     TessellationOperations.clearTiling()
