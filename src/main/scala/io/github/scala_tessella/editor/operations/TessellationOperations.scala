@@ -106,13 +106,13 @@ object TessellationOperations:
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
 
-  def attemptQuadruplication(): Unit =
+  def attemptDoubling(): Unit =
     val tiling = currentTiling.now()
     val op     = () =>
       try
-        tiling.quadrupleArea
+        tiling.doubleArea
       catch
-        case e: Exception => Left(ValidationError(s"Error quadruplicating: ${e.getMessage}"))
+        case e: Exception => Left(ValidationError(s"Error doubling: ${e.getMessage}"))
 
     OperationRunner.runTilingOp(op)(
       onSuccess =

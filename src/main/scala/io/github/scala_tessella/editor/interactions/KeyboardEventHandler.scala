@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.interactions
 
-import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.EditorState
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.file.SvgExporter
@@ -92,6 +92,9 @@ object KeyboardEventHandler:
         case "e" | "E"                                  =>
           event.preventDefault()
           enqueueRotate(-15) // debounced
+        case "d" | "D"                                  =>
+          event.preventDefault()
+          AppState.doubleTiling()
         case "Z" if primaryMod(event) && event.shiftKey =>
           event.preventDefault()
           UndoManager.redo()

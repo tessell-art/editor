@@ -94,6 +94,18 @@ object GuidePopup:
               " tool to select the shape (and the fill color) of an existing irregular polygon."
             )
           ),
+          h3("Doubling"),
+          ul(
+            li(
+              "Use the ",
+              b("Edit → Double (to infinite)"),
+              " menu option or the ",
+              kbd('D'),
+              " key to double the entire tiling. ",
+              "This works only when the boundary is a parallelogon, ",
+              "so that the whole infinite planar space could be covered."
+            )
+          ),
           h3("Deleting"),
           ul(
             li(
@@ -101,7 +113,7 @@ object GuidePopup:
               IconsSVG.eraserIcon,
               " ",
               i("Eraser"),
-              " tool to delete a vertex, and edge or a whole polygon from the tiling."
+              " tool to delete a vertex, an edge or a whole polygon from the tiling."
             ),
             li(
               "When you click on a polygon the vertices, edges (at midpoint) and face (at center) will be highlighted, ",
