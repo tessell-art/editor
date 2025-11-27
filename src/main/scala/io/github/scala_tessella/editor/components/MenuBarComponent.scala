@@ -212,13 +212,8 @@ object MenuBarComponent:
 
     menuItem(
       "Edit",
-      dropdownLink("↶ Undo", () => AppState.undoObserver: Unit, AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink(
-        "↷ Redo",
-        () => AppState.redoObserver: Unit,
-        AppState.canRedo,
-        shortcut = Some("Shift+Ctrl+Z")
-      ),
+      dropdownLink("↶ Undo", () => UndoManager.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
+      dropdownLink("↷ Redo", () => UndoManager.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
       dropdownLink("Clear Tiling", () => AppState.clearTiling()),
       dropdownLink("Double (to infinite)", () => AppState.doubleTiling(), shortcut = Some("D")),
