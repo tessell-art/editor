@@ -94,7 +94,7 @@ object GuidePopup:
               " tool to select the shape (and the fill color) of an existing irregular polygon."
             )
           ),
-          h3("Doubling"),
+          h3("Doubling and mirroring"),
           ul(
             li(
               "Use the ",
@@ -104,6 +104,11 @@ object GuidePopup:
               " key to double the entire tiling. ",
               "This works only when the boundary is a parallelogon, ",
               "so that the whole infinite planar space could be covered."
+            ),
+            li(
+              "Use the ",
+              b("Edit → Mirror"),
+              " menu option to switch to a mirror image of the tiling."
             )
           ),
           h3("Deleting"),

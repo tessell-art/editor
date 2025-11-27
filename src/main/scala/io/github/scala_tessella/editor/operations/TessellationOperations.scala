@@ -1,8 +1,9 @@
 package io.github.scala_tessella.editor.operations
 
+import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
-import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
+import io.github.scala_tessella.dcel.{TilingDCEL, TilingEquivalency, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
@@ -113,6 +114,24 @@ object TessellationOperations:
         tiling.doubleArea
       catch
         case e: Exception => Left(ValidationError(s"Error doubling: ${e.getMessage}"))
+
+    OperationRunner.runTilingOp(op)(
+      onSuccess =
+        EditorState.showUniformity.set(false)
+        EditorState.uniformityMap.set(None)
+        EditorState.selectedPerimeterEdges.set(Set.empty)
+      ,
+      onFailure = err =>
+        ErrorOperations.showError(err.message)
+    )
+
+  def attemptMirroring(): Unit =
+    val tiling = currentTiling.now()
+    val op     = () =>
+      try
+        Right(tiling.verticallyReflectedCopy)
+      catch
+        case e: Exception => Left(ValidationError(s"Error mirroring: ${e.getMessage}"))
 
     OperationRunner.runTilingOp(op)(
       onSuccess =

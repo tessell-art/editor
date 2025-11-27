@@ -220,8 +220,9 @@ object MenuBarComponent:
         shortcut = Some("Shift+Ctrl+Z")
       ),
       div(className := "menu-separator"),
-      dropdownLink("Double (to infinite)", () => AppState.doubleTiling(), shortcut = Some("D")),
       dropdownLink("Clear Tiling", () => AppState.clearTiling()),
+      dropdownLink("Double (to infinite)", () => AppState.doubleTiling(), shortcut = Some("D")),
+      dropdownLink("Mirror", () => AppState.mirrorTiling()),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {
