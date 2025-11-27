@@ -120,10 +120,9 @@ object TessellationOperations:
 
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        faceIds.indices.foreach(id =>
+        faceIds.indices.foreach: id =>
           val rgb = colors(faceIds(id))
           polygonColors.update(_ + (TilingBuilder.faceIdF(maxFaceId + id + 1) -> rgb))
-        )
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
         EditorState.selectedPerimeterEdges.set(Set.empty)
