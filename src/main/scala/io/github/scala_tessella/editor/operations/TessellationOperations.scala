@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
-import io.github.scala_tessella.dcel.{TilingDCEL, TilingEquivalency, ValidationError}
+import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
