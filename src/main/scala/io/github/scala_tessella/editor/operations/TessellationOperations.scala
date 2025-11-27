@@ -3,8 +3,8 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
-import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
-import io.github.scala_tessella.editor.models.EditorState.currentTiling
+import io.github.scala_tessella.dcel.{TilingBuilder, TilingDCEL, ValidationError}
+import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
@@ -108,8 +108,11 @@ object TessellationOperations:
     )
 
   def attemptDoubling(): Unit =
-    val tiling = currentTiling.now()
-    val op     = () =>
+    val tiling    = currentTiling.now()
+    val faceIds   = tiling.innerFaces.map(_.id)
+    val maxFaceId = faceIds.map(TilingBuilder.idFromFaceId).max
+    val colors    = polygonColors.now()
+    val op        = () =>
       try
         tiling.doubleArea
       catch
@@ -117,6 +120,10 @@ object TessellationOperations:
 
     OperationRunner.runTilingOp(op)(
       onSuccess =
+        faceIds.indices.foreach(id =>
+          val rgb = colors(faceIds(id))
+          polygonColors.update(_ + (TilingBuilder.faceIdF(maxFaceId + id + 1) -> rgb))
+        )
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
         EditorState.selectedPerimeterEdges.set(Set.empty)
