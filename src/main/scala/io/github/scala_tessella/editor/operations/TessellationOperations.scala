@@ -126,6 +126,7 @@ object TessellationOperations:
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
         EditorState.selectedPerimeterEdges.set(Set.empty)
+        if ViewOperations.isTilingLargerThanCanvas then ViewOperations.fitTilingToCanvas()
       ,
       onFailure = err =>
         ErrorOperations.showError(err.message)
