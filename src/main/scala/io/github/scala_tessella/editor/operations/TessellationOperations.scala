@@ -47,6 +47,8 @@ object TessellationOperations:
       currentTiling.set(TilingDCEL.empty)
       EditorState.showUniformity.set(false)
       EditorState.uniformityMap.set(None)
+      EditorState.showRotation.set(false)
+      EditorState.rotationVertexIds.set(None)
       EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
@@ -81,6 +83,8 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
     )
@@ -92,6 +96,8 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
     )
@@ -103,6 +109,8 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
@@ -125,6 +133,8 @@ object TessellationOperations:
           polygonColors.update(_ + (TilingBuilder.faceIdF(maxFaceId + id + 1) -> rgb))
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
         EditorState.selectedPerimeterEdges.set(Set.empty)
         if ViewOperations.isTilingLargerThanCanvas then ViewOperations.fitTilingToCanvas()
       ,
@@ -144,6 +154,8 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
         EditorState.selectedPerimeterEdges.set(Set.empty)
       ,
       onFailure = err =>
@@ -179,6 +191,8 @@ object TessellationOperations:
           onSuccess =
             EditorState.showUniformity.set(false)
             EditorState.uniformityMap.set(None)
+            EditorState.showRotation.set(false)
+            EditorState.rotationVertexIds.set(None)
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = err =>
@@ -236,6 +250,8 @@ object TessellationOperations:
           onSuccess =
             EditorState.showUniformity.set(false)
             EditorState.uniformityMap.set(None)
+            EditorState.showRotation.set(false)
+            EditorState.rotationVertexIds.set(None)
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = error => {

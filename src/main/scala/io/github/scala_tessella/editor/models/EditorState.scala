@@ -49,6 +49,11 @@ object EditorState:
 
   val uniformityMap: Var[Option[Map[VertexId, Int]]] = Var(None)
 
+  /** Whether rotational symmetry should be shown */
+  val showRotation: Var[Boolean] = Var(false)
+
+  val rotationVertexIds: Var[Option[Set[VertexId]]] = Var(None)
+
   /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
   val userThemePreference: Var[Option[String]] = Var(None)
 

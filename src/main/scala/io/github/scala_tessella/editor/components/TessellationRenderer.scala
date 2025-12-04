@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.{BigPoint, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
+import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.editor.models.{
   AppState,
   ClickablePoint,
@@ -191,10 +192,13 @@ object TessellationRenderer:
 
     val nodeUniformity = children <-- EditorState.showUniformity.signal
       .combineWith(EditorState.uniformityMap.signal)
-      .map { (showUni, uniOpt) =>
-
+      .map: (showUni, uniOpt) =>
         if showUni && uniOpt.nonEmpty then renderUniformity(tiling.coordinates, uniOpt.get) else List.empty
-      }
+
+    val nodeRotation = children <-- EditorState.showRotation.signal
+      .combineWith(EditorState.rotationVertexIds.signal)
+      .map: (showRot, rotOpt) =>
+        if showRot && rotOpt.nonEmpty then renderRotation(tiling.coordinates, rotOpt.get) else List.empty
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
@@ -263,6 +267,7 @@ object TessellationRenderer:
       perimeterEdges,
       interiorEdgesOverlay,
       nodeUniformity,
+      nodeRotation,
       nodeLabels,
       failedPolygonWireframe,
       previewPolygonWireframe,
@@ -338,6 +343,27 @@ object TessellationRenderer:
           svg.strokeWidth := "1"
         )
       }
+
+  private def renderRotation(
+      coordinates: Map[VertexId, BigPoint],
+      rotSet: Set[VertexId]
+  ): List[Element] =
+    val vs     = coordinates
+      .filter { (vertexId, _) =>
+
+        rotSet.contains(vertexId)
+      }
+    val center = tilingPointToCanvasView(vs.values.toList.centroid.toPoint)
+    rotSet.toList.map(id =>
+      val vertex        = tilingPointToCanvasView(vs(id).toPoint)
+      svg.line(
+        lineCoords(LineSegment(center, vertex).extend),
+        svg.stroke        := "#ffffff",
+        svg.strokeWidth   := "1",
+        svg.className     := "previous-measurement-line",
+        svg.pointerEvents := "none"
+      )
+    )
 
   private def renderClickablePoint(p: ClickablePoint): Element =
     val point = tilingPointToCanvasView(p.point)

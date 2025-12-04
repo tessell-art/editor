@@ -261,6 +261,11 @@ object MenuBarComponent:
         EditorState.showUniformity.signal.map(if (_) "Hide Uniformity" else "Show Uniformity"),
         () => AppState.toggleShowUniformity()
       ),
+      dropdownLinkDynamic(
+        EditorState.showRotation.signal.map(if (_) "Hide Rotational Symmetry"
+        else "Show Rotational Symmetry"),
+        () => AppState.toggleShowRotation()
+      ),
       div(className := "menu-separator"),
       dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),

@@ -34,3 +34,6 @@ object LineSegment:
 
     def horizontalAngle: Radian =
       Radian(Math.atan2(dy, dx))
+
+    def extend: LineSegment =
+      LineSegment(p1, p2 + Point(dx, dy))

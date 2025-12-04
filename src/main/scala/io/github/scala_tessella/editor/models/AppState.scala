@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.TilingSymmetry.rotationalVertexIds
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
@@ -111,7 +112,7 @@ object AppState:
                 val classes  = tiling.uniformityTree.flattenLeaves
                 val indexMap =
                   classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
-                Logger.debug(s"Computed uniformity map: $indexMap")
+//                Logger.debug(s"Computed uniformity map: $indexMap")
                 Some(indexMap)
             }
             .foreach { computed =>
@@ -119,6 +120,43 @@ object AppState:
               if !showUniformity.now() then
                 uniformityMap.set(computed)
                 showUniformity.set(true)
+            }
+
+  /** Toggles the visibility of the uniformity data. Does nothing if the editor is currently processing an
+    * operation.
+    */
+  def toggleShowRotation(): Unit =
+    ifNotProcessing:
+      val currentlyShown = showRotation.now()
+      if currentlyShown then
+        // Turning OFF: hide immediately
+        showRotation.set(false)
+      else
+        // Turning ON
+        val existing = rotationVertexIds.now()
+        if existing.nonEmpty then
+          // Already computed: show immediately
+          showRotation.set(true)
+        else
+          // Compute first, then show
+          val tiling = currentTiling.now()
+          AsyncUtils
+            .withLoadingState { () =>
+
+              if tiling.isEmpty then None
+              else
+                val vs = tiling.rotationalVertexIds
+                if vs.size > 1 then
+                  Logger.debug(s"Rotation vertices: $vs")
+                  Some(vs.toSet)
+                else
+                  None
+            }
+            .foreach { computed =>
+              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
+              if !showRotation.now() then
+                rotationVertexIds.set(computed)
+                showRotation.set(true)
             }
 
   /** Checks if the current tiling is empty.
