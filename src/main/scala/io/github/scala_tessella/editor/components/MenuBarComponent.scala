@@ -266,6 +266,11 @@ object MenuBarComponent:
         else "Show Rotational Symmetry"),
         () => AppState.toggleShowRotation()
       ),
+      dropdownLinkDynamic(
+        EditorState.showReflection.signal.map(if (_) "Hide Reflectional Symmetry"
+        else "Show Reflectional Symmetry"),
+        () => AppState.toggleShowReflection()
+      ),
       div(className := "menu-separator"),
       dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),

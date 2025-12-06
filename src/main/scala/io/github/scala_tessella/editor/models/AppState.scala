@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.dcel.TilingSymmetry.rotationalVertexIds
+import io.github.scala_tessella.dcel.TilingSymmetry.{reflectionalVertexIds, rotationalVertexIds}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
@@ -122,7 +122,7 @@ object AppState:
                 showUniformity.set(true)
             }
 
-  /** Toggles the visibility of the uniformity data. Does nothing if the editor is currently processing an
+  /** Toggles the visibility of the rotation axes. Does nothing if the editor is currently processing an
     * operation.
     */
   def toggleShowRotation(): Unit =
@@ -157,6 +157,43 @@ object AppState:
               if !showRotation.now() then
                 rotationVertexIds.set(computed)
                 showRotation.set(true)
+            }
+
+  /** Toggles the visibility of the reflection axes. Does nothing if the editor is currently processing an
+    * operation.
+    */
+  def toggleShowReflection(): Unit =
+    ifNotProcessing:
+      val currentlyShown = showReflection.now()
+      if currentlyShown then
+        // Turning OFF: hide immediately
+        showReflection.set(false)
+      else
+        // Turning ON
+        val existing = reflectionVertexIds.now()
+        if existing.nonEmpty then
+          // Already computed: show immediately
+          showReflection.set(true)
+        else
+          // Compute first, then show
+          val tiling = currentTiling.now()
+          AsyncUtils
+            .withLoadingState { () =>
+
+              if tiling.isEmpty then None
+              else
+                val vs = tiling.reflectionalVertexIds
+                if vs.nonEmpty then
+                  Logger.debug(s"Reflection vertices: $vs")
+                  Some(vs)
+                else
+                  None
+            }
+            .foreach { computed =>
+              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
+              if !showReflection.now() then
+                reflectionVertexIds.set(computed)
+                showReflection.set(true)
             }
 
   /** Checks if the current tiling is empty.

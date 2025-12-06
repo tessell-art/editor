@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.{BigPoint, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryLocation, BoundaryEdge, BoundaryVertex}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.editor.models.{
@@ -200,6 +201,11 @@ object TessellationRenderer:
       .map: (showRot, rotOpt) =>
         if showRot && rotOpt.nonEmpty then renderRotation(tiling.coordinates, rotOpt.get) else List.empty
 
+    val nodeReflection = children <-- EditorState.showReflection.signal
+      .combineWith(EditorState.reflectionVertexIds.signal)
+      .map: (showRefl, reflOpt) =>
+        if showRefl && reflOpt.nonEmpty then renderReflection(tiling.coordinates, reflOpt.get) else List.empty
+
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
       EditorState.failedPlacement.signal
@@ -268,6 +274,7 @@ object TessellationRenderer:
       interiorEdgesOverlay,
       nodeUniformity,
       nodeRotation,
+      nodeReflection,
       nodeLabels,
       failedPolygonWireframe,
       previewPolygonWireframe,
@@ -357,11 +364,36 @@ object TessellationRenderer:
     rotSet.toList.map(id =>
       val vertex        = tilingPointToCanvasView(vs(id).toPoint)
       svg.line(
-        lineCoords(LineSegment(center, vertex).extend),
-        svg.stroke        := "#ffffff",
+        lineCoords(LineSegment(center, vertex).extendFromOrigin),
+        svg.stroke        := "Gold",
         svg.strokeWidth   := "1",
         svg.className     := "previous-measurement-line",
         svg.pointerEvents := "none"
+      )
+    )
+
+  private def renderReflection(
+      coordinates: Map[VertexId, BigPoint],
+      refList: List[(BoundaryLocation, BoundaryLocation)]
+  ): List[Element] =
+
+    def locationToPoint(loc: BoundaryLocation): Point =
+      tilingPointToCanvasView(loc match {
+        case BoundaryVertex(i)  => coordinates(i).toPoint
+        case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint
+      })
+
+    refList.map((loc1, loc2) =>
+
+      val vertex1          = locationToPoint(loc1)
+      val vertex2          = locationToPoint(loc2)
+      svg.line(
+        lineCoords(LineSegment(vertex1, vertex2).extendFromMidPoint),
+        svg.stroke          := "DarkOrange",
+        svg.strokeWidth     := "1",
+        svg.strokeDashArray := "5, 5",
+        svg.className       := "previous-measurement-line",
+        svg.pointerEvents   := "none"
       )
     )
 

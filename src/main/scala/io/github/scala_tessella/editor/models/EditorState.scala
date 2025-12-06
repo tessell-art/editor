@@ -6,6 +6,8 @@ import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
+
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -53,6 +55,11 @@ object EditorState:
   val showRotation: Var[Boolean] = Var(false)
 
   val rotationVertexIds: Var[Option[Set[VertexId]]] = Var(None)
+
+  /** Whether reflectional symmetry should be shown */
+  val showReflection: Var[Boolean] = Var(false)
+
+  val reflectionVertexIds: Var[Option[List[(BoundaryLocation, BoundaryLocation)]]] = Var(None)
 
   /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
   val userThemePreference: Var[Option[String]] = Var(None)
