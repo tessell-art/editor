@@ -362,13 +362,13 @@ object TessellationRenderer:
       }
     val center = tilingPointToCanvasView(vs.values.toList.centroid.toPoint)
     rotSet.toList.map { id =>
-      val vertex  = tilingPointToCanvasView(vs(id).toPoint)
-      val segment = LineSegment(center, vertex).extendFromOrigin
-      val p1      = segment.p1
-      val p2      = segment.p2
-      val width   = segment.length / 10
-      val vector  = segment.unitVector * width
-      val p3      = p2 + Point(-vector.y, vector.x)
+      val vertex     = tilingPointToCanvasView(vs(id).toPoint)
+      val segment    = LineSegment(center, vertex).extendFromOrigin
+      val p1         = segment.p1
+      val p2         = segment.p2
+      val width      = segment.length / 10
+      val vector     = segment.unitVector * width
+      val p3         = p2 + Point(-vector.y, vector.x)
       val gradientId = s"rot-grad-${id.value}"
 
       svg.g(

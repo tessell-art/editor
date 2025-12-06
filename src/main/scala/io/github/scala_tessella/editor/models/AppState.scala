@@ -86,6 +86,11 @@ object AppState:
     ifNotProcessing:
       showNodeLabels.update(!_)
 
+  private def infoSize(size: Int, dataType: String): Unit =
+    ErrorOperations.info(
+      s"$dataType data computed: $size ${if size == 1 then "class" else "classes"} found"
+    )
+
   /** Toggles the visibility of the uniformity data. Does nothing if the editor is currently processing an
     * operation.
     */
@@ -120,6 +125,8 @@ object AppState:
               if !showUniformity.now() then
                 uniformityMap.set(computed)
                 showUniformity.set(true)
+                val size = computed.map(_.values.toSet.size).getOrElse(0)
+                infoSize(size, "Uniformity")
             }
 
   /** Toggles the visibility of the rotation axes. Does nothing if the editor is currently processing an
@@ -157,6 +164,8 @@ object AppState:
               if !showRotation.now() then
                 rotationVertexIds.set(computed)
                 showRotation.set(true)
+                val size = computed.map(_.size).getOrElse(1)
+                infoSize(size, "Rotation")
             }
 
   /** Toggles the visibility of the reflection axes. Does nothing if the editor is currently processing an
@@ -194,6 +203,8 @@ object AppState:
               if !showReflection.now() then
                 reflectionVertexIds.set(computed)
                 showReflection.set(true)
+                val size = computed.map(_.size).getOrElse(0)
+                infoSize(size, "Reflection")
             }
 
   /** Checks if the current tiling is empty.
