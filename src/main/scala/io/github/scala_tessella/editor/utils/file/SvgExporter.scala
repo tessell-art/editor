@@ -5,7 +5,12 @@ import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
-import io.github.scala_tessella.editor.models.EditorState.{showNodeLabels, showReflection, showUniformity}
+import io.github.scala_tessella.editor.models.EditorState.{
+  showNodeLabels,
+  showReflection,
+  showRotation,
+  showUniformity
+}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
@@ -28,7 +33,13 @@ object SvgExporter:
           AsyncUtils.withLoadingState { () =>
             val finalName  = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
             val svgContent =
-              generateSvgContent(tiling, showNodeLabels.now(), showUniformity.now(), showReflection.now())
+              generateSvgContent(
+                tiling,
+                showNodeLabels.now(),
+                showUniformity.now(),
+                showRotation.now(),
+                showReflection.now()
+              )
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.currentFileName.set(Some(finalName))
           }: Unit
@@ -41,7 +52,13 @@ object SvgExporter:
         val tiling = EditorState.currentTiling.now()
         if !tiling.isEmpty then
           val svgContent =
-            generateSvgContent(tiling, showNodeLabels.now(), showUniformity.now(), showReflection.now())
+            generateSvgContent(
+              tiling,
+              showNodeLabels.now(),
+              showUniformity.now(),
+              showRotation.now(),
+              showReflection.now()
+            )
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
       }
     ): Unit
@@ -50,6 +67,7 @@ object SvgExporter:
       tiling: TilingDCEL,
       showNodeLabels: Boolean,
       showUniformity: Boolean,
+      showRotation: Boolean,
       showReflection: Boolean
   ): String =
     val coordinates = tiling.coordinates
@@ -66,6 +84,7 @@ object SvgExporter:
       val polygonsXml   = generatePolygonsXml(tiling, scale, offset, strokeWidth)
       val perimeterXml  = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)
       val uniformityXml = if showUniformity then generateUniformityXml(coordinates, scale, offset) else ""
+      val rotationXml   = if showRotation then generateRotationXml(coordinates, scale, offset) else ""
       val reflectionXml = if showReflection then generateReflectionXml(coordinates, scale, offset) else ""
       val labelsXml     = if showNodeLabels then generateLabelsXml(coordinates, scale, offset) else ""
       val metadataXml   = generateMetadataXml(tiling)
@@ -77,8 +96,8 @@ object SvgExporter:
          |  <rect width="100%" height="100%" fill="white"/>
          |$perimeterXml
          |$polygonsXml${if showUniformity then s"\n$uniformityXml" else ""}${
-          if showReflection then s"\n$reflectionXml" else ""
-        }${
+          if showRotation then s"\n$rotationXml" else ""
+        }${if showReflection then s"\n$reflectionXml" else ""}${
           if showNodeLabels then s"\n$labelsXml" else ""
         }
          |$metadataXml
@@ -156,6 +175,36 @@ object SvgExporter:
             )}" r="16" stroke="$color" fill="$color" />"""
         }.mkString("\n")
       s"""  <g id="node-uniformity" stroke-width="1" >
+         |$nodesXml
+         |  </g>""".stripMargin
+
+  private[utils] def generateRotationXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val rotList = EditorState.rotationVertexIds.now().map(_.toList).getOrElse(Nil)
+      val vs      = coordinates
+        .filter { (vertexId, _) =>
+
+          rotList.contains(vertexId)
+        }
+      val center  = vs.values.toList.centroid.toPoint.scaleAndTranslate(scale, offset)
+
+      val nodesXml =
+        vs.map { (vertexId, coords) =>
+
+          val segment = LineSegment(center, coords.toPoint.scaleAndTranslate(scale, offset)).extendFromOrigin
+          s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${
+              SvgDsl.fmt4(
+                segment.p1.y
+              )
+            }"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
+        }.mkString("\n")
+
+      s"""  <g id="node-reflection" stroke="Gold" stroke-width="1" stroke-dasharray="2,2" >
          |$nodesXml
          |  </g>""".stripMargin
 
