@@ -366,13 +366,9 @@ object TessellationRenderer:
       val segment = LineSegment(center, vertex).extendFromOrigin
       val p1      = segment.p1
       val p2      = segment.p2
-
-      val width = 20.0
-
-      val vector = segment.unitVector * width
-
-      val p3 = p2 + Point(-vector.y, vector.x)
-
+      val width   = segment.length / 10
+      val vector  = segment.unitVector * width
+      val p3      = p2 + Point(-vector.y, vector.x)
       val gradientId = s"rot-grad-${id.value}"
 
       svg.g(
@@ -384,8 +380,8 @@ object TessellationRenderer:
             svg.y1            := p2.y.toString,
             svg.x2            := p3.x.toString,
             svg.y2            := p3.y.toString,
-            svg.stop(svg.feOffset("25%"), svg.stopColor := "Gold", svg.stopOpacity := "0.9"),
-            svg.stop(svg.feOffset("75%"), svg.stopColor := "Blue", svg.stopOpacity := "0.2")
+            svg.stop(svg.offsetAttr := "0%", svg.stopColor   := "Gold", svg.stopOpacity := "0.8"),
+            svg.stop(svg.offsetAttr := "100%", svg.stopColor := "Blue", svg.stopOpacity := "0.0")
           )
         ),
         svg.polygon(
