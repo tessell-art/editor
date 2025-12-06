@@ -150,8 +150,18 @@ object GuidePopup:
             ),
             li(
               "You can use ",
-              b("View → Show uniformity"),
+              b("View → Show Uniformity"),
               " to show dots marking nodes with the same adjacent pattern."
+            ),
+            li(
+              "You can use ",
+              b("View → Show Rotational Symmetry"),
+              " to show the rotation axes dividing the tiling in identical rotated parts."
+            ),
+            li(
+              "You can use ",
+              b("View → Show Reflectional Symmetry"),
+              " to show the reflection axes dividing the tiling in mirrored halves."
             )
           ),
           h3("Styling"),
