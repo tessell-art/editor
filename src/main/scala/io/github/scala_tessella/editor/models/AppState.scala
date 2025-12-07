@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.dcel.TilingSymmetry.{reflectionalVertexIds, rotationalVertexIds}
+import io.github.scala_tessella.dcel.TilingSymmetry.{reflectionalVertexIds, rotationalVertexIdsAlt}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
@@ -152,10 +152,10 @@ object AppState:
 
               if tiling.isEmpty then None
               else
-                val vs = tiling.rotationalVertexIds
+                val vs = tiling.rotationalVertexIdsAlt
                 if vs.size > 1 then
                   Logger.debug(s"Rotation vertices: $vs")
-                  Some(vs.toSet)
+                  Some(vs)
                 else
                   None
             }

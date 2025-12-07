@@ -54,7 +54,7 @@ object EditorState:
   /** Whether rotational symmetry should be shown */
   val showRotation: Var[Boolean] = Var(false)
 
-  val rotationVertexIds: Var[Option[Set[VertexId]]] = Var(None)
+  val rotationVertexIds: Var[Option[List[BoundaryLocation]]] = Var(None)
 
   /** Whether reflectional symmetry should be shown */
   val showReflection: Var[Boolean] = Var(false)

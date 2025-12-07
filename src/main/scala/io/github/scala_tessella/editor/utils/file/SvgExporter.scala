@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.utils.file
 
-import io.github.scala_tessella.dcel.geometry.BigPoint
+import io.github.scala_tessella.dcel.geometry.{BigLineSegment, BigPoint}
 import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
@@ -185,16 +185,13 @@ object SvgExporter:
   ): String =
     if coordinates.isEmpty then ""
     else
-      val rotList = EditorState.rotationVertexIds.now().map(_.toList).getOrElse(Nil)
-      val vs      = coordinates
-        .filter { (vertexId, _) =>
-
-          rotList.contains(vertexId)
-        }
-      val center  = vs.values.toList.centroid.toPoint.scaleAndTranslate(scale, offset)
-
-      val nodesXml =
-        vs.map { (vertexId, coords) =>
+      val rotList   = EditorState.rotationVertexIds.now().getOrElse(Nil)
+      val rotCoords = rotList.map:
+        case BoundaryVertex(i)  => i -> coordinates(i)
+        case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
+      val center    = rotCoords.map(_._2).centroid.toPoint.scaleAndTranslate(scale, offset)
+      val nodesXml  =
+        rotCoords.map { (vertexId, coords) =>
 
           val segment = LineSegment(center, coords.toPoint.scaleAndTranslate(scale, offset)).extendFromOrigin
           s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${

@@ -1,9 +1,9 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.geometry.{BigPoint, RegularPolygon}
+import io.github.scala_tessella.dcel.geometry.{BigLineSegment, BigPoint, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryLocation, BoundaryEdge, BoundaryVertex}
+import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.editor.models.{
@@ -353,16 +353,14 @@ object TessellationRenderer:
 
   private def renderRotation(
       coordinates: Map[VertexId, BigPoint],
-      rotSet: Set[VertexId]
+      rotList: List[BoundaryLocation]
   ): List[Element] =
-    val vs     = coordinates
-      .filter { (vertexId, _) =>
-
-        rotSet.contains(vertexId)
-      }
-    val center = tilingPointToCanvasView(vs.values.toList.centroid.toPoint)
-    rotSet.toList.map { id =>
-      val vertex     = tilingPointToCanvasView(vs(id).toPoint)
+    val rotCoords = rotList.map:
+      case BoundaryVertex(i)  => i -> coordinates(i)
+      case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
+    val center    = tilingPointToCanvasView(rotCoords.map(_._2).centroid.toPoint)
+    rotCoords.map { (id, coords) =>
+      val vertex     = tilingPointToCanvasView(coords.toPoint)
       val segment    = LineSegment(center, vertex).extendFromOrigin
       val p1         = segment.p1
       val p2         = segment.p2
