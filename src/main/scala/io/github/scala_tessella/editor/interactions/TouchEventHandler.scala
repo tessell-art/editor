@@ -146,6 +146,7 @@ object TouchEventHandler:
     resetTouchState()
 
   private def resetTouchState(): Unit =
+    EditorState.previewPlacement.set(None)
     initialTouchDistance.set(None)
     initialScale.set(None)
     initialAngle.set(None)
