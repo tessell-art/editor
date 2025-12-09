@@ -322,40 +322,59 @@ object TessellationRenderer:
 
   private def renderRotation(
       coordinates: Map[VertexId, BigPoint],
-      rotList: List[BoundaryLocation]
+      rotList: List[BoundaryLocation],
+      durationSeconds: Int = 30
   ): List[Element] =
     val rotCoords = rotList.map:
       case BoundaryVertex(i)  => i -> coordinates(i)
       case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
-    val center    = tilingPointToCanvasView(rotCoords.map(_._2).centroid.toPoint)
-    rotCoords.map: (id, coords) =>
-      val vertex     = tilingPointToCanvasView(coords.toPoint)
-      val segment    = LineSegment(center, vertex).extendFromOrigin
-      val p1         = segment.p1
-      val p2         = segment.p2
-      val width      = segment.length / 10
-      val vector     = segment.unitVector * width
-      val p3         = p2 + Point(-vector.y, vector.x)
-      val gradientId = s"rot-grad-${id.value}"
 
-      svg.g(
-        svg.defs(
-          svg.linearGradient(
-            svg.idAttr        := gradientId,
-            svg.gradientUnits := "userSpaceOnUse",
-            svg.x1            := p2.x.toString,
-            svg.y1            := p2.y.toString,
-            svg.x2            := p3.x.toString,
-            svg.y2            := p3.y.toString,
-            svg.stop(svg.offsetAttr := "0%", svg.stopColor   := "Gold", svg.stopOpacity := "0.8"),
-            svg.stop(svg.offsetAttr := "100%", svg.stopColor := "Blue", svg.stopOpacity := "0.0")
+    if rotCoords.isEmpty then Nil
+    else
+      val center   = tilingPointToCanvasView(rotCoords.map(_._2).centroid.toPoint)
+      val elements = rotCoords.map: (id, coords) =>
+        val vertex     = tilingPointToCanvasView(coords.toPoint)
+        val segment    = LineSegment(center, vertex).extendFromOrigin
+        val p1         = segment.p1
+        val p2         = segment.p2
+        val width      = segment.length / 10
+        val vector     = segment.unitVector * width
+        val p3         = p2 + Point(-vector.y, vector.x)
+        val gradientId = s"rot-grad-${id.value}"
+
+        svg.g(
+          svg.defs(
+            svg.linearGradient(
+              svg.idAttr        := gradientId,
+              svg.gradientUnits := "userSpaceOnUse",
+              svg.x1            := p2.x.toString,
+              svg.y1            := p2.y.toString,
+              svg.x2            := p3.x.toString,
+              svg.y2            := p3.y.toString,
+              svg.stop(svg.offsetAttr := "0%", svg.stopColor   := "Gold", svg.stopOpacity := "0.8"),
+              svg.stop(svg.offsetAttr := "100%", svg.stopColor := "Blue", svg.stopOpacity := "0.0")
+            )
+          ),
+          svg.polygon(
+            svg.points        := s"${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}",
+            svg.fill          := s"url(#$gradientId)",
+            svg.stroke        := "none",
+            svg.pointerEvents := "none"
           )
-        ),
-        svg.polygon(
-          svg.points        := s"${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}",
-          svg.fill          := s"url(#$gradientId)",
-          svg.stroke        := "none",
-          svg.pointerEvents := "none"
+        )
+
+      List(
+        svg.g(
+          elements,
+          svg.animateTransform(
+            svg.attributeName := "transform",
+            svg.attributeType := "XML",
+            svg.tpe           := "rotate",
+            svg.from          := s"360 ${center.x} ${center.y}",
+            svg.to            := s"0 ${center.x} ${center.y}",
+            svg.dur           := s"${durationSeconds}s",
+            svg.repeatCount   := "indefinite"
+          )
         )
       )
 
