@@ -100,7 +100,6 @@ object TouchEventHandler:
               )
             )
             lastPanPoint.set(Some(touchPoint))
-
     else if touches.length == 2 then
       val initDistOpt     = initialTouchDistance.now()
       val initScaleOpt    = initialScale.now()
