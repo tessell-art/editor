@@ -66,11 +66,10 @@ object TouchEventHandler:
       initialRotation.set(Some(Radian.fromDegrees(currentTransform.rotationDegrees)))
 
       // Set an anchor point for zooming
-      EditorState.canvasElementRef.now().foreach { canvasElement =>
+      EditorState.canvasElementRef.now().foreach: canvasElement =>
         val pointer    = getPointer(canvasElement, segment)
         val worldPoint = screenToWorld(pointer, currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
-      }
     else
       isDragging.set(true)
       event.preventDefault()
@@ -83,7 +82,7 @@ object TouchEventHandler:
       val dragging      = isDragging.now()
       val lastPanOpt    = lastPanPoint.now()
 
-      startPointOpt.foreach { startPoint =>
+      startPointOpt.foreach: startPoint =>
         val touch      = touches(0)
         val touchPoint = touch.toPoint
         if !dragging then
@@ -93,7 +92,7 @@ object TouchEventHandler:
 
         if isDragging.now() then
           event.preventDefault()
-          lastPanOpt.foreach { lastPoint =>
+          lastPanOpt.foreach: lastPoint =>
             val panD = touchPoint - lastPoint
             EditorState.viewTransform.update(t =>
               t.copy(
@@ -101,8 +100,7 @@ object TouchEventHandler:
               )
             )
             lastPanPoint.set(Some(touchPoint))
-          }
-      }
+
     else if touches.length == 2 then
       val initDistOpt     = initialTouchDistance.now()
       val initScaleOpt    = initialScale.now()
@@ -127,14 +125,13 @@ object TouchEventHandler:
 
           val gestureCenter = segment.midPoint
 
-          EditorState.canvasElementRef.now().foreach { canvasElement =>
+          EditorState.canvasElementRef.now().foreach: canvasElement =>
             val pointer = getPointer(canvasElement, segment)
             val newPan  = pointer - transformedPoint
             EditorState.viewTransform.update(_.copy(
               scale = newScale,
               pan = newPan
             ).withRotation(newRotation.toDegrees.toInt))
-          }
         case _                                                                                            => // State wasn't correctly initialized
 
   def handleTouchEnd(event: TouchEvent): Unit =
