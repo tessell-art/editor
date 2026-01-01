@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.geometry.{RegularPolygon, SimplePolygon}
+import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.currentTiling
@@ -64,7 +64,7 @@ object TessellationOperations:
         EditorState.recentIrregularPolygon.now() match
           case Some(angles) =>
             UndoManager.saveState()
-            TilingDCEL.createSimplePolygon(SimplePolygon(angles)).toOption match
+            TilingDCEL.createSimplePolygon(angles).toOption match
               case Some(tiling) =>
                 currentTiling.set(tiling)
                 SelectionOperations.clearAllSelections()
@@ -125,7 +125,7 @@ object TessellationOperations:
                 tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head.id, RegularPolygon(maybeSides.get))
               else
                 val angles = EditorState.recentIrregularPolygon.now().get
-                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head.id, SimplePolygon(angles))
+                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head.id, angles)
             else
               Left(ValidationError("Invalid edge index"))
           catch
@@ -184,7 +184,7 @@ object TessellationOperations:
               tiling.maybeAddRegularPolygon(startVertexId, endVertexId, RegularPolygon(maybeSides.get))
             else
               val angles = EditorState.recentIrregularPolygon.now().get
-              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, SimplePolygon(angles))
+              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, angles)
           catch
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
