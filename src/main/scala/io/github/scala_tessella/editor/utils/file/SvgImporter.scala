@@ -73,6 +73,10 @@ object SvgImporter:
           AppState.clearMeasurements()
           EditorState.showUniformity.set(false)
           EditorState.uniformityMap.set(None)
+          EditorState.showRotation.set(false)
+          EditorState.rotationVertexIds.set(None)
+          EditorState.showReflection.set(false)
+          EditorState.reflectionVertexIds.set(None)
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
 

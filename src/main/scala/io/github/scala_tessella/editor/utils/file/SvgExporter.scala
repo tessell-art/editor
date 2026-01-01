@@ -1,16 +1,22 @@
 package io.github.scala_tessella.editor.utils.file
 
-import io.github.scala_tessella.dcel.geometry.BigPoint
+import io.github.scala_tessella.dcel.geometry.{BigLineSegment, BigPoint}
 import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models.EditorState.{showNodeLabels, showUniformity}
+import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
+import io.github.scala_tessella.editor.models.EditorState.{
+  showNodeLabels,
+  showReflection,
+  showRotation,
+  showUniformity
+}
 import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
-import io.github.scala_tessella.editor.utils.geo.Point
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.{AsyncUtils, SvgDsl}
 import org.scalajs.dom
 
@@ -26,7 +32,14 @@ object SvgExporter:
         if newName.nonEmpty then
           AsyncUtils.withLoadingState { () =>
             val finalName  = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
-            val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showUniformity.now())
+            val svgContent =
+              generateSvgContent(
+                tiling,
+                showNodeLabels.now(),
+                showUniformity.now(),
+                showRotation.now(),
+                showReflection.now()
+              )
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.currentFileName.set(Some(finalName))
           }: Unit
@@ -38,7 +51,14 @@ object SvgExporter:
       EditorState.currentFileName.now().foreach { fileName =>
         val tiling = EditorState.currentTiling.now()
         if !tiling.isEmpty then
-          val svgContent = generateSvgContent(tiling, showNodeLabels.now(), showUniformity.now())
+          val svgContent =
+            generateSvgContent(
+              tiling,
+              showNodeLabels.now(),
+              showUniformity.now(),
+              showRotation.now(),
+              showReflection.now()
+            )
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
       }
     ): Unit
@@ -46,7 +66,9 @@ object SvgExporter:
   private[utils] def generateSvgContent(
       tiling: TilingDCEL,
       showNodeLabels: Boolean,
-      showUniformity: Boolean
+      showUniformity: Boolean,
+      showRotation: Boolean,
+      showReflection: Boolean
   ): String =
     val coordinates = tiling.coordinates
     if coordinates.isEmpty then
@@ -62,6 +84,8 @@ object SvgExporter:
       val polygonsXml   = generatePolygonsXml(tiling, scale, offset, strokeWidth)
       val perimeterXml  = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)
       val uniformityXml = if showUniformity then generateUniformityXml(coordinates, scale, offset) else ""
+      val rotationXml   = if showRotation then generateRotationXml(coordinates, scale, offset) else ""
+      val reflectionXml = if showReflection then generateReflectionXml(coordinates, scale, offset) else ""
       val labelsXml     = if showNodeLabels then generateLabelsXml(coordinates, scale, offset) else ""
       val metadataXml   = generateMetadataXml(tiling)
 
@@ -72,6 +96,8 @@ object SvgExporter:
          |  <rect width="100%" height="100%" fill="white"/>
          |$perimeterXml
          |$polygonsXml${if showUniformity then s"\n$uniformityXml" else ""}${
+          if showRotation then s"\n$rotationXml" else ""
+        }${if showReflection then s"\n$reflectionXml" else ""}${
           if showNodeLabels then s"\n$labelsXml" else ""
         }
          |$metadataXml
@@ -149,6 +175,63 @@ object SvgExporter:
             )}" r="16" stroke="$color" fill="$color" />"""
         }.mkString("\n")
       s"""  <g id="node-uniformity" stroke-width="1" >
+         |$nodesXml
+         |  </g>""".stripMargin
+
+  private[utils] def generateRotationXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val rotList   = EditorState.rotationVertexIds.now().getOrElse(Nil)
+      val rotCoords = rotList.map:
+        case BoundaryVertex(i)  => i -> coordinates(i)
+        case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
+      val center    = rotCoords.map(_._2).centroid.toPoint.scaleAndTranslate(scale, offset)
+      val nodesXml  =
+        rotCoords.map { (vertexId, coords) =>
+
+          val segment = LineSegment(center, coords.toPoint.scaleAndTranslate(scale, offset)).extendFromOrigin
+          s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${
+              SvgDsl.fmt4(
+                segment.p1.y
+              )
+            }"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
+        }.mkString("\n")
+
+      s"""  <g id="node-reflection" stroke="Gold" stroke-width="1" stroke-dasharray="2,2" >
+         |$nodesXml
+         |  </g>""".stripMargin
+
+  private[utils] def generateReflectionXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val refList = EditorState.reflectionVertexIds.now().getOrElse(Nil)
+
+      def locationToPoint(loc: BoundaryLocation): Point =
+        (loc match {
+          case BoundaryVertex(i)  => coordinates(i).toPoint
+          case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint
+        }).scaleAndTranslate(scale, offset)
+
+      val nodesXml =
+        refList.map { (loc1, loc2) =>
+
+          val vertex1 = locationToPoint(loc1)
+          val vertex2 = locationToPoint(loc2)
+          val segment = LineSegment(vertex1, vertex2).extendFromMidPoint
+          s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${SvgDsl.fmt4(
+              segment.p1.y
+            )}"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
+        }.mkString("\n")
+
+      s"""  <g id="node-reflection" stroke="DarkOrange" stroke-width="1" stroke-dasharray="5,5" >
          |$nodesXml
          |  </g>""".stripMargin
 

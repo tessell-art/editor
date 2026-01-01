@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.TilingSymmetry.{reflectionalVertexIds, rotationalVertexIds}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
@@ -85,6 +86,11 @@ object AppState:
     ifNotProcessing:
       showNodeLabels.update(!_)
 
+  private def displaySizeInfo(size: Int, dataType: String): Unit =
+    ErrorOperations.info(
+      s"$dataType data computed: $size ${if size == 1 then "class" else "classes"} found"
+    )
+
   /** Toggles the visibility of the uniformity data. Does nothing if the editor is currently processing an
     * operation.
     */
@@ -111,7 +117,7 @@ object AppState:
                 val classes  = tiling.uniformityTree.flattenLeaves
                 val indexMap =
                   classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
-                Logger.debug(s"Computed uniformity map: $indexMap")
+//                Logger.debug(s"Computed uniformity map: $indexMap")
                 Some(indexMap)
             }
             .foreach { computed =>
@@ -119,6 +125,86 @@ object AppState:
               if !showUniformity.now() then
                 uniformityMap.set(computed)
                 showUniformity.set(true)
+                val size = computed.map(_.values.toSet.size).getOrElse(0)
+                displaySizeInfo(size, "Uniformity")
+            }
+
+  /** Toggles the visibility of the rotation axes. Does nothing if the editor is currently processing an
+    * operation.
+    */
+  def toggleShowRotation(): Unit =
+    ifNotProcessing:
+      val currentlyShown = showRotation.now()
+      if currentlyShown then
+        // Turning OFF: hide immediately
+        showRotation.set(false)
+      else
+        // Turning ON
+        val existing = rotationVertexIds.now()
+        if existing.nonEmpty then
+          // Already computed: show immediately
+          showRotation.set(true)
+        else
+          // Compute first, then show
+          val tiling = currentTiling.now()
+          AsyncUtils
+            .withLoadingState { () =>
+
+              if tiling.isEmpty then None
+              else
+                val vs = tiling.rotationalVertexIds
+                if vs.size > 1 then
+                  Logger.debug(s"Rotation vertices: $vs")
+                  Some(vs)
+                else
+                  None
+            }
+            .foreach { computed =>
+              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
+              if !showRotation.now() then
+                rotationVertexIds.set(computed)
+                showRotation.set(true)
+                val size = computed.map(_.size).getOrElse(1)
+                displaySizeInfo(size, "Rotation")
+            }
+
+  /** Toggles the visibility of the reflection axes. Does nothing if the editor is currently processing an
+    * operation.
+    */
+  def toggleShowReflection(): Unit =
+    ifNotProcessing:
+      val currentlyShown = showReflection.now()
+      if currentlyShown then
+        // Turning OFF: hide immediately
+        showReflection.set(false)
+      else
+        // Turning ON
+        val existing = reflectionVertexIds.now()
+        if existing.nonEmpty then
+          // Already computed: show immediately
+          showReflection.set(true)
+        else
+          // Compute first, then show
+          val tiling = currentTiling.now()
+          AsyncUtils
+            .withLoadingState { () =>
+
+              if tiling.isEmpty then None
+              else
+                val vs = tiling.reflectionalVertexIds
+                if vs.nonEmpty then
+                  Logger.debug(s"Reflection vertices: $vs")
+                  Some(vs)
+                else
+                  None
+            }
+            .foreach { computed =>
+              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
+              if !showReflection.now() then
+                reflectionVertexIds.set(computed)
+                showReflection.set(true)
+                val size = computed.map(_.size).getOrElse(0)
+                displaySizeInfo(size, "Reflection")
             }
 
   /** Checks if the current tiling is empty.
@@ -135,6 +221,16 @@ object AppState:
     */
   def selectPolygon(sides: Int): Unit =
     TessellationOperations.selectPolygon(sides)
+
+  /** Clears the current tiling and all measurements.
+    */
+  def doubleTiling(): Unit =
+    clearMeasurements()
+    TessellationOperations.attemptDoubling()
+
+  def mirrorTiling(): Unit =
+    clearMeasurements()
+    TessellationOperations.attemptMirroring()
 
   /** Clears the current tiling and all measurements.
     */

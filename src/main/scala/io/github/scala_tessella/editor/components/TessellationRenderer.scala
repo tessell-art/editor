@@ -1,9 +1,11 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.geometry.{BigPoint, RegularPolygon}
+import io.github.scala_tessella.dcel.geometry.{BigLineSegment, BigPoint, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
+import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.editor.models.{
   AppState,
   ClickablePoint,
@@ -66,40 +68,31 @@ object TessellationRenderer:
   private def renderTilingPolygonFromPoints(pointsStr: String, faceId: FaceId): Element =
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(faceId))
 
-    val rgbSignal = EditorState.polygonColors.signal.map {
+    val rgbSignal = EditorState.polygonColors.signal.map:
       _.getOrElse(faceId, ColorRGB(200, 200, 200)).toRgb
-    }
 
-    val opacity = EditorState.showUniformity.signal.map {
-      showUni =>
-
-        if showUni then "0.0" else "1.0"
-    }
+    val opacity = EditorState.showUniformity.signal.map: showUni =>
+      if showUni then "0.0" else "1.0"
 
     // Check if this polygon should be hidden due to failed deletion
-    val shouldHideForDeletion = EditorState.failedDeletion.signal.map {
+    val shouldHideForDeletion = EditorState.failedDeletion.signal.map:
       case Some(failedDel) => failedDel.faceId == faceId
       case None            => false
-    }
 
     // Update stroke and styling based on editor mode
-    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
-      case (selected, mode) =>
-        if selected then "#ff6b6b"
-        else
-          mode match
-            case EditorMode.Select => "#646cff"
-            case EditorMode.Delete => "#ff4444"
-    }
+    val strokeColorSignal = isSelected.combineWith(EditorState.editorMode.signal).map: (selected, mode) =>
+      if selected then "#ff6b6b"
+      else
+        mode match
+          case EditorMode.Select => "#646cff"
+          case EditorMode.Delete => "#ff4444"
 
-    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map {
-      case (selected, mode) =>
-        if selected then "3.5"
-        else
-          mode match
-            case EditorMode.Select => "1.5"
-            case EditorMode.Delete => "2.0"
-    }
+    val strokeWidthSignal = isSelected.combineWith(EditorState.editorMode.signal).map: (selected, mode) =>
+      if selected then "3.5"
+      else
+        mode match
+          case EditorMode.Select => "1.5"
+          case EditorMode.Delete => "2.0"
 
     val basePolygon = svg.polygon(
       svg.points := pointsStr, // static, precomputed
@@ -153,108 +146,96 @@ object TessellationRenderer:
 
     // Precompute face data once per render pass
     val facesData: List[(FaceId, String)] =
-      tiling.innerFacesVertices.map { (faceId, faceVertices) =>
-        val pointStrings = faceVertices.map(vertex =>
+      tiling.innerFacesVertices.map: (faceId, faceVertices) =>
+        val pointStrings = faceVertices.map: vertex =>
           val point = tilingPointToCanvasView(vertex.coords.toPoint)
           s"${point.x},${point.y}"
-        )
         (faceId, pointStrings.mkString(" "))
-      }
 
-    val tilingPolygons = facesData.map { case (faceId, pointsStr) =>
+    val tilingPolygons = facesData.map: (faceId, pointsStr) =>
       getOrAssignPolygonColor(faceId): Unit
       renderTilingPolygonFromPoints(pointsStr, faceId)
-    }
 
     val perimeterEdges =
-      tiling.boundaryVertices.map(_.toCoords).slidingO(2).toList.zipWithIndex.map {
-        (vs, index) =>
-
-          renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index")
-      }
+      tiling.boundaryVertices.map(_.toCoords).slidingO(2).toList.zipWithIndex.map: (vs, index) =>
+        renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index")
 
     // Interior edges overlay only when Inserter tool is active AND a polygon is highlighted
     val interiorEdgesOverlay = children <--
       EditorState.isInserterActive
         .combineWith(EditorState.selectedFaceForInsertion)
-        .map { (isInserter, faceIdOpt) =>
+        .map:
+          case (true, Some(fid)) => renderInteriorEdgesForFace(tiling, fid)
+          case _                 => List.empty
 
-          (isInserter, faceIdOpt) match
-            case (true, Some(fid)) => renderInteriorEdgesForFace(tiling, fid)
-            case _                 => List.empty
-        }
-
-    val nodeLabels = children <-- EditorState.showNodeLabels.signal.map { showLabels =>
-
+    val nodeLabels = children <-- EditorState.showNodeLabels.signal.map: showLabels =>
       if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
-    }
 
     val nodeUniformity = children <-- EditorState.showUniformity.signal
       .combineWith(EditorState.uniformityMap.signal)
-      .map { (showUni, uniOpt) =>
-
+      .map: (showUni, uniOpt) =>
         if showUni && uniOpt.nonEmpty then renderUniformity(tiling.coordinates, uniOpt.get) else List.empty
-      }
+
+    val nodeRotation = children <-- EditorState.showRotation.signal
+      .combineWith(EditorState.rotationVertexIds.signal)
+      .map: (showRot, rotOpt) =>
+        if showRot && rotOpt.nonEmpty then renderRotation(tiling.coordinates, rotOpt.get) else List.empty
+
+    val nodeReflection = children <-- EditorState.showReflection.signal
+      .combineWith(EditorState.reflectionVertexIds.signal)
+      .map: (showRefl, reflOpt) =>
+        if showRefl && reflOpt.nonEmpty then renderReflection(tiling.coordinates, reflOpt.get) else List.empty
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
       EditorState.failedPlacement.signal
         .combineWith(EditorState.isInserterActive, EditorState.selectedFaceForInsertion)
-        .map { (placementOpt, isInserter, faceIdOpt) =>
-
-          placementOpt.map { p =>
+        .map: (placementOpt, isInserter, faceIdOpt) =>
+          placementOpt.map: p =>
             val adjusted =
               (isInserter, faceIdOpt) match
                 case (true, Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
                 case _                                       => p
             FailedPolygonRenderer.renderFailedPlacement(adjusted)
-          }
-        }
 
     // Hover preview wireframe for boundary addition
-    val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map { placement =>
-
+    val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map: placement =>
       placement.map(PreviewPolygonRenderer.renderPreview)
-    }
 
     // Failed polygon wireframe overlay for deletion
-    val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map { deletion =>
+    val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map: deletion =>
 //      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
       None
-    }
 
     val clickablePointsDisplay = children <-- EditorState.clickablePoints.signal
       .combineWith(EditorState.measurementStartPoint.signal)
-      .map { (points, startPointOpt) =>
-
+      .map: (points, startPointOpt) =>
         points.filterNot(p => startPointOpt.contains(p)).map(renderClickablePoint)
-      }
 
     val measurementStartPointDisplay =
-      child.maybe <-- EditorState.measurementStartPoint.signal.map(_.map(renderMeasurementStartPoint))
+      child.maybe <-- EditorState.measurementStartPoint.signal.map:
+        _.map(renderMeasurementStartPoint)
     val measurementEndPointDisplay   =
-      child.maybe <-- EditorState.measurementEndPoint.signal.map(_.map(renderMeasurementEndPoint))
+      child.maybe <-- EditorState.measurementEndPoint.signal.map:
+        _.map(renderMeasurementEndPoint)
     val measurementLineDisplay       = child.maybe <-- EditorState.measurementStartPoint.signal
       .combineWith(EditorState.measurementEndPoint.signal)
-      .map {
+      .map:
         case (Some(start), Some(end)) => Some(renderMeasurementLine(start, end))
         case _                        => None
-      }
 
     val previousMeasurementLineDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
       .combineWith(EditorState.measurementPreviousEndPoint.signal)
-      .map {
+      .map:
         case (Some(start), Some(previousEnd)) => Some(renderPreviousMeasurementLine(start, previousEnd))
         case _                                => None
-      }
 
     val measurementAngleArcDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
       .combineWith(EditorState.measurementPreviousEndPoint.signal, EditorState.measurementEndPoint.signal)
-      .map {
+      .map:
         case (Some(start), Some(previousEnd), Some(end)) =>
           Some(renderMeasurementAngleArc(start, previousEnd, end))
         case _                                           => None
-      }
 
     svg.g(
       svg.className := "tessellation",
@@ -263,6 +244,8 @@ object TessellationRenderer:
       perimeterEdges,
       interiorEdgesOverlay,
       nodeUniformity,
+      nodeRotation,
+      nodeReflection,
       nodeLabels,
       failedPolygonWireframe,
       previewPolygonWireframe,
@@ -287,17 +270,16 @@ object TessellationRenderer:
 
       svg.text(
         textCoords(offset),
-        svg.fontSize <-- EditorState.viewTransform.signal.map(transform =>
+        svg.fontSize <-- EditorState.viewTransform.signal.map: transform =>
           // Scale the font size with zoom but keep it readable
           val baseFontSize = 12
           val scaledSize   = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
-        ),
+        ,
         // Counter-rotate the text to keep it readable
-        svg.transform <-- EditorState.viewTransform.signal.map(transform =>
+        svg.transform <-- EditorState.viewTransform.signal.map: transform =>
           // Rotate around the text position to counter the canvas rotation
-          s"rotate(${-transform.rotationDegrees} ${offset.x} ${offset.y})"
-        ),
+          s"rotate(${-transform.rotationDegrees} ${offset.x} ${offset.y})",
         svg.fill             := "#ffeb3b", // Bright yellow for visibility
         svg.fontFamily       := "monospace",
         svg.fontWeight       := "bold",
@@ -306,9 +288,8 @@ object TessellationRenderer:
         svg.className        := "node-label",
         // Add stroke for better readability
         svg.stroke           := "#000",
-        svg.strokeWidth <-- EditorState.viewTransform.signal.map(transform =>
-          (0.5 / transform.scale).max(0.2).min(1.0).toString
-        ),
+        svg.strokeWidth <-- EditorState.viewTransform.signal.map: transform =>
+          (0.5 / transform.scale).max(0.2).min(1.0).toString,
         svg.paintOrder       := "stroke fill",
         vertexId.value
       )
@@ -338,6 +319,87 @@ object TessellationRenderer:
           svg.strokeWidth := "1"
         )
       }
+
+  private def renderRotation(
+      coordinates: Map[VertexId, BigPoint],
+      rotList: List[BoundaryLocation],
+      durationSeconds: Int = 30
+  ): List[Element] =
+    val rotCoords = rotList.map:
+      case BoundaryVertex(i)  => i -> coordinates(i)
+      case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
+
+    if rotCoords.isEmpty then Nil
+    else
+      val center   = tilingPointToCanvasView(rotCoords.map(_._2).centroid.toPoint)
+      val elements = rotCoords.map: (id, coords) =>
+        val vertex     = tilingPointToCanvasView(coords.toPoint)
+        val segment    = LineSegment(center, vertex).extendFromOrigin
+        val p1         = segment.p1
+        val p2         = segment.p2
+        val width      = segment.length / 10
+        val vector     = segment.unitVector * width
+        val p3         = p2 + Point(-vector.y, vector.x)
+        val gradientId = s"rot-grad-${id.value}"
+
+        svg.g(
+          svg.defs(
+            svg.linearGradient(
+              svg.idAttr        := gradientId,
+              svg.gradientUnits := "userSpaceOnUse",
+              svg.x1            := p2.x.toString,
+              svg.y1            := p2.y.toString,
+              svg.x2            := p3.x.toString,
+              svg.y2            := p3.y.toString,
+              svg.stop(svg.offsetAttr := "0%", svg.stopColor   := "Gold", svg.stopOpacity := "0.8"),
+              svg.stop(svg.offsetAttr := "100%", svg.stopColor := "Blue", svg.stopOpacity := "0.0")
+            )
+          ),
+          svg.polygon(
+            svg.points        := s"${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}",
+            svg.fill          := s"url(#$gradientId)",
+            svg.stroke        := "none",
+            svg.pointerEvents := "none"
+          )
+        )
+
+      List(
+        svg.g(
+          elements,
+          svg.animateTransform(
+            svg.attributeName := "transform",
+            svg.attributeType := "XML",
+            svg.tpe           := "rotate",
+            svg.from          := s"360 ${center.x} ${center.y}",
+            svg.to            := s"0 ${center.x} ${center.y}",
+            svg.dur           := s"${durationSeconds}s",
+            svg.repeatCount   := "indefinite"
+          )
+        )
+      )
+
+  private def renderReflection(
+      coordinates: Map[VertexId, BigPoint],
+      refList: List[(BoundaryLocation, BoundaryLocation)]
+  ): List[Element] =
+
+    def locationToPoint(loc: BoundaryLocation): Point =
+      tilingPointToCanvasView(loc match {
+        case BoundaryVertex(i)  => coordinates(i).toPoint
+        case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint
+      })
+
+    refList.map: (loc1, loc2) =>
+      val vertex1          = locationToPoint(loc1)
+      val vertex2          = locationToPoint(loc2)
+      svg.line(
+        lineCoords(LineSegment(vertex1, vertex2).extendFromMidPoint),
+        svg.stroke          := "DarkOrange",
+        svg.strokeWidth     := "1",
+        svg.strokeDashArray := "5, 5",
+        svg.className       := "previous-measurement-line",
+        svg.pointerEvents   := "none"
+      )
 
   private def renderClickablePoint(p: ClickablePoint): Element =
     val point = tilingPointToCanvasView(p.point)

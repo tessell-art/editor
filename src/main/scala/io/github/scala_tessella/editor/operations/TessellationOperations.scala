@@ -1,9 +1,10 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.geometry.RegularPolygon
+import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
+import io.github.scala_tessella.dcel.geometry.{RegularPolygon, SimplePolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
-import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
-import io.github.scala_tessella.editor.models.EditorState.currentTiling
+import io.github.scala_tessella.dcel.{TilingBuilder, TilingDCEL, ValidationError}
+import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
@@ -46,6 +47,10 @@ object TessellationOperations:
       currentTiling.set(TilingDCEL.empty)
       EditorState.showUniformity.set(false)
       EditorState.uniformityMap.set(None)
+      EditorState.showRotation.set(false)
+      EditorState.rotationVertexIds.set(None)
+      EditorState.showReflection.set(false)
+      EditorState.reflectionVertexIds.set(None)
       EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
@@ -64,7 +69,7 @@ object TessellationOperations:
         EditorState.recentIrregularPolygon.now() match
           case Some(angles) =>
             UndoManager.saveState()
-            TilingDCEL.createSimplePolygon(angles).toOption match
+            TilingDCEL.createSimplePolygon(SimplePolygon(angles)).toOption match
               case Some(tiling) =>
                 currentTiling.set(tiling)
                 SelectionOperations.clearAllSelections()
@@ -80,6 +85,10 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
+        EditorState.showReflection.set(false)
+        EditorState.reflectionVertexIds.set(None)
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
     )
@@ -91,6 +100,10 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
+        EditorState.showReflection.set(false)
+        EditorState.reflectionVertexIds.set(None)
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
     )
@@ -102,8 +115,61 @@ object TessellationOperations:
       onSuccess =
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
+        EditorState.showReflection.set(false)
+        EditorState.reflectionVertexIds.set(None)
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
+    )
+
+  def attemptDoubling(): Unit =
+    val tiling    = currentTiling.now()
+    val faceIds   = tiling.innerFaces.map(_.id)
+    val maxFaceId = faceIds.map(TilingBuilder.idFromFaceId).max
+    val colors    = polygonColors.now()
+    val op        = () =>
+      try
+        tiling.doubleArea
+      catch
+        case e: Exception => Left(ValidationError(s"Error doubling: ${e.getMessage}"))
+
+    OperationRunner.runTilingOp(op)(
+      onSuccess =
+        faceIds.indices.foreach: id =>
+          val rgb = colors(faceIds(id))
+          polygonColors.update(_ + (TilingBuilder.faceIdF(maxFaceId + id + 1) -> rgb))
+        EditorState.showUniformity.set(false)
+        EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
+        EditorState.showReflection.set(false)
+        EditorState.reflectionVertexIds.set(None)
+        EditorState.selectedPerimeterEdges.set(Set.empty)
+        if ViewOperations.isTilingLargerThanCanvas then ViewOperations.fitTilingToCanvas()
+      ,
+      onFailure = err =>
+        ErrorOperations.showError(err.message)
+    )
+
+  def attemptMirroring(): Unit =
+    val tiling = currentTiling.now()
+    val op     = () =>
+      try
+        Right(tiling.verticallyReflectedCopy)
+      catch
+        case e: Exception => Left(ValidationError(s"Error mirroring: ${e.getMessage}"))
+
+    OperationRunner.runTilingOp(op)(
+      onSuccess =
+        EditorState.showUniformity.set(false)
+        EditorState.uniformityMap.set(None)
+        EditorState.showRotation.set(false)
+        EditorState.rotationVertexIds.set(None)
+        EditorState.selectedPerimeterEdges.set(Set.empty)
+      ,
+      onFailure = err =>
+        ErrorOperations.showError(err.message)
     )
 
   // Handle perimeter-edge click with polygon growth
@@ -125,7 +191,7 @@ object TessellationOperations:
                 tiling.maybeAddRegularPolygonToBoundary(selectedEdge.head.id, RegularPolygon(maybeSides.get))
               else
                 val angles = EditorState.recentIrregularPolygon.now().get
-                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head.id, angles)
+                tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head.id, SimplePolygon(angles))
             else
               Left(ValidationError("Invalid edge index"))
           catch
@@ -135,6 +201,10 @@ object TessellationOperations:
           onSuccess =
             EditorState.showUniformity.set(false)
             EditorState.uniformityMap.set(None)
+            EditorState.showRotation.set(false)
+            EditorState.rotationVertexIds.set(None)
+            EditorState.showReflection.set(false)
+            EditorState.reflectionVertexIds.set(None)
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = err =>
@@ -184,7 +254,7 @@ object TessellationOperations:
               tiling.maybeAddRegularPolygon(startVertexId, endVertexId, RegularPolygon(maybeSides.get))
             else
               val angles = EditorState.recentIrregularPolygon.now().get
-              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, angles)
+              tiling.maybeAddSimplePolygon(startVertexId, endVertexId, SimplePolygon(angles))
           catch
             case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
@@ -192,6 +262,10 @@ object TessellationOperations:
           onSuccess =
             EditorState.showUniformity.set(false)
             EditorState.uniformityMap.set(None)
+            EditorState.showRotation.set(false)
+            EditorState.rotationVertexIds.set(None)
+            EditorState.showReflection.set(false)
+            EditorState.reflectionVertexIds.set(None)
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = error => {

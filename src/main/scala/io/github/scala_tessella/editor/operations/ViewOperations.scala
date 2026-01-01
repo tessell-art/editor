@@ -109,6 +109,22 @@ object ViewOperations:
           ).foreach(EditorState.viewTransform.set)
         }
 
+  def isTilingLargerThanCanvas: Boolean =
+    val tiling = EditorState.currentTiling.now()
+    if tiling.isEmpty then false
+    else
+      val coords = tiling.boundaryVertices.map(_.coords.toPoint).map(_.scale(canvasScale))
+
+      val transform = EditorState.viewTransform.now()
+      val rotation  = Radian(AngleDegree(transform.rotationDegrees).toBigRadian.toBigDecimal.toDouble)
+      val width     = canvasCenter.x * 2
+      val height    = canvasCenter.y * 2
+
+      coords.exists { point =>
+        val screenPoint = transform.pan + forwardTransform(point, canvasCenter, transform.scale, rotation)
+        screenPoint.x < 0 || screenPoint.x > width || screenPoint.y < 0 || screenPoint.y > height
+      }
+
   // Pure function to perform inverse transformation (screen to world)
   private[operations] def inverseTransform(
       viewCenter: Point,

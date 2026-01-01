@@ -94,6 +94,23 @@ object GuidePopup:
               " tool to select the shape (and the fill color) of an existing irregular polygon."
             )
           ),
+          h3("Doubling and mirroring"),
+          ul(
+            li(
+              "Use the ",
+              b("Edit → Double (to infinite)"),
+              " menu option or the ",
+              kbd('D'),
+              " key to double the entire tiling. ",
+              "This works only when the boundary is a parallelogon, ",
+              "so that the whole infinite planar space could be covered."
+            ),
+            li(
+              "Use the ",
+              b("Edit → Mirror"),
+              " menu option to switch to a mirror image of the tiling."
+            )
+          ),
           h3("Deleting"),
           ul(
             li(
@@ -101,7 +118,7 @@ object GuidePopup:
               IconsSVG.eraserIcon,
               " ",
               i("Eraser"),
-              " tool to delete a vertex, and edge or a whole polygon from the tiling."
+              " tool to delete a vertex, an edge or a whole polygon from the tiling."
             ),
             li(
               "When you click on a polygon the vertices, edges (at midpoint) and face (at center) will be highlighted, ",
@@ -133,8 +150,18 @@ object GuidePopup:
             ),
             li(
               "You can use ",
-              b("View → Show uniformity"),
+              b("View → Show Uniformity"),
               " to show dots marking nodes with the same adjacent pattern."
+            ),
+            li(
+              "You can use ",
+              b("View → Show Rotational Symmetry"),
+              " to show the rotation axes dividing the tiling in identical rotated parts."
+            ),
+            li(
+              "You can use ",
+              b("View → Show Reflectional Symmetry"),
+              " to show the reflection axes dividing the tiling in mirrored halves."
             )
           ),
           h3("Styling"),

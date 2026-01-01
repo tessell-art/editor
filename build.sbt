@@ -10,8 +10,8 @@ ThisBuild / scalafmtOnCompile := true
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
-    scalaVersion := "3.7.3",
-    version := "0.3.1",
+    scalaVersion := "3.7.4",
+    version := "0.3.3",
     name := "Tessella Editor",
 
     // Tell Scala.js that this is an application with a main method
@@ -37,7 +37,7 @@ lazy val editor = project.in(file("."))
     libraryDependencies += "io.github.nguyenyou" %%% "ui5-webcomponents-laminar" % "2.14.0",
     libraryDependencies += "com.raquo" %%% "laminar" % "17.2.1",
     libraryDependencies += "org.typelevel" %%% "spire" % "0.18.0",
-    libraryDependencies += "io.github.scala-tessella" %%% "ring-seq" % "0.6.2",
+    libraryDependencies += "io.github.scala-tessella" %%% "ring-seq" % "0.6.2+52-9bf40159",
     libraryDependencies += "io.github.scala-tessella" %%% "dcel" % "0.1.0-SNAPSHOT",
 
     // Test dependencies

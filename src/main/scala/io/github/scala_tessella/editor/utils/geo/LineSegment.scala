@@ -34,3 +34,10 @@ object LineSegment:
 
     def horizontalAngle: Radian =
       Radian(Math.atan2(dy, dx))
+
+    def extendFromOrigin: LineSegment =
+      LineSegment(p1, p2 + Point(dx, dy))
+
+    def extendFromMidPoint: LineSegment =
+      val half = Point(dx, dy).scale(0.5)
+      LineSegment(p1 - half, p2 + half)

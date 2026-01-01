@@ -127,11 +127,11 @@ object MenuBarComponent:
       )
     )
 
-  private def dropdownLinks(templates: List[Template]): List[Element] =
+  private def dropdownLinks(directory: String, templates: List[Template]): List[Element] =
     templates.map(template =>
       dropdownLink(
         s"${template.name} ${template.pattern}",
-        () => TemplateLoader.loadTemplate(template.filename)
+        () => TemplateLoader.loadTemplate(directory, template.filename)
       )
     )
 
@@ -152,21 +152,21 @@ object MenuBarComponent:
     subMenuItem(
       "Regular...",
       // Regular tilings
-      dropdownLinks(regularNames)
+      dropdownLinks("regular", regularNames)
     )
 
   private def semiRegularMenu(): Element =
     subMenuItem(
       "Semi Regular...",
       // Semi regular tilings
-      dropdownLinks(semiRegularNames)
+      dropdownLinks("semiregular", semiRegularNames)
     )
 
   private def aperiodicMenu(): Element =
     subMenuItem(
       "Aperiodic...",
       // Aperiodic tilings
-      dropdownLinks(irregularNames)
+      dropdownLinks("aperiodic", irregularNames)
     )
 
   private def fileMenu(): Element =
@@ -212,15 +212,12 @@ object MenuBarComponent:
 
     menuItem(
       "Edit",
-      dropdownLink("↶ Undo", () => AppState.undoObserver: Unit, AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink(
-        "↷ Redo",
-        () => AppState.redoObserver: Unit,
-        AppState.canRedo,
-        shortcut = Some("Shift+Ctrl+Z")
-      ),
+      dropdownLink("↶ Undo", () => UndoManager.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
+      dropdownLink("↷ Redo", () => UndoManager.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
       dropdownLink("Clear Tiling", () => AppState.clearTiling()),
+      dropdownLink("Double (to infinite)", () => AppState.doubleTiling(), shortcut = Some("D")),
+      dropdownLink("Mirror", () => AppState.mirrorTiling()),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {
@@ -263,6 +260,16 @@ object MenuBarComponent:
       dropdownLinkDynamic(
         EditorState.showUniformity.signal.map(if (_) "Hide Uniformity" else "Show Uniformity"),
         () => AppState.toggleShowUniformity()
+      ),
+      dropdownLinkDynamic(
+        EditorState.showRotation.signal.map(if (_) "Hide Rotational Symmetry"
+        else "Show Rotational Symmetry"),
+        () => AppState.toggleShowRotation()
+      ),
+      dropdownLinkDynamic(
+        EditorState.showReflection.signal.map(if (_) "Hide Reflectional Symmetry"
+        else "Show Reflectional Symmetry"),
+        () => AppState.toggleShowReflection()
       ),
       div(className := "menu-separator"),
       dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),

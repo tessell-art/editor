@@ -41,9 +41,10 @@ object ErrorOperations:
         case _                     => friendly
 
     // Keep existing state updates for on-canvas feedback overlays
-    EditorState.errorMessage.set(Some(fullMessage))
-    EditorState.failedPlacement.set(placement)
-    EditorState.failedDeletion.set(deletion)
+    if severity != Severity.Info then
+      EditorState.errorMessage.set(Some(fullMessage))
+      EditorState.failedPlacement.set(placement)
+      EditorState.failedDeletion.set(deletion)
 
     // Auto-clear overlays and message after timeouts
     Try {

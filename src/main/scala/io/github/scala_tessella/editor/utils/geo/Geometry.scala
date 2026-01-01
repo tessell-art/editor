@@ -61,8 +61,12 @@ object Geometry:
 
   /** Creates points for a regular polygon. */
   def regularPolygonPoints(sides: Int, radius: Double, center: Point = Point.origin): Seq[Point] =
+    // shift to have a flat bottom side
+    val shift =
+      if sides % 2 != 0 then Radian.TAU_2 / 2
+      else Radian.TAU_2 / 2 + Radian.TAU_2 / sides
     (0 until sides).map { i =>
-      val angle = (Radian.TAU * i / sides) - Radian.TAU_2 // Start from the top
+      val angle = (Radian.TAU * i / sides) - shift // Start from the top
       center + Point.fromPolar(radius, angle)
     }
 
