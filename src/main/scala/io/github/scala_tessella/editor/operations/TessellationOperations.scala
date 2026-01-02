@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
-import io.github.scala_tessella.dcel.{TilingBuilder, TilingDCEL, ValidationError}
+import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
@@ -125,8 +125,14 @@ object TessellationOperations:
 
   def attemptDoubling(): Unit =
     val tiling    = currentTiling.now()
-    val faceIds   = tiling.innerFaces.map(_.id)
-    val maxFaceId = faceIds.map(TilingBuilder.idFromFaceId).max
+    val faceIds   =
+      tiling.innerFaces.map:
+        _.id
+    val maxFaceId =
+      faceIds
+        .map: faceId =>
+          faceId.value
+        .max
     val colors    = polygonColors.now()
     val op        = () =>
       try
@@ -138,7 +144,7 @@ object TessellationOperations:
       onSuccess =
         faceIds.indices.foreach: id =>
           val rgb = colors(faceIds(id))
-          polygonColors.update(_ + (TilingBuilder.faceIdF(maxFaceId + id + 1) -> rgb))
+          polygonColors.update(_ + (FaceId(maxFaceId + id + 1) -> rgb))
         EditorState.showUniformity.set(false)
         EditorState.uniformityMap.set(None)
         EditorState.showRotation.set(false)
@@ -305,8 +311,3 @@ object TessellationOperations:
               )
           }
         )
-
-  // Parse FaceId from a DOM polygon id of the form "tiling-poly-<faceId>"
-  // Centralizing this at the operation boundary allows UI to keep legacy ids while core uses FaceId.
-  private def parseFaceIdFromPolygonDomId(polygonId: String): Option[FaceId] =
-    Some(FaceId(polygonId))

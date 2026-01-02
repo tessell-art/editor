@@ -60,10 +60,6 @@ object TessellationRenderer:
     )
   )
 
-  // Helper: extract FaceId from "tiling-poly-<faceId>"
-  private def polygonIdToFaceId(polygonId: String): Option[FaceId] =
-    Some(FaceId(polygonId))
-
   // New: build polygon elements from a precomputed points string.
   private def renderTilingPolygonFromPoints(pointsStr: String, faceId: FaceId): Element =
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(faceId))
