@@ -22,13 +22,13 @@ class AppStateSpec extends FunSuite with EditorStateFixture:
 
   test("clearMeasurements should reset all measurement-related state") {
     // Given: some measurement state is set
-    val point = ClickablePoint(Point(1, 1), Anchor.Vertex(VertexId("V1")))
+    val point = ClickablePoint(Point(1, 1), Anchor.Vertex(VertexId(1)))
     EditorState.clickablePoints.set(List(point))
     EditorState.measurementStartPoint.set(Some(point))
     EditorState.measurementEndPoint.set(Some(point))
     EditorState.measurementResult.set(Some(123.45))
     EditorState.measurementAngle.set(Some(Radian(0.5)))
-    EditorState.highlightedPolygonId.set(Some(FaceId("F1")))
+    EditorState.highlightedPolygonId.set(Some(FaceId(1)))
     EditorState.measurementPreviousEndPoint.set(Some(Point(0, 0)))
 
     // When

@@ -116,7 +116,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
     // Create a tiling and set up selections
     selectPolygon(6)
-    EditorState.selectedTilingPolygons.set(Set(FaceId("F1")))
+    EditorState.selectedTilingPolygons.set(Set(FaceId(1)))
     clearAllSelections()
 
     // Node labels visibility and error should remain unchanged
@@ -131,7 +131,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     assert(!initialTiling.isEmpty)
 
     // Simulate growing the tiling by adding selections
-    EditorState.selectedTilingPolygons.set(Set(FaceId("F1"), FaceId("F2")))
+    EditorState.selectedTilingPolygons.set(Set(FaceId(1), FaceId(2)))
     EditorState.selectedPerimeterEdges.set(Set("edge1"))
 
     // Change polygon selection
@@ -140,7 +140,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     // Tiling should remain the same
     assertEquals(EditorState.currentTiling.now(), initialTiling)
     // Selections should be preserved
-    assertEquals(EditorState.selectedTilingPolygons.now(), Set(FaceId("F1"), FaceId("F2")))
+    assertEquals(EditorState.selectedTilingPolygons.now(), Set(FaceId(1), FaceId(2)))
     assertEquals(EditorState.selectedPerimeterEdges.now(), Set("edge1"))
     // Only the selected polygon type should change
     assertEquals(EditorState.selectedPolygon.now(), Some(4))
