@@ -31,4 +31,3 @@ object ColorOperations:
       EditorState.polygonColors.update: currentColors =>
         faceIds.foldLeft(currentColors): (colors, faceId) =>
           if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
-      

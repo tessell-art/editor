@@ -17,7 +17,7 @@ import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
-import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, SvgDsl}
+import io.github.scala_tessella.editor.utils.{AsyncUtils, SvgDsl}
 import org.scalajs.dom
 
 object SvgExporter:

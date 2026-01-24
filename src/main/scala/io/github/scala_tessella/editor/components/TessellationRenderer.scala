@@ -27,7 +27,6 @@ import io.github.scala_tessella.editor.utils.SvgDsl.{
 }
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
-import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
 
