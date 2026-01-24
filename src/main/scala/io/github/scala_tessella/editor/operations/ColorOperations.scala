@@ -20,10 +20,15 @@ object ColorOperations:
           }
         }
 
-  def getOrAssignPolygonColor(faceId: FaceId): ColorRGB =
-    EditorState.polygonColors.now().get(faceId) match
-      case Some(rgb) => rgb
-      case None      =>
-        val rgb = EditorState.fillColor.now()
-        EditorState.polygonColors.update(_ + (faceId -> rgb))
-        rgb
+  def getPolygonColor(faceId: FaceId): Option[ColorRGB] =
+    EditorState.polygonColors.now().get(faceId)
+
+  def setPolygonColor(faceId: FaceId, color: ColorRGB): Unit =
+    EditorState.polygonColors.update(_ + (faceId -> color))
+
+  def ensureColorsForFaces(faceIds: Iterable[FaceId], defaultColor: ColorRGB): Unit =
+    if faceIds.nonEmpty then
+      EditorState.polygonColors.update: currentColors =>
+        faceIds.foldLeft(currentColors): (colors, faceId) =>
+          if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
+      

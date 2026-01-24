@@ -284,14 +284,13 @@ object AppState:
   def applyColorToSelectedPolygons(color: ColorRGB): Unit =
     ColorOperations.applyColorToSelectedPolygons(color)
 
-  /** Gets the color for a polygon or assigns a new one if it doesn't have one.
-    * @param faceId
-    *   The tag of the polygon
-    * @return
-    *   The color of the polygon (RGB tuple)
-    */
-  def getOrAssignPolygonColor(faceId: FaceId): ColorRGB =
-    ColorOperations.getOrAssignPolygonColor(faceId)
+  /** Gets the color for a polygon if it exists. */
+  def getPolygonColor(faceId: FaceId): Option[ColorRGB] =
+    ColorOperations.getPolygonColor(faceId)
+
+  /** Sets the color for a polygon explicitly. */
+  def setPolygonColor(faceId: FaceId, color: ColorRGB): Unit =
+    ColorOperations.setPolygonColor(faceId, color)
 
   /** Shows an error message with optional details about failed operations.
     * @param message

@@ -7,6 +7,7 @@ import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
+import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
 import io.github.scala_tessella.editor.utils.geo.Point
@@ -33,6 +34,7 @@ object TessellationOperations:
         try
           val tiling = TilingDCEL.createRegularPolygon(RegularPolygon(sides))
           currentTiling.set(tiling)
+          ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.fillColor.now())
           SelectionOperations.clearAllSelections()
         catch
           case e: Throwable =>
@@ -72,6 +74,7 @@ object TessellationOperations:
             TilingDCEL.createSimplePolygon(angles).toOption match
               case Some(tiling) =>
                 currentTiling.set(tiling)
+                ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.fillColor.now())
                 SelectionOperations.clearAllSelections()
               case None         =>
                 UndoManager.undo()

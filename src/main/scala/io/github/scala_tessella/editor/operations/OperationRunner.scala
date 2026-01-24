@@ -3,6 +3,7 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingError}
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.{AsyncUtils, UndoManager}
+import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -26,7 +27,9 @@ object OperationRunner:
         if newTiling != current then
           // Save the pre-change snapshot only if the result will differ
           UndoManager.saveState()
+          val newFaces = newTiling.innerFaces.map(_.id).toSet
           EditorState.currentTiling.set(newTiling)
+          ensureColorsForFaces(newFaces, EditorState.fillColor.now())
         // Clear error and allow caller extras (e.g., clearing selections)
         ErrorOperations.clearError()
         onSuccess

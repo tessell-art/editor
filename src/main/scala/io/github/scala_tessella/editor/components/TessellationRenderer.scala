@@ -14,7 +14,6 @@ import io.github.scala_tessella.editor.models.{
   FailedPolygonPlacement,
   Tool
 }
-import io.github.scala_tessella.editor.operations.ColorOperations.getOrAssignPolygonColor
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
@@ -149,7 +148,6 @@ object TessellationRenderer:
         (faceId, pointStrings.mkString(" "))
 
     val tilingPolygons = facesData.map: (faceId, pointsStr) =>
-      getOrAssignPolygonColor(faceId): Unit
       renderTilingPolygonFromPoints(pointsStr, faceId)
 
     val perimeterEdges =
