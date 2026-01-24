@@ -53,8 +53,8 @@
 }
 
 .toggle-btn.mode-select {
-  background-color: #4CAF50;
-  border-color: #45a049;
+  background-color: var(--toggle-select);
+  border-color: var(--toggle-select-border);
   color: white;
 }
 

@@ -49,7 +49,7 @@
 }
 
 .error-close:hover {
-  color: #000;
+  color: var(--error-close-hover);
 }
 
 @keyframes slideIn {

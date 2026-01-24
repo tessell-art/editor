@@ -25,7 +25,7 @@
 
 .popup-content h1 {
     margin-top: 0;
-    color: #e0e0e0;
+    color: var(--popup-heading-muted);
 }
 
 .popup-content h2 {
@@ -49,7 +49,7 @@
     text-align: center;
 }
 .popup-text, .popup-text-scrollable {
-    color: #CCC;
+    color: var(--popup-text-muted);
 }
 
 .popup-text-scrollable {
@@ -82,24 +82,24 @@
 }
 
 .popup-close-btn:hover {
-    color: #BBB; /* Lighter on hover */
+    color: var(--popup-close-hover); /* Lighter on hover */
 }
 
 .light-mode .popup-close-btn {
-    background-color: #333;
+    background-color: var(--menu-bg);
 }
 
 /* Add styles for control buttons in light mode for better contrast */
 .light-mode .btn-left,
 .light-mode .btn-right,
 .light-mode .btn-flip {
-    color: #213547; /* Dark text for high contrast on light background */
-    background-color: #f9f9f9;
-    border: 1px solid #d9d9d9;
+    color: var(--text-color); /* Dark text for high contrast on light background */
+    background-color: var(--panel-bg);
+    border: 1px solid var(--popup-button-border);
 }
 
 .light-mode .btn-left:hover,
 .light-mode .btn-right:hover,
 .light-mode .btn-flip:hover {
-    background-color: #f0f0f0; /* Slightly darker on hover */
+    background-color: var(--popup-button-hover); /* Slightly darker on hover */
 }

@@ -29,7 +29,7 @@ svg:hover .node-label {
   display: block;
   border: 2px solid var(--panel-border-strong);
   border-radius: 8px;
-  background-color: #0f0f0f;
+  background-color: var(--canvas-bg);
   cursor: grab;
   outline: none;
 }
@@ -81,7 +81,7 @@ svg:hover .node-label {
 
 .perimeter-edge-transparent:hover {
   filter: drop-shadow(0 0 8px rgba(255, 61, 0, 0.6));
-  stroke: #00C853 !important; /* Bright green for hover */
+  stroke: var(--hover-green) !important; /* Bright green for hover */
 }
 
 /* Interior edge styling for inserter tool */
@@ -91,7 +91,7 @@ svg:hover .node-label {
 
 /* Green pulsating halo on highlighted interior edge (group hover) */
 .interior-edge-group:hover .interior-edge {
-    stroke: #00C853 !important;
+    stroke: var(--hover-green) !important;
     filter: drop-shadow(0 0 8px rgba(0, 200, 83, 0.65));
     animation: edgePulse 1.2s ease-in-out infinite;
 }
@@ -104,17 +104,17 @@ svg:hover .node-label {
 
 /* Keep existing hover cue on the transparent hit area (optional, still consistent) */
 .interior-edge-transparent:hover {
-    stroke: #00C853 !important;
+    stroke: var(--hover-green) !important;
 }
 
 /* Theme-aware preview wireframe color */
 .dark-mode svg .inserter-preview-wireframe {
-    color: #ffffff;
+    color: var(--preview-dark);
     filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
 }
 
 .light-mode svg .inserter-preview-wireframe {
-    color: #222222; /* dark gray/near black for light background */
+    color: var(--preview-light); /* dark gray/near black for light background */
     filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.25));
 }
 

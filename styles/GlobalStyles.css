@@ -32,6 +32,7 @@
   --error-bg: #f8d7da;
   --error-text: #721c24;
   --error-border: #f5c6cb;
+  --error-close-hover: #000;
   --popup-overlay: rgba(0, 0, 0, 0.6);
   --popup-bg: #fff;
   --popup-text: #333;
@@ -43,6 +44,17 @@
   --toggle-delete: #f44336;
   --toggle-delete-border: #d32f2f;
   --toggle-delete-hover: #e53935;
+  --canvas-bg: #0f0f0f;
+  --hover-green: #00C853;
+  --preview-dark: #ffffff;
+  --preview-light: #222222;
+  --popup-heading-muted: #e0e0e0;
+  --popup-text-muted: #CCC;
+  --popup-close-hover: #BBB;
+  --toggle-select: #4CAF50;
+  --toggle-select-border: #45a049;
+  --popup-button-border: #d9d9d9;
+  --popup-button-hover: #f0f0f0;
 
   color-scheme: light dark;
   color: var(--text-color);
