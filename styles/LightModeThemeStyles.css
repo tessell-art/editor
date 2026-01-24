@@ -21,6 +21,9 @@
   --error-text: #8a2c3a;
   --error-border: #f3c2c7;
   --canvas-bg: #ffffff;
+  --color-picker-bg: #ffffff;
+  --color-picker-shadow: #cbd3dd80;
+  --color-picker-actions: #6b7682;
 }
 
 .light-mode a:hover {
