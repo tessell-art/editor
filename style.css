@@ -7,6 +7,7 @@
 @import url('./styles/CanvasNodeLabelStyles.css');
 @import url('./styles/ErrorMessageStyles.css');
 @import url('./styles/LightModeThemeStyles.css');
+@import url('./styles/DarkModeThemeStyles.css');
 @import url('./styles/ResponsiveDesignMediaQueries.css');
 @import url('./styles/ColorPicker.css');
 @import url('./styles/LoadingIndicator.css');

@@ -2,51 +2,60 @@
   color: #213547;
   background-color: #ffffff;
   --text-color: #213547;
+  --text-strong: #000;
+  --text-muted: #666;
   --bg-color: #ffffff;
   --panel-bg: #f9f9f9;
+  --panel-bg-strong: #fff;
   --panel-border: #ddd;
   --panel-border-strong: #ccc;
+  --panel-hover: #f0f0f0;
+  --panel-soft: #f0f0f0;
+  --button-bg: #f9f9f9;
   --link-hover: #747bff;
   --popup-text: #333;
   --popup-muted: #666;
+  --popup-heading-muted: #333;
+  --popup-text-muted: #666;
   --error-bg: #f8d7da;
   --error-text: #721c24;
   --error-border: #f5c6cb;
+  --canvas-bg: #fafafa;
 }
 
 .light-mode a:hover {
-  color: #747bff;
+  color: var(--link-hover);
 }
 
 .light-mode button {
-  background-color: #f9f9f9;
+  background-color: var(--button-bg);
 }
 
 .light-mode h3 {
-  color: #666;
+  color: var(--text-muted);
 }
 
 .light-mode .polygon-palette, .light-mode .canvas-container {
-  background-color: #f9f9f9;
-  border-color: #ddd;
+  background-color: var(--panel-bg);
+  border-color: var(--panel-border);
 }
 
 .light-mode .polygon-btn {
-  background-color: #fff;
-  border-color: #ddd;
-  color: #333;
+  background-color: var(--panel-bg-strong);
+  border-color: var(--panel-border);
+  color: var(--text-color);
 }
 
 .light-mode .polygon-btn:hover {
-  background-color: #f0f0f0;
-  color: #000;
+  background-color: var(--panel-hover);
+  color: var(--text-strong);
 }
 
 .light-mode .selected-info, .light-mode .canvas-controls, .light-mode .tiling-controls {
-  background-color: #f0f0f0;
+  background-color: var(--panel-soft);
 }
 
 .light-mode .editor-canvas {
-  background-color: #fafafa;
-  border-color: #ccc;
+  background-color: var(--canvas-bg);
+  border-color: var(--panel-border-strong);
 }

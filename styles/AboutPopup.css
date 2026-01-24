@@ -18,7 +18,7 @@
     border-radius: 8px;
     max-width: 550px;
     width: 90%;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px var(--popup-shadow);
     color: var(--popup-text);
     margin: 20px;
 }

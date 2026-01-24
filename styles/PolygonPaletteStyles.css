@@ -21,7 +21,7 @@
   justify-content: center;
   padding: 0.5rem;
   min-height: 70px;
-  background-color: #2a2a2a;
+  background-color: var(--panel-bg-strong);
   border: 2px solid var(--panel-border-strong);
   border-radius: 8px;
   color: var(--text-muted-strong);
@@ -31,8 +31,8 @@
 
 .polygon-btn:hover {
   border-color: var(--accent);
-  background-color: #333;
-  color: #fff;
+  background-color: var(--panel-hover);
+  color: var(--text-inverse);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(100, 108, 255, 0.3);
 }
@@ -40,7 +40,7 @@
 .polygon-btn.selected {
   border-color: var(--accent);
   background-color: var(--highlight);
-  color: #000;
+  color: var(--on-highlight);
   box-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
 }
 
@@ -101,18 +101,18 @@
 .light-mode .polygon-btn.selected {
   border-color: var(--accent);
   background-color: var(--highlight);
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .light-mode .polygon-btn.selected:hover {
   background-color: var(--highlight-strong);
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .light-mode .polygon-label-input {
-  background-color: #FFF;
-  border: 1px solid #666;
-  color: #000;
+  background-color: var(--input-bg-light);
+  border: 1px solid var(--input-border-light);
+  color: var(--input-text-light);
 }
 
 .corner-button {

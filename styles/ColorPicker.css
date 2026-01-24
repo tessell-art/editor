@@ -1,17 +1,17 @@
 .color-picker-popup {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.5); z-index: 1000;
+    background: var(--popup-overlay); z-index: 1000;
 }
-.popup-content {
-    background: #333; padding: 24px 32px; border-radius: 8px;
-    box-shadow: 0 4px 24px #2225;
+.color-picker-popup .popup-content {
+    background: var(--color-picker-bg); padding: 24px 32px; border-radius: 8px;
+    box-shadow: 0 4px 24px var(--color-picker-shadow);
     display: flex; flex-direction: column; gap: 1em; align-items: center;
 }
 .popup-actions {
     display: flex;
     gap: 0.6em;
-    color: darkgray;
+    color: var(--color-picker-actions);
 }
 
 ui5-slider.ui5-color-picker-alpha-slider {

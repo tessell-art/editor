@@ -13,7 +13,7 @@
 }
 
 .loading-content {
-    background-color: #2a2a2a;
+    background-color: var(--panel-bg-strong);
     border: 2px solid var(--focus-ring);
     border-radius: 8px;
     padding: 20px;
@@ -55,7 +55,7 @@ button:disabled {
 
 /* Processing status styles */
 .status.processing {
-    color: #ff9500;
+    color: var(--status-processing);
     animation: pulse 1.5s ease-in-out infinite;
 }
 

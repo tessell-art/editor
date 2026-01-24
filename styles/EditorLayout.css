@@ -24,7 +24,7 @@
 }
 
 .light-mode .file-name {
-  color: #1a1a1a;
+  color: var(--text-color);
 }
 
 .measurement-result {

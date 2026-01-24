@@ -15,6 +15,11 @@
   --menu-dropdown-bg: #f9f9f9;
   --menu-dropdown-text: #000;
   --menu-dropdown-border: #e0e0e0;
+  --menu-dropdown-hover: #f1f1f1;
+  --menu-disabled: #ccc;
+  --menu-mobile-bg: #333;
+  --menu-mobile-border: #555;
+  --menu-mobile-hover: #555;
   --link-color: #042A79;
   --link-hover: #00007F;
   --highlight: #20A4BE;
@@ -23,9 +28,14 @@
   --text-muted: #aaa;
   --text-muted-strong: #ccc;
   --text-subtle: #888;
+  --text-inverse: #fff;
+  --text-strong: #000;
   --button-bg: #1a1a1a;
   --btn-disabled-bg: #444;
   --btn-disabled-text: #888;
+  --panel-bg-strong: #2a2a2a;
+  --panel-hover: #333;
+  --panel-soft: #333;
   --loading-bg: rgba(0, 0, 0, 0.5);
   --spinner-track: #333;
   --spinner-head: #646cff;
@@ -39,6 +49,15 @@
   --popup-heading: #005f73;
   --popup-link: #007bff;
   --popup-muted: #666;
+  --popup-bg-dark: #1e1e1e;
+  --popup-text-dark: #e8e8e8;
+  --popup-muted-dark: #b8b8b8;
+  --popup-heading-dark: #9ad4e5;
+  --popup-link-dark: #8ab4ff;
+  --popup-shadow: rgba(0, 0, 0, 0.3);
+  --color-picker-bg: #333;
+  --color-picker-shadow: #2225;
+  --color-picker-actions: darkgray;
   --toggle-border: #20A4BE;
   --toggle-bg-active: #20A4BE;
   --toggle-delete: #f44336;
@@ -55,8 +74,13 @@
   --toggle-select-border: #45a049;
   --popup-button-border: #d9d9d9;
   --popup-button-hover: #f0f0f0;
+  --on-highlight: #000;
+  --input-bg-light: #fff;
+  --input-border-light: #666;
+  --input-text-light: #000;
+  --status-processing: #ff9500;
 
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text-color);
   background-color: var(--bg-color);
 

@@ -1,0 +1,27 @@
+.dark-mode {
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  color-scheme: dark;
+  --text-color: rgba(255, 255, 255, 0.87);
+  --text-strong: #fff;
+  --text-muted: #aaa;
+  --text-muted-strong: #ccc;
+  --text-subtle: #888;
+  --bg-color: #242424;
+  --panel-bg: #1a1a1a;
+  --panel-bg-strong: #2a2a2a;
+  --panel-border: #333;
+  --panel-border-strong: #444;
+  --panel-hover: #333;
+  --panel-soft: #333;
+  --button-bg: #1a1a1a;
+  --link-hover: #00007F;
+  --canvas-bg: #0f0f0f;
+  --popup-bg: var(--popup-bg-dark);
+  --popup-text: var(--popup-text-dark);
+  --popup-muted: var(--popup-muted-dark);
+  --popup-heading: var(--popup-heading-dark);
+  --popup-heading-muted: #cfcfcf;
+  --popup-text-muted: var(--popup-muted-dark);
+  --popup-link: var(--popup-link-dark);
+}
