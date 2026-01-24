@@ -4,7 +4,8 @@ import io.github.scala_tessella.dcel.geometry.BigPoint
 import io.github.scala_tessella.dcel.structure.VertexId
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.TilingBuilders
 import munit.FunSuite
@@ -73,6 +74,21 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
     // Should contain nodes in the data attribute
     assert(result.contains("data-nodes=\"\""))
+  }
+
+  test("should use assigned polygon colors when exporting polygons") {
+    val faceId = squareTiling.innerFaces.head.id
+    val color  = ColorRGB(12, 34, 56)
+    EditorState.polygonColors.set(Map(faceId -> color))
+
+    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
+    assert(result.contains(s"""fill="${color.toRgb}""""))
+  }
+
+  test("should fall back to default polygon color when none is assigned") {
+    EditorState.polygonColors.set(Map.empty)
+    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
+    assert(result.contains(s"""fill="${EditorConfig.defaultPolygonColor.toRgb}""""))
   }
 
   test("should generate perimeter XML when perimeter exists") {

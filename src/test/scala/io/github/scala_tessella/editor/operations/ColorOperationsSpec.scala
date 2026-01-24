@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.EditorStateFixture
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB
 import munit.FunSuite
 
@@ -62,4 +62,26 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
 
     // Then
     assertEquals(EditorState.polygonColors.now(), initialColors)
+  }
+
+  test("getPolygonColor should return None when color is missing") {
+    EditorState.polygonColors.set(Map.empty)
+    assertEquals(ColorOperations.getPolygonColor(F1), None)
+  }
+
+  test("setPolygonColor should update the color map") {
+    val color = ColorRGB(10, 20, 30)
+    ColorOperations.setPolygonColor(F1, color)
+    assertEquals(EditorState.polygonColors.now().get(F1), Some(color))
+  }
+
+  test("ensureColorsForFaces should assign defaults only when missing") {
+    val existing = ColorRGB(1, 2, 3)
+    EditorState.polygonColors.set(Map(F1 -> existing))
+
+    ColorOperations.ensureColorsForFaces(List(F1, F2), EditorConfig.defaultPolygonColor)
+
+    val colors = EditorState.polygonColors.now()
+    assertEquals(colors.get(F1), Some(existing))
+    assertEquals(colors.get(F2), Some(EditorConfig.defaultPolygonColor))
   }

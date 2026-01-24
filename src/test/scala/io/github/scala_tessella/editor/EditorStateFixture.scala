@@ -24,6 +24,8 @@ trait EditorStateFixture:
     EditorState.showAboutPopup.set(false)
     EditorState.showGuidePopup.set(false)
     EditorState.showShortcutsPopup.set(false)
+    EditorState.showIrregularPolygonPopup.set(false)
+    EditorState.showColorPicker.set(false)
 
     // Clear errors and failed ops
     EditorState.errorMessage.set(None)
@@ -39,6 +41,7 @@ trait EditorStateFixture:
     EditorState.highlightedPolygonId.set(None)
     EditorState.measurementResult.set(None)
     EditorState.measurementAngle.set(None)
+    EditorState.isAngleShownInRad.set(true)
 
     // Reset selection & tiling to a known base
     EditorState.currentTiling.set(TilingDCEL.empty)
@@ -46,12 +49,23 @@ trait EditorStateFixture:
     EditorState.selectedPerimeterEdges.set(Set.empty)
     EditorState.selectedTilingPolygons.set(Set.empty)
     EditorState.polygonColors.set(Map.empty)
+    EditorState.activeTool.set(None)
+    EditorState.isIrregularSelected.set(false)
+    EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
 
     // Reset view and toggles
     EditorState.viewTransform.set(ViewTransform())
     EditorState.showNodeLabels.set(false)
     EditorState.showUniformity.set(false)
     EditorState.showRotation.set(false)
+    EditorState.showReflection.set(false)
+    EditorState.uniformityMap.set(None)
+    EditorState.rotationVertexIds.set(None)
+    EditorState.reflectionVertexIds.set(None)
+    EditorState.currentFileName.set(None)
+    EditorState.canvasElementRef.set(None)
+    EditorState.userThemePreference.set(None)
+    EditorState.tempColor.set(EditorState.fillColor.now())
 
   override def afterEach(context: AfterEach): Unit =
     // Restore the structural snapshot
@@ -82,9 +96,23 @@ trait EditorStateFixture:
     EditorState.highlightedPolygonId.set(None)
     EditorState.measurementResult.set(None)
     EditorState.measurementAngle.set(None)
+    EditorState.isAngleShownInRad.set(true)
 
     EditorState.showNodeLabels.set(false)
     EditorState.showUniformity.set(false)
     EditorState.showRotation.set(false)
+    EditorState.showReflection.set(false)
+    EditorState.uniformityMap.set(None)
+    EditorState.rotationVertexIds.set(None)
+    EditorState.reflectionVertexIds.set(None)
+    EditorState.showIrregularPolygonPopup.set(false)
+    EditorState.showColorPicker.set(false)
+    EditorState.activeTool.set(None)
+    EditorState.isIrregularSelected.set(false)
+    EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
+    EditorState.currentFileName.set(None)
+    EditorState.canvasElementRef.set(None)
+    EditorState.userThemePreference.set(None)
+    EditorState.tempColor.set(EditorState.fillColor.now())
 
     saved = None

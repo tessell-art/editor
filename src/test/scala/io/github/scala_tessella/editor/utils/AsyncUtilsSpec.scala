@@ -5,7 +5,7 @@ import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
 
@@ -23,14 +23,11 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     assert(EditorState.isProcessing.now())
 
     // Wait for the future to complete
-    future.onComplete {
-      case Success(result)    =>
-        assert(executed)
-        assertEquals(result, "result")
-        // Processing state should be cleared after completion
-        assert(!EditorState.isProcessing.now())
-      case Failure(exception) =>
-        fail(s"Unexpected failure: $exception")
+    future.map { result =>
+      assert(executed)
+      assertEquals(result, "result")
+      // Processing state should be cleared after completion
+      assert(!EditorState.isProcessing.now())
     }
   }
 
@@ -45,13 +42,10 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     assert(EditorState.isProcessing.now())
 
     // Wait for the future to complete
-    future.onComplete {
-      case Success(_)         =>
-        fail("Expected failure but got success")
-      case Failure(exception) =>
-        assertEquals(exception.getMessage, "Test exception")
-        // Processing state should be cleared even after exception
-        assert(!EditorState.isProcessing.now())
+    future.failed.map { exception =>
+      assertEquals(exception.getMessage, "Test exception")
+      // Processing state should be cleared even after exception
+      assert(!EditorState.isProcessing.now())
     }
   }
 
@@ -60,11 +54,9 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
       42
     )
 
-    future.onComplete {
-      case Success(result)    =>
-        assertEquals(result, 42)
-      case Failure(exception) =>
-        fail(s"Unexpected failure: $exception")
+    future.map { result =>
+
+      assertEquals(result, 42)
     }
   }
 
@@ -78,13 +70,8 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     assert(EditorState.isProcessing.now())
 
     // Both futures should complete successfully
-    future1.onComplete {
-      case Success(result) => assertEquals(result, "first")
-      case Failure(ex)     => fail(s"Future1 failed: $ex")
-    }
-
-    future2.onComplete {
-      case Success(result) => assertEquals(result, "second")
-      case Failure(ex)     => fail(s"Future2 failed: $ex")
+    Future.sequence(List(future1, future2)).map { results =>
+      assertEquals(results.toSet, Set("first", "second"))
+      assert(!EditorState.isProcessing.now())
     }
   }
