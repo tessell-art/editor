@@ -43,6 +43,7 @@ lazy val editor = project.in(file("."))
 
     // Test dependencies
     libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,
+    libraryDependencies += "org.scalameta" %%% "munit-scalacheck" % "1.0.0" % Test,
 
     // Compiler hygiene: turn on key warnings and make them fail the build
     scalacOptions ++= Seq(
