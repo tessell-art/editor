@@ -119,11 +119,6 @@ object ErrorOperations:
     dom.document.createElement("div") match
       case container: dom.HTMLDivElement =>
         container.id = "toast-container"
-        // Inline base styles to avoid dependency on app CSS
-        container.setAttribute(
-          "style",
-          "position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none;"
-        )
         dom.document.body.appendChild(container): Unit
         container
       case _                             =>
@@ -140,23 +135,8 @@ object ErrorOperations:
         toast.setAttribute("role", "status")
         toast.setAttribute("aria-live", "polite")
         toast.className = "editor-toast"
+        toast.setAttribute("data-severity", severity.toString.toLowerCase)
         toast.textContent = text
-        toast.style.pointerEvents = "auto"
-
-        // Basic styling with severity coloring
-        val (bg, fg, border) = severity match
-          case Severity.Info    => ("#263238", "#E0F7FA", "#4FC3F7")
-          case Severity.Warning => ("#3E2723", "#FFE0B2", "#FFB74D")
-          case Severity.Error   => ("#311920", "#FFCDD2", "#EF5350")
-
-        toast.setAttribute(
-          "style",
-          s"""background:$bg;color:$fg;border:1px solid $border;border-radius:8px;
-             |padding:10px 12px;box-shadow:0 6px 16px rgba(0,0,0,0.3);
-             |max-width:420px;font:14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-             |white-space:pre-wrap;cursor:pointer;opacity:0;transform:translateY(8px);
-             |transition:opacity .15s ease, transform .15s ease;""".stripMargin
-        )
 
         // Click to dismiss early
         toast.onclick = _ => removeToast(toast)

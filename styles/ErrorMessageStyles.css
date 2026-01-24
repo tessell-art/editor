@@ -62,3 +62,43 @@
     transform: translateY(0);
   }
 }
+
+#toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.editor-toast {
+  background: #263238;
+  color: #E0F7FA;
+  border: 1px solid #4FC3F7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  max-width: 420px;
+  font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  white-space: pre-wrap;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.editor-toast[data-severity="warning"] {
+  background: #3E2723;
+  color: #FFE0B2;
+  border-color: #FFB74D;
+}
+
+.editor-toast[data-severity="error"] {
+  background: #311920;
+  color: #FFCDD2;
+  border-color: #EF5350;
+}
