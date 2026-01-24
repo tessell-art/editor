@@ -28,6 +28,6 @@
     right: 15px;
     font-family: Arial, sans-serif;
     font-size: 14px;
-    color: #AAAAAA;
+    color: var(--text-muted);
     pointer-events: none;
 }

@@ -29,6 +29,20 @@
   --loading-bg: rgba(0, 0, 0, 0.5);
   --spinner-track: #333;
   --spinner-head: #646cff;
+  --error-bg: #f8d7da;
+  --error-text: #721c24;
+  --error-border: #f5c6cb;
+  --popup-overlay: rgba(0, 0, 0, 0.6);
+  --popup-bg: #fff;
+  --popup-text: #333;
+  --popup-heading: #005f73;
+  --popup-link: #007bff;
+  --popup-muted: #666;
+  --toggle-border: #20A4BE;
+  --toggle-bg-active: #20A4BE;
+  --toggle-delete: #f44336;
+  --toggle-delete-border: #d32f2f;
+  --toggle-delete-hover: #e53935;
 
   color-scheme: light dark;
   color: var(--text-color);

@@ -2,7 +2,7 @@
 .tiling-controls {
   margin-top: 1.5rem;
   padding: 1rem;
-  background-color: #333;
+  background-color: var(--menu-bg);
   border-radius: 8px;
 }
 
@@ -35,9 +35,9 @@
 
 .toggle-btn {
   padding: 8px 8px;
-  border: 2px solid #20A4BE;
+  border: 2px solid var(--toggle-border);
   background: transparent;
-  color: #20A4BE;
+  color: var(--toggle-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -48,7 +48,7 @@
 }
 
 .toggle-btn.active {
-  background: #20A4BE;
+  background: var(--toggle-bg-active);
   color: white;
 }
 
@@ -59,12 +59,12 @@
 }
 
 .toggle-btn.mode-delete {
-  background-color: #f44336;
-  border-color: #d32f2f;
+  background-color: var(--toggle-delete);
+  border-color: var(--toggle-delete-border);
 }
 
 .toggle-btn.mode-delete:hover {
-  background-color: #e53935;
+  background-color: var(--toggle-delete-hover);
 }
 
 .tiling-polygon.delete-mode {
@@ -87,7 +87,7 @@
 
 .fill-color-btn {
   margin-left: 8px;
-  border: 2px solid #20A4BE;
+  border: 2px solid var(--toggle-border);
   display: inline-flex;
   align-items: center;
   gap: 0.3em;

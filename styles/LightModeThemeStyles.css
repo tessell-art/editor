@@ -7,6 +7,11 @@
   --panel-border: #ddd;
   --panel-border-strong: #ccc;
   --link-hover: #747bff;
+  --popup-text: #333;
+  --popup-muted: #666;
+  --error-bg: #f8d7da;
+  --error-text: #721c24;
+  --error-border: #f5c6cb;
 }
 
 .light-mode a:hover {

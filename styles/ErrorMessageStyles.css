@@ -17,10 +17,10 @@
 .error-message {
   display: flex;
   align-items: center;
-  background-color: #f8d7da;
-  color: #721c24;
+  background-color: var(--error-bg);
+  color: var(--error-text);
   font-size: 12px;
-  border: 1px solid #f5c6cb;
+  border: 1px solid var(--error-border);
   border-radius: 4px;
   padding: 0.5rem 0.25rem;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -42,7 +42,7 @@
   border: none;
   font-size: 1.5rem;
   font-weight: bold;
-  color: #721c24;
+  color: var(--error-text);
   cursor: pointer;
   padding: 0 0.5rem;
   margin-left: 1rem;
