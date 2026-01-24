@@ -26,13 +26,13 @@
 }
 
 @media (max-width: 768px) {
+  :root {
+    --canvas-height: 400px;
+  }
+
   .canvas-controls {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .editor-canvas {
-    height: 400px;
   }
 
   .tiling-controls button {

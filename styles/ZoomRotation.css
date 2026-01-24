@@ -18,8 +18,7 @@
 /* The SVG element itself will fill its wrapper */
 .editor-canvas {
     width: 100%;
-    height: 100%;
-    display: block; /* Removes any extra space below the SVG */
+    /* sizing is controlled by --canvas-height in GlobalStyles/ResponsiveDesign */
 }
 
 /* The placeholder styling is unchanged but is included for completeness */
