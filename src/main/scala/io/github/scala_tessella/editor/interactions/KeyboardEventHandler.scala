@@ -40,6 +40,27 @@ object KeyboardEventHandler:
 
   private val debounceMs = 20 // ~1 frame @ 50fps; adjust 16–33ms as desired
 
+  private[interactions] def rotationDeltaForKey(key: String): Option[Int] =
+    key match
+      case "r" | "R" => Some(15)
+      case "e" | "E" => Some(-15)
+      case _         => None
+
+  private[interactions] def zoomFactorForKey(key: String): Option[Double] =
+    key match
+      case "+" | "=" => Some(1.1)
+      case "-" | "_" => Some(1.0 / 1.1)
+      case _         => None
+
+  private[interactions] def isUndoShortcut(key: String, primary: Boolean, shift: Boolean): Boolean =
+    primary && key == "z" && !shift
+
+  private[interactions] def isRedoShortcut(key: String, primary: Boolean, shift: Boolean): Boolean =
+    primary && shift && (key == "Z" || key == "z")
+
+  private[interactions] def isSaveShortcut(key: String, primary: Boolean): Boolean =
+    primary && key == "s"
+
   private def flushRotate(): Unit =
     if rotateAccum != 0 then
       ViewOperations.rotateView(rotateAccum)
@@ -85,38 +106,35 @@ object KeyboardEventHandler:
     }
 
     if !targetIsInput then
-      event.key match
-        case "r" | "R"                                  =>
+      rotationDeltaForKey(event.key) match
+        case Some(delta) =>
           event.preventDefault()
-          enqueueRotate(+15) // debounced
-        case "e" | "E"                                  =>
-          event.preventDefault()
-          enqueueRotate(-15) // debounced
-        case "d" | "D"                                  =>
-          event.preventDefault()
-          AppState.doubleTiling()
-        case "Z" if primaryMod(event) && event.shiftKey =>
-          event.preventDefault()
-          UndoManager.redo()
-        case "z" if primaryMod(event)                   =>
-          event.preventDefault()
-          UndoManager.undo()
-        case "s" if primaryMod(event)                   =>
-          event.preventDefault()
-          // Use the snapshots captured above
-          if hasFileName && !currentTiling.isEmpty then
-            SvgExporter.saveTilingToSVG()
-        case "+" | "="                                  =>
-          event.preventDefault()
-          enqueueZoom(1.1) // debounced
-        case "-" | "_"                                  =>
-          event.preventDefault()
-          enqueueZoom(1.0 / 1.1) // debounced
-        case "Escape"                                   =>
-          event.preventDefault()
-          clearAllSelections()
-        case "Delete" | "Backspace"                     =>
-          event.preventDefault()
-          // Future deletion logic can be added here
-          ()
-        case _                                          => ()
+          enqueueRotate(delta) // debounced
+        case None        =>
+          zoomFactorForKey(event.key) match
+            case Some(factor) =>
+              event.preventDefault()
+              enqueueZoom(factor) // debounced
+            case None         =>
+              if event.key == "d" || event.key == "D" then
+                event.preventDefault()
+                AppState.doubleTiling()
+              else if isRedoShortcut(event.key, primaryMod(event), event.shiftKey) then
+                event.preventDefault()
+                UndoManager.redo()
+              else if isUndoShortcut(event.key, primaryMod(event), event.shiftKey) then
+                event.preventDefault()
+                UndoManager.undo()
+              else if isSaveShortcut(event.key, primaryMod(event)) then
+                event.preventDefault()
+                // Use the snapshots captured above
+                if hasFileName && !currentTiling.isEmpty then
+                  SvgExporter.saveTilingToSVG()
+              else if event.key == "Escape" then
+                event.preventDefault()
+                clearAllSelections()
+              else if event.key == "Delete" || event.key == "Backspace" then
+                event.preventDefault()
+                // Future deletion logic can be added here
+                ()
+              else ()
