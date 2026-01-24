@@ -128,7 +128,7 @@ object SvgExporter:
   ): String =
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
-        val color    = AppState.getPolygonColor(faceId).getOrElse(ColorRGB(200, 200, 200)).toRgb
+        val color    = AppState.getPolygonColor(faceId).getOrElse(EditorConfig.defaultPolygonColor).toRgb
         val points   = pointsString(faceVertices, scale, offset)
         val nodesStr = "" // nodes.map(_.toString).mkString(",")
 

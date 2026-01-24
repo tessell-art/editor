@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.models
 
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object EditorConfig:
@@ -16,3 +17,6 @@ object EditorConfig:
 
   // Polygon palette configuration
   val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
+
+  // Default polygon fill color when no explicit color is assigned
+  val defaultPolygonColor: ColorRGB = ColorRGB(76, 175, 80)

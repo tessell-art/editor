@@ -6,6 +6,7 @@ import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.editor.models.EditorConfig
 import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
 
 import org.scalajs.dom
@@ -82,7 +83,7 @@ object EditorState:
   //
 
   /** Current fill color (RGB tuple) */
-  val fillColor: Var[ColorRGB] = Var(ColorRGB(76, 175, 80))
+  val fillColor: Var[ColorRGB] = Var(EditorConfig.defaultPolygonColor)
 
   /** Map of polygon tags to their colors */
   val polygonColors: Var[Map[FaceId, ColorRGB]] = Var(Map.empty)

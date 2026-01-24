@@ -9,6 +9,7 @@ import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.editor.models.{
   AppState,
   ClickablePoint,
+  EditorConfig,
   EditorMode,
   EditorState,
   FailedPolygonPlacement,
@@ -64,7 +65,7 @@ object TessellationRenderer:
     val isSelected = EditorState.selectedTilingPolygons.signal.map(_.contains(faceId))
 
     val rgbSignal = EditorState.polygonColors.signal.map:
-      _.getOrElse(faceId, ColorRGB(200, 200, 200)).toRgb
+      _.getOrElse(faceId, EditorConfig.defaultPolygonColor).toRgb
 
     val opacity = EditorState.showUniformity.signal.map: showUni =>
       if showUni then "0.0" else "1.0"
