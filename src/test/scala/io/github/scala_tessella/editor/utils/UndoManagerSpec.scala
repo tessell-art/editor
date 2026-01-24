@@ -4,6 +4,7 @@ import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
+import io.github.scala_tessella.editor.models.Tool
 import io.github.scala_tessella.editor.utils.TilingBuilders.*
 import munit.FunSuite
 
@@ -167,4 +168,25 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     assert(UndoManager.getUndoPreview.exists(_.startsWith("Undo:")))
     UndoManager.undo()
     assert(UndoManager.getRedoPreview.nonEmpty)
+  }
+
+  test("undo/redo should restore tool state and selections") {
+    reset()
+    EditorState.currentTiling.set(freshSquare())
+    val faceId = EditorState.currentTiling.now().innerFaces.head.id
+
+    EditorState.activeTool.set(None)
+    EditorState.selectedTilingPolygons.set(Set(faceId))
+    UndoManager.saveState()
+
+    EditorState.activeTool.set(Some(Tool.ColorPicker))
+    EditorState.selectedTilingPolygons.set(Set.empty)
+
+    UndoManager.undo()
+    assertEquals(EditorState.activeTool.now(), None)
+    assertEquals(EditorState.selectedTilingPolygons.now(), Set(faceId))
+
+    UndoManager.redo()
+    assertEquals(EditorState.activeTool.now(), Some(Tool.ColorPicker))
+    assertEquals(EditorState.selectedTilingPolygons.now(), Set.empty)
   }

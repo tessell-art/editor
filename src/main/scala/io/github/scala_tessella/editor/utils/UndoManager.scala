@@ -78,7 +78,10 @@ object UndoManager:
       state1.selectedTilingPolygons == state2.selectedTilingPolygons &&
       state1.polygonColors == state2.polygonColors &&
       state1.fillColor == state2.fillColor &&
-      state1.editorMode == state2.editorMode
+      state1.editorMode == state2.editorMode &&
+      state1.activeTool == state2.activeTool &&
+      state1.recentIrregularPolygon == state2.recentIrregularPolygon &&
+      state1.isIrregularSelected == state2.isIrregularSelected
 
   private def restoreState(snapshot: AppStateSnapshot): Unit =
     EditorState.currentTiling.set(snapshot.tiling)
@@ -88,6 +91,9 @@ object UndoManager:
     EditorState.polygonColors.set(snapshot.polygonColors)
     EditorState.fillColor.set(snapshot.fillColor)
     EditorState.editorMode.set(snapshot.editorMode)
+    EditorState.activeTool.set(snapshot.activeTool)
+    EditorState.recentIrregularPolygon.set(snapshot.recentIrregularPolygon)
+    EditorState.isIrregularSelected.set(snapshot.isIrregularSelected)
     clearError()
 
   private def updateUndoRedoSignals(): Unit =

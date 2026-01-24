@@ -77,6 +77,9 @@ trait EditorStateFixture:
       EditorState.polygonColors.set(s.polygonColors)
       EditorState.fillColor.set(s.fillColor)
       EditorState.editorMode.set(s.editorMode)
+      EditorState.activeTool.set(s.activeTool)
+      EditorState.recentIrregularPolygon.set(s.recentIrregularPolygon)
+      EditorState.isIrregularSelected.set(s.isIrregularSelected)
     }
 
     // And reset the ephemeral / transient state again (to avoid leaks even if no snapshot)

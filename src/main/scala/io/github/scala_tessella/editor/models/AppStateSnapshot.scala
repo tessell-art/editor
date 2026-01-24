@@ -14,6 +14,7 @@ case class AppStateSnapshot(
     polygonColors: Map[FaceId, ColorRGB],
     fillColor: ColorRGB,
     editorMode: EditorMode,
+    activeTool: Option[Tool],
     timestamp: Long = System.currentTimeMillis(),
     recentIrregularPolygon: Option[Vector[AngleDegree]],
     isIrregularSelected: Boolean
@@ -30,6 +31,7 @@ object AppStateSnapshot:
       polygonColors = EditorState.polygonColors.now(),
       fillColor = EditorState.fillColor.now(),
       editorMode = EditorState.editorMode.now(),
+      activeTool = EditorState.activeTool.now(),
       recentIrregularPolygon = EditorState.recentIrregularPolygon.now(),
       isIrregularSelected = EditorState.isIrregularSelected.now()
     )
