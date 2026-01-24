@@ -1,0 +1,42 @@
+package io.github.scala_tessella.editor.operations
+
+import io.github.scala_tessella.editor.EditorStateFixture
+import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
+import munit.FunSuite
+
+class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
+
+  test("selectPolygon should save undo and assign default colors on empty tiling") {
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.fillColor.set(ColorRGB(10, 20, 30))
+    UndoManager.clearHistory()
+
+    TessellationOperations.selectPolygon(4)
+
+    val tiling = EditorState.currentTiling.now()
+    assert(!tiling.isEmpty)
+    assertEquals(UndoManager.undoCount.now(), 1)
+    assert(tiling.innerFaces.nonEmpty)
+    assert(tiling.innerFaces.forall(face =>
+      EditorState.polygonColors.now().get(face.id).contains(EditorState.fillColor.now())
+    ))
+  }
+
+  test("initializeWithIrregularIfEmpty should save undo and assign colors") {
+    val fill = ColorRGB(7, 8, 9)
+    EditorState.fillColor.set(fill)
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
+    UndoManager.clearHistory()
+
+    TessellationOperations.initializeWithIrregularIfEmpty()
+
+    val tiling = EditorState.currentTiling.now()
+    assert(!tiling.isEmpty)
+    assertEquals(UndoManager.undoCount.now(), 1)
+    assert(tiling.innerFaces.nonEmpty)
+    assert(tiling.innerFaces.forall(face =>
+      EditorState.polygonColors.now().get(face.id).contains(fill)
+    ))
+  }
