@@ -51,7 +51,8 @@ object EditorApp:
   val effectiveTheme: Signal[String] =
     EditorState.userThemePreference.signal
       .combineWith(systemTheme)
-      .map((userChoiceOpt, systemPref) => userChoiceOpt.getOrElse(systemPref))
+      .map: (userChoiceOpt, systemPref) =>
+        userChoiceOpt.getOrElse(systemPref)
 
   // 3. The toggleTheme function is no longer needed here; the logic is moved into the component.
 
