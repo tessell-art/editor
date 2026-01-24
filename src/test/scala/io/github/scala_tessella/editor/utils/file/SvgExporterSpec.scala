@@ -1,6 +1,8 @@
 package io.github.scala_tessella.editor.utils.file
 
 import io.github.scala_tessella.dcel.geometry.BigPoint
+import io.github.scala_tessella.dcel.conversion.TilingSVG
+import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.VertexId
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
@@ -287,4 +289,52 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     )
     assert(result.contains("width=\"90.0"))
     assert(result.contains("height=\"90.0"))
+  }
+
+  test("generateSvgContent should round-trip metadata into a tiling") {
+    val svgContent = SvgExporter.generateSvgContent(
+      squareTiling,
+      showNodeLabels = false,
+      showUniformity = false,
+      showRotation = false,
+      showReflection = false
+    )
+
+    val metadataRegex =
+      "(?s)<tessella:tessella-dcel[^>]*>.*?</tessella:tessella-dcel>".r
+    val metadata      = metadataRegex.findFirstIn(svgContent).getOrElse("")
+    assert(metadata.nonEmpty)
+
+    val parsed = TilingSVG.fromMetadata(metadata).toOption.get
+    // Equality is not guaranteed on TilingDCEL, so compare canonical metadata instead.
+    assertEquals(parsed.toMetadata, squareTiling.toMetadata)
+  }
+
+  test("generateSvgContent should export polygon fill colors for all faces") {
+    val faces  = squareTiling.innerFaces
+    val colors = faces.zipWithIndex.map { (face, idx) =>
+
+      face.id -> ColorRGB(10 + idx, 20 + idx, 30 + idx)
+    }.toMap
+    EditorState.polygonColors.set(colors)
+
+    val svgContent = SvgExporter.generateSvgContent(
+      squareTiling,
+      showNodeLabels = false,
+      showUniformity = false,
+      showRotation = false,
+      showReflection = false
+    )
+
+    val groupRegex = "(?s)<g id=\"tiling-polygons\"[^>]*>(.*?)</g>".r
+    val groupBody  = groupRegex.findFirstMatchIn(svgContent).map(_.group(1)).getOrElse("")
+    assert(groupBody.nonEmpty)
+
+    val fills = "fill=\"(rgb\\([^)]+\\))\"".r
+      .findAllMatchIn(groupBody)
+      .map(_.group(1))
+      .toSet
+
+    val expected = colors.values.map(_.toRgb).toSet
+    assertEquals(fills, expected)
   }
