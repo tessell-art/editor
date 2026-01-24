@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
-import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.models.{AppState, EditorState, FailedPolygonPlacement}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
@@ -47,12 +47,7 @@ object TessellationOperations:
         UndoManager.saveState()
 
       currentTiling.set(TilingDCEL.empty)
-      EditorState.showUniformity.set(false)
-      EditorState.uniformityMap.set(None)
-      EditorState.showRotation.set(false)
-      EditorState.rotationVertexIds.set(None)
-      EditorState.showReflection.set(false)
-      EditorState.reflectionVertexIds.set(None)
+      AppState.clearSymmetryOverlays()
       EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
       EditorState.selectedPerimeterEdges.set(Set.empty)
@@ -86,13 +81,7 @@ object TessellationOperations:
     val op = () => currentTiling.now().maybeDeleteFace(faceId)
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        EditorState.showUniformity.set(false)
-        EditorState.uniformityMap.set(None)
-        EditorState.showRotation.set(false)
-        EditorState.rotationVertexIds.set(None)
-        EditorState.showReflection.set(false)
-        EditorState.reflectionVertexIds.set(None)
-      ,
+        AppState.clearSymmetryOverlays(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
     )
 
@@ -101,13 +90,7 @@ object TessellationOperations:
     val op = () => currentTiling.now().maybeDeleteVertex(vertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        EditorState.showUniformity.set(false)
-        EditorState.uniformityMap.set(None)
-        EditorState.showRotation.set(false)
-        EditorState.rotationVertexIds.set(None)
-        EditorState.showReflection.set(false)
-        EditorState.reflectionVertexIds.set(None)
-      ,
+        AppState.clearSymmetryOverlays(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
     )
 
@@ -116,13 +99,7 @@ object TessellationOperations:
     val op = () => currentTiling.now().maybeDeleteEdge(startVertexId, endVertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        EditorState.showUniformity.set(false)
-        EditorState.uniformityMap.set(None)
-        EditorState.showRotation.set(false)
-        EditorState.rotationVertexIds.set(None)
-        EditorState.showReflection.set(false)
-        EditorState.reflectionVertexIds.set(None)
-      ,
+        AppState.clearSymmetryOverlays(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
 
@@ -148,12 +125,7 @@ object TessellationOperations:
         faceIds.indices.foreach: id =>
           val rgb = colors(faceIds(id))
           polygonColors.update(_ + (FaceId(maxFaceId + id + 1) -> rgb))
-        EditorState.showUniformity.set(false)
-        EditorState.uniformityMap.set(None)
-        EditorState.showRotation.set(false)
-        EditorState.rotationVertexIds.set(None)
-        EditorState.showReflection.set(false)
-        EditorState.reflectionVertexIds.set(None)
+        AppState.clearSymmetryOverlays()
         EditorState.selectedPerimeterEdges.set(Set.empty)
         if ViewOperations.isTilingLargerThanCanvas then ViewOperations.fitTilingToCanvas()
       ,
@@ -171,10 +143,7 @@ object TessellationOperations:
 
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        EditorState.showUniformity.set(false)
-        EditorState.uniformityMap.set(None)
-        EditorState.showRotation.set(false)
-        EditorState.rotationVertexIds.set(None)
+        AppState.clearSymmetryOverlays()
         EditorState.selectedPerimeterEdges.set(Set.empty)
       ,
       onFailure = err =>
@@ -208,12 +177,7 @@ object TessellationOperations:
 
         OperationRunner.runTilingOp(op)(
           onSuccess =
-            EditorState.showUniformity.set(false)
-            EditorState.uniformityMap.set(None)
-            EditorState.showRotation.set(false)
-            EditorState.rotationVertexIds.set(None)
-            EditorState.showReflection.set(false)
-            EditorState.reflectionVertexIds.set(None)
+            AppState.clearSymmetryOverlays()
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = err =>
@@ -269,12 +233,7 @@ object TessellationOperations:
 
         OperationRunner.runTilingOp(op)(
           onSuccess =
-            EditorState.showUniformity.set(false)
-            EditorState.uniformityMap.set(None)
-            EditorState.showRotation.set(false)
-            EditorState.rotationVertexIds.set(None)
-            EditorState.showReflection.set(false)
-            EditorState.reflectionVertexIds.set(None)
+            AppState.clearSymmetryOverlays()
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = error => {

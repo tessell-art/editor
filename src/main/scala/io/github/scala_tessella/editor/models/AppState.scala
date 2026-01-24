@@ -367,3 +367,12 @@ object AppState:
     highlightedPolygonId.set(None)
     measurementResult.set(None)
     measurementAngle.set(None)
+
+  /** Clears symmetry overlays and their cached data. */
+  def clearSymmetryOverlays(): Unit =
+    showUniformity.set(false)
+    uniformityMap.set(None)
+    showRotation.set(false)
+    rotationVertexIds.set(None)
+    showReflection.set(false)
+    reflectionVertexIds.set(None)

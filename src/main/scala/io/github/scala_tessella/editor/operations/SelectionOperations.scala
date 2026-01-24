@@ -84,24 +84,30 @@ object SelectionOperations:
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
-        val polygonIdsToAdd = tiling.innerFaces.collect {
-          // @todo two traversals, one for the number of sides, one for the angles
-          case face if face.halfEdges.toOption.get.size == sides && face.hasEqualAngles.toOption.get =>
-            face.id
-        }.toSet
+        val polygonIdsToAdd =
+          tiling.innerFaces
+            .collect:
+              // @todo two traversals, one for the number of sides, one for the angles
+              case face
+                  if face.halfEdges.toOption.exists(_.size == sides) &&
+                    face.hasEqualAngles.toOption.contains(true) =>
+                face.id
+            .toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
   def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
     ifNotProcessing:
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
-        val polygonIdsToAdd = tiling.innerFaces.collect {
-          // @todo two traversals, one for the number of sides, one for the angles
-          case face
-              if face.halfEdges.toOption.get.size == angles.size && face.angles.toOption.get.isRotationOrReflectionOf(
-                angles
-              ) => face.id
-        }.toSet
+        val polygonIdsToAdd =
+          tiling.innerFaces
+            .collect:
+              // @todo two traversals, one for the number of sides, one for the angles
+              case face
+                  if face.halfEdges.toOption.exists(_.size == angles.size) &&
+                    face.angles.toOption.exists(_.isRotationOrReflectionOf(angles)) =>
+                face.id
+            .toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
 
   def selectPolygonsByColor(faceId: FaceId): Unit =
@@ -138,21 +144,25 @@ object SelectionOperations:
           EditorState.activeTool.set(None) // Deactivate after picking
         }
       case Some(Tool.ShapeAndColorPicker) =>
-        val tiling = EditorState.currentTiling.now()
-        EditorState.polygonColors.now().get(faceId).foreach { color =>
-          EditorState.fillColor.set(color)
-          val face = tiling.findInnerFace(faceId).toOption.get
-          if face.hasEqualAngles.toOption.get then
-            val sides = face.halfEdges.toOption.get.size
-            EditorState.isIrregularSelected.set(false)
-            EditorState.selectedPolygon.set(Some(sides))
-          else
-            val angles = face.angles.toOption.get.toVector
-            EditorState.recentIrregularPolygon.set(Some(angles)) // remember latest irregular
-            EditorState.selectedPolygon.set(None)
-            EditorState.isIrregularSelected.set(true)            // select irregular
-          EditorState.activeTool.set(None) // Deactivate after picking
-        }
+        val tiling     = EditorState.currentTiling.now()
+        val maybeFace  = tiling.findInnerFace(faceId).toOption
+        val maybeColor = EditorState.polygonColors.now().get(faceId)
+        (for color <- maybeColor; face <- maybeFace yield (color, face)) match
+          case Some((color, face)) =>
+            EditorState.fillColor.set(color)
+            if face.hasEqualAngles.toOption.contains(true) then
+              face.halfEdges.toOption.foreach: edges =>
+                val sides = edges.size
+                EditorState.isIrregularSelected.set(false)
+                EditorState.selectedPolygon.set(Some(sides))
+            else
+              face.angles.toOption.foreach: angles =>
+                EditorState.recentIrregularPolygon.set(Some(angles.toVector)) // remember latest irregular
+                EditorState.selectedPolygon.set(None)
+                EditorState.isIrregularSelected.set(true)                     // select irregular
+            EditorState.activeTool.set(None) // Deactivate after picking
+          case None                =>
+            ()
       case Some(Tool.SelectByColor)       =>
         selectPolygonsByColor(faceId)
       case Some(Tool.Measurement)         =>
