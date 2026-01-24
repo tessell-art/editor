@@ -8,7 +8,9 @@ import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.editor.utils.geo.Geometry.fitPointsToViewBox
 import io.github.scala_tessella.editor.utils.geo.Point
+import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
 import io.github.scala_tessella.editor.utils.TilingBuilders
 import munit.FunSuite
 
@@ -338,3 +340,53 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     val expected = colors.values.map(_.toRgb).toSet
     assertEquals(fills, expected)
   }
+
+  test("generateSvgContent snapshot includes canonical metadata and key elements") {
+    val svgContent = SvgExporter.generateSvgContent(
+      squareTiling,
+      showNodeLabels = false,
+      showUniformity = false,
+      showRotation = false,
+      showReflection = false
+    )
+
+    def normalize(s: String): String =
+      s.replaceAll("\\s+", "")
+
+    val svgTagRegex                = "(?s)<svg\\s+([^>]+)>".r
+    val svgAttrs                   = svgTagRegex.findFirstMatchIn(svgContent).map(_.group(1)).getOrElse("")
+    def attr(name: String): String =
+      s"""$name="([^"]+)"""".r.findFirstMatchIn(svgAttrs).map(_.group(1)).getOrElse("")
+
+    val metadataRegex =
+      "(?s)<tessella:tessella-dcel[^>]*>.*?</tessella:tessella-dcel>".r
+    val metadata      = metadataRegex.findFirstIn(svgContent).getOrElse("")
+
+    val polygonGroupRegex = "(?s)<g id=\"tiling-polygons\"[^>]*>(.*?)</g>".r
+    val groupBody         = polygonGroupRegex.findFirstMatchIn(svgContent).map(_.group(1)).getOrElse("")
+    val polygonPoints     = "points=\"([^\"]+)\"".r.findFirstMatchIn(groupBody).map(_.group(1)).getOrElse("")
+    val polygonCount      = "<polygon".r.findAllMatchIn(groupBody).size
+
+    val coordinates           = squareTiling.coordinates.values.toList.map(_.toPoint)
+    val (w, h, offset)        = coordinates.fitPointsToViewBox(EditorConfig.canvasScale, padding = 20.0)
+    val expectedWidth         = w
+    val expectedHeight        = h
+    val expectedPolygonsGroup =
+      SvgExporter.generatePolygonsXml(squareTiling, EditorConfig.canvasScale, offset, strokeWidth = 1.5)
+    val expectedGroupBody     =
+      polygonGroupRegex.findFirstMatchIn(expectedPolygonsGroup).map(_.group(1)).getOrElse("")
+    val expectedFirstPoints   =
+      "points=\"([^\"]+)\"".r.findFirstMatchIn(expectedGroupBody).map(_.group(1)).getOrElse("")
+
+    assertEquals(polygonCount, 1)
+    assertEquals(polygonPoints, expectedFirstPoints)
+    assertEquals(normalize(metadata), normalize(squareTiling.toMetadata))
+    assertEqualsDouble(attr("width").toDouble, expectedWidth, 1e-6)
+    assertEqualsDouble(attr("height").toDouble, expectedHeight, 1e-6)
+  }
+
+  private def assertEqualsDouble(obtained: Double, expected: Double, delta: Double): Unit =
+    assert(
+      math.abs(obtained - expected) <= delta,
+      s"obtained=$obtained expected=$expected delta=$delta"
+    )
