@@ -40,3 +40,13 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
       EditorState.polygonColors.now().get(face.id).contains(fill)
     ))
   }
+
+  test("attemptPolygonAddition should show error when tiling is empty") {
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.selectedPolygon.set(Some(4))
+    EditorState.errorMessage.set(None)
+
+    TessellationOperations.attemptPolygonAddition("edge-1", 0)
+
+    assert(EditorState.errorMessage.now().exists(_.contains("No tiling available to grow")))
+  }

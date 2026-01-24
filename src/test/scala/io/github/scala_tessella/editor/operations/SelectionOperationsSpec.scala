@@ -99,3 +99,41 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     SelectionOperations.handleTilingPolygonClick(faceId)
     assertEquals(EditorState.selectedTilingPolygons.now(), Set.empty)
   }
+
+  test("SelectByColor should deactivate even when no color is assigned") {
+    val tiling = TilingBuilders.freshSquare()
+    val faceId = tiling.innerFaces.head.id
+    EditorState.currentTiling.set(tiling)
+    EditorState.polygonColors.set(Map.empty)
+    EditorState.activeTool.set(Some(Tool.SelectByColor))
+
+    SelectionOperations.handleTilingPolygonClick(faceId)
+
+    assertEquals(EditorState.selectedTilingPolygons.now(), Set.empty)
+    assertEquals(EditorState.activeTool.now(), None)
+  }
+
+  test("ShapeAndColorPicker should deactivate even when no color is assigned") {
+    val tiling = TilingBuilders.freshSquare()
+    val faceId = tiling.innerFaces.head.id
+    EditorState.currentTiling.set(tiling)
+    EditorState.polygonColors.set(Map.empty)
+    EditorState.activeTool.set(Some(Tool.ShapeAndColorPicker))
+
+    SelectionOperations.handleTilingPolygonClick(faceId)
+
+    assertEquals(EditorState.activeTool.now(), Some(Tool.ShapeAndColorPicker))
+    assertEquals(EditorState.selectedPolygon.now(), None)
+    assertEquals(EditorState.isIrregularSelected.now(), false)
+  }
+
+  test("handlePerimeterEdgeClick should show error when tiling is empty and a polygon is selected") {
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.selectedPolygon.set(Some(4))
+    EditorState.isIrregularSelected.set(false)
+    EditorState.errorMessage.set(None)
+
+    SelectionOperations.handlePerimeterEdgeClick("edge-1", 0)
+
+    assert(EditorState.errorMessage.now().exists(_.contains("No tiling available to grow")))
+  }
