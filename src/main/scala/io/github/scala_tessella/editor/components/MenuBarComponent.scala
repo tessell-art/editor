@@ -72,6 +72,28 @@ object MenuBarComponent:
       )
     )
 
+  private def dropdownLinkBase(
+      title: Mod[HtmlElement],
+      action: () => Unit,
+      enabled: Signal[Boolean],
+      shortcut: Option[String]
+  ): Element =
+    a(
+      href := "#",
+      onClick.preventDefault.compose(
+        _.withCurrentValueOf(enabled).collect { case (_, true) =>
+          ()
+        }
+      ) --> { _ =>
+
+        action()
+        isMenuOpen.set(false)
+      }, // close menu on action
+      className("disabled") <-- enabled.map(!_),
+      span(title),
+      shortcut.map(s => span(className := "shortcut", s))
+    )
+
   // A helper for creating a clickable link in a dropdown
   private def dropdownLink(
       title: String,
@@ -79,16 +101,7 @@ object MenuBarComponent:
       enabled: Signal[Boolean] = Val(true),
       shortcut: Option[String] = None
   ): Element =
-    a(
-      href := "#",
-      onClick.preventDefault.map(_ => action()) --> { _ =>
-
-        isMenuOpen.set(false)
-      }, // close menu on action
-      className("disabled") <-- enabled.map(!_),
-      span(title),
-      shortcut.map(s => span(className := "shortcut", s))
-    )
+    dropdownLinkBase(title, action, enabled, shortcut)
 
   // A helper for creating a dropdown link with dynamic text
   private def dropdownLinkDynamic(
@@ -97,16 +110,7 @@ object MenuBarComponent:
       enabled: Signal[Boolean] = Val(true),
       shortcut: Option[String] = None
   ): Element =
-    a(
-      href := "#",
-      onClick.preventDefault.map(_ => action()) --> { _ =>
-
-        isMenuOpen.set(false)
-      }, // close menu on action
-      className("disabled") <-- enabled.map(!_),
-      span(child.text <-- title),
-      shortcut.map(s => span(className := "shortcut", s))
-    )
+    dropdownLinkBase(child.text <-- title, action, enabled, shortcut)
 
   // Helper for a menu item that opens a submenu
   private def subMenuItem(title: String, children: Mod[HtmlElement]*): Element =

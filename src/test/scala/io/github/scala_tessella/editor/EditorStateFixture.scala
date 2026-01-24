@@ -11,10 +11,7 @@ trait EditorStateFixture:
 
   private var saved: Option[AppStateSnapshot] = None
 
-  override def beforeEach(context: BeforeEach): Unit =
-    // Snapshot the state that represents the "app model"
-    saved = Some(AppStateSnapshot.fromCurrentState)
-
+  private def resetTransientState(): Unit =
     // Ensure a clean baseline for each test (transient UI/processing flags)
     EditorState.isProcessing.set(false)
     EditorState.isDragging.set(false)
@@ -67,6 +64,12 @@ trait EditorStateFixture:
     EditorState.userThemePreference.set(None)
     EditorState.tempColor.set(EditorState.fillColor.now())
 
+  override def beforeEach(context: BeforeEach): Unit =
+    // Snapshot the state that represents the "app model"
+    saved = Some(AppStateSnapshot.fromCurrentState)
+
+    resetTransientState()
+
   override def afterEach(context: AfterEach): Unit =
     // Restore the structural snapshot
     saved.foreach { s =>
@@ -83,39 +86,6 @@ trait EditorStateFixture:
     }
 
     // And reset the ephemeral / transient state again (to avoid leaks even if no snapshot)
-    EditorState.isProcessing.set(false)
-    EditorState.isDragging.set(false)
-    EditorState.dragStart.set(None)
-
-    EditorState.errorMessage.set(None)
-    EditorState.failedPlacement.set(None)
-    EditorState.failedDeletion.set(None)
-
-    EditorState.previewPlacement.set(None)
-    EditorState.clickablePoints.set(Nil)
-    EditorState.measurementStartPoint.set(None)
-    EditorState.measurementEndPoint.set(None)
-    EditorState.measurementPreviousEndPoint.set(None)
-    EditorState.highlightedPolygonId.set(None)
-    EditorState.measurementResult.set(None)
-    EditorState.measurementAngle.set(None)
-    EditorState.isAngleShownInRad.set(true)
-
-    EditorState.showNodeLabels.set(false)
-    EditorState.showUniformity.set(false)
-    EditorState.showRotation.set(false)
-    EditorState.showReflection.set(false)
-    EditorState.uniformityMap.set(None)
-    EditorState.rotationVertexIds.set(None)
-    EditorState.reflectionVertexIds.set(None)
-    EditorState.showIrregularPolygonPopup.set(false)
-    EditorState.showColorPicker.set(false)
-    EditorState.activeTool.set(None)
-    EditorState.isIrregularSelected.set(false)
-    EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
-    EditorState.currentFileName.set(None)
-    EditorState.canvasElementRef.set(None)
-    EditorState.userThemePreference.set(None)
-    EditorState.tempColor.set(EditorState.fillColor.now())
+    resetTransientState()
 
     saved = None
