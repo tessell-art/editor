@@ -86,7 +86,7 @@
 }
 
 .light-mode .popup-close-btn {
-    background-color: var(--menu-bg);
+    background-color: transparent;
 }
 
 /* Add styles for control buttons in light mode for better contrast */
@@ -102,4 +102,9 @@
 .light-mode .btn-right:hover,
 .light-mode .btn-flip:hover {
     background-color: var(--popup-button-hover); /* Slightly darker on hover */
+}
+
+.popup-logo {
+    display: block;
+    margin: 0 auto 10px;
 }
