@@ -1,9 +1,9 @@
 
 /* Canvas Styles */
 .canvas-container {
-  border: 2px solid #333;
+  border: 2px solid var(--panel-border);
   border-radius: 12px;
-  background-color: #1a1a1a;
+  background-color: var(--panel-bg);
   padding: 0.5rem;
 }
 
@@ -27,7 +27,7 @@ svg:hover .node-label {
   width: 100%;
   height: var(--canvas-height);
   display: block;
-  border: 2px solid #444;
+  border: 2px solid var(--panel-border-strong);
   border-radius: 8px;
   background-color: #0f0f0f;
   cursor: grab;
@@ -39,7 +39,7 @@ svg:hover .node-label {
 }
 
 .editor-canvas:focus {
-  border-color: #646cff;
+  border-color: var(--focus-ring);
   box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.3);
 }
 

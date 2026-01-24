@@ -1,6 +1,12 @@
 .light-mode {
   color: #213547;
   background-color: #ffffff;
+  --text-color: #213547;
+  --bg-color: #ffffff;
+  --panel-bg: #f9f9f9;
+  --panel-border: #ddd;
+  --panel-border-strong: #ccc;
+  --link-hover: #747bff;
 }
 
 .light-mode a:hover {

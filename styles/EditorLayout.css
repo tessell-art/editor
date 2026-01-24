@@ -20,7 +20,7 @@
   text-align: left;
   font-family: monospace;
   font-size: 14px;
-  color: #ccc;
+  color: var(--text-muted-strong);
 }
 
 .light-mode .file-name {
@@ -31,7 +31,7 @@
   text-align: right;
   font-family: Arial, sans-serif;
   font-size: 14px;
-  color: #AAAAAA;
+  color: var(--text-muted);
   padding-right: 5px;
 }
 

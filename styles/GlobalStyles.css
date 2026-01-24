@@ -3,10 +3,36 @@
   line-height: 1.5;
   font-weight: 400;
   --canvas-height: 600px;
+  --text-color: rgba(255, 255, 255, 0.87);
+  --bg-color: #242424;
+  --panel-bg: #1a1a1a;
+  --panel-border: #333;
+  --panel-border-strong: #444;
+  --accent: #042A79;
+  --accent-strong: #00007F;
+  --menu-bg: #333;
+  --menu-hover: #555;
+  --menu-dropdown-bg: #f9f9f9;
+  --menu-dropdown-text: #000;
+  --menu-dropdown-border: #e0e0e0;
+  --link-color: #042A79;
+  --link-hover: #00007F;
+  --highlight: #20A4BE;
+  --highlight-strong: #18788C;
+  --focus-ring: #646cff;
+  --text-muted: #aaa;
+  --text-muted-strong: #ccc;
+  --text-subtle: #888;
+  --button-bg: #1a1a1a;
+  --btn-disabled-bg: #444;
+  --btn-disabled-text: #888;
+  --loading-bg: rgba(0, 0, 0, 0.5);
+  --spinner-track: #333;
+  --spinner-head: #646cff;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--text-color);
+  background-color: var(--bg-color);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,11 +43,11 @@
 
 a {
   font-weight: 500;
-  color: #042A79;
+  color: var(--link-color);
   text-decoration: inherit;
 }
 a:hover {
-  color: #00007F;
+  color: var(--link-hover);
 }
 
 body {
@@ -46,7 +72,7 @@ h2 {
 h3 {
   font-size: 1.2em;
   margin: 0.8rem 0;
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 #app {
@@ -62,14 +88,14 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--button-bg);
   color: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
   margin: 0.25rem;
 }
 button:hover {
-  border-color: #00007F;
+  border-color: var(--accent-strong);
 }
 button:focus,
 button:focus-visible {
