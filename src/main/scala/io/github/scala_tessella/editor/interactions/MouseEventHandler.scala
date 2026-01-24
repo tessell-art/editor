@@ -8,6 +8,21 @@ import org.scalajs.dom.{MouseEvent, WheelEvent}
 import scala.math.{max, min}
 
 object MouseEventHandler:
+  private[interactions] def calculateZoomTransform(
+      currentTransform: io.github.scala_tessella.editor.models.ViewTransform,
+      mousePos: Point,
+      scaleFactor: Double
+  ): io.github.scala_tessella.editor.models.ViewTransform =
+    val newScale = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
+    // Calculate the world position that the mouse is pointing to before zoom
+    val world    = (mousePos - currentTransform.pan) / currentTransform.scale
+    // Calculate new pan to keep the world position under the mouse cursor
+    val newPan   = mousePos - world * newScale
+    currentTransform.copy(
+      scale = newScale,
+      pan = newPan
+    )
+
   def mouseEventHandlers: List[Modifier[?]] = List(
     onMouseDown --> handleMouseDown,
     onMouseMove --> handleMouseMove,
@@ -63,18 +78,9 @@ object MouseEventHandler:
     val currentTransform = EditorState.viewTransform.now()
 
     getCanvasRelativePosition(event).foreach { (mousePos: Point) =>
-      val scaleFactor = if (event.deltaY < 0) 1.1 else 0.9
-      val newScale    = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
-
-      // Calculate the world position that the mouse is pointing to before zoom
-      val world  = (mousePos - currentTransform.pan) / currentTransform.scale
-      // Calculate new pan to keep the world position under the mouse cursor
-      val newPan = mousePos - world * newScale
-
-      EditorState.viewTransform.set(currentTransform.copy(
-        scale = newScale,
-        pan = newPan
-      ))
+      val scaleFactor  = if (event.deltaY < 0) 1.1 else 0.9
+      val newTransform = calculateZoomTransform(currentTransform, mousePos, scaleFactor)
+      EditorState.viewTransform.set(newTransform)
     }
 
   // Keep a name-compatible alias to match onWheel wiring used in the canvas
