@@ -70,6 +70,7 @@ trait EditorStateFixture:
     EditorState.tempPerimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
     EditorState.showSettingsColorPicker.set(false)
     EditorState.tempSettingsPickerColor.set(EditorConfig.defaultPolygonColor)
+    EditorState.loadingMessage.set(None)
 
   override def beforeEach(context: BeforeEach): Unit =
     // Snapshot the state that represents the "app model"

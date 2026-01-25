@@ -60,6 +60,19 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     }
   }
 
+  test("withLoadingState should set and clear loading message") {
+    assertEquals(EditorState.loadingMessage.now(), None)
+
+    val future = AsyncUtils.withLoadingState(() => "ok", Some("Working..."))
+
+    assertEquals(EditorState.loadingMessage.now(), Some("Working..."))
+
+    future.map { result =>
+      assertEquals(result, "ok")
+      assertEquals(EditorState.loadingMessage.now(), None)
+    }
+  }
+
   test("multiple withLoadingState calls should handle processing state correctly") {
     assert(!EditorState.isProcessing.now())
 

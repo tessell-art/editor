@@ -150,7 +150,10 @@ object EditorCanvasComponent:
       div(
         className := "loading-content",
         div(className := "spinner"),
-        p("Processing tessellation...")
+        p(
+          child.text <-- EditorState.loadingMessage.signal.map:
+            _.getOrElse("Processing tessellation...")
+        )
       )
     )
 

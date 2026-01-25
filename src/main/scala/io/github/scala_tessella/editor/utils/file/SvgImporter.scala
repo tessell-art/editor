@@ -30,7 +30,7 @@ object SvgImporter:
           val content =
             Option(reader.result).fold(""):
               _.toString
-          AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name))
+          AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name), Some("Importing SVG..."))
         }
         reader.readAsText(file)
       // Clean up the temporary input element
@@ -40,6 +40,7 @@ object SvgImporter:
 
   def importTilingFromSVG(svgContent: String, filename: String): Unit =
     Try {
+      AsyncUtils.setLoadingMessage("Parsing SVG metadata...")
       val parser = new dom.DOMParser()
       val doc    = parser.parseFromString(svgContent, MIMEType.`image/svg+xml`)
 
@@ -70,6 +71,8 @@ object SvgImporter:
           .toList
 
       val metadataStr = tessElem.outerHTML
+
+      AsyncUtils.setLoadingMessage("Validating tessellation...")
 
       TilingSVG.fromMetadata(metadataStr) match
         case Left(err)                 =>

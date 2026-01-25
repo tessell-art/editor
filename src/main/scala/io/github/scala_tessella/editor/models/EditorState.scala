@@ -118,6 +118,9 @@ object EditorState:
   /** Whether the editor is currently processing an operation */
   val isProcessing: Var[Boolean] = Var(false)
 
+  /** Optional loading message to show while processing */
+  val loadingMessage: Var[Option[String]] = Var(None)
+
   /** Whether the user is currently dragging */
   val isDragging: Var[Boolean] = Var(false)
 
