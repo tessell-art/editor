@@ -31,7 +31,6 @@ object IrregularPolygonPopup:
   def element: Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showIrregularPolygonPopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeIrregular,
       div(
         className := "popup-content",

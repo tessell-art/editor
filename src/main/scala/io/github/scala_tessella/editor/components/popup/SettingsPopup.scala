@@ -87,7 +87,6 @@ object SettingsPopup:
   def element: Element =
     div(
       className := "popup-overlay settings-popup",
-      display <-- EditorState.showSettingsPopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeSettings,
       onMountCallback: ctx =>
         EditorState.showSettingsPopup.signal

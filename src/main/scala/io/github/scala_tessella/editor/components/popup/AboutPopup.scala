@@ -15,7 +15,6 @@ object AboutPopup:
   def element: Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showAboutPopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeAbout,
       div(
         className := "popup-content",

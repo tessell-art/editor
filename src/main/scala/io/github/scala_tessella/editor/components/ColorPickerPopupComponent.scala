@@ -11,7 +11,6 @@ object ColorPickerPopupComponent:
   def element(isOpen: Var[Boolean], tempColor: Var[ColorRGB]): Element =
     div(
       className := "color-picker-popup",
-      display <-- isOpen.signal.map(open => if open then "flex" else "none"),
       // Background overlay
       onClick --> { _ =>
 

@@ -14,7 +14,6 @@ object ShortcutsPopup:
   def element: Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showShortcutsPopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeShortcuts,
       div(
         className := "popup-content",

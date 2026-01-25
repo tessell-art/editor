@@ -14,7 +14,6 @@ object GuidePopup:
   def element: Element =
     div(
       className := "popup-overlay",
-      display <-- EditorState.showGuidePopup.signal.map(if _ then "flex" else "none"),
       onClick --> closeGuide,
       div(
         className := "popup-content",
