@@ -1,0 +1,63 @@
+.settings-content {
+    max-width: 640px;
+}
+
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.settings-label {
+    font-weight: 600;
+    color: var(--popup-heading);
+    min-width: 220px;
+}
+
+.settings-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--popup-button-border);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.settings-value {
+    font-family: monospace;
+    font-size: 0.9em;
+    color: var(--popup-text-muted);
+}
+
+.settings-color-picker-overlay {
+    z-index: 1100;
+}
+
+.settings-color-picker-content {
+    background: var(--color-picker-bg);
+    box-shadow: 0 4px 24px var(--color-picker-shadow);
+}
+
+@media (max-width: 600px) {
+    .settings-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .settings-label {
+        min-width: auto;
+    }
+}

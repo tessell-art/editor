@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
-import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
 import io.github.scala_tessella.editor.models.EditorConfig
 import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
 
@@ -82,8 +82,16 @@ object EditorState:
   // COLOR MANAGEMENT
   //
 
+  /** Default fill color for new tilings (can be customized in settings) */
+  val defaultStartFillColor: Var[ColorRGB] =
+    Var(SettingsStorage.loadDefaultStartFillColor().getOrElse(EditorConfig.defaultPolygonColor))
+
+  /** Perimeter edge color for the editor canvas (can be customized in settings) */
+  val perimeterEdgeColor: Var[ColorRGB] =
+    Var(SettingsStorage.loadPerimeterEdgeColor().getOrElse(EditorConfig.defaultPerimeterEdgeColor))
+
   /** Current fill color (RGB tuple) */
-  val fillColor: Var[ColorRGB] = Var(EditorConfig.defaultPolygonColor)
+  val fillColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
 
   /** Map of polygon tags to their colors */
   val polygonColors: Var[Map[FaceId, ColorRGB]] = Var(Map.empty)
@@ -125,6 +133,9 @@ object EditorState:
 
   /** Whether the irregular polygon popup is visible */
   val showIrregularPolygonPopup: Var[Boolean] = Var(false)
+
+  /** Whether the settings popup is visible */
+  val showSettingsPopup: Var[Boolean] = Var(false)
 
   //
   // ERROR HANDLING

@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.models
 
 import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object EditorConfig:
@@ -20,3 +21,6 @@ object EditorConfig:
 
   // Default polygon fill color when no explicit color is assigned
   val defaultPolygonColor: ColorRGB = ColorRGB(76, 175, 80)
+
+  // Default perimeter edge color for the editor canvas
+  val defaultPerimeterEdgeColor: ColorRGB = ColorRGB(255, 149, 0)

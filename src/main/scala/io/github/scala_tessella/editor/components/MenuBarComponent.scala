@@ -55,7 +55,8 @@ object MenuBarComponent:
       IrregularPolygonPopup.element,
       GuidePopup.element,
       ShortcutsPopup.element,
-      AboutPopup.element
+      AboutPopup.element,
+      SettingsPopup.element
     )
 
   // A helper to create a top-level menu item like "File", "Edit"
@@ -185,6 +186,7 @@ object MenuBarComponent:
           EditorState.currentFileName.set(None)
           UndoManager.clearHistory()
           EditorState.viewTransform.set(ViewTransform())
+          EditorState.fillColor.set(EditorState.defaultStartFillColor.now())
       ),
       templatesMenu(),
       div(className := "menu-separator"),
@@ -205,7 +207,9 @@ object MenuBarComponent:
         "Export to DOT...",
         () => DotExporter.exportTilingToDOT(),
         enabled = isTilingEmpty.map(!_)
-      )
+      ),
+      div(className := "menu-separator"),
+      dropdownLink("Settings...", () => EditorState.showSettingsPopup.set(true))
     )
 
   private def editMenu(): Element =

@@ -653,7 +653,7 @@ object TessellationRenderer:
     // The visible line that the user sees
     val visibleLine = svg.line(
       lineCoords(LineSegment(point1, point2)),
-      svg.stroke        := "#ff9500",
+      svg.stroke <-- EditorState.perimeterEdgeColor.signal.map(_.toRgb),
       svg.strokeWidth   := "4",
       svg.strokeLineCap := "round",
       svg.className     := "perimeter-edge",

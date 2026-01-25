@@ -28,6 +28,18 @@ object ColorRGB:
       }
     }
 
+  def parseHex(colorStr: String): Option[ColorRGB] =
+    Option(colorStr).map(_.trim).flatMap: s =>
+      val hex = if s.startsWith("#") then s.drop(1) else s
+      if hex.length == 6 && hex.forall: x =>
+          x.isDigit || "abcdefABCDEF".contains(x)
+      then
+        val r = Integer.parseInt(hex.substring(0, 2), 16)
+        val g = Integer.parseInt(hex.substring(2, 4), 16)
+        val b = Integer.parseInt(hex.substring(4, 6), 16)
+        Some(ColorRGB(r, g, b))
+      else None
+
   extension (color: ColorRGB)
 
     inline def r: Int =
