@@ -17,26 +17,25 @@ object EditorCanvasComponent:
       //      h2("Canvas"),
       CanvasControlComponent.element,
       // Loading indicator
-      loadingIndicator(),
+      child.maybe <-- EditorState.isProcessing.signal.map: processing =>
+        if processing then Some(loadingIndicator()) else None,
       div(
         className := "file-and-measurement-container",
         div(
           className := "file-name",
           child.text <-- EditorState.currentFileName.signal.combineWith(
             EditorState.measurementResult.signal
-          ).map { (maybeName, maybeDistance) =>
-
+          ).map: (maybeName, maybeDistance) =>
             maybeDistance match
               case Some(_) => ""
               case None    => maybeName.getOrElse("untitled")
-          }
         ),
         div(
           className := "measurement-result",
           child <-- EditorState.measurementResult.signal
             .combineWith(EditorState.measurementAngle.signal)
             .combineWith(EditorState.isAngleShownInRad.signal)
-            .map {
+            .map:
               case (None, _, _)                         => ""
               case (Some(distance), None, _)            => distanceString(distance)
               case (Some(distance), Some(angle), isRad) =>
@@ -55,7 +54,6 @@ object EditorCanvasComponent:
                   ),
                   span(s" · $distancePart")
                 )
-            }
         )
       ),
       // A new wrapper for the SVG and its overlays
@@ -69,18 +67,17 @@ object EditorCanvasComponent:
           svg.tabIndex  := "0",
 
           // Store reference to the canvas element
-          onMountCallback(ctx => EditorState.canvasElementRef.set(Some(ctx.thisNode.ref))),
+          onMountCallback: ctx =>
+            EditorState.canvasElementRef.set(Some(ctx.thisNode.ref)),
 
           // Dynamic cursor and interactivity derived as a Signal
           {
             val canvasInteractivityStyle: Signal[String] =
-              EditorState.isProcessing.signal.map { isProcessing =>
-
+              EditorState.isProcessing.signal.map: isProcessing =>
                 if isProcessing then
                   "cursor: wait; pointer-events: none;"
                 else
                   "cursor: default;"
-              }
             svg.style <-- canvasInteractivityStyle
           },
 
@@ -96,53 +93,45 @@ object EditorCanvasComponent:
           // Disable mouse events when processing, without using .now()
           onMouseDown.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> MouseEventHandler.handleMouseDown,
           onMouseMove.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> MouseEventHandler.handleMouseMove,
           onMouseUp.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> MouseEventHandler.handleMouseUp,
           onWheel.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> MouseEventHandler.handleWheel,
 
           // Touch events for mobile support (also gated)
           onTouchStart.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> TouchEventHandler.handleTouchStart,
           onTouchMove.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> TouchEventHandler.handleTouchMove,
           onTouchEnd.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> TouchEventHandler.handleTouchEnd,
           onTouchCancel.compose(
             _.withCurrentValueOf(EditorState.isProcessing.signal)
-              .collect { case (e, false) =>
-                e
-              }
+              .collect:
+                case (e, false) => e
           ) --> TouchEventHandler.handleTouchCancel
         ),
         // HTML placeholder text is now inside the wrapper
@@ -158,7 +147,6 @@ object EditorCanvasComponent:
   private def loadingIndicator(): Element =
     div(
       className := "loading-indicator",
-      display <-- EditorState.isProcessing.signal.map(processing => if processing then "block" else "none"),
       div(
         className := "loading-content",
         div(className := "spinner"),
