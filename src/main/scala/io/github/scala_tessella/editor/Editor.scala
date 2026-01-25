@@ -69,5 +69,8 @@ object EditorApp:
       // Global keyboard event handlers
       KeyboardEventHandler.keyboardEventHandlers,
       // Render the Color Picker Popup at the top level, controlled by shared state
-      ColorPickerPopupComponent.element(EditorState.showColorPicker, EditorState.tempColor)
+      child.maybe <-- EditorState.showColorPicker.signal.map: show =>
+        if show then
+          Some(ColorPickerPopupComponent.element(EditorState.showColorPicker, EditorState.tempColor))
+        else None
     )

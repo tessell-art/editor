@@ -52,11 +52,16 @@ object MenuBarComponent:
         // Pass both the signal and the Var to the switcher
         themeSwitcher(effectiveTheme, userThemePreference)
       ),
-      IrregularPolygonPopup.element,
-      GuidePopup.element,
-      ShortcutsPopup.element,
-      AboutPopup.element,
-      SettingsPopup.element
+      child.maybe <-- EditorState.showIrregularPolygonPopup.signal.map: show =>
+        if show then Some(IrregularPolygonPopup.element) else None,
+      child.maybe <-- EditorState.showGuidePopup.signal.map: show =>
+        if show then Some(GuidePopup.element) else None,
+      child.maybe <-- EditorState.showShortcutsPopup.signal.map: show =>
+        if show then Some(ShortcutsPopup.element) else None,
+      child.maybe <-- EditorState.showAboutPopup.signal.map: show =>
+        if show then Some(AboutPopup.element) else None,
+      child.maybe <-- EditorState.showSettingsPopup.signal.map: show =>
+        if show then Some(SettingsPopup.element) else None
     )
 
   // A helper to create a top-level menu item like "File", "Edit"
