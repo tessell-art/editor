@@ -47,7 +47,6 @@ object SettingsPopup:
   private def settingsColorPickerPopup: Element =
     div(
       className := "popup-overlay settings-color-picker-overlay",
-      display <-- showSettingsColorPicker.signal.map(if _ then "flex" else "none"),
       onClick.stopPropagation --> { _ =>
 
         showSettingsColorPicker.set(false)
@@ -181,5 +180,8 @@ object SettingsPopup:
           )
         )
       ),
-      settingsColorPickerPopup
+      child.maybe <-- showSettingsColorPicker.signal.map { show =>
+
+        if show then Some(settingsColorPickerPopup) else None
+      }
     )
