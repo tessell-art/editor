@@ -23,6 +23,7 @@ trait EditorStateFixture:
     EditorState.showShortcutsPopup.set(false)
     EditorState.showIrregularPolygonPopup.set(false)
     EditorState.showColorPicker.set(false)
+    EditorState.showSettingsPopup.set(false)
 
     // Clear errors and failed ops
     EditorState.errorMessage.set(None)
@@ -63,6 +64,8 @@ trait EditorStateFixture:
     EditorState.canvasElementRef.set(None)
     EditorState.userThemePreference.set(None)
     EditorState.tempColor.set(EditorState.fillColor.now())
+    EditorState.defaultStartFillColor.set(EditorConfig.defaultPolygonColor)
+    EditorState.perimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
 
   override def beforeEach(context: BeforeEach): Unit =
     // Snapshot the state that represents the "app model"

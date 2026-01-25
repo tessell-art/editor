@@ -50,3 +50,17 @@ class ColorRGBSpec extends FunSuite:
     // if behavior changes to validate range, update this test accordingly
     assert(ColorRGB.parseColor("rgb(999,999,999)").contains(ColorRGB(999, 999, 999)))
   }
+
+  test("parseHex accepts 6-digit hex with or without leading #") {
+    assert(ColorRGB.parseHex("#1a2b3c").contains(ColorRGB(26, 43, 60)))
+    assert(ColorRGB.parseHex("ffffff").contains(ColorRGB(255, 255, 255)))
+    assert(ColorRGB.parseHex("#000000").contains(ColorRGB(0, 0, 0)))
+  }
+
+  test("parseHex rejects invalid or malformed hex strings") {
+    assert(ColorRGB.parseHex("").isEmpty)
+    assert(ColorRGB.parseHex("#123").isEmpty)
+    assert(ColorRGB.parseHex("#zzzzzz").isEmpty)
+    assert(ColorRGB.parseHex("12345").isEmpty)
+    assert(ColorRGB.parseHex("1234567").isEmpty)
+  }
