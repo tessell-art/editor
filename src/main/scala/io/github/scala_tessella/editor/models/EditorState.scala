@@ -99,6 +99,9 @@ object EditorState:
   /** Temporary settings perimeter edge color (used by Settings popup UI) */
   val tempPerimeterEdgeColor: Var[ColorRGB] = Var(perimeterEdgeColor.now())
 
+  /** Temporary settings picker color (used by Settings popup UI) */
+  val tempSettingsPickerColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
+
   /** Map of polygon tags to their colors */
   val polygonColors: Var[Map[FaceId, ColorRGB]] = Var(Map.empty)
 
@@ -142,6 +145,9 @@ object EditorState:
 
   /** Whether the settings popup is visible */
   val showSettingsPopup: Var[Boolean] = Var(false)
+
+  /** Whether the settings color picker popup is visible */
+  val showSettingsColorPicker: Var[Boolean] = Var(false)
 
   //
   // ERROR HANDLING

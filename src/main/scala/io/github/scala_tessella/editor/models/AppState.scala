@@ -292,6 +292,13 @@ object AppState:
   def setPolygonColor(faceId: FaceId, color: ColorRGB): Unit =
     ColorOperations.setPolygonColor(faceId, color)
 
+  /** Syncs temporary settings values from current saved settings. */
+  def refreshSettingsTempValues(): Unit =
+    EditorState.tempDefaultFillColor.set(EditorState.defaultStartFillColor.now())
+    EditorState.tempPerimeterEdgeColor.set(EditorState.perimeterEdgeColor.now())
+    EditorState.tempSettingsPickerColor.set(EditorState.defaultStartFillColor.now())
+    EditorState.showSettingsColorPicker.set(false)
+
   /** Applies editor settings and persists them. */
   def applySettings(defaultFill: ColorRGB, perimeterEdge: ColorRGB): Unit =
     EditorState.defaultStartFillColor.set(defaultFill)

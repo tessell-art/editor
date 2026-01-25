@@ -11,9 +11,6 @@ object SettingsPopup:
 
   import PopupCommons._
 
-  private val showSettingsColorPicker: Var[Boolean] = Var(false)
-  private val tempPickerColor: Var[ColorRGB]        = Var(EditorState.defaultStartFillColor.now())
-
   private enum SettingsColorTarget:
     case DefaultFill, PerimeterEdge
 
@@ -22,15 +19,10 @@ object SettingsPopup:
   private val closeSettings: Observer[org.scalajs.dom.MouseEvent] =
     closePopup(EditorState.showSettingsPopup)
 
-  private def refreshTempValues(): Unit =
-    EditorState.tempDefaultFillColor.set(EditorState.defaultStartFillColor.now())
-    EditorState.tempPerimeterEdgeColor.set(EditorState.perimeterEdgeColor.now())
-    showSettingsColorPicker.set(false)
-
   private def openColorPicker(target: SettingsColorTarget, currentColor: ColorRGB): Unit =
     settingsColorTarget.set(target)
-    tempPickerColor.set(currentColor)
-    showSettingsColorPicker.set(true)
+    EditorState.tempSettingsPickerColor.set(currentColor)
+    EditorState.showSettingsColorPicker.set(true)
 
   private def applyPickerColor(color: ColorRGB): Unit =
     settingsColorTarget.now() match
@@ -47,7 +39,7 @@ object SettingsPopup:
       className := "popup-overlay settings-color-picker-overlay",
       onClick.stopPropagation --> { _ =>
 
-        showSettingsColorPicker.set(false)
+        EditorState.showSettingsColorPicker.set(false)
       },
       div(
         className := "popup-content settings-color-picker-content",
@@ -55,13 +47,13 @@ object SettingsPopup:
         h3("Select color"),
         ColorPicker(
           _.simplified := true,
-          _.value <-- tempPickerColor.signal.map:
+          _.value <-- EditorState.tempSettingsPickerColor.signal.map:
             _.toRgba
           ,
           _.onChange.map { event =>
             val color = event.target._colorValue._rgb
             ColorRGB(color.r.toInt, color.g.toInt, color.b.toInt)
-          } --> tempPickerColor.writer
+          } --> EditorState.tempSettingsPickerColor.writer
         )(),
         div(
           className := "popup-actions",
@@ -69,14 +61,14 @@ object SettingsPopup:
             "Cancel",
             onClick --> { _ =>
 
-              showSettingsColorPicker.set(false)
+              EditorState.showSettingsColorPicker.set(false)
             }
           ),
           button(
             "Apply",
             onClick --> { _ =>
-              applyPickerColor(tempPickerColor.now())
-              showSettingsColorPicker.set(false)
+              applyPickerColor(EditorState.tempSettingsPickerColor.now())
+              EditorState.showSettingsColorPicker.set(false)
             }
           )
         )
@@ -92,7 +84,7 @@ object SettingsPopup:
           .changes
           .filter:
             identity
-          .foreach(_ => refreshTempValues())(using ctx.owner): Unit,
+          .foreach(_ => AppState.refreshSettingsTempValues())(using ctx.owner): Unit,
       div(
         className := "popup-content settings-content",
         onClick.stopPropagation --> {},
@@ -180,6 +172,6 @@ object SettingsPopup:
           )
         )
       ),
-      child.maybe <-- showSettingsColorPicker.signal.map: show =>
+      child.maybe <-- EditorState.showSettingsColorPicker.signal.map: show =>
         if show then Some(settingsColorPickerPopup) else None
     )

@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.models
 
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.editor.EditorStateFixture
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import munit.FunSuite
 
@@ -42,4 +43,20 @@ class AppStateSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.highlightedPolygonId.now(), None)
     assertEquals(EditorState.measurementResult.now(), None)
     assertEquals(EditorState.measurementAngle.now(), None)
+  }
+
+  test("refreshSettingsTempValues syncs temp settings and hides picker") {
+    EditorState.defaultStartFillColor.set(ColorRGB(10, 20, 30))
+    EditorState.perimeterEdgeColor.set(ColorRGB(40, 50, 60))
+    EditorState.tempDefaultFillColor.set(ColorRGB(1, 2, 3))
+    EditorState.tempPerimeterEdgeColor.set(ColorRGB(4, 5, 6))
+    EditorState.tempSettingsPickerColor.set(ColorRGB(7, 8, 9))
+    EditorState.showSettingsColorPicker.set(true)
+
+    AppState.refreshSettingsTempValues()
+
+    assertEquals(EditorState.tempDefaultFillColor.now(), EditorState.defaultStartFillColor.now())
+    assertEquals(EditorState.tempPerimeterEdgeColor.now(), EditorState.perimeterEdgeColor.now())
+    assertEquals(EditorState.tempSettingsPickerColor.now(), EditorState.defaultStartFillColor.now())
+    assertEquals(EditorState.showSettingsColorPicker.now(), false)
   }
