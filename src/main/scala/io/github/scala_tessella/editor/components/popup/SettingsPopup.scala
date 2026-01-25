@@ -11,8 +11,6 @@ object SettingsPopup:
 
   import PopupCommons._
 
-  private val tempDefaultFillColor: Var[ColorRGB]   = Var(EditorState.defaultStartFillColor.now())
-  private val tempPerimeterColor: Var[ColorRGB]     = Var(EditorState.perimeterEdgeColor.now())
   private val showSettingsColorPicker: Var[Boolean] = Var(false)
   private val tempPickerColor: Var[ColorRGB]        = Var(EditorState.defaultStartFillColor.now())
 
@@ -25,8 +23,8 @@ object SettingsPopup:
     closePopup(EditorState.showSettingsPopup)
 
   private def refreshTempValues(): Unit =
-    tempDefaultFillColor.set(EditorState.defaultStartFillColor.now())
-    tempPerimeterColor.set(EditorState.perimeterEdgeColor.now())
+    EditorState.tempDefaultFillColor.set(EditorState.defaultStartFillColor.now())
+    EditorState.tempPerimeterEdgeColor.set(EditorState.perimeterEdgeColor.now())
     showSettingsColorPicker.set(false)
 
   private def openColorPicker(target: SettingsColorTarget, currentColor: ColorRGB): Unit =
@@ -36,13 +34,13 @@ object SettingsPopup:
 
   private def applyPickerColor(color: ColorRGB): Unit =
     settingsColorTarget.now() match
-      case SettingsColorTarget.DefaultFill   => tempDefaultFillColor.set(color)
-      case SettingsColorTarget.PerimeterEdge => tempPerimeterColor.set(color)
+      case SettingsColorTarget.DefaultFill   => EditorState.tempDefaultFillColor.set(color)
+      case SettingsColorTarget.PerimeterEdge => EditorState.tempPerimeterEdgeColor.set(color)
 
   private def resetToDefaults(): Unit =
     val (fill, perimeter) = SettingsDefaults.tempDefaults
-    tempDefaultFillColor.set(fill)
-    tempPerimeterColor.set(perimeter)
+    EditorState.tempDefaultFillColor.set(fill)
+    EditorState.tempPerimeterEdgeColor.set(perimeter)
 
   private def settingsColorPickerPopup: Element =
     div(
@@ -113,19 +111,19 @@ object SettingsPopup:
               className   := "settings-control",
               div(
                 className := "settings-swatch",
-                backgroundColor <-- tempDefaultFillColor.signal.map:
+                backgroundColor <-- EditorState.tempDefaultFillColor.signal.map:
                   _.toHex
               ),
               button(
                 "Pick...",
                 onClick --> { _ =>
 
-                  openColorPicker(SettingsColorTarget.DefaultFill, tempDefaultFillColor.now())
+                  openColorPicker(SettingsColorTarget.DefaultFill, EditorState.tempDefaultFillColor.now())
                 }
               ),
               span(
                 className := "settings-value",
-                child.text <-- tempDefaultFillColor.signal.map(_.toHex)
+                child.text <-- EditorState.tempDefaultFillColor.signal.map(_.toHex)
               )
             )
           ),
@@ -136,19 +134,19 @@ object SettingsPopup:
               className   := "settings-control",
               div(
                 className := "settings-swatch",
-                backgroundColor <-- tempPerimeterColor.signal.map:
+                backgroundColor <-- EditorState.tempPerimeterEdgeColor.signal.map:
                   _.toHex
               ),
               button(
                 "Pick...",
                 onClick --> { _ =>
 
-                  openColorPicker(SettingsColorTarget.PerimeterEdge, tempPerimeterColor.now())
+                  openColorPicker(SettingsColorTarget.PerimeterEdge, EditorState.tempPerimeterEdgeColor.now())
                 }
               ),
               span(
                 className := "settings-value",
-                child.text <-- tempPerimeterColor.signal.map:
+                child.text <-- EditorState.tempPerimeterEdgeColor.signal.map:
                   _.toHex
               )
             )
@@ -173,7 +171,10 @@ object SettingsPopup:
           button(
             "Apply",
             onClick --> { _ =>
-              AppState.applySettings(tempDefaultFillColor.now(), tempPerimeterColor.now())
+              AppState.applySettings(
+                EditorState.tempDefaultFillColor.now(),
+                EditorState.tempPerimeterEdgeColor.now()
+              )
               EditorState.showSettingsPopup.set(false)
             }
           )

@@ -93,6 +93,12 @@ object EditorState:
   /** Current fill color (RGB tuple) */
   val fillColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
 
+  /** Temporary settings default fill color (used by Settings popup UI) */
+  val tempDefaultFillColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
+
+  /** Temporary settings perimeter edge color (used by Settings popup UI) */
+  val tempPerimeterEdgeColor: Var[ColorRGB] = Var(perimeterEdgeColor.now())
+
   /** Map of polygon tags to their colors */
   val polygonColors: Var[Map[FaceId, ColorRGB]] = Var(Map.empty)
 
