@@ -24,14 +24,15 @@ object SvgImporter:
     dom.document.body.appendChild(inputEl): Unit
     inputEl.onchange = _ => {
       val fileOpt = Option(inputEl.files).flatMap(fs => Option(fs.item(0)))
-      fileOpt.foreach { file =>
+      fileOpt.foreach: file =>
         val reader = new FileReader()
         reader.onload = (_: ProgressEvent) => {
-          val content = Option(reader.result).fold("")(_.toString)
+          val content =
+            Option(reader.result).fold(""):
+              _.toString
           AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name))
         }
         reader.readAsText(file)
-      }
       // Clean up the temporary input element
       dom.document.body.removeChild(inputEl): Unit
     }
@@ -45,24 +46,28 @@ object SvgImporter:
       // Prefer namespace-aware selection for the tessella DCEL metadata
       val ns        = "https://github.com/scala-tessella/tessella"
       val tessElems = Option(doc.getElementsByTagNameNS(ns, "tessella-dcel"))
-        .filter(_.length > 0)
-        .map(_.item(0))
+        .filter:
+          _.length > 0
+        .map:
+          _.item(0)
 
       // Fallback for cases where namespace lookups might fail (e.g., missing prefix binding)
       val tessElem =
-        tessElems.orElse {
-          Option(doc.querySelector("metadata tessella\\:tessella-dcel"))
-        }.getOrElse(
-          throw new Exception("No Tessella DCEL metadata found in the SVG.")
-        )
+        tessElems
+          .orElse:
+            Option(doc.querySelector("metadata tessella\\:tessella-dcel"))
+          .getOrElse(
+            throw new Exception("No Tessella DCEL metadata found in the SVG.")
+          )
 
       // Collect polygon fills (in order) to restore colors
       val svgPolys                  = doc.querySelectorAll("#tiling-polygons polygon")
       val polyFills: List[ColorRGB] =
-        (0 until svgPolys.length).flatMap { i =>
-          val el = svgPolys(i)
-          parseColor(Option(el.getAttribute("fill")).getOrElse(""))
-        }.toList
+        (0 until svgPolys.length)
+          .flatMap: i =>
+            val el = svgPolys(i)
+            parseColor(Option(el.getAttribute("fill")).getOrElse(""))
+          .toList
 
       val metadataStr = tessElem.outerHTML
 
@@ -80,9 +85,8 @@ object SvgImporter:
           val colorMap =
             faces
               .zip(polyFills) // zip truncates safely if lengths differ
-              .map { case (face, rgb) =>
-                face.id -> rgb
-              }
+              .map:
+                case (face, rgb) => face.id -> rgb
               .toMap
           EditorState.polygonColors.set(colorMap)
           EditorState.currentFileName.set(Some(filename))
