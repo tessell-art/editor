@@ -3,8 +3,8 @@ package io.github.scala_tessella.editor.components.popup
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
-import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
-import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
+import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsDefaults, SettingsStorage}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 
 object SettingsPopup:
@@ -40,8 +40,9 @@ object SettingsPopup:
       case SettingsColorTarget.PerimeterEdge => tempPerimeterColor.set(color)
 
   private def resetToDefaults(): Unit =
-    tempDefaultFillColor.set(EditorConfig.defaultPolygonColor)
-    tempPerimeterColor.set(EditorConfig.defaultPerimeterEdgeColor)
+    val (fill, perimeter) = SettingsDefaults.tempDefaults
+    tempDefaultFillColor.set(fill)
+    tempPerimeterColor.set(perimeter)
 
   private def settingsColorPickerPopup: Element =
     div(
