@@ -3,8 +3,8 @@ package io.github.scala_tessella.editor.components.popup
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
-import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsDefaults, SettingsStorage}
+import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsDefaults}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 
 object SettingsPopup:
@@ -57,7 +57,9 @@ object SettingsPopup:
         h3("Select color"),
         ColorPicker(
           _.simplified := true,
-          _.value <-- tempPickerColor.signal.map(_.toRgba),
+          _.value <-- tempPickerColor.signal.map:
+            _.toRgba
+          ,
           _.onChange.map { event =>
             val color = event.target._colorValue._rgb
             ColorRGB(color.r.toInt, color.g.toInt, color.b.toInt)
@@ -90,7 +92,8 @@ object SettingsPopup:
       onMountCallback: ctx =>
         EditorState.showSettingsPopup.signal
           .changes
-          .filter(identity)
+          .filter:
+            identity
           .foreach(_ => refreshTempValues())(using ctx.owner): Unit,
       div(
         className := "popup-content settings-content",
@@ -110,7 +113,8 @@ object SettingsPopup:
               className   := "settings-control",
               div(
                 className := "settings-swatch",
-                backgroundColor <-- tempDefaultFillColor.signal.map(_.toHex)
+                backgroundColor <-- tempDefaultFillColor.signal.map:
+                  _.toHex
               ),
               button(
                 "Pick...",
@@ -132,7 +136,8 @@ object SettingsPopup:
               className   := "settings-control",
               div(
                 className := "settings-swatch",
-                backgroundColor <-- tempPerimeterColor.signal.map(_.toHex)
+                backgroundColor <-- tempPerimeterColor.signal.map:
+                  _.toHex
               ),
               button(
                 "Pick...",
@@ -143,7 +148,8 @@ object SettingsPopup:
               ),
               span(
                 className := "settings-value",
-                child.text <-- tempPerimeterColor.signal.map(_.toHex)
+                child.text <-- tempPerimeterColor.signal.map:
+                  _.toHex
               )
             )
           )
@@ -167,21 +173,12 @@ object SettingsPopup:
           button(
             "Apply",
             onClick --> { _ =>
-              val fill = tempDefaultFillColor.now()
-              EditorState.defaultStartFillColor.set(fill)
-              EditorState.fillColor.set(fill)
-              SettingsStorage.saveDefaultStartFillColor(fill)
-
-              val perimeter = tempPerimeterColor.now()
-              EditorState.perimeterEdgeColor.set(perimeter)
-              SettingsStorage.savePerimeterEdgeColor(perimeter)
+              AppState.applySettings(tempDefaultFillColor.now(), tempPerimeterColor.now())
               EditorState.showSettingsPopup.set(false)
             }
           )
         )
       ),
-      child.maybe <-- showSettingsColorPicker.signal.map { show =>
-
+      child.maybe <-- showSettingsColorPicker.signal.map: show =>
         if show then Some(settingsColorPickerPopup) else None
-      }
     )

@@ -9,7 +9,7 @@ import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.utils.geo.Point
-import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, Logger, UndoManager}
+import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, Logger, SettingsStorage, UndoManager}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -291,6 +291,14 @@ object AppState:
   /** Sets the color for a polygon explicitly. */
   def setPolygonColor(faceId: FaceId, color: ColorRGB): Unit =
     ColorOperations.setPolygonColor(faceId, color)
+
+  /** Applies editor settings and persists them. */
+  def applySettings(defaultFill: ColorRGB, perimeterEdge: ColorRGB): Unit =
+    EditorState.defaultStartFillColor.set(defaultFill)
+    EditorState.fillColor.set(defaultFill)
+    SettingsStorage.saveDefaultStartFillColor(defaultFill)
+    EditorState.perimeterEdgeColor.set(perimeterEdge)
+    SettingsStorage.savePerimeterEdgeColor(perimeterEdge)
 
   /** Shows an error message with optional details about failed operations.
     * @param message
