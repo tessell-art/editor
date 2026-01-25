@@ -49,6 +49,10 @@
 .settings-color-picker-content {
     background: var(--color-picker-bg);
     box-shadow: 0 4px 24px var(--color-picker-shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1em;
 }
 
 @media (max-width: 600px) {
