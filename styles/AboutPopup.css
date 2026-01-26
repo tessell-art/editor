@@ -63,8 +63,9 @@
 
 .about-version {
     font-size: 0.8em;
-    color: white;
-    margin-top: -50px;
+    color: var(--popup-text-muted);
+    margin-top: -30px;
+    text-align: center;
 }
 
 .popup-close-btn {
