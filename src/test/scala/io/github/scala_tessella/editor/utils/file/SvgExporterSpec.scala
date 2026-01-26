@@ -185,7 +185,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
       "<tessella:tessella-dcel xmlns:tessella=\"https://github.com/scala-tessella/tessella\"><vertices>"
     ))
     assert(result.contains("</vertices>"))
-    assert(result.contains("<vertex id=\"1\" x=\"0\" y=\"0\""))
+    assert(result.contains("<vertex id=\"V1\" x=\"0\" y=\"0\""))
   }
 
   test("should handle empty tiling without coordinates") {
