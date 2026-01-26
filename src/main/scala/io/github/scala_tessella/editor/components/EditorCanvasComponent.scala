@@ -69,6 +69,8 @@ object EditorCanvasComponent:
           // Store reference to the canvas element
           onMountCallback: ctx =>
             EditorState.canvasElementRef.set(Some(ctx.thisNode.ref)),
+          onUnmountCallback: _ =>
+            EditorState.canvasElementRef.set(None),
 
           // Dynamic cursor and interactivity derived as a Signal
           {
