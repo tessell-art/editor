@@ -63,6 +63,7 @@ trait EditorStateFixture:
     EditorState.currentFileName.set(None)
     EditorState.canvasElementRef.set(None)
     EditorState.userThemePreference.set(None)
+    EditorState.isMenuOpen.set(false)
     EditorState.tempColor.set(EditorState.fillColor.now())
     EditorState.defaultStartFillColor.set(EditorConfig.defaultPolygonColor)
     EditorState.perimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)

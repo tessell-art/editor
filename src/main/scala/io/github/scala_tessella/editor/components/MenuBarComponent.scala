@@ -12,9 +12,6 @@ import scala.math.{max, min}
 
 object MenuBarComponent:
 
-  // This state is for the mobile view, to toggle the hamburger menu
-  private val isMenuOpen = Var(false)
-
   // The signature is updated to accept the theme preference Var directly
   def element(effectiveTheme: Signal[String], userThemePreference: Var[Option[String]]): Element =
     div(
@@ -31,16 +28,13 @@ object MenuBarComponent:
           // Hamburger button for small screens
           button(
             className  := "menu-toggle",
-            onClick --> { _ =>
-
-              isMenuOpen.update(!_)
-            },
+            onClick --> (_ => EditorState.isMenuOpen.update(!_)),
             aria.label := "Toggle navigation menu",
             "☰"
           ),
           // The menu itself
           div(
-            className <-- isMenuOpen.signal.map(open =>
+            className <-- EditorState.isMenuOpen.signal.map(open =>
               if (open) "menu-items-container open" else "menu-items-container"
             ),
             fileMenu(),
@@ -87,13 +81,12 @@ object MenuBarComponent:
     a(
       href := "#",
       onClick.preventDefault.compose(
-        _.withCurrentValueOf(enabled).collect { case (_, true) =>
-          ()
-        }
+        _.withCurrentValueOf(enabled).collect:
+          case (_, true) => ()
       ) --> { _ =>
 
         action()
-        isMenuOpen.set(false)
+        EditorState.isMenuOpen.set(false)
       }, // close menu on action
       className("disabled") <-- enabled.map(!_),
       span(title),
@@ -249,7 +242,7 @@ object MenuBarComponent:
         onClick.preventDefault --> { _ =>
           EditorState.tempColor.set(EditorState.fillColor.now())
           EditorState.showColorPicker.set(true)
-          isMenuOpen.set(false)
+          EditorState.isMenuOpen.set(false)
         }
       )
 //      div(className := "menu-separator"),

@@ -65,6 +65,9 @@ object EditorState:
   /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
   val userThemePreference: Var[Option[String]] = Var(None)
 
+  /** Whether the mobile menu is open */
+  val isMenuOpen: Var[Boolean] = Var(false)
+
   //
   // TESSELLATION STATE
   //
