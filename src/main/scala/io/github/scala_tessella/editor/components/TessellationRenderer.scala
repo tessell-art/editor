@@ -85,20 +85,24 @@ object TessellationRenderer:
 
     // Update stroke and styling based on editor mode
     val strokeColorSignal =
-      isSelected.combineWith(EditorState.editorMode.signal).map: (selected, mode) =>
-        if selected then "#ff6b6b"
-        else
-          mode match
-            case EditorMode.Select => "#646cff"
-            case EditorMode.Delete => "#ff4444"
+      isSelected
+        .combineWith(EditorState.editorMode.signal)
+        .map: (selected, mode) =>
+          if selected then "#ff6b6b"
+          else
+            mode match
+              case EditorMode.Select => "#646cff"
+              case EditorMode.Delete => "#ff4444"
 
     val strokeWidthSignal =
-      isSelected.combineWith(EditorState.editorMode.signal).map: (selected, mode) =>
-        if selected then "3.5"
-        else
-          mode match
-            case EditorMode.Select => "1.5"
-            case EditorMode.Delete => "2.0"
+      isSelected
+        .combineWith(EditorState.editorMode.signal)
+        .map: (selected, mode) =>
+          if selected then "3.5"
+          else
+            mode match
+              case EditorMode.Select => "1.5"
+              case EditorMode.Delete => "2.0"
 
     val basePolygon = svg.polygon(
       svg.points := pointsStr, // static, precomputed
@@ -113,7 +117,8 @@ object TessellationRenderer:
       // Cursor style and conditional opacity
       svg.style <-- shouldHideForDeletion
         .combineWith(EditorState.editorMode.signal)
-        .combineWith(EditorState.activeTool.signal).map:
+        .combineWith(EditorState.activeTool.signal)
+        .map:
           case (hidden, mode, tool) =>
             val cursor  = tool match
               case Some(Tool.ColorPicker)         => s"cursor: $colorPickerCursor;"
@@ -145,8 +150,10 @@ object TessellationRenderer:
 
     svg.g(
       basePolygon,
-      child.maybe <-- isSelected.combineWith(shouldHideForDeletion).map:
-        case (selected, hidden) => if selected && !hidden then Some(patternOverlay) else None
+      child.maybe <-- isSelected
+        .combineWith(shouldHideForDeletion)
+        .map:
+          case (selected, hidden) => if selected && !hidden then Some(patternOverlay) else None
     )
 
   def renderTiling(tiling: TilingDCEL): Element =
@@ -154,9 +161,10 @@ object TessellationRenderer:
     // Precompute face data once per render pass
     val facesData: List[(FaceId, String)] =
       tiling.innerFacesVertices.map: (faceId, faceVertices) =>
-        val pointStrings = faceVertices.map: vertex =>
-          val point = tilingPointToCanvasView(vertex.coords.toPoint)
-          s"${point.x},${point.y}"
+        val pointStrings =
+          faceVertices.map: vertex =>
+            val point = tilingPointToCanvasView(vertex.coords.toPoint)
+            s"${point.x},${point.y}"
         (faceId, pointStrings.mkString(" "))
 
     val tilingPolygons =
@@ -211,7 +219,8 @@ object TessellationRenderer:
 
     // Hover preview wireframe for boundary addition
     val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map: placement =>
-      placement.map(PreviewPolygonRenderer.renderPreview)
+      placement.map:
+        PreviewPolygonRenderer.renderPreview
 
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map: deletion =>
@@ -221,14 +230,20 @@ object TessellationRenderer:
     val clickablePointsDisplay = children <-- EditorState.clickablePoints.signal
       .combineWith(EditorState.measurementStartPoint.signal)
       .map: (points, startPointOpt) =>
-        points.filterNot(p => startPointOpt.contains(p)).map(renderClickablePoint)
+        points
+          .filterNot: p =>
+            startPointOpt.contains(p)
+          .map:
+            renderClickablePoint
 
     val measurementStartPointDisplay =
       child.maybe <-- EditorState.measurementStartPoint.signal.map:
-        _.map(renderMeasurementStartPoint)
+        _.map:
+          renderMeasurementStartPoint
     val measurementEndPointDisplay   =
       child.maybe <-- EditorState.measurementEndPoint.signal.map:
-        _.map(renderMeasurementEndPoint)
+        _.map:
+          renderMeasurementEndPoint
     val measurementLineDisplay       = child.maybe <-- EditorState.measurementStartPoint.signal
       .combineWith(EditorState.measurementEndPoint.signal)
       .map:
@@ -312,11 +327,9 @@ object TessellationRenderer:
   ): List[Element] =
 
     coordinates.toList
-      .filter { (vertexId, _) =>
-
+      .filter: (vertexId, _) =>
         uniMap.contains(vertexId)
-      }
-      .map { (vertexId, bigPoint) =>
+      .map: (vertexId, bigPoint) =>
         val vertex = bigPoint.toPoint
 
         // Convert tessella coordinates to canvas coordinates
@@ -329,7 +342,6 @@ object TessellationRenderer:
           svg.stroke      := color,
           svg.strokeWidth := "1"
         )
-      }
 
   private def renderRotation(
       coordinates: Map[VertexId, BigPoint],
@@ -395,10 +407,9 @@ object TessellationRenderer:
   ): List[Element] =
 
     def locationToPoint(loc: BoundaryLocation): Point =
-      tilingPointToCanvasView(loc match {
+      tilingPointToCanvasView(loc match
         case BoundaryVertex(i)  => coordinates(i).toPoint
-        case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint
-      })
+        case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint)
 
     refList.map: (loc1, loc2) =>
       val vertex1          = locationToPoint(loc1)
@@ -421,7 +432,7 @@ object TessellationRenderer:
       svg.stroke        := "black",
       svg.strokeWidth   := "1",
       svg.className     := "clickable-point",
-      onMountCallback { ctx =>
+      onMountCallback: ctx =>
         // Guard the event stream at the source
         gate(
           ctx.thisNode.events(onClick.preventDefault.mapTo(p))
@@ -432,15 +443,14 @@ object TessellationRenderer:
             case (point, Some(Tool.Fan))         => AppState.handlePointClickForFan(point)
             case (point, Some(Tool.Inserter))    => AppState.handlePointClickForInsertion(point)
             case (point, _)                      => AppState.handlePointClickForDeletion(point)
-          }(using ctx.owner): Unit
-      },
+          }(using ctx.owner): Unit,
       svg.style         := "cursor: crosshair;",
-      svg.style <-- EditorState.activeTool.signal.map {
+      svg.style <-- EditorState.activeTool.signal.map:
         case Some(Tool.Measurement) => s"cursor: crosshair;"
         case Some(Tool.Fan)         => s"cursor: pointer;"
         case Some(Tool.Inserter)    => s"cursor: pointer;"
         case _                      => s"cursor: $deleteCursor;"
-      },
+      ,
       svg.pointerEvents := "visible"
     )
 
@@ -523,15 +533,16 @@ object TessellationRenderer:
 
   private def rawRender(faceId: FaceId, vertices: List[Vertex]): List[Element] =
     val edges = vertices.map(_.toCoords).slidingO(2).toList
-    edges.zipWithIndex.map { case (pair, idx) =>
-      renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
-    }
+    edges.zipWithIndex.map:
+      case (pair, idx) =>
+        renderInteriorEdge((pair(0), pair(1)), faceId, s"interior-edge-${faceId.value}-$idx")
 
   // New: render interactive interior edges for inserter tool
   private def renderInteriorEdges(tiling: TilingDCEL): List[Element] =
     if tiling.isEmpty then Nil
     else
-      tiling.innerFacesVertices.flatMap(rawRender)
+      tiling.innerFacesVertices.flatMap:
+        rawRender
 
   // New: render interactive interior edges for one selected face (Inserter mode)
   private def renderInteriorEdgesForFace(tiling: TilingDCEL, faceId: FaceId): List[Element] =
@@ -554,9 +565,9 @@ object TessellationRenderer:
         .combineWith(EditorState.isIrregularSelected.signal)
         .combineWith(EditorState.recentIrregularPolygon.signal)
         .combineWith(EditorState.currentTiling.signal)
-        .map { case (maybeSides, isIrregular, maybeAngles, tiling) =>
-          (maybeSides, isIrregular, maybeAngles, tiling)
-        }
+        .map:
+          case (maybeSides, isIrregular, maybeAngles, tiling) =>
+            (maybeSides, isIrregular, maybeAngles, tiling)
 
     val interactionArea = svg.line(
       lineCoords(LineSegment(point1, point2)),
@@ -635,7 +646,9 @@ object TessellationRenderer:
   ): Element =
     val vertex1    = edge._1.point
     val vertex2    = edge._2.point
-    val isSelected = EditorState.selectedPerimeterEdges.signal.map(_.contains(id))
+    val isSelected =
+      EditorState.selectedPerimeterEdges.signal.map:
+        _.contains(id)
 
     // Convert tessella coordinates to canvas coordinates
     val point1 = tilingPointToCanvasView(vertex1)
@@ -646,9 +659,9 @@ object TessellationRenderer:
         .combineWith(EditorState.isIrregularSelected.signal)
         .combineWith(EditorState.recentIrregularPolygon.signal)
         .combineWith(EditorState.currentTiling.signal)
-        .map { case (maybeSides, isIrregular, maybeAngles, tiling) =>
-          (maybeSides, isIrregular, maybeAngles, tiling)
-        }
+        .map:
+          case (maybeSides, isIrregular, maybeAngles, tiling) =>
+            (maybeSides, isIrregular, maybeAngles, tiling)
 
     // A wider, transparent line for easier interaction, especially on touch devices
     val interactionArea = svg.line(
