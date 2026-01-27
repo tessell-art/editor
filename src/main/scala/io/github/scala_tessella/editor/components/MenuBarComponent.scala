@@ -184,7 +184,7 @@ object MenuBarComponent:
           EditorState.currentFileName.set(None)
           UndoManager.clearHistory()
           EditorState.viewTransform.set(ViewTransform())
-          EditorState.fillColor.set(EditorState.defaultStartFillColor.now())
+          AppState.resetFillColorToDefault()
       ),
       templatesMenu(),
       div(className := "menu-separator"),
@@ -239,8 +239,11 @@ object MenuBarComponent:
       a(
         href        := "#",
         "Fill Color...",
-        onClick.preventDefault --> { _ =>
-          EditorState.tempColor.set(EditorState.fillColor.now())
+        onClick.preventDefault.compose(
+          _.withCurrentValueOf(EditorState.fillColor.signal)
+            .map((_, color) => color)
+        ) --> { color =>
+          EditorState.tempColor.set(color)
           EditorState.showColorPicker.set(true)
           EditorState.isMenuOpen.set(false)
         }

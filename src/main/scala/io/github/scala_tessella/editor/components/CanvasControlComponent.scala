@@ -47,9 +47,11 @@ object CanvasControlComponent:
                 }
               )
             ),
-            onClick.compose(gate) --> { _ =>
+            onClick.compose(stream =>
+              gate(stream).withCurrentValueOf(EditorState.fillColor.signal)
+            ) --> { case (_, color) =>
               // Use shared state from EditorState
-              EditorState.tempColor.set(EditorState.fillColor.now())
+              EditorState.tempColor.set(color)
               EditorState.showColorPicker.set(true)
             },
             className := "fill-color-btn"

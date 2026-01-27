@@ -81,7 +81,7 @@ object PolygonPaletteComponent:
 
   private def customPolygonSelector(): Element =
     val customSides = Var(11)
-    val inputValue  = Var(customSides.now().toString)
+    val inputValue  = Var("11")
 
     def validateSides(input: String): Int =
       input.toIntOption.getOrElse(3).clamp(3, 100)
@@ -90,18 +90,13 @@ object PolygonPaletteComponent:
       customSides.set(sides)
       inputValue.set(sides.toString)
 
-    val syncInputToSource         = customSides.signal.changes.map(_.toString) --> inputValue
-    val displaySides              = inputValue.signal.map(validateSides)
-    val isSelected                = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
+    val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
+    val displaySides      = inputValue.signal.map(validateSides)
+    val isSelected        = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
       (maybeSelected, currentCustom) =>
 
         maybeSelected.contains(currentCustom)
     }
-    val validateAndUpdateObserver = Observer[Any] { _ =>
-      val validatedSides = validateSides(inputValue.now())
-      updateSides(validatedSides)
-    }
-
     div(
       syncInputToSource,
       className <-- polygonButtonClass("polygon-btn custom-polygon-creator", isSelected),
@@ -128,8 +123,13 @@ object PolygonPaletteComponent:
           value <-- inputValue,
           onInput.mapToValue --> inputValue
         ),
-        onBlur --> validateAndUpdateObserver,
-        onKeyPress.filter(_.key == "Enter").preventDefault --> validateAndUpdateObserver,
+        onBlur.compose(_.withCurrentValueOf(inputValue.signal)) --> { case (_, value) =>
+          updateSides(validateSides(value))
+        },
+        onKeyPress.filter(_.key == "Enter").preventDefault
+          .compose(_.withCurrentValueOf(inputValue.signal)) --> { case (_, value) =>
+          updateSides(validateSides(value))
+        },
         onClick.stopPropagation --> {},
         disabled <-- EditorState.isProcessing.signal
       )

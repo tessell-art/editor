@@ -24,8 +24,8 @@ object SettingsPopup:
     EditorState.tempSettingsPickerColor.set(currentColor)
     EditorState.showSettingsColorPicker.set(true)
 
-  private def applyPickerColor(color: ColorRGB): Unit =
-    settingsColorTarget.now() match
+  private def applyPickerColor(target: SettingsColorTarget, color: ColorRGB): Unit =
+    target match
       case SettingsColorTarget.DefaultFill   => EditorState.tempDefaultFillColor.set(color)
       case SettingsColorTarget.PerimeterEdge => EditorState.tempPerimeterEdgeColor.set(color)
 
@@ -66,8 +66,12 @@ object SettingsPopup:
           ),
           button(
             "Apply",
-            onClick.stopPropagation --> { _ =>
-              applyPickerColor(EditorState.tempSettingsPickerColor.now())
+            onClick.stopPropagation.compose(
+              _.withCurrentValueOf(
+                settingsColorTarget.signal.combineWith(EditorState.tempSettingsPickerColor.signal)
+              )
+            ) --> { case (_, target: SettingsColorTarget, color: ColorRGB) =>
+              applyPickerColor(target, color)
               EditorState.showSettingsColorPicker.set(false)
             }
           )
@@ -168,11 +172,14 @@ object SettingsPopup:
           ),
           button(
             "Apply",
-            onClick --> { _ =>
-              AppState.applySettings(
-                EditorState.tempDefaultFillColor.now(),
-                EditorState.tempPerimeterEdgeColor.now()
+            onClick.compose(
+              _.withCurrentValueOf(
+                EditorState.tempDefaultFillColor.signal.combineWith(
+                  EditorState.tempPerimeterEdgeColor.signal
+                )
               )
+            ) --> { case (_, fill: ColorRGB, perimeter: ColorRGB) =>
+              AppState.applySettings(fill, perimeter)
               EditorState.showSettingsPopup.set(false)
             }
           )

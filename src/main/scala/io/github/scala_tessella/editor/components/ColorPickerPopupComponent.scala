@@ -39,8 +39,10 @@ object ColorPickerPopupComponent:
           ),
           button(
             "OK",
-            onClick --> { _ =>
-              val newColor = tempColor.now()
+            onClick.compose(
+              _.withCurrentValueOf(tempColor.signal)
+                .map((_, color) => color)
+            ) --> { newColor =>
               EditorState.fillColor.set(newColor)
 
               // Apply the new color to all currently selected polygons

@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.geometry.{BigLineSegment, BigPoint, RegularPolygon}
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, BigLineSegment, BigPoint, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
@@ -542,6 +542,15 @@ object TessellationRenderer:
     val point1 = tilingPointToCanvasView(v1)
     val point2 = tilingPointToCanvasView(v2)
 
+    val previewState: Signal[(Option[Int], Boolean, Option[Vector[AngleDegree]], TilingDCEL)] =
+      EditorState.selectedPolygon.signal
+        .combineWith(EditorState.isIrregularSelected.signal)
+        .combineWith(EditorState.recentIrregularPolygon.signal)
+        .combineWith(EditorState.currentTiling.signal)
+        .map { case (maybeSides, isIrregular, maybeAngles, tiling) =>
+          (maybeSides, isIrregular, maybeAngles, tiling)
+        }
+
     val interactionArea = svg.line(
       lineCoords(LineSegment(point1, point2)),
       svg.stroke        := transparent,
@@ -549,46 +558,51 @@ object TessellationRenderer:
       svg.strokeLineCap := "round",
       svg.className     := "interior-edge-transparent",
       // Show inner preview oriented into this face
-      onMouseEnter.compose(gate) --> { _ =>
-
-        (EditorState.selectedPolygon.now(), EditorState.isIrregularSelected.now()) match
-          case (maybeSides, isIrregular) =>
-            val tiling = EditorState.currentTiling.now()
-            if isIrregular then
-              val angles = EditorState.recentIrregularPolygon.now().get
-              EditorState.previewPlacement.set(
-                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
-                  0,
-                  angles,
-                  edge,
-                  tiling,
-                  intoFace = Some(faceId)
-                ))
-              )
-            else
-              val sides = maybeSides.getOrElse(0)
-              EditorState.previewPlacement.set(
-                Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
-                  0,
-                  RegularPolygon(sides).angles,
-                  edge,
-                  tiling,
-                  intoFace = Some(faceId)
-                ))
-              )
+      onMouseEnter.compose(stream =>
+        gate(stream).withCurrentValueOf(previewState)
+      ) --> {
+        case (
+              _,
+              maybeSides: Option[Int],
+              isIrregular: Boolean,
+              maybeAngles: Option[Vector[AngleDegree]],
+              tiling: TilingDCEL
+            ) =>
+          if isIrregular then
+            val angles = maybeAngles.get
+            EditorState.previewPlacement.set(
+              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
+                0,
+                angles,
+                edge,
+                tiling,
+                intoFace = Some(faceId)
+              ))
+            )
+          else
+            val sides = maybeSides.getOrElse(0)
+            EditorState.previewPlacement.set(
+              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
+                0,
+                RegularPolygon(sides).angles,
+                edge,
+                tiling,
+                intoFace = Some(faceId)
+              ))
+            )
       },
       onMouseLeave.compose(gate) --> { _ =>
 
         EditorState.previewPlacement.set(None)
       },
       // Trigger insertion directly when clicking the highlighted interior edge
-      onClick.preventDefault.compose(gate) --> { _ =>
-
-        EditorState.activeTool.now() match
-          case Some(Tool.Inserter) =>
-            TessellationOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
-            EditorState.previewPlacement.set(None)
-          case _                   => ()
+      onClick.preventDefault.compose(stream =>
+        gate(stream).withCurrentValueOf(EditorState.activeTool.signal)
+      ) --> {
+        case (_, Some(Tool.Inserter)) =>
+          TessellationOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
+          EditorState.previewPlacement.set(None)
+        case _                        => ()
       }
     )
 
@@ -620,6 +634,15 @@ object TessellationRenderer:
     val point1 = tilingPointToCanvasView(vertex1)
     val point2 = tilingPointToCanvasView(vertex2)
 
+    val previewState: Signal[(Option[Int], Boolean, Option[Vector[AngleDegree]], TilingDCEL)] =
+      EditorState.selectedPolygon.signal
+        .combineWith(EditorState.isIrregularSelected.signal)
+        .combineWith(EditorState.recentIrregularPolygon.signal)
+        .combineWith(EditorState.currentTiling.signal)
+        .map { case (maybeSides, isIrregular, maybeAngles, tiling) =>
+          (maybeSides, isIrregular, maybeAngles, tiling)
+        }
+
     // A wider, transparent line for easier interaction, especially on touch devices
     val interactionArea = svg.line(
       lineCoords(LineSegment(point1, point2)),
@@ -631,26 +654,27 @@ object TessellationRenderer:
         "none"
       )),
       // Enhanced visual feedback and click handling
-      onMouseEnter.compose(gate) --> { _ =>
-
-        (
-          EditorState.selectedPolygon.now(),
-          EditorState.isIrregularSelected.now(),
-          EditorState.recentIrregularPolygon.now()
-        ) match
-          case (maybeSides, isIrregular, maybeAngles) =>
-            val tiling = EditorState.currentTiling.now()
-            val angles =
-              if isIrregular then
-                maybeAngles.get
-              else
-                RegularPolygon(maybeSides.get).angles
-            EditorState.previewPlacement.set(Some(FailedPolygonPlacement(
-              edgeIndex,
-              angles,
-              edge,
-              tiling
-            )))
+      onMouseEnter.compose(stream =>
+        gate(stream).withCurrentValueOf(previewState)
+      ) --> {
+        case (
+              _,
+              maybeSides: Option[Int],
+              isIrregular: Boolean,
+              maybeAngles: Option[Vector[AngleDegree]],
+              tiling: TilingDCEL
+            ) =>
+          val angles =
+            if isIrregular then
+              maybeAngles.get
+            else
+              RegularPolygon(maybeSides.get).angles
+          EditorState.previewPlacement.set(Some(FailedPolygonPlacement(
+            edgeIndex,
+            angles,
+            edge,
+            tiling
+          )))
       },
       onMouseLeave.compose(gate) --> { _ =>
 

@@ -307,6 +307,10 @@ object AppState:
     EditorState.perimeterEdgeColor.set(perimeterEdge)
     SettingsStorage.savePerimeterEdgeColor(perimeterEdge)
 
+  /** Resets the current fill color to the default start fill color. */
+  def resetFillColorToDefault(): Unit =
+    EditorState.fillColor.set(EditorState.defaultStartFillColor.now())
+
   /** Shows an error message with optional details about failed operations.
     * @param message
     *   The error message to display
