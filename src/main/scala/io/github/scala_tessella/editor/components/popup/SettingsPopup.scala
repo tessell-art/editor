@@ -59,14 +59,14 @@ object SettingsPopup:
           className := "popup-actions",
           button(
             "Cancel",
-            onClick --> { _ =>
+            onClick.stopPropagation --> { _ =>
 
               EditorState.showSettingsColorPicker.set(false)
             }
           ),
           button(
             "Apply",
-            onClick --> { _ =>
+            onClick.stopPropagation --> { _ =>
               applyPickerColor(EditorState.tempSettingsPickerColor.now())
               EditorState.showSettingsColorPicker.set(false)
             }
@@ -101,17 +101,20 @@ object SettingsPopup:
             div(className := "settings-label", "Default start fill color"),
             div(
               className   := "settings-control",
-              div(
-                className := "settings-swatch",
-                backgroundColor <-- EditorState.tempDefaultFillColor.signal.map:
-                  _.toHex
-              ),
               button(
-                "Pick...",
-                onClick --> { _ =>
+                className := "settings-swatch-button",
+                onClick.compose(
+                  _.withCurrentValueOf(EditorState.tempDefaultFillColor.signal)
+                    .map((_, color) => color)
+                ) --> { color =>
 
-                  openColorPicker(SettingsColorTarget.DefaultFill, EditorState.tempDefaultFillColor.now())
-                }
+                  openColorPicker(SettingsColorTarget.DefaultFill, color)
+                },
+                div(
+                  className := "settings-swatch",
+                  backgroundColor <-- EditorState.tempDefaultFillColor.signal.map:
+                    _.toHex
+                )
               ),
               span(
                 className := "settings-value",
@@ -124,17 +127,20 @@ object SettingsPopup:
             div(className := "settings-label", "Perimeter edge color"),
             div(
               className   := "settings-control",
-              div(
-                className := "settings-swatch",
-                backgroundColor <-- EditorState.tempPerimeterEdgeColor.signal.map:
-                  _.toHex
-              ),
               button(
-                "Pick...",
-                onClick --> { _ =>
+                className := "settings-swatch-button",
+                onClick.compose(
+                  _.withCurrentValueOf(EditorState.tempPerimeterEdgeColor.signal)
+                    .map((_, color) => color)
+                ) --> { color =>
 
-                  openColorPicker(SettingsColorTarget.PerimeterEdge, EditorState.tempPerimeterEdgeColor.now())
-                }
+                  openColorPicker(SettingsColorTarget.PerimeterEdge, color)
+                },
+                div(
+                  className := "settings-swatch",
+                  backgroundColor <-- EditorState.tempPerimeterEdgeColor.signal.map:
+                    _.toHex
+                )
               ),
               span(
                 className := "settings-value",
