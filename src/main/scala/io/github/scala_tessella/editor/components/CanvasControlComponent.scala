@@ -90,7 +90,7 @@ object CanvasControlComponent:
           createToolButton(
             Tool.Fan,
             "Activate fan mode to multiply around boundary vertex",
-            IconsSVG.rulerIcon
+            IconsSVG.fanIcon
           ),
           button(
             child.text <-- EditorState.showNodeLabels.signal.map(show =>
