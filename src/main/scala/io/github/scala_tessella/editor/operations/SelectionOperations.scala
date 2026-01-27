@@ -4,6 +4,7 @@ import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
+import io.github.scala_tessella.editor.utils.Logger
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
 import io.github.scala_tessella.ring_seq.RingSeq.{isRotationOrReflectionOf, slidingO}
@@ -47,6 +48,15 @@ object SelectionOperations:
           Math.min(diffRad, Radian.TAU.toDouble - diffRad)
         )
         EditorState.measurementAngle.set(maybeAngle.map(Radian(_)))
+
+  def handlePointClickForFan(point: ClickablePoint): Unit =
+    ifNotProcessing:
+      EditorState.clickablePoints.set(Nil)
+      point.anchor match
+        case Anchor.Vertex(vertexId) =>
+          Logger.debug(s"Fan vertex clicked: $vertexId")
+          TessellationOperations.attemptFanning(vertexId)
+        case _                       => ()
 
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     ifNotProcessing:
@@ -166,6 +176,8 @@ object SelectionOperations:
       case Some(Tool.SelectByColor)       =>
         selectPolygonsByColor(faceId)
       case Some(Tool.Measurement)         =>
+        setupFaceClickablePoints(faceId)
+      case Some(Tool.Fan)                 =>
         setupFaceClickablePoints(faceId)
       case Some(Tool.Eraser)              =>
         setupFaceClickablePoints(faceId)

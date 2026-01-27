@@ -103,6 +103,14 @@ object TessellationOperations:
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
 
+  def attemptFanning(vertexId: VertexId): Unit =
+    val op = () => currentTiling.now().fanAt(vertexId)
+    OperationRunner.runTilingOp(op)(
+      onSuccess =
+        AppState.clearSymmetryOverlays(),
+      onFailure = err => ErrorOperations.showError(s"Cannot fan tiling: ${err.message}")
+    )
+
   def attemptDoubling(): Unit =
     val tiling    = currentTiling.now()
     val faceIds   =

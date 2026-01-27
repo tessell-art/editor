@@ -39,7 +39,7 @@ enum EditorMode:
 
 // Tool enumeration
 enum Tool:
-  case ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Inserter, Measurement
+  case ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Inserter, Measurement, Fan
 
 /** AppState object provides a higher-level interface to the editor state. It exports all members of
   * EditorState and provides methods to manipulate the state.
@@ -260,6 +260,13 @@ object AppState:
     */
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     SelectionOperations.handlePointClickForMeasurement(point)
+
+  /** Handles a click on a point for multiplying tilind around a vertex..
+    * @param point
+    *   The clicked point
+    */
+  def handlePointClickForFan(point: ClickablePoint): Unit =
+    SelectionOperations.handlePointClickForFan(point)
 
   /** Handles a click on a point for deletion.
     *

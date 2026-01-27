@@ -116,6 +116,7 @@ object TessellationRenderer:
               case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
               case Some(Tool.SelectByColor)       => s"cursor: $selectByColorCursor;"
               case Some(Tool.Measurement)         => s"cursor: $measurementCursor;"
+              case Some(Tool.Fan)                 => s"cursor: $measurementCursor;"
               case Some(Tool.Eraser)              => s"cursor: $eraserCursor;"
               case Some(Tool.Inserter)            => s"cursor: $inserterCursor;"
               case _                              => mode match
@@ -424,6 +425,7 @@ object TessellationRenderer:
           .withCurrentValueOf(EditorState.activeTool.signal)
           .foreach {
             case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
+            case (point, Some(Tool.Fan))         => AppState.handlePointClickForFan(point)
             case (point, Some(Tool.Inserter))    => AppState.handlePointClickForInsertion(point)
             case (point, _)                      => AppState.handlePointClickForDeletion(point)
           }(using ctx.owner): Unit
@@ -431,6 +433,7 @@ object TessellationRenderer:
       svg.style         := "cursor: crosshair;",
       svg.style <-- EditorState.activeTool.signal.map {
         case Some(Tool.Measurement) => s"cursor: crosshair;"
+        case Some(Tool.Fan)         => s"cursor: pointer;"
         case Some(Tool.Inserter)    => s"cursor: pointer;"
         case _                      => s"cursor: $deleteCursor;"
       },

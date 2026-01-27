@@ -11,7 +11,8 @@ object CanvasControlComponent:
   private def toggleTool(tool: Tool): Unit =
     EditorState.activeTool.update {
       case Some(t) if t == tool =>
-        if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter then AppState.clearMeasurements()
+        if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter || t == Tool.Fan then
+          AppState.clearMeasurements()
         None // Deactivate if it's the current tool
       case _                    =>
         AppState.clearMeasurements() // Clear measurements when switching
@@ -84,6 +85,11 @@ object CanvasControlComponent:
           createToolButton(
             Tool.Measurement,
             "Activate measure mode to calculate the distance between two points",
+            IconsSVG.rulerIcon
+          ),
+          createToolButton(
+            Tool.Fan,
+            "Activate fan mode to multiply around boundary vertex",
             IconsSVG.rulerIcon
           ),
           button(
