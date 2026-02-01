@@ -281,7 +281,12 @@ object MenuBarComponent:
         () => AppState.toggleShowReflection()
       ),
       div(className := "menu-separator"),
-      dropdownLink("Fit to Canvas", () => AppState.fitTilingToCanvas(), enabled = isTilingEmpty.map(!_)),
+      dropdownLink(
+        "Fit to Canvas",
+        () => AppState.fitTilingToCanvas(),
+        enabled = isTilingEmpty.map(!_),
+        shortcut = Some("F")
+      ),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
       div(className := "menu-separator"),
       dropdownLink(

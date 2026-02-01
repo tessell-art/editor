@@ -66,6 +66,10 @@ object ShortcutsPopup:
               tr(
                 td("Rotate Right"),
                 td(kbd("R"))
+              ),
+              tr(
+                td("Fit to Canvas"),
+                td(kbd("F"))
               )
             )
           )

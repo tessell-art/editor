@@ -119,6 +119,9 @@ object KeyboardEventHandler:
               if event.key == "d" || event.key == "D" then
                 event.preventDefault()
                 AppState.doubleTiling()
+              else if event.key == "f" || event.key == "F" then
+                event.preventDefault()
+                AppState.fitTilingToCanvas()
               else if isRedoShortcut(event.key, primaryMod(event), event.shiftKey) then
                 event.preventDefault()
                 UndoManager.redo()
