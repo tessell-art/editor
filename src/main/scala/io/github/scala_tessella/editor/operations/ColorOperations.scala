@@ -27,19 +27,27 @@ object ColorOperations:
     EditorState.polygonColors.update(_ + (faceId -> color))
 
   def ensureColorsForFaces(faceIds: Iterable[FaceId], defaultColor: ColorRGB): Unit =
-    if faceIds.nonEmpty then
-      EditorState.polygonColors.update: currentColors =>
-        faceIds.foldLeft(currentColors): (colors, faceId) =>
-          if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
+    updateFaceColors(faceIds, defaultColor, trimMissing = false)
 
   /** Keep polygonColors in sync with the current tiling faces:
     *   - Remove colors for faces that no longer exist
     *   - Add default color for any new faces
     */
   def syncColorsForFaces(faceIds: Iterable[FaceId], defaultColor: ColorRGB): Unit =
-    val faceIdSet = faceIds.toSet
-    EditorState.polygonColors.update: currentColors =>
-      val trimmed = currentColors.filter: (faceId, _) =>
-        faceIdSet.contains(faceId)
-      faceIdSet.foldLeft(trimmed): (colors, faceId) =>
-        if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
+    updateFaceColors(faceIds, defaultColor, trimMissing = true)
+
+  private def updateFaceColors(
+      faceIds: Iterable[FaceId],
+      defaultColor: ColorRGB,
+      trimMissing: Boolean
+  ): Unit =
+    if faceIds.nonEmpty then
+      val faceIdSet = faceIds.toSet
+      EditorState.polygonColors.update: currentColors =>
+        val base =
+          if trimMissing then
+            currentColors.filter: (faceId, _) =>
+              faceIdSet.contains(faceId)
+          else currentColors
+        faceIdSet.foldLeft(base): (colors, faceId) =>
+          if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
