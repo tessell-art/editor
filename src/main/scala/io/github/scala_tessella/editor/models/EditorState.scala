@@ -176,6 +176,13 @@ object EditorState:
   val previewPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
 
   //
+  // ANIMATION
+  //
+
+  /** Fan animation overlay, if any */
+  val fanAnimation: Var[Option[FanAnimation]] = Var(None)
+
+  //
   // MEASUREMENT TOOL
   //
 

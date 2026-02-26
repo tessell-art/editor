@@ -32,6 +32,7 @@ trait EditorStateFixture:
 
     // Clear preview and measurement-related state
     EditorState.previewPlacement.set(None)
+    EditorState.fanAnimation.set(None)
     EditorState.clickablePoints.set(Nil)
     EditorState.measurementStartPoint.set(None)
     EditorState.measurementEndPoint.set(None)

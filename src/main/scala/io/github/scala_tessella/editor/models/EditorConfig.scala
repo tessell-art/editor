@@ -23,3 +23,6 @@ object EditorConfig:
 
   // Default perimeter edge color for the editor canvas
   val defaultPerimeterEdgeColor: ColorRGB = ColorRGB(255, 149, 0)
+
+  // Fan animation duration (milliseconds)
+  val fanAnimationDurationMs: Int = 3000

@@ -8,7 +8,7 @@ import io.github.scala_tessella.dcel.TilingSymmetry.{reflectionalVertexIds, rota
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.TessellationOperations.VertexCoord
 import io.github.scala_tessella.editor.operations.*
-import io.github.scala_tessella.editor.utils.geo.Point
+import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, Logger, SettingsStorage, UndoManager}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,6 +24,15 @@ case class FailedPolygonPlacement(
 
 // Case class to represent a failed polygon deletion
 case class FailedPolygonDeletion(faceId: FaceId, polygonNodes: Vector[VertexId])
+
+// Case class to represent a fan animation overlay
+case class FanAnimation(
+    facePoints: List[(FaceId, String)],
+    pivot: Point,
+    copies: Int,
+    stepAngle: Radian,
+    durationMs: Int
+)
 
 enum Anchor:
 

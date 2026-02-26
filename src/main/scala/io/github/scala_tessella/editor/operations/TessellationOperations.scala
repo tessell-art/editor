@@ -5,15 +5,22 @@ import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
-import io.github.scala_tessella.editor.models.{AppState, EditorState, FailedPolygonPlacement}
+import io.github.scala_tessella.editor.models.{
+  AppState,
+  EditorConfig,
+  EditorState,
+  FailedPolygonPlacement,
+  FanAnimation
+}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.polygonName
-import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
-import io.github.scala_tessella.editor.utils.geo.Point
+import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.{tilingPointToCanvasView, toPoint}
+import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{Logger, UndoManager}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
+import scala.scalajs.js.timers.setTimeout
 object TessellationOperations:
 
   type VertexCoord = (id: VertexId, point: Point)
@@ -104,12 +111,16 @@ object TessellationOperations:
     )
 
   def attemptFanning(vertexId: VertexId): Unit =
-    val tiling    = currentTiling.now()
-    val faceIds   = tiling.innerFaces.map(_.id)
-    val maxFaceId = faceIds.map(_.value).maxOption.getOrElse(0)
-    val colors    = polygonColors.now()
-    val faceCount = faceIds.size
-    val op        = () => tiling.fanAt(vertexId)
+    val tiling           = currentTiling.now()
+    EditorState.fanAnimation.set(None)
+    val faceIds          = tiling.innerFaces.map(_.id)
+    val facePoints       = precomputeFacePoints(tiling)
+    val maxFaceId        = faceIds.map(_.value).maxOption.getOrElse(0)
+    val colors           = polygonColors.now()
+    val faceCount        = faceIds.size
+    val pivotOpt         = tiling.findVertex(vertexId).toOption.map(_.coords.toPoint)
+    val boundaryAngleOpt = boundaryInnerAngleAt(tiling, vertexId)
+    val op               = () => tiling.fanAt(vertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess =
         val newFaceCount = currentTiling.now().innerFaces.size
@@ -121,10 +132,62 @@ object TessellationOperations:
               val rgb   = colors.getOrElse(faceIds(id), fillFallback)
               val newId = FaceId(maxFaceId + (copyIndex - 1) * faceCount + id + 1)
               polygonColors.update(_ + (newId -> rgb))
+          (pivotOpt, boundaryAngleOpt) match
+            case (Some(pivot), Some(angle)) if copies > 1 =>
+              val animation =
+                FanAnimation(facePoints, pivot, copies, angle, EditorConfig.fanAnimationDurationMs)
+              EditorState.fanAnimation.set(Some(animation))
+              setTimeout(EditorConfig.fanAnimationDurationMs) {
+                EditorState.fanAnimation.update {
+                  case Some(current) if current eq animation => None
+                  case other                                 => other
+                }
+              }: Unit
+            case _                                        => ()
         AppState.clearSymmetryOverlays()
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot fan tiling: ${err.message}")
     )
+
+  private def boundaryInnerAngleAt(tiling: TilingDCEL, vertexId: VertexId): Option[Radian] =
+    val boundary = tiling.boundaryVertices.map(_.toCoords).toVector
+    val n        = boundary.size
+    if n < 3 then None
+    else
+      val idx = boundary.indexWhere(_.id == vertexId)
+      if idx < 0 then None
+      else
+        val prev  = boundary((idx - 1 + n) % n).point
+        val curr  = boundary(idx).point
+        val next  = boundary((idx + 1) % n).point
+        val v1    = prev - curr
+        val v2    = next - curr
+        val denom = v1.magnitude * v2.magnitude
+        val eps   = 1e-12
+        if denom < eps then None
+        else
+          val cosTheta   = (v1.dot(v2) / denom).max(-1.0).min(1.0)
+          val theta      = Math.acos(cosTheta)
+          val cross      = v1.x * v2.y - v1.y * v2.x
+          val signedArea =
+            (0 until n).foldLeft(0.0): (acc, i) =>
+              val p1 = boundary(i).point
+              val p2 = boundary((i + 1) % n).point
+              acc + (p1.x * p2.y - p2.x * p1.y)
+          val isCCW      = signedArea > 0
+          val isConcave  =
+            if isCCW then cross > 0 else cross < 0
+          val interior   =
+            if isConcave then Radian(Radian.TAU.toDouble - theta) else Radian(theta)
+          Some(interior)
+
+  private def precomputeFacePoints(tiling: TilingDCEL): List[(FaceId, String)] =
+    tiling.innerFacesVertices.map: (faceId, faceVertices) =>
+      val pointStrings =
+        faceVertices.map: vertex =>
+          val point = tilingPointToCanvasView(vertex.coords.toPoint)
+          s"${point.x},${point.y}"
+      (faceId, pointStrings.mkString(" "))
 
   def attemptDoubling(): Unit =
     val tiling    = currentTiling.now()

@@ -12,6 +12,7 @@ import io.github.scala_tessella.editor.models.{
   EditorConfig,
   EditorMode,
   EditorState,
+  FanAnimation,
   FailedPolygonPlacement,
   Tool
 }
@@ -29,6 +30,7 @@ import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom.EndingType.transparent
+import scala.scalajs.js
 
 object TessellationRenderer:
 
@@ -282,6 +284,40 @@ object TessellationRenderer:
       measurementLineDisplay,
       previousMeasurementLineDisplay,
       measurementAngleArcDisplay
+    )
+
+  def renderFanAnimation(animation: FanAnimation): Element =
+    val pivot           = tilingPointToCanvasView(animation.pivot)
+    val durationSeconds = animation.durationMs.toDouble / 1000.0
+    val stepDegrees     = animation.stepAngle.toDegrees
+
+    def renderFanPolygons(): List[Element] =
+      animation.facePoints.map: (faceId, pointsStr) =>
+        renderTilingPolygonFromPoints(pointsStr, faceId)
+
+    val copyGroups =
+      (0 until animation.copies).map: copyIndex =>
+        val targetDegrees = stepDegrees * copyIndex
+        svg.g(
+          svg.style := "pointer-events: none;",
+          renderFanPolygons(),
+          svg.animateTransform(
+            svg.attributeName := "transform",
+            svg.attributeType := "XML",
+            svg.tpe           := "rotate",
+            svg.from          := s"0 ${pivot.x} ${pivot.y}",
+            svg.to            := s"$targetDegrees ${pivot.x} ${pivot.y}",
+            svg.dur           := s"${durationSeconds}s",
+            svg.fill          := "freeze",
+            svg.begin         := "indefinite",
+            onMountCallback: ctx =>
+              ctx.thisNode.ref.asInstanceOf[js.Dynamic].beginElement(): Unit
+          )
+        )
+
+    svg.g(
+      svg.className := "fan-animation",
+      copyGroups
     )
 
   private def renderNodeLabels(coordinates: Map[VertexId, BigPoint]): List[Element] =
