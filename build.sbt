@@ -10,7 +10,7 @@ ThisBuild / scalafmtOnCompile := true
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
-    scalaVersion := "3.8.1",
+    scalaVersion := "3.8.2",
     version := "0.3.4",
     name := "Tessella Editor",
 
