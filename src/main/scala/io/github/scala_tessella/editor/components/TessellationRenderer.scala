@@ -311,7 +311,7 @@ object TessellationRenderer:
             svg.fill          := "freeze",
             svg.begin         := "indefinite",
             onMountCallback: ctx =>
-              ctx.thisNode.ref.asInstanceOf[js.Dynamic].beginElement(): Unit
+              val _ = ctx.thisNode.ref.asInstanceOf[js.Dynamic].beginElement()
           )
         )
 
