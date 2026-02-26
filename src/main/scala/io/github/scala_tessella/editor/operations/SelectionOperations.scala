@@ -178,7 +178,7 @@ object SelectionOperations:
       case Some(Tool.Measurement)         =>
         setupFaceClickablePoints(faceId)
       case Some(Tool.Fan)                 =>
-        setupFaceClickablePoints(faceId, verticesOnly = true)
+        setupFaceClickablePoints(faceId, boundaryVerticesOnly = true)
       case Some(Tool.Eraser)              =>
         setupFaceClickablePoints(faceId)
       case Some(Tool.Inserter)            =>
@@ -193,7 +193,7 @@ object SelectionOperations:
   private def setupFaceClickablePoints(
       faceId: FaceId,
       edgesOnly: Boolean = false,
-      verticesOnly: Boolean = false
+      boundaryVerticesOnly: Boolean = false
   ): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
@@ -213,21 +213,28 @@ object SelectionOperations:
               val vertexIdsAndPoints = faceVertices.map(_.id).zip(vertices)
               val edges              = vertexIdsAndPoints.toVector.slidingO(2).toList
               //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
-              val midPoints          = edges.map { edge =>
-                val p1 = edge(0)._2
-                val p2 = edge(1)._2
-                ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
-              }
+              val midPoints          =
+                edges.map: edge =>
+                  val p1 = edge(0)._2
+                  val p2 = edge(1)._2
+                  ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))
 
-              val vertexPoints = vertexIdsAndPoints.map { case (vertexId, point) =>
-                ClickablePoint(point, Anchor.Vertex(vertexId))
-              }
+              val vertexPoints =
+                vertexIdsAndPoints.map: (vertexId, point) =>
+                  ClickablePoint(point, Anchor.Vertex(vertexId))
               val centerX      = vertices.map(_.x).sum / vertices.size
               val centerY      = vertices.map(_.y).sum / vertices.size
               val centerPoint  = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
-              if verticesOnly then
-                EditorState.clickablePoints.set(vertexPoints)
+              if boundaryVerticesOnly then
+                val boundaryVertexIds    = tiling.boundaryVertices.map(_.id).toSet
+                val vertexBoundaryPoints =
+                  vertexIdsAndPoints
+                    .filter: (vertexId, _) =>
+                      boundaryVertexIds.contains(vertexId)
+                    .map: (vertexId, point) =>
+                      ClickablePoint(point, Anchor.Vertex(vertexId))
+                EditorState.clickablePoints.set(vertexBoundaryPoints)
               else
                 EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
 
