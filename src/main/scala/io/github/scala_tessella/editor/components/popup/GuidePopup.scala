@@ -93,6 +93,21 @@ object GuidePopup:
               " tool to select the shape (and the fill color) of an existing irregular polygon."
             )
           ),
+          h3("Fanning"),
+          ul(
+            li(
+              "Use the ",
+              IconsSVG.fanIcon,
+              " ",
+              i("Fan"),
+              " tool to add copies of the tiling rotating around a boundary vertex."
+            ),
+            li(
+              "When you click on a polygon the boundary vertices will be highlighted, ",
+              "click one to fan the tiling around the selected vertex. ",
+              "As many copies as possible will be added, up to a full circle."
+            )
+          ),
           h3("Doubling and mirroring"),
           ul(
             li(
