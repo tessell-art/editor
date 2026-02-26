@@ -104,10 +104,25 @@ object TessellationOperations:
     )
 
   def attemptFanning(vertexId: VertexId): Unit =
-    val op = () => currentTiling.now().fanAt(vertexId)
+    val tiling    = currentTiling.now()
+    val faceIds   = tiling.innerFaces.map(_.id)
+    val maxFaceId = faceIds.map(_.value).maxOption.getOrElse(0)
+    val colors    = polygonColors.now()
+    val faceCount = faceIds.size
+    val op        = () => tiling.fanAt(vertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        AppState.clearSymmetryOverlays(),
+        val newFaceCount = currentTiling.now().innerFaces.size
+        if faceCount > 0 && newFaceCount > faceCount && newFaceCount % faceCount == 0 then
+          val copies       = newFaceCount / faceCount
+          val fillFallback = EditorState.fillColor.now()
+          (1 until copies).foreach: copyIndex =>
+            faceIds.indices.foreach: id =>
+              val rgb   = colors.getOrElse(faceIds(id), fillFallback)
+              val newId = FaceId(maxFaceId + (copyIndex - 1) * faceCount + id + 1)
+              polygonColors.update(_ + (newId -> rgb))
+        AppState.clearSymmetryOverlays()
+      ,
       onFailure = err => ErrorOperations.showError(s"Cannot fan tiling: ${err.message}")
     )
 

@@ -2,8 +2,11 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
+import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager, TilingBuilders}
 import munit.FunSuite
+
+import scala.concurrent.Promise
+import scala.scalajs.js.timers.setTimeout
 
 class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
@@ -49,4 +52,31 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     TessellationOperations.attemptPolygonAddition("edge-1", 0)
 
     assert(EditorState.errorMessage.now().exists(_.contains("No tiling available to grow")))
+  }
+
+  test("attemptFanning should replicate colors across fan copies") {
+    val tiling        = TilingBuilders.freshSquare()
+    val faceIds       = tiling.innerFaces.map(_.id)
+    val originalColor = ColorRGB(200, 100, 50)
+    val fillColor     = ColorRGB(1, 2, 3)
+    val vertexId      = tiling.boundaryVertices.head.id
+
+    EditorState.currentTiling.set(tiling)
+    EditorState.fillColor.set(fillColor)
+    EditorState.polygonColors.set(faceIds.map(_ -> originalColor).toMap)
+
+    val done = Promise[Unit]()
+
+    TessellationOperations.attemptFanning(vertexId)
+
+    setTimeout(200) {
+      val newFaceIds = EditorState.currentTiling.now().innerFaces.map(_.id)
+      val colors     = EditorState.polygonColors.now()
+
+      assert(newFaceIds.size > faceIds.size)
+      assert(newFaceIds.forall(id => colors.get(id).contains(originalColor)))
+      done.success(())
+    }: Unit
+
+    done.future
   }
