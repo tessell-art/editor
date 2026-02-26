@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.EditorStateFixture
-import io.github.scala_tessella.editor.models.{EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{Anchor, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.utils.{ColorRGB, TilingBuilders}
 import munit.FunSuite
 
@@ -70,6 +70,27 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     assertEquals(EditorState.highlightedPolygonId.now(), Some(faceId))
     assert(EditorState.clickablePoints.now().nonEmpty)
+  }
+
+  test("Fan tool should only expose vertex clickable points") {
+    val tiling      = TilingBuilders.freshSquare()
+    val faceId      = tiling.innerFaces.head.id
+    val vertexCount = tiling.findInnerFaceVertices(faceId).toOption.get.size
+
+    EditorState.currentTiling.set(tiling)
+    EditorState.activeTool.set(Some(Tool.Fan))
+
+    SelectionOperations.handleTilingPolygonClick(faceId)
+
+    val points = EditorState.clickablePoints.now()
+    assertEquals(EditorState.highlightedPolygonId.now(), Some(faceId))
+    assertEquals(points.size, vertexCount)
+    assert(points.forall(p =>
+      p.anchor match {
+        case Anchor.Vertex(_) => true
+        case _                => false
+      }
+    ))
   }
 
   test("Inserter tool should highlight face and not create clickable points") {

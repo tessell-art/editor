@@ -178,7 +178,7 @@ object SelectionOperations:
       case Some(Tool.Measurement)         =>
         setupFaceClickablePoints(faceId)
       case Some(Tool.Fan)                 =>
-        setupFaceClickablePoints(faceId)
+        setupFaceClickablePoints(faceId, verticesOnly = true)
       case Some(Tool.Eraser)              =>
         setupFaceClickablePoints(faceId)
       case Some(Tool.Inserter)            =>
@@ -190,7 +190,11 @@ object SelectionOperations:
           case EditorMode.Delete =>
             TessellationOperations.attemptFaceDeletion(faceId)
 
-  private def setupFaceClickablePoints(faceId: FaceId, edgesOnly: Boolean = false): Unit =
+  private def setupFaceClickablePoints(
+      faceId: FaceId,
+      edgesOnly: Boolean = false,
+      verticesOnly: Boolean = false
+  ): Unit =
     EditorState.currentTiling.now() match
       case tiling if !tiling.isEmpty =>
 
@@ -222,7 +226,10 @@ object SelectionOperations:
               val centerY      = vertices.map(_.y).sum / vertices.size
               val centerPoint  = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
-              EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
+              if verticesOnly then
+                EditorState.clickablePoints.set(vertexPoints)
+              else
+                EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
 
           case None => ()
       case _ => ()
