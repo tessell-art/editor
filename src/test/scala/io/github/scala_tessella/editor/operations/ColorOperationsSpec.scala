@@ -17,6 +17,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
   val F1: FaceId = FaceId(1)
   val F2: FaceId = FaceId(2)
   val F3: FaceId = FaceId(3)
+  val F4: FaceId = FaceId(4)
 
   test("applyColorToSelectedPolygons should apply the current fill color to selected polygons") {
     // Given
@@ -84,4 +85,21 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     val colors = EditorState.polygonColors.now()
     assertEquals(colors.get(F1), Some(existing))
     assertEquals(colors.get(F2), Some(EditorConfig.defaultPolygonColor))
+  }
+
+  test("syncColorsForFaces should remove stale colors and add missing defaults") {
+    val existing1 = ColorRGB(1, 2, 3)
+    val existing2 = ColorRGB(4, 5, 6)
+    val stale     = ColorRGB(7, 8, 9)
+    val default   = ColorRGB(11, 12, 13)
+
+    EditorState.polygonColors.set(Map(F1 -> existing1, F2 -> existing2, F3 -> stale))
+
+    ColorOperations.syncColorsForFaces(List(F1, F2, F4), default)
+
+    val colors = EditorState.polygonColors.now()
+    assertEquals(colors.get(F1), Some(existing1))
+    assertEquals(colors.get(F2), Some(existing2))
+    assertEquals(colors.get(F4), Some(default))
+    assert(!colors.contains(F3))
   }

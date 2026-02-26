@@ -67,3 +67,30 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
       assertEquals(EditorState.currentTiling.now(), tiling)
     }
   }
+
+  test("runTilingOp should drop colors for faces not present in new tiling") {
+    val oldTiling = TilingBuilders.freshSquare()
+    val newTiling = TilingBuilders.freshTriangle()
+    val fill      = ColorRGB(9, 8, 7)
+    val newFaces  = newTiling.innerFaces.map(_.id).toSet
+    val staleId   = io.github.scala_tessella.dcel.structure.FaceId(9999)
+
+    EditorState.currentTiling.set(oldTiling)
+    EditorState.fillColor.set(fill)
+    EditorState.polygonColors.set(Map(staleId -> ColorRGB(1, 2, 3)))
+    UndoManager.clearHistory()
+
+    val done = Promise[Unit]()
+    OperationRunner.runTilingOp(() => Right(newTiling))(
+      onSuccess = done.success(()),
+      onFailure = err => done.failure(new RuntimeException(err.message))
+    )
+
+    done.future.map { _ =>
+      val colors = EditorState.polygonColors.now()
+      assert(newFaces.nonEmpty)
+      assertEquals(colors.keySet, newFaces)
+      assert(newFaces.forall(id => colors.get(id).contains(fill)))
+      assert(!colors.contains(staleId))
+    }
+  }

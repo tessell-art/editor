@@ -31,3 +31,15 @@ object ColorOperations:
       EditorState.polygonColors.update: currentColors =>
         faceIds.foldLeft(currentColors): (colors, faceId) =>
           if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
+
+  /** Keep polygonColors in sync with the current tiling faces:
+    *   - Remove colors for faces that no longer exist
+    *   - Add default color for any new faces
+    */
+  def syncColorsForFaces(faceIds: Iterable[FaceId], defaultColor: ColorRGB): Unit =
+    val faceIdSet = faceIds.toSet
+    EditorState.polygonColors.update: currentColors =>
+      val trimmed = currentColors.filter: (faceId, _) =>
+        faceIdSet.contains(faceId)
+      faceIdSet.foldLeft(trimmed): (colors, faceId) =>
+        if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
