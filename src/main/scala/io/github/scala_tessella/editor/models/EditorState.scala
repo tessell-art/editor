@@ -182,6 +182,9 @@ object EditorState:
   /** Fan animation overlay, if any */
   val fanAnimation: Var[Option[FanAnimation]] = Var(None)
 
+  /** Doubling animation overlay, if any */
+  val doublingAnimation: Var[Option[DoublingAnimation]] = Var(None)
+
   //
   // MEASUREMENT TOOL
   //

@@ -9,6 +9,7 @@ import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.editor.models.{
   AppState,
   ClickablePoint,
+  DoublingAnimation,
   EditorConfig,
   EditorMode,
   EditorState,
@@ -294,10 +295,6 @@ object TessellationRenderer:
     val stepDegrees     = animation.stepAngle.toDegrees
     val staggerMs       = animation.staggerMs.toDouble
 
-    def easeOutCubic(t: Double): Double =
-      val clamped = t.max(0.0).min(1.0)
-      1.0 - Math.pow(1.0 - clamped, 3)
-
     def renderFanPolygons(): List[Element] =
       animation.facePoints.map: (faceId, pointsStr) =>
         renderTilingPolygonFromPoints(pointsStr, faceId)
@@ -339,6 +336,53 @@ object TessellationRenderer:
       svg.className := "fan-animation",
       copyGroups
     )
+
+  def renderDoublingAnimation(animation: DoublingAnimation): Element =
+    val durationSeconds   = animation.durationMs.toDouble / 1000.0
+    var rafId             = 0
+    var startTime         = -1.0
+    var node: dom.Element = null
+
+    def renderPolygons(): List[Element] =
+      animation.facePoints.map: (faceId, pointsStr) =>
+        renderTilingPolygonFromPoints(pointsStr, faceId)
+
+    lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+      if node != null then
+        if startTime < 0 then startTime = ts
+        val elapsed  = ts - startTime
+        val progress =
+          if durationSeconds <= 0 then 1.0
+          else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
+        val eased    = easeOutCubic(progress)
+        val dx       = animation.delta.x * eased
+        val dy       = animation.delta.y * eased
+        node.setAttribute("transform", s"translate($dx $dy)")
+        if progress < 1.0 then
+          rafId = dom.window.requestAnimationFrame(step)
+
+    svg.g(
+      svg.className := "doubling-animation",
+      svg.g(
+        svg.style := "pointer-events: none;",
+        renderPolygons()
+      ),
+      svg.g(
+        svg.style := "pointer-events: none;",
+        renderPolygons(),
+        onMountCallback: ctx =>
+          node = ctx.thisNode.ref
+          node.setAttribute("transform", "translate(0 0)")
+          rafId = dom.window.requestAnimationFrame(step)
+        ,
+        onUnmountCallback: _ =>
+          if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+      )
+    )
+
+  private def easeOutCubic(t: Double): Double =
+    val clamped = t.max(0.0).min(1.0)
+    1.0 - Math.pow(1.0 - clamped, 3)
 
   private def renderNodeLabels(coordinates: Map[VertexId, BigPoint]): List[Element] =
     coordinates.toList.map { (vertexId, bigPoint) =>

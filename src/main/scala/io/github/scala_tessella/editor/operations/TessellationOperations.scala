@@ -7,6 +7,7 @@ import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{
   AppState,
+  DoublingAnimation,
   EditorConfig,
   EditorState,
   FailedPolygonPlacement,
@@ -113,6 +114,7 @@ object TessellationOperations:
   def attemptFanning(vertexId: VertexId): Unit =
     val tiling           = currentTiling.now()
     EditorState.fanAnimation.set(None)
+    EditorState.doublingAnimation.set(None)
     val faceIds          = tiling.innerFaces.map(_.id)
     val facePoints       = precomputeFacePoints(tiling)
     val maxFaceId        = faceIds.map(_.value).maxOption.getOrElse(0)
@@ -171,18 +173,33 @@ object TessellationOperations:
           s"${point.x},${point.y}"
       (faceId, pointStrings.mkString(" "))
 
+  private def faceCentroid(tiling: TilingDCEL, faceId: FaceId): Option[Point] =
+    tiling.findInnerFaceVertices(faceId).toOption.map: vertices =>
+      val points = vertices.map(_.coords.toPoint).map(tilingPointToCanvasView)
+      averagePoint(points).getOrElse(Point.origin)
+
+  private def averagePoint(points: Iterable[Point]): Option[Point] =
+    if points.isEmpty then None
+    else
+      val (sx, sy, count) = points.foldLeft((0.0, 0.0, 0)): (acc, p) =>
+        (acc._1 + p.x, acc._2 + p.y, acc._3 + 1)
+      Some(Point(sx / count, sy / count))
+
   def attemptDoubling(): Unit =
-    val tiling    = currentTiling.now()
-    val faceIds   =
+    val tiling         = currentTiling.now()
+    EditorState.doublingAnimation.set(None)
+    val faceIds        =
       tiling.innerFaces.map:
         _.id
-    val maxFaceId =
+    val facePoints     = precomputeFacePoints(tiling)
+    val originalCenter = averagePoint(faceIds.flatMap(id => faceCentroid(tiling, id)))
+    val maxFaceId      =
       faceIds
         .map: faceId =>
           faceId.value
         .max
-    val colors    = polygonColors.now()
-    val op        = () =>
+    val colors         = polygonColors.now()
+    val op             = () =>
       try
         tiling.doubleArea
       catch
@@ -193,9 +210,27 @@ object TessellationOperations:
         faceIds.indices.foreach: id =>
           val rgb = colors(faceIds(id))
           polygonColors.update(_ + (FaceId(maxFaceId + id + 1) -> rgb))
+        val newFaceIds = faceIds.indices.map(id => FaceId(maxFaceId + id + 1))
+        val newCenter  = averagePoint(newFaceIds.flatMap(id => faceCentroid(currentTiling.now(), id)))
+        val needsFit   = ViewOperations.isTilingLargerThanCanvas
+        var fitDelayed = false
+        (originalCenter, newCenter) match
+          case (Some(orig), Some(next)) =>
+            val delta     = next - orig
+            val animation = DoublingAnimation(facePoints, delta, EditorConfig.fanAnimationDurationMs)
+            EditorState.doublingAnimation.set(Some(animation))
+            val _         = setTimeout(EditorConfig.fanAnimationDurationMs) {
+              EditorState.doublingAnimation.update {
+                case Some(current) if current eq animation => None
+                case other                                 => other
+              }
+              if needsFit then ViewOperations.fitTilingToCanvas()
+            }
+            fitDelayed = true
+          case _                        => ()
         AppState.clearSymmetryOverlays()
         EditorState.selectedPerimeterEdges.set(Set.empty)
-        if ViewOperations.isTilingLargerThanCanvas then ViewOperations.fitTilingToCanvas()
+        if needsFit && !fitDelayed then ViewOperations.fitTilingToCanvas()
       ,
       onFailure = err =>
         ErrorOperations.showError(err.message)

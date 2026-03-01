@@ -35,6 +35,12 @@ case class FanAnimation(
     staggerMs: Int
 )
 
+case class DoublingAnimation(
+    facePoints: List[(FaceId, String)],
+    delta: Point,
+    durationMs: Int
+)
+
 enum Anchor:
 
   case Vertex(vertexId: VertexId)

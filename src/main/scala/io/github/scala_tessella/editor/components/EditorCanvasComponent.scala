@@ -176,19 +176,22 @@ object EditorCanvasComponent:
       // Grid pattern
       GridRenderer.element,
 
-      // Render tessellation (or fan animation, if active)
-      child <-- EditorState.fanAnimation.signal
-        .combineWith(EditorState.currentTiling.signal)
-        .map: (fanOpt, tiling) =>
-          fanOpt match
-            case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
-            case None            => TessellationRenderer.renderTiling(tiling),
+      // Render tessellation (or animations, if active)
+      child <-- EditorState.doublingAnimation.signal
+        .combineWith(EditorState.fanAnimation.signal, EditorState.currentTiling.signal)
+        .map: (doubleOpt, fanOpt, tiling) =>
+          doubleOpt match
+            case Some(animation) => TessellationRenderer.renderDoublingAnimation(animation)
+            case None            =>
+              fanOpt match
+                case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
+                case None            => TessellationRenderer.renderTiling(tiling),
 
       // Show message when no tessellation is available
-      child.maybe <-- EditorState.fanAnimation.signal
-        .combineWith(EditorState.currentTiling.signal)
-        .map: (fanOpt, tiling) =>
-          if fanOpt.isDefined then None
+      child.maybe <-- EditorState.doublingAnimation.signal
+        .combineWith(EditorState.fanAnimation.signal, EditorState.currentTiling.signal)
+        .map: (doubleOpt, fanOpt, tiling) =>
+          if doubleOpt.isDefined || fanOpt.isDefined then None
           else if tiling.isEmpty then
             Some(noTessellationMessage())
           else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.get then
