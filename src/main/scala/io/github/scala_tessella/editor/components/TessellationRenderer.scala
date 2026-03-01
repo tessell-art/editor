@@ -292,6 +292,11 @@ object TessellationRenderer:
     val pivot           = tilingPointToCanvasView(animation.pivot)
     val durationSeconds = animation.durationMs.toDouble / 1000.0
     val stepDegrees     = animation.stepAngle.toDegrees
+    val staggerMs       = animation.staggerMs.toDouble
+
+    def easeOutCubic(t: Double): Double =
+      val clamped = t.max(0.0).min(1.0)
+      1.0 - Math.pow(1.0 - clamped, 3)
 
     def renderFanPolygons(): List[Element] =
       animation.facePoints.map: (faceId, pointsStr) =>
@@ -303,6 +308,7 @@ object TessellationRenderer:
         var rafId             = 0
         var startTime         = -1.0
         var node: dom.Element = null
+        val delayMs           = staggerMs * copyIndex
 
         lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
           if node != null then
@@ -310,8 +316,9 @@ object TessellationRenderer:
             val elapsed  = ts - startTime
             val progress =
               if durationSeconds <= 0 then 1.0
-              else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
-            val angle    = targetDegrees * progress
+              else Math.min(1.0, (elapsed - delayMs) / (durationSeconds * 1000.0))
+            val eased    = easeOutCubic(progress)
+            val angle    = targetDegrees * eased
             node.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
             if progress < 1.0 then
               rafId = dom.window.requestAnimationFrame(step)

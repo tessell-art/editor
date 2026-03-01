@@ -31,7 +31,8 @@ case class FanAnimation(
     pivot: Point,
     copies: Int,
     stepAngle: Radian,
-    durationMs: Int
+    durationMs: Int,
+    staggerMs: Int
 )
 
 enum Anchor:

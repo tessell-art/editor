@@ -135,7 +135,14 @@ object TessellationOperations:
           (pivotOpt, boundaryAngleOpt) match
             case (Some(pivot), Some(angle)) if copies > 1 =>
               val animation =
-                FanAnimation(facePoints, pivot, copies, angle, EditorConfig.fanAnimationDurationMs)
+                FanAnimation(
+                  facePoints,
+                  pivot,
+                  copies,
+                  angle,
+                  EditorConfig.fanAnimationDurationMs,
+                  EditorConfig.fanAnimationStaggerMs
+                )
               EditorState.fanAnimation.set(Some(animation))
               setTimeout(EditorConfig.fanAnimationDurationMs) {
                 EditorState.fanAnimation.update {
