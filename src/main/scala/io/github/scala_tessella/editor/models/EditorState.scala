@@ -62,8 +62,8 @@ object EditorState:
 
   val reflectionVertexIds: Var[Option[List[(BoundaryLocation, BoundaryLocation)]]] = Var(None)
 
-  /** Theme preference: None means follow the system, Some("light") or Some("dark") is user override */
-  val userThemePreference: Var[Option[String]] = Var(None)
+  /** Theme preference: None means follow the system, Some(Theme.Light/Dark) is user override */
+  val userThemePreference: Var[Option[Theme]] = Var(None)
 
   /** Whether the mobile menu is open */
   val isMenuOpen: Var[Boolean] = Var(false)
@@ -247,24 +247,25 @@ object EditorState:
     highlightedPolygonId.signal
 
   /** System theme as a Signal (uses a media query, no Var) */
-  private val systemThemeBus      = new EventBus[String]
-  val systemTheme: Signal[String] =
+  private val systemThemeBus     = new EventBus[Theme]
+  val systemTheme: Signal[Theme] =
     if js.typeOf(js.Dynamic.global.window) != "undefined" then
       // Browser environment
       val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
-      val signal          = systemThemeBus.events.startWith(if lightMediaQuery.matches then "light" else "dark")
+      val signal          =
+        systemThemeBus.events.startWith(if lightMediaQuery.matches then Theme.Light else Theme.Dark)
       lightMediaQuery.addEventListener(
         "change",
         (_: dom.Event) =>
-          systemThemeBus.writer.onNext(if lightMediaQuery.matches then "light" else "dark")
+          systemThemeBus.writer.onNext(if lightMediaQuery.matches then Theme.Light else Theme.Dark)
       )
       signal
     else
       // Test/Node.js environment - default to light theme
-      systemThemeBus.events.startWith("light")
+      systemThemeBus.events.startWith(Theme.Light)
 
   /** Effective theme: user's preference or system */
-  val effectiveTheme: Signal[String] =
+  val effectiveTheme: Signal[Theme] =
     userThemePreference.signal.combineWith(systemTheme).map {
       case (Some(user), _) => user
       case (None, sys)     => sys
@@ -273,6 +274,6 @@ object EditorState:
   /** Theme-aware overlay preview stroke color */
   val overlayPreviewStrokeColor: Signal[String] =
     effectiveTheme.map {
-      case "light" => "#222222" // dark gray for light mode
-      case _       => "#ffffff" // white for dark mode
+      case Theme.Light => "#222222" // dark gray for light mode
+      case Theme.Dark  => "#ffffff" // white for dark mode
     }

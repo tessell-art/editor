@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.components.popup.*
-import io.github.scala_tessella.editor.models.{AppState, EditorState, ViewTransform}
+import io.github.scala_tessella.editor.models.{AppState, EditorState, Theme, ViewTransform}
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
 import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter, TemplateLoader}
@@ -13,7 +13,7 @@ import scala.math.{max, min}
 object MenuBarComponent:
 
   // The signature is updated to accept the theme preference Var directly
-  def element(effectiveTheme: Signal[String], userThemePreference: Var[Option[String]]): Element =
+  def element(effectiveTheme: Signal[Theme], userThemePreference: Var[Option[Theme]]): Element =
     div(
       navTag(
         className := "menu-bar",
@@ -314,22 +314,21 @@ object MenuBarComponent:
 
   // This now handles the theme update logic directly
   private def themeSwitcher(
-      effectiveTheme: Signal[String],
-      userThemePreference: Var[Option[String]]
+      effectiveTheme: Signal[Theme],
+      userThemePreference: Var[Option[Theme]]
   ): Element =
     button(
       className := "theme-toggle-button",
       title <-- effectiveTheme.map {
-        case "dark"  => "Switch to Light Mode"
-        case "light" => "Switch to Dark Mode"
+        case Theme.Dark  => "Switch to Light Mode"
+        case Theme.Light => "Switch to Dark Mode"
       },
       // Safely get the current theme on click and update the state
       onClick.compose(_.withCurrentValueOf(effectiveTheme)) --> { case (_, currentTheme) =>
-        val nextTheme = if (currentTheme == "light") "dark" else "light"
-        userThemePreference.set(Some(nextTheme))
+        userThemePreference.set(Some(currentTheme.toggle))
       },
       child <-- effectiveTheme.map {
-        case "dark"  => IconsSVG.sunIcon  // Sun icon for dark mode, to switch to light
-        case "light" => IconsSVG.moonIcon // Moon icon for light mode, to switch to dark
+        case Theme.Dark  => IconsSVG.sunIcon  // Sun icon for dark mode, to switch to light
+        case Theme.Light => IconsSVG.moonIcon // Moon icon for light mode, to switch to dark
       }
     )
