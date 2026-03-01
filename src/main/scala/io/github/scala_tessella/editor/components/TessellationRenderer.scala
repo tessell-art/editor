@@ -12,8 +12,8 @@ import io.github.scala_tessella.editor.models.{
   EditorConfig,
   EditorMode,
   EditorState,
-  FanAnimation,
   FailedPolygonPlacement,
+  FanAnimation,
   Tool
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
@@ -29,7 +29,9 @@ import io.github.scala_tessella.editor.utils.SvgDsl.{
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
+import org.scalajs.dom
 import org.scalajs.dom.EndingType.transparent
+
 import scala.scalajs.js
 
 object TessellationRenderer:
@@ -297,22 +299,33 @@ object TessellationRenderer:
 
     val copyGroups =
       (0 until animation.copies).map: copyIndex =>
-        val targetDegrees = stepDegrees * copyIndex
+        val targetDegrees     = stepDegrees * copyIndex
+        var rafId             = 0
+        var startTime         = -1.0
+        var node: dom.Element = null
+
+        lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+          if node != null then
+            if startTime < 0 then startTime = ts
+            val elapsed  = ts - startTime
+            val progress =
+              if durationSeconds <= 0 then 1.0
+              else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
+            val angle    = targetDegrees * progress
+            node.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
+            if progress < 1.0 then
+              rafId = dom.window.requestAnimationFrame(step)
+
         svg.g(
           svg.style := "pointer-events: none;",
           renderFanPolygons(),
-          svg.animateTransform(
-            svg.attributeName := "transform",
-            svg.attributeType := "XML",
-            svg.tpe           := "rotate",
-            svg.from          := s"0 ${pivot.x} ${pivot.y}",
-            svg.to            := s"$targetDegrees ${pivot.x} ${pivot.y}",
-            svg.dur           := s"${durationSeconds}s",
-            svg.fill          := "freeze",
-            svg.begin         := "indefinite",
-            onMountCallback: ctx =>
-              val _ = ctx.thisNode.ref.asInstanceOf[js.Dynamic].beginElement()
-          )
+          onMountCallback: ctx =>
+            node = ctx.thisNode.ref
+            node.setAttribute("transform", s"rotate(0 ${pivot.x} ${pivot.y})")
+            rafId = dom.window.requestAnimationFrame(step)
+          ,
+          onUnmountCallback: _ =>
+            if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
         )
 
     svg.g(
