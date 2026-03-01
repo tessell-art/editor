@@ -1,4 +1,5 @@
 import org.scalajs.linker.interface.ModuleSplitStyle
+import org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
 
 // Enable semanticdb for Scalafix (Scala 3)
 ThisBuild / semanticdbEnabled := true
@@ -57,6 +58,11 @@ lazy val editor = project.in(file("."))
 
     // MUnit test framework
     testFrameworks += new TestFramework("munit.Framework"),
+
+    // Use JSDOM-backed Node.js environment for Scala.js tests that touch DOM APIs
+    Test / jsEnv := new JSDOMNodeJSEnv(),
+    // JSDOM env expects a script input (no module)
+    Test / scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.NoModule)),
 
     // Generate a Scala object with the app version from SBT `version`
     Compile / sourceGenerators += Def.task {

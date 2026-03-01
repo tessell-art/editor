@@ -247,11 +247,16 @@ object EditorState:
     highlightedPolygonId.signal
 
   /** System theme as a Signal (uses a media query, no Var) */
-  private val systemThemeBus     = new EventBus[Theme]
+  private val systemThemeBus                    = new EventBus[Theme]
+  private def defaultThemeSignal: Signal[Theme] =
+    systemThemeBus.events.startWith(Theme.Light)
+
   val systemTheme: Signal[Theme] =
-    if js.typeOf(js.Dynamic.global.window) != "undefined" then
-      // Browser environment
-      val lightMediaQuery = dom.window.matchMedia("(prefers-color-scheme: light)")
+    val windowDyn = js.Dynamic.global.selectDynamic("window")
+    if js.typeOf(windowDyn) != "undefined" && js.typeOf(windowDyn.matchMedia) == "function" then
+      // Browser environment with matchMedia support
+      val lightMediaQuery =
+        windowDyn.matchMedia("(prefers-color-scheme: light)").asInstanceOf[dom.MediaQueryList]
       val signal          =
         systemThemeBus.events.startWith(if lightMediaQuery.matches then Theme.Light else Theme.Dark)
       lightMediaQuery.addEventListener(
@@ -261,8 +266,8 @@ object EditorState:
       )
       signal
     else
-      // Test/Node.js environment - default to light theme
-      systemThemeBus.events.startWith(Theme.Light)
+      // Test/Node.js environment or unsupported matchMedia - default to light theme
+      defaultThemeSignal
 
   /** Effective theme: user's preference or system */
   val effectiveTheme: Signal[Theme] =
