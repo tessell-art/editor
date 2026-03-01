@@ -150,36 +150,11 @@ object TessellationOperations:
     )
 
   private def boundaryInnerAngleAt(tiling: TilingDCEL, vertexId: VertexId): Option[Radian] =
-    val boundary = tiling.boundaryVertices.map(_.toCoords).toVector
-    val n        = boundary.size
-    if n < 3 then None
-    else
-      val idx = boundary.indexWhere(_.id == vertexId)
-      if idx < 0 then None
-      else
-        val prev  = boundary((idx - 1 + n) % n).point
-        val curr  = boundary(idx).point
-        val next  = boundary((idx + 1) % n).point
-        val v1    = prev - curr
-        val v2    = next - curr
-        val denom = v1.magnitude * v2.magnitude
-        val eps   = 1e-12
-        if denom < eps then None
-        else
-          val cosTheta   = (v1.dot(v2) / denom).max(-1.0).min(1.0)
-          val theta      = Math.acos(cosTheta)
-          val cross      = v1.x * v2.y - v1.y * v2.x
-          val signedArea =
-            (0 until n).foldLeft(0.0): (acc, i) =>
-              val p1 = boundary(i).point
-              val p2 = boundary((i + 1) % n).point
-              acc + (p1.x * p2.y - p2.x * p1.y)
-          val isCCW      = signedArea > 0
-          val isConcave  =
-            if isCCW then cross > 0 else cross < 0
-          val interior   =
-            if isConcave then Radian(Radian.TAU.toDouble - theta) else Radian(theta)
-          Some(interior)
+    tiling.getInnerAnglesAtVertex(vertexId).toOption
+      .map:
+        _.sumExact.toRational.toDouble
+      .map:
+        Radian.fromDegrees
 
   private def precomputeFacePoints(tiling: TilingDCEL): List[(FaceId, String)] =
     tiling.innerFacesVertices.map: (faceId, faceVertices) =>
