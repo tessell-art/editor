@@ -126,6 +126,8 @@ object TessellationOperations:
     OperationRunner.runTilingOp(op)(
       onSuccess =
         val newFaceCount = currentTiling.now().innerFaces.size
+        val needsFit     = ViewOperations.isTilingLargerThanCanvas
+        var fitDelayed   = false
         if faceCount > 0 && newFaceCount > faceCount && newFaceCount % faceCount == 0 then
           val copies       = newFaceCount / faceCount
           val fillFallback = EditorState.fillColor.now()
@@ -151,9 +153,12 @@ object TessellationOperations:
                   case Some(current) if current eq animation => None
                   case other                                 => other
                 }
+                if needsFit then ViewOperations.fitTilingToCanvas()
               }: Unit
+              fitDelayed = true
             case _                                        => ()
         AppState.clearSymmetryOverlays()
+        if needsFit && !fitDelayed then ViewOperations.fitTilingToCanvas()
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot fan tiling: ${err.message}")
     )
