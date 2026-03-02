@@ -8,7 +8,7 @@ import io.github.scala_tessella.editor.components.{
   PolygonPaletteComponent
 }
 import io.github.scala_tessella.editor.interactions.KeyboardEventHandler
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{EditorState, Theme}
 import io.github.scala_tessella.editor.utils.Logger
 import org.scalajs.dom
 
@@ -17,14 +17,6 @@ def Editor(): Unit =
   // Initialize logging based on environment (dev vs prod)
   Logger.initFromEnvironment()
   Logger.info("Editor starting up")
-  // This observer will update the body's class list whenever the theme changes.
-  // We use unsafeWindowOwner because this is a global setting for the app's lifetime.
-  val _ = EditorState.effectiveTheme.foreach { theme =>
-    dom.document.body.classList.remove("light-mode")
-    dom.document.body.classList.remove("dark-mode")
-    dom.document.body.classList.add(theme.modeClass)
-  }(using unsafeWindowOwner)
-
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
     EditorApp.element
@@ -33,6 +25,8 @@ def Editor(): Unit =
 object EditorApp:
   def element: Element =
     div(
+      cls("light-mode") <-- EditorState.effectiveTheme.map(_ == Theme.Light),
+      cls("dark-mode") <-- EditorState.effectiveTheme.map(_ == Theme.Dark),
       //      h1("Polygon Shape Editor"),
       // Add the Menu Bar at the top, passing the theme signal and the state Var to update
       MenuBarComponent.element(EditorState.effectiveTheme, EditorState.userThemePreference),
