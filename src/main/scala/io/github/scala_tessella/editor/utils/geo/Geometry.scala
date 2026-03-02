@@ -72,18 +72,16 @@ object Geometry:
 
   /** Build polygon vertices using unit edge length and given internal angles. */
   def buildUnitEdgePolygon(angles: Seq[Radian]): Vector[Point] =
-    val origin  = Point.origin
-    var x       = origin.x
-    var y       = origin.y
-    var heading = 0.0 // radians
-    val pts     = collection.mutable.ArrayBuffer[Point](origin)
-    angles.foreach { t =>
-      x = x + Math.cos(heading)
-      y = y + Math.sin(heading)
-      pts += Point(x, y)
-      heading = heading + t.toDouble
-    }
-    pts.toVector
+    val origin = Point.origin
+    angles
+      .scanLeft((origin, 0.0)):
+        case ((current, heading), t) =>
+          val nextPoint = current + Point(Math.cos(heading), Math.sin(heading))
+          val nextHead  = heading + t.toDouble
+          (nextPoint, nextHead)
+      .map: (point, _) =>
+        point
+      .toVector
 
   /** Compute basic geometric properties of an edge (length, unit vector, midpoint). */
   def edgeMetrics(vertex1: Point, vertex2: Point): (Double, Point, Point) =
