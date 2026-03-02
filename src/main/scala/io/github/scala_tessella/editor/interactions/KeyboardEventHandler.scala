@@ -10,7 +10,6 @@ import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 
 import scala.math.{max, min}
-import scala.scalajs.js.timers.{SetTimeoutHandle, clearTimeout, setTimeout} // debouncing timers
 
 object KeyboardEventHandler:
 
@@ -22,22 +21,56 @@ object KeyboardEventHandler:
     // Command on macOS, Ctrl elsewhere
     if isMac then e.metaKey else e.ctrlKey
 
-  def keyboardEventHandlers: Binder[HtmlElement] =
-    // Gate the stream using the processing signal without calling .now() per keydown
-    windowEvents(_.onKeyDown)
-      .withCurrentValueOf(EditorState.isProcessing.signal)
-      .collect { case (event, false) =>
-        event
-      }
-      --> handleKeyDown
+  def keyboardEventHandlers: Mod[HtmlElement] =
+    onMountCallback: ctx =>
+      val owner    = ctx.owner
+      // Gate the stream using the processing signal without calling .now() per keydown
+      val keyDowns = windowEvents(_.onKeyDown)
+        .withCurrentValueOf(EditorState.isProcessing.signal)
+        .collect:
+          case (event, false) => event
 
-  // --- Debounced rotate / zoom state ---
-  private var rotateAccum: Int                      = 0
-  private var rotateTimer: Option[SetTimeoutHandle] = None
+      val rotationStream = keyDowns
+        .map: event =>
+          if isTargetInput(event) then None
+          else
+            rotationDeltaForKey(event.key).map: delta =>
+              event.preventDefault()
+              delta
+        .collect:
+          case Some(delta) => delta
 
-  private var zoomAccum: Double                   = 1.0
-  private var zoomTimer: Option[SetTimeoutHandle] = None
+      val zoomStream = keyDowns
+        .map: event =>
+          if isTargetInput(event) then None
+          else
+            zoomFactorForKey(event.key).map: factor =>
+              event.preventDefault()
+              factor
+        .collect:
+          case Some(factor) => factor
 
+      rotationStream
+        .debounce(debounceMs)
+        .foreach(ViewOperations.rotateView)(using owner): Unit
+
+      zoomStream
+        .debounce(debounceMs)
+        .foreach { factor =>
+
+          EditorState.viewTransform.update: t =>
+            val next = t.scale * factor
+            t.copy(scale = min(max(next, 0.1), 5.0))
+        }(using owner): Unit
+
+      keyDowns
+        .filter: event =>
+          !isTargetInput(event) &&
+            rotationDeltaForKey(event.key).isEmpty &&
+            zoomFactorForKey(event.key).isEmpty
+        .foreach(handleKeyDown)(using owner): Unit
+
+  // --- Debounced rotate / zoom config ---
   private val debounceMs = 20 // ~1 frame @ 50fps; adjust 16–33ms as desired
 
   private[interactions] def rotationDeltaForKey(key: String): Option[Int] =
@@ -61,43 +94,8 @@ object KeyboardEventHandler:
   private[interactions] def isSaveShortcut(key: String, primary: Boolean): Boolean =
     primary && key == "s"
 
-  private def flushRotate(): Unit =
-    if rotateAccum != 0 then
-      ViewOperations.rotateView(rotateAccum)
-      rotateAccum = 0
-
-  private def flushZoom(): Unit =
-    if zoomAccum != 1.0 then
-      // Apply once, respecting existing scale limits
-      val factor = zoomAccum
-      zoomAccum = 1.0
-      EditorState.viewTransform.update { t =>
-        val next = t.scale * factor
-        t.copy(scale = min(max(next, 0.1), 5.0))
-      }
-
-  private def enqueueRotate(delta: Int): Unit =
-    rotateAccum += delta
-    rotateTimer.foreach(clearTimeout)
-    rotateTimer = Some(setTimeout(debounceMs) {
-      flushRotate()
-      rotateTimer = None
-    })
-
-  private def enqueueZoom(factor: Double): Unit =
-    zoomAccum *= factor
-    zoomTimer.foreach(clearTimeout)
-    zoomTimer = Some(setTimeout(debounceMs) {
-      flushZoom()
-      zoomTimer = None
-    })
-
-  def handleKeyDown(event: KeyboardEvent): Unit =
-    // Snapshot small pieces of state once per key event
-    val currentTiling = EditorState.currentTiling.now()
-    val hasFileName   = EditorState.currentFileName.now().isDefined
-
-    val targetIsInput = Option(event.target).exists {
+  private def isTargetInput(event: KeyboardEvent): Boolean =
+    Option(event.target).exists {
       case _: dom.html.Input                            => true
       case _: dom.html.TextArea                         => true
       case _: dom.html.Select                           => true
@@ -105,39 +103,34 @@ object KeyboardEventHandler:
       case _                                            => false
     }
 
-    if !targetIsInput then
-      rotationDeltaForKey(event.key) match
-        case Some(delta) =>
-          event.preventDefault()
-          enqueueRotate(delta) // debounced
-        case None        =>
-          zoomFactorForKey(event.key) match
-            case Some(factor) =>
-              event.preventDefault()
-              enqueueZoom(factor) // debounced
-            case None         =>
-              if event.key == "d" || event.key == "D" then
-                event.preventDefault()
-                AppState.doubleTiling()
-              else if event.key == "f" || event.key == "F" then
-                event.preventDefault()
-                AppState.fitTilingToCanvas()
-              else if isRedoShortcut(event.key, primaryMod(event), event.shiftKey) then
-                event.preventDefault()
-                UndoManager.redo()
-              else if isUndoShortcut(event.key, primaryMod(event), event.shiftKey) then
-                event.preventDefault()
-                UndoManager.undo()
-              else if isSaveShortcut(event.key, primaryMod(event)) then
-                event.preventDefault()
-                // Use the snapshots captured above
-                if hasFileName && !currentTiling.isEmpty then
-                  SvgExporter.saveTilingToSVG()
-              else if event.key == "Escape" then
-                event.preventDefault()
-                clearAllSelections()
-              else if event.key == "Delete" || event.key == "Backspace" then
-                event.preventDefault()
-                // Future deletion logic can be added here
-                ()
-              else ()
+  def handleKeyDown(event: KeyboardEvent): Unit =
+    // Snapshot small pieces of state once per key event
+    val currentTiling = EditorState.currentTiling.now()
+    val hasFileName   = EditorState.currentFileName.now().isDefined
+
+    if !isTargetInput(event) then
+      if event.key == "d" || event.key == "D" then
+        event.preventDefault()
+        AppState.doubleTiling()
+      else if event.key == "f" || event.key == "F" then
+        event.preventDefault()
+        AppState.fitTilingToCanvas()
+      else if isRedoShortcut(event.key, primaryMod(event), event.shiftKey) then
+        event.preventDefault()
+        UndoManager.redo()
+      else if isUndoShortcut(event.key, primaryMod(event), event.shiftKey) then
+        event.preventDefault()
+        UndoManager.undo()
+      else if isSaveShortcut(event.key, primaryMod(event)) then
+        event.preventDefault()
+        // Use the snapshots captured above
+        if hasFileName && !currentTiling.isEmpty then
+          SvgExporter.saveTilingToSVG()
+      else if event.key == "Escape" then
+        event.preventDefault()
+        clearAllSelections()
+      else if event.key == "Delete" || event.key == "Backspace" then
+        event.preventDefault()
+        // Future deletion logic can be added here
+        ()
+      else ()
