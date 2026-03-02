@@ -31,7 +31,7 @@ object EditorApp:
       onMountCallback: ctx =>
         val owner     = ctx.owner
         val windowDyn = js.Dynamic.global.selectDynamic("window")
-        val _ =
+        val _         =
           if js.typeOf(windowDyn) != "undefined" && js.typeOf(windowDyn.matchMedia) == "function" then
             val mediaQuery =
               windowDyn.matchMedia("(prefers-color-scheme: light)").asInstanceOf[dom.MediaQueryList]
