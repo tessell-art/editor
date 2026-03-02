@@ -31,16 +31,18 @@ object EditorApp:
       onMountCallback: ctx =>
         val owner     = ctx.owner
         val windowDyn = js.Dynamic.global.selectDynamic("window")
-        if js.typeOf(windowDyn) != "undefined" && js.typeOf(windowDyn.matchMedia) == "function" then
-          val mediaQuery =
-            windowDyn.matchMedia("(prefers-color-scheme: light)").asInstanceOf[dom.MediaQueryList]
-          val initial    = if mediaQuery.matches then Theme.Light else Theme.Dark
-          val changes    =
-            DomEventStream(mediaQuery, "change")
-              .map(_ => if mediaQuery.matches then Theme.Light else Theme.Dark)
-          changes.startWith(initial).foreach(EditorState.systemTheme.set)(using owner)
-        else
-          EditorState.systemTheme.set(Theme.Light)
+        val _ =
+          if js.typeOf(windowDyn) != "undefined" && js.typeOf(windowDyn.matchMedia) == "function" then
+            val mediaQuery =
+              windowDyn.matchMedia("(prefers-color-scheme: light)").asInstanceOf[dom.MediaQueryList]
+            val initial    = if mediaQuery.matches then Theme.Light else Theme.Dark
+            val changes    =
+              DomEventStream(mediaQuery, "change")
+                .map: _ =>
+                  if mediaQuery.matches then Theme.Light else Theme.Dark
+            changes.startWith(initial).foreach(EditorState.systemTheme.set)(using owner)
+          else
+            EditorState.systemTheme.set(Theme.Light)
 
         EditorState.effectiveTheme.foreach { theme =>
           val body = dom.document.body
