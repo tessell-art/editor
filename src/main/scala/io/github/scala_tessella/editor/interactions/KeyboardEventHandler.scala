@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.{AppState, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
@@ -68,7 +69,11 @@ object KeyboardEventHandler:
           !isTargetInput(event) &&
             rotationDeltaForKey(event.key).isEmpty &&
             zoomFactorForKey(event.key).isEmpty
-        .foreach(handleKeyDown)(using owner): Unit
+        .withCurrentValueOf(EditorState.currentTiling.signal, EditorState.currentFileName.signal)
+        .foreach { (event, tiling, fileNameOpt) =>
+
+          handleKeyDown(event, tiling, fileNameOpt.isDefined)
+        }(using owner): Unit
 
   // --- Debounced rotate / zoom config ---
   private val debounceMs = 20 // ~1 frame @ 50fps; adjust 16–33ms as desired
@@ -103,11 +108,7 @@ object KeyboardEventHandler:
       case _                                            => false
     }
 
-  def handleKeyDown(event: KeyboardEvent): Unit =
-    // Snapshot small pieces of state once per key event
-    val currentTiling = EditorState.currentTiling.now()
-    val hasFileName   = EditorState.currentFileName.now().isDefined
-
+  def handleKeyDown(event: KeyboardEvent, currentTiling: TilingDCEL, hasFileName: Boolean): Unit =
     if !isTargetInput(event) then
       if event.key == "d" || event.key == "D" then
         event.preventDefault()

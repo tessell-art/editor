@@ -16,7 +16,9 @@ object UndoComponent:
         title <-- UndoManager.canUndo.signal.map(isUndoable =>
           if (isUndoable) UndoManager.getUndoPreview.getOrElse("Undo") else "No actions to undo"
         ),
-        onClick --> AppState.undoObserver,
+        onClick.compose(
+          _.withCurrentValueOf(EditorState.isProcessing.signal).map(_._2)
+        ) --> AppState.undoObserver,
         span(className := "icon", "↶")
 //        span(className := "button-text", " "),
 //        span(
@@ -34,7 +36,9 @@ object UndoComponent:
         title <-- UndoManager.canRedo.signal.map(isRedoable =>
           if (isRedoable) UndoManager.getRedoPreview.getOrElse("Redo") else "No actions to redo"
         ),
-        onClick --> AppState.redoObserver,
+        onClick.compose(
+          _.withCurrentValueOf(EditorState.isProcessing.signal).map(_._2)
+        ) --> AppState.redoObserver,
         span(className := "icon", "↷") // Redo arrow icon
 //        span(className := "button-text", " "),
 //        span(

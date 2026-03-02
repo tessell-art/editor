@@ -72,17 +72,15 @@ object AppState:
   val canRedo: Signal[Boolean] = UndoManager.canRedo.signal
 
   // Observers for UI wiring (Laminar-idiomatic: views do --> AppState.XObserver)
-  val undoObserver: Observer[Any] = Observer { _ =>
+  val undoObserver: Observer[Boolean] =
+    Observer: isProcessing =>
+      ifNotProcessing(isProcessing):
+        UndoManager.undo()
 
-    ifNotProcessing:
-      UndoManager.undo()
-  }
-
-  val redoObserver: Observer[Any] = Observer { _ =>
-
-    ifNotProcessing:
-      UndoManager.redo()
-  }
+  val redoObserver: Observer[Boolean] =
+    Observer: isProcessing =>
+      ifNotProcessing(isProcessing):
+        UndoManager.redo()
 
   // Simple UI operations
 
@@ -91,10 +89,9 @@ object AppState:
     */
   def toggleEditorMode(): Unit =
     ifNotProcessing:
-      editorMode.update {
+      editorMode.update:
         case EditorMode.Select => EditorMode.Delete
         case EditorMode.Delete => EditorMode.Select
-      }
 
   /** Toggles the visibility of node labels. Does nothing if the editor is currently processing an operation.
     */
