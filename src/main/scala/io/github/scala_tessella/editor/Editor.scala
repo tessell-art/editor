@@ -25,8 +25,12 @@ def Editor(): Unit =
 object EditorApp:
   def element: Element =
     div(
-      cls("light-mode") <-- EditorState.effectiveTheme.map(_ == Theme.Light),
-      cls("dark-mode") <-- EditorState.effectiveTheme.map(_ == Theme.Dark),
+      onMountCallback: ctx =>
+        EditorState.effectiveTheme.foreach { theme =>
+          val body = dom.document.body
+          body.classList.toggle("light-mode", theme == Theme.Light): Unit
+          body.classList.toggle("dark-mode", theme == Theme.Dark): Unit
+        }(using ctx.owner): Unit,
       //      h1("Polygon Shape Editor"),
       // Add the Menu Bar at the top, passing the theme signal and the state Var to update
       MenuBarComponent.element(EditorState.effectiveTheme, EditorState.userThemePreference),
