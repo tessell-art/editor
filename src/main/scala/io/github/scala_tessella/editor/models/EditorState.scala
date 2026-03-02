@@ -11,8 +11,6 @@ import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
 
 import org.scalajs.dom
 
-import scala.scalajs.js
-
 /** EditorState object contains all the state variables for the editor. The state is organized into logical
   * groups for better maintainability.
   */
@@ -246,32 +244,12 @@ object EditorState:
   val selectedFaceForInsertion: Signal[Option[FaceId]] =
     highlightedPolygonId.signal
 
-  /** System theme as a Signal (uses a media query, no Var) */
-  private val systemThemeBus                    = new EventBus[Theme]
-  private def defaultThemeSignal: Signal[Theme] =
-    systemThemeBus.events.startWith(Theme.Light)
-
-  val systemTheme: Signal[Theme] =
-    val windowDyn = js.Dynamic.global.selectDynamic("window")
-    if js.typeOf(windowDyn) != "undefined" && js.typeOf(windowDyn.matchMedia) == "function" then
-      // Browser environment with matchMedia support
-      val lightMediaQuery =
-        windowDyn.matchMedia("(prefers-color-scheme: light)").asInstanceOf[dom.MediaQueryList]
-      val signal          =
-        systemThemeBus.events.startWith(if lightMediaQuery.matches then Theme.Light else Theme.Dark)
-      lightMediaQuery.addEventListener(
-        "change",
-        (_: dom.Event) =>
-          systemThemeBus.writer.onNext(if lightMediaQuery.matches then Theme.Light else Theme.Dark)
-      )
-      signal
-    else
-      // Test/Node.js environment or unsupported matchMedia - default to light theme
-      defaultThemeSignal
+  /** System theme, updated from EditorApp on mount (default is light). */
+  val systemTheme: Var[Theme] = Var(Theme.Light)
 
   /** Effective theme: user's preference or system */
   val effectiveTheme: Signal[Theme] =
-    userThemePreference.signal.combineWith(systemTheme).map {
+    userThemePreference.signal.combineWith(systemTheme.signal).map {
       case (Some(user), _) => user
       case (None, sys)     => sys
     }
