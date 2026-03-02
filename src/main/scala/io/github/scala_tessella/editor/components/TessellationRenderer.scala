@@ -301,36 +301,38 @@ object TessellationRenderer:
 
     val copyGroups =
       (0 until animation.copies).map: copyIndex =>
-        val targetDegrees             = stepDegrees * copyIndex
-        var rafId                     = 0
-        var startTime                 = -1.0
-        var node: Option[dom.Element] = None
-        val delayMs                   = staggerMs * copyIndex
-
-        lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-          node.foreach: el =>
-            if startTime < 0 then startTime = ts
-            val elapsed  = ts - startTime
-            val progress =
-              if durationSeconds <= 0 then 1.0
-              else Math.min(1.0, (elapsed - delayMs) / (durationSeconds * 1000.0))
-            val eased    = easeOutCubic(progress)
-            val angle    = targetDegrees * eased
-            el.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
-            if progress < 1.0 then
-              rafId = dom.window.requestAnimationFrame(step)
+        val targetDegrees      = stepDegrees * copyIndex
+        val delayMs            = staggerMs * copyIndex
+        var cancel: () => Unit = () => ()
 
         svg.g(
           svg.style := "pointer-events: none;",
           renderFanPolygons(),
           onMountCallback: ctx =>
-            node = Some(ctx.thisNode.ref)
-            node.foreach(_.setAttribute("transform", s"rotate(0 ${pivot.x} ${pivot.y})"))
+            val node      = ctx.thisNode.ref
+            var rafId     = 0
+            var startTime = -1.0
+
+            lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+              if startTime < 0 then startTime = ts
+              val elapsed  = ts - startTime
+              val progress =
+                if durationSeconds <= 0 then 1.0
+                else Math.min(1.0, (elapsed - delayMs) / (durationSeconds * 1000.0))
+              val eased    = easeOutCubic(progress)
+              val angle    = targetDegrees * eased
+              node.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
+              if progress < 1.0 then
+                rafId = dom.window.requestAnimationFrame(step)
+
+            cancel = () =>
+              if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+
+            node.setAttribute("transform", s"rotate(0 ${pivot.x} ${pivot.y})")
             rafId = dom.window.requestAnimationFrame(step)
           ,
           onUnmountCallback: _ =>
-            if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
-            node = None
+            cancel()
         )
 
     svg.g(
@@ -339,28 +341,12 @@ object TessellationRenderer:
     )
 
   def renderDoublingAnimation(animation: DoublingAnimation): Element =
-    val durationSeconds           = animation.durationMs.toDouble / 1000.0
-    var rafId                     = 0
-    var startTime                 = -1.0
-    var node: Option[dom.Element] = None
+    val durationSeconds    = animation.durationMs.toDouble / 1000.0
+    var cancel: () => Unit = () => ()
 
     def renderPolygons(): List[Element] =
       animation.facePoints.map: (faceId, pointsStr) =>
         renderTilingPolygonFromPoints(pointsStr, faceId)
-
-    lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-      node.foreach: el =>
-        if startTime < 0 then startTime = ts
-        val elapsed  = ts - startTime
-        val progress =
-          if durationSeconds <= 0 then 1.0
-          else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
-        val eased    = easeOutCubic(progress)
-        val dx       = animation.delta.x * eased
-        val dy       = animation.delta.y * eased
-        el.setAttribute("transform", s"translate($dx $dy)")
-        if progress < 1.0 then
-          rafId = dom.window.requestAnimationFrame(step)
 
     svg.g(
       svg.className := "doubling-animation",
@@ -372,14 +358,31 @@ object TessellationRenderer:
         svg.style := "pointer-events: none;",
         renderPolygons(),
         onMountCallback: ctx =>
-          node = Some(ctx.thisNode.ref)
-          node.foreach:
-            _.setAttribute("transform", "translate(0 0)")
+          val node      = ctx.thisNode.ref
+          var rafId     = 0
+          var startTime = -1.0
+
+          lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+            if startTime < 0 then startTime = ts
+            val elapsed  = ts - startTime
+            val progress =
+              if durationSeconds <= 0 then 1.0
+              else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
+            val eased    = easeOutCubic(progress)
+            val dx       = animation.delta.x * eased
+            val dy       = animation.delta.y * eased
+            node.setAttribute("transform", s"translate($dx $dy)")
+            if progress < 1.0 then
+              rafId = dom.window.requestAnimationFrame(step)
+
+          cancel = () =>
+            if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+
+          node.setAttribute("transform", "translate(0 0)")
           rafId = dom.window.requestAnimationFrame(step)
         ,
         onUnmountCallback: _ =>
-          if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
-          node = None
+          cancel()
       )
     )
 
