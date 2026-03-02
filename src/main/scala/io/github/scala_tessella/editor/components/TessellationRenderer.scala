@@ -301,14 +301,14 @@ object TessellationRenderer:
 
     val copyGroups =
       (0 until animation.copies).map: copyIndex =>
-        val targetDegrees     = stepDegrees * copyIndex
-        var rafId             = 0
-        var startTime         = -1.0
-        var node: dom.Element = null
-        val delayMs           = staggerMs * copyIndex
+        val targetDegrees             = stepDegrees * copyIndex
+        var rafId                     = 0
+        var startTime                 = -1.0
+        var node: Option[dom.Element] = None
+        val delayMs                   = staggerMs * copyIndex
 
         lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-          if node != null then
+          node.foreach: el =>
             if startTime < 0 then startTime = ts
             val elapsed  = ts - startTime
             val progress =
@@ -316,7 +316,7 @@ object TessellationRenderer:
               else Math.min(1.0, (elapsed - delayMs) / (durationSeconds * 1000.0))
             val eased    = easeOutCubic(progress)
             val angle    = targetDegrees * eased
-            node.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
+            el.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
             if progress < 1.0 then
               rafId = dom.window.requestAnimationFrame(step)
 
@@ -324,12 +324,13 @@ object TessellationRenderer:
           svg.style := "pointer-events: none;",
           renderFanPolygons(),
           onMountCallback: ctx =>
-            node = ctx.thisNode.ref
-            node.setAttribute("transform", s"rotate(0 ${pivot.x} ${pivot.y})")
+            node = Some(ctx.thisNode.ref)
+            node.foreach(_.setAttribute("transform", s"rotate(0 ${pivot.x} ${pivot.y})"))
             rafId = dom.window.requestAnimationFrame(step)
           ,
           onUnmountCallback: _ =>
             if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+            node = None
         )
 
     svg.g(
@@ -338,17 +339,17 @@ object TessellationRenderer:
     )
 
   def renderDoublingAnimation(animation: DoublingAnimation): Element =
-    val durationSeconds   = animation.durationMs.toDouble / 1000.0
-    var rafId             = 0
-    var startTime         = -1.0
-    var node: dom.Element = null
+    val durationSeconds           = animation.durationMs.toDouble / 1000.0
+    var rafId                     = 0
+    var startTime                 = -1.0
+    var node: Option[dom.Element] = None
 
     def renderPolygons(): List[Element] =
       animation.facePoints.map: (faceId, pointsStr) =>
         renderTilingPolygonFromPoints(pointsStr, faceId)
 
     lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-      if node != null then
+      node.foreach: el =>
         if startTime < 0 then startTime = ts
         val elapsed  = ts - startTime
         val progress =
@@ -357,7 +358,7 @@ object TessellationRenderer:
         val eased    = easeOutCubic(progress)
         val dx       = animation.delta.x * eased
         val dy       = animation.delta.y * eased
-        node.setAttribute("transform", s"translate($dx $dy)")
+        el.setAttribute("transform", s"translate($dx $dy)")
         if progress < 1.0 then
           rafId = dom.window.requestAnimationFrame(step)
 
@@ -371,12 +372,14 @@ object TessellationRenderer:
         svg.style := "pointer-events: none;",
         renderPolygons(),
         onMountCallback: ctx =>
-          node = ctx.thisNode.ref
-          node.setAttribute("transform", "translate(0 0)")
+          node = Some(ctx.thisNode.ref)
+          node.foreach:
+            _.setAttribute("transform", "translate(0 0)")
           rafId = dom.window.requestAnimationFrame(step)
         ,
         onUnmountCallback: _ =>
           if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+          node = None
       )
     )
 
@@ -385,7 +388,7 @@ object TessellationRenderer:
     1.0 - Math.pow(1.0 - clamped, 3)
 
   private def renderNodeLabels(coordinates: Map[VertexId, BigPoint]): List[Element] =
-    coordinates.toList.map { (vertexId, bigPoint) =>
+    coordinates.toList.map: (vertexId, bigPoint) =>
       val vertex = bigPoint.toPoint
 
       // Convert tessella coordinates to canvas coordinates
@@ -419,7 +422,6 @@ object TessellationRenderer:
         svg.paintOrder       := "stroke fill",
         vertexId.value
       )
-    }
 
   private def renderUniformity(
       coordinates: Map[VertexId, BigPoint],
