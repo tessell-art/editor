@@ -60,17 +60,15 @@ object EditorState:
 
     /** Effective theme: user's preference or system */
     val effectiveTheme: Signal[Theme] =
-      userThemePreference.signal.combineWith(systemTheme.signal).map {
+      userThemePreference.signal.combineWith(systemTheme.signal).map:
         case (Some(user), _) => user
         case (None, sys)     => sys
-      }
 
     /** Theme-aware overlay preview stroke color */
     val overlayPreviewStrokeColor: Signal[String] =
-      effectiveTheme.map {
+      effectiveTheme.map:
         case Theme.Light => "#222222" // dark gray for light mode
         case Theme.Dark  => "#ffffff" // white for dark mode
-      }
 
   object TessellationState:
     /** Current tiling being edited */
@@ -215,7 +213,8 @@ object EditorState:
   object DerivedState:
     /** Checks if Inserter tool is active */
     val isInserterActive: Signal[Boolean] =
-      ToolState.activeTool.signal.map(_.contains(Tool.Inserter))
+      ToolState.activeTool.signal.map:
+        _.contains(Tool.Inserter)
 
     /** Selected face for insertion, derived from highlighted polygon id */
     val selectedFaceForInsertion: Signal[Option[FaceId]] =
