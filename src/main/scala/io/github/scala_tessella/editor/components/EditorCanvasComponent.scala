@@ -12,6 +12,36 @@ object EditorCanvasComponent:
     f"Distance: $distance%.6f units"
 
   def element: Element =
+    val fileNameDisplaySignal =
+      EditorState.currentFileName.signal.combineWith(EditorState.measurementResult.signal).map:
+        (maybeName, maybeDistance) =>
+          maybeDistance match
+            case Some(_) => ""
+            case None    => maybeName.getOrElse("untitled")
+
+    val measurementDisplaySignal =
+      EditorState.measurementResult.signal
+        .combineWith(EditorState.measurementAngle.signal, EditorState.isAngleShownInRad.signal)
+        .map:
+          case (None, _, _)                         => None
+          case (Some(distance), None, _)            => Some(span(distanceString(distance)))
+          case (Some(distance), Some(angle), isRad) =>
+            val angleText    =
+              if isRad then f"Angle: ${angle.toDouble}%.6f rad" else f"Angle: ${angle.toDegrees}%.2f°"
+            val distancePart = distanceString(distance)
+            Some(span(
+              span(
+                onClick --> { _ =>
+
+                  EditorState.isAngleShownInRad.update(!_)
+                },
+                title     := "Click to toggle radians/degrees",
+                className := "angle-toggle",
+                angleText
+              ),
+              span(s" · $distancePart")
+            ))
+
     div(
       className := "canvas-container",
       //      h2("Canvas"),
@@ -23,37 +53,11 @@ object EditorCanvasComponent:
         className := "file-and-measurement-container",
         div(
           className := "file-name",
-          child.text <-- EditorState.currentFileName.signal.combineWith(
-            EditorState.measurementResult.signal
-          ).map: (maybeName, maybeDistance) =>
-            maybeDistance match
-              case Some(_) => ""
-              case None    => maybeName.getOrElse("untitled")
+          child.text <-- fileNameDisplaySignal
         ),
         div(
           className := "measurement-result",
-          child <-- EditorState.measurementResult.signal
-            .combineWith(EditorState.measurementAngle.signal)
-            .combineWith(EditorState.isAngleShownInRad.signal)
-            .map:
-              case (None, _, _)                         => ""
-              case (Some(distance), None, _)            => distanceString(distance)
-              case (Some(distance), Some(angle), isRad) =>
-                val angleText    =
-                  if isRad then f"Angle: ${angle.toDouble}%.6f rad" else f"Angle: ${angle.toDegrees}%.2f°"
-                val distancePart = distanceString(distance)
-                span(
-                  span(
-                    onClick --> { _ =>
-
-                      EditorState.isAngleShownInRad.update(!_)
-                    },
-                    title     := "Click to toggle radians/degrees",
-                    className := "angle-toggle",
-                    angleText
-                  ),
-                  span(s" · $distancePart")
-                )
+          child.maybe <-- measurementDisplaySignal
         )
       ),
       // A new wrapper for the SVG and its overlays
@@ -168,6 +172,10 @@ object EditorCanvasComponent:
     )
 
   private def contentGroup(): Element =
+    val animationAndTilingSignal =
+      EditorState.doublingAnimation.signal
+        .combineWith(EditorState.fanAnimation.signal, EditorState.currentTiling.signal)
+
     svg.g(
       svg.transform <-- EditorState.viewTransform.signal.map(transform =>
         s"translate(${transform.pan.x}, ${transform.pan.y}) scale(${transform.scale}) rotate(${transform.rotationDegrees} 400 300)"
@@ -177,26 +185,22 @@ object EditorCanvasComponent:
       GridRenderer.element,
 
       // Render tessellation (or animations, if active)
-      child <-- EditorState.doublingAnimation.signal
-        .combineWith(EditorState.fanAnimation.signal, EditorState.currentTiling.signal)
-        .map: (doubleOpt, fanOpt, tiling) =>
-          doubleOpt match
-            case Some(animation) => TessellationRenderer.renderDoublingAnimation(animation)
-            case None            =>
-              fanOpt match
-                case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
-                case None            => TessellationRenderer.renderTiling(tiling),
+      child <-- animationAndTilingSignal.map: (doubleOpt, fanOpt, tiling) =>
+        doubleOpt match
+          case Some(animation) => TessellationRenderer.renderDoublingAnimation(animation)
+          case None            =>
+            fanOpt match
+              case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
+              case None            => TessellationRenderer.renderTiling(tiling),
 
       // Show message when no tessellation is available
-      child.maybe <-- EditorState.doublingAnimation.signal
-        .combineWith(EditorState.fanAnimation.signal, EditorState.currentTiling.signal)
-        .map: (doubleOpt, fanOpt, tiling) =>
-          if doubleOpt.isDefined || fanOpt.isDefined then None
-          else if tiling.isEmpty then
-            Some(noTessellationMessage())
-          else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.get then
-            Some(onePolygonMessage())
-          else None
+      child.maybe <-- animationAndTilingSignal.map: (doubleOpt, fanOpt, tiling) =>
+        if doubleOpt.isDefined || fanOpt.isDefined then None
+        else if tiling.isEmpty then
+          Some(noTessellationMessage())
+        else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.get then
+          Some(onePolygonMessage())
+        else None
     )
 
   private def createSvgText(point: Point, fontSize: Int, fill: String, content: String): Element =

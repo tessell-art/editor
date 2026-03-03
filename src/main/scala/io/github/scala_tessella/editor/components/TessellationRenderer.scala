@@ -241,6 +241,10 @@ object TessellationRenderer:
           .map:
             renderClickablePoint
 
+    val measurementSignals =
+      EditorState.measurementStartPoint.signal
+        .combineWith(EditorState.measurementPreviousEndPoint.signal, EditorState.measurementEndPoint.signal)
+
     val measurementStartPointDisplay =
       child.maybe <-- EditorState.measurementStartPoint.signal.map:
         _.map:
@@ -249,24 +253,18 @@ object TessellationRenderer:
       child.maybe <-- EditorState.measurementEndPoint.signal.map:
         _.map:
           renderMeasurementEndPoint
-    val measurementLineDisplay       = child.maybe <-- EditorState.measurementStartPoint.signal
-      .combineWith(EditorState.measurementEndPoint.signal)
-      .map:
-        case (Some(start), Some(end)) => Some(renderMeasurementLine(start, end))
-        case _                        => None
+    val measurementLineDisplay       = child.maybe <-- measurementSignals.map:
+      case (Some(start), _, Some(end)) => Some(renderMeasurementLine(start, end))
+      case _                           => None
 
-    val previousMeasurementLineDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
-      .combineWith(EditorState.measurementPreviousEndPoint.signal)
-      .map:
-        case (Some(start), Some(previousEnd)) => Some(renderPreviousMeasurementLine(start, previousEnd))
-        case _                                => None
+    val previousMeasurementLineDisplay = child.maybe <-- measurementSignals.map:
+      case (Some(start), Some(previousEnd), _) => Some(renderPreviousMeasurementLine(start, previousEnd))
+      case _                                   => None
 
-    val measurementAngleArcDisplay = child.maybe <-- EditorState.measurementStartPoint.signal
-      .combineWith(EditorState.measurementPreviousEndPoint.signal, EditorState.measurementEndPoint.signal)
-      .map:
-        case (Some(start), Some(previousEnd), Some(end)) =>
-          Some(renderMeasurementAngleArc(start, previousEnd, end))
-        case _                                           => None
+    val measurementAngleArcDisplay = child.maybe <-- measurementSignals.map:
+      case (Some(start), Some(previousEnd), Some(end)) =>
+        Some(renderMeasurementAngleArc(start, previousEnd, end))
+      case _                                           => None
 
     svg.g(
       svg.className := "tessellation",
