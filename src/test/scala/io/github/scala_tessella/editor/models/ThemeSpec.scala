@@ -18,7 +18,7 @@ final class ThemeSpec extends FunSuite:
 
   test("effectiveTheme falls back to system when no preference is set") {
     EditorState.userThemePreference.set(None)
-    val systemTheme    = sampleSignal(EditorState.systemTheme)
+    val systemTheme    = sampleSignal(EditorState.systemTheme.signal)
     val effectiveTheme = sampleSignal(EditorState.effectiveTheme)
     assertEquals(effectiveTheme, systemTheme)
   }
