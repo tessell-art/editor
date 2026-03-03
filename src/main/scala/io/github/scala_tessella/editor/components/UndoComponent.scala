@@ -14,7 +14,7 @@ object UndoComponent:
           !_
         ).combineWith(EditorState.isProcessing.signal).map(_ || _),
         title <-- UndoManager.canUndo.signal.map(isUndoable =>
-          if (isUndoable) UndoManager.getUndoPreview.getOrElse("Undo") else "No actions to undo"
+          if isUndoable then UndoManager.getUndoPreview.getOrElse("Undo") else "No actions to undo"
         ),
         onClick.compose(
           _.withCurrentValueOf(EditorState.isProcessing.signal).map(_._2)
