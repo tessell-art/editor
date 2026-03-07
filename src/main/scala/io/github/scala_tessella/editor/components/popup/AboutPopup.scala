@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L._
-import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.buildinfo.BuildInfo
 
@@ -13,17 +12,8 @@ object AboutPopup:
     closePopup(EditorState.showAboutPopup)
 
   def element: Element =
-    div(
-      className := "popup-overlay",
-      onClick --> closeAbout,
-      div(
-        className := "popup-content",
-        onClick.stopPropagation --> {},
-        button(
-          className := "popup-close-btn",
-          onClick --> closeAbout,
-          closeIcon
-        ),
+    popupOverlay(closeAbout)(
+      popupContent(closeAbout)(
         img(
           src       := "tessella-logo.svg",
           alt       := "Tessella Logo",

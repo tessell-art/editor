@@ -1,11 +1,10 @@
 package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
+import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.geo.Point
 import org.scalajs.dom.{MouseEvent, WheelEvent}
-
-import scala.math.{max, min}
 
 object MouseEventHandler:
   private[interactions] def calculateZoomTransform(
@@ -13,7 +12,7 @@ object MouseEventHandler:
       mousePos: Point,
       scaleFactor: Double
   ): io.github.scala_tessella.editor.models.ViewTransform =
-    val newScale = max(0.1, min(5.0, currentTransform.scale * scaleFactor))
+    val newScale = ViewOperations.clampViewScale(currentTransform.scale * scaleFactor)
     // Calculate the world position that the mouse is pointing to before zoom
     val world    = (mousePos - currentTransform.pan) / currentTransform.scale
     // Calculate new pan to keep the world position under the mouse cursor
@@ -78,7 +77,9 @@ object MouseEventHandler:
     val currentTransform = EditorState.viewTransform.now()
 
     getCanvasRelativePosition(event).foreach { (mousePos: Point) =>
-      val scaleFactor  = if (event.deltaY < 0) 1.1 else 0.9
+      val scaleFactor  =
+        if event.deltaY < 0 then EditorConfig.mouseWheelZoomInFactor
+        else EditorConfig.mouseWheelZoomOutFactor
       val newTransform = calculateZoomTransform(currentTransform, mousePos, scaleFactor)
       EditorState.viewTransform.set(newTransform)
     }

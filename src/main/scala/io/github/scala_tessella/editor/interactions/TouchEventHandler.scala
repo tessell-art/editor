@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
+import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
 import org.scalajs.dom
 import org.scalajs.dom.{DOMRect, Touch, TouchEvent, TouchList}
@@ -114,7 +115,8 @@ object TouchEventHandler:
 
           // New scale and rotation based on the initial state
           val newDistance   = segment.length
-          val newScale      = if (initialDist > 0) initScale * (newDistance / initialDist) else initScale
+          val rawScale      = if initialDist > 0 then initScale * (newDistance / initialDist) else initScale
+          val newScale      = ViewOperations.clampViewScale(rawScale)
           val newAngle      = segment.horizontalAngle.normalize
           val rotationDelta = newAngle - initAngle
           val newRotation   = initRotation + rotationDelta

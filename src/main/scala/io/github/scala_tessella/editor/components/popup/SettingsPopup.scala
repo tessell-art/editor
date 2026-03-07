@@ -80,23 +80,17 @@ object SettingsPopup:
     )
 
   def element: Element =
-    div(
-      className := "popup-overlay settings-popup",
-      onClick --> closeSettings,
+    popupOverlay(
+      closeSettings,
+      overlayClassName = "popup-overlay settings-popup",
       onMountCallback: ctx =>
         EditorState.showSettingsPopup.signal
           .changes
           .filter:
             identity
-          .foreach(_ => AppState.refreshSettingsTempValues())(using ctx.owner): Unit,
-      div(
-        className := "popup-content settings-content",
-        onClick.stopPropagation --> {},
-        button(
-          className := "popup-close-btn",
-          onClick --> closeSettings,
-          closeIcon
-        ),
+          .foreach(_ => AppState.refreshSettingsTempValues())(using ctx.owner): Unit
+    )(
+      popupContent(closeSettings, contentClassName = "popup-content settings-content")(
         h1("Settings"),
         div(
           className := "settings-grid",

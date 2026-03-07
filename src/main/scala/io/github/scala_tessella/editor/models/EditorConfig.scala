@@ -15,6 +15,16 @@ object EditorConfig:
   // Derived canvas center
   val canvasCenter: Point = LineSegment(Point.origin, canvasEnd).midPoint
 
+  // View zoom limits
+  val minViewScale: Double = 0.1
+  val maxViewScale: Double = 5.0
+
+  // View zoom factors by input modality
+  val mouseWheelZoomInFactor: Double  = 1.1
+  val mouseWheelZoomOutFactor: Double = 0.9
+  val keyboardZoomFactor: Double      = 1.1
+  val menuZoomFactor: Double          = 1.2
+
   // Polygon palette configuration
   val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
 
@@ -27,6 +37,3 @@ object EditorConfig:
   // Fan animation duration (milliseconds)
   val fanAnimationDurationMs: Int = 3000
   val fanAnimationStaggerMs: Int  = 60
-
-  // Mirror animation duration (milliseconds)
-  val mirrorAnimationDurationMs: Int = 1200

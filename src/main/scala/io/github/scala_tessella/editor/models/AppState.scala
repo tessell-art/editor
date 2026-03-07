@@ -110,121 +110,85 @@ object AppState:
       s"$dataType data computed: $size ${if size == 1 then "class" else "classes"} found"
     )
 
+  private def toggleComputedOverlay[T](
+      showFlag: Var[Boolean],
+      cache: Var[Option[T]],
+      dataType: String,
+      sizeOf: Option[T] => Int
+  )(compute: TilingDCEL => Option[T]): Unit =
+    val currentlyShown = showFlag.now()
+    if currentlyShown then
+      showFlag.set(false)
+    else
+      val existing = cache.now()
+      if existing.nonEmpty then
+        showFlag.set(true)
+      else
+        val tiling = currentTiling.now()
+        AsyncUtils
+          .withLoadingState { () =>
+
+            if tiling.isEmpty then None
+            else compute(tiling)
+          }
+          .foreach { computed =>
+            // Only apply if the user still intends to show (hasn't toggled off meanwhile)
+            if !showFlag.now() then
+              cache.set(computed)
+              showFlag.set(true)
+              displaySizeInfo(sizeOf(computed), dataType)
+          }
+
   /** Toggles the visibility of the uniformity data. Does nothing if the editor is currently processing an
     * operation.
     */
   def toggleShowUniformity(): Unit =
     ifNotProcessing:
-      val currentlyShown = showUniformity.now()
-      if currentlyShown then
-        // Turning OFF: hide immediately
-        showUniformity.set(false)
-      else
-        // Turning ON
-        val existing = uniformityMap.now()
-        if existing.nonEmpty then
-          // Already computed: show immediately
-          showUniformity.set(true)
-        else
-          // Compute first, then show
-          val tiling = currentTiling.now()
-          AsyncUtils
-            .withLoadingState { () =>
-
-              if tiling.isEmpty then None
-              else
-                val classes  = tiling.uniformityTree.flattenLeaves
-                val indexMap =
-                  classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
-//                Logger.debug(s"Computed uniformity map: $indexMap")
-                Some(indexMap)
-            }
-            .foreach { computed =>
-              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
-              if !showUniformity.now() then
-                uniformityMap.set(computed)
-                showUniformity.set(true)
-                val size = computed.map(_.values.toSet.size).getOrElse(0)
-                displaySizeInfo(size, "Uniformity")
-            }
+      toggleComputedOverlay(
+        showFlag = showUniformity,
+        cache = uniformityMap,
+        dataType = "Uniformity",
+        sizeOf = _.map(_.values.toSet.size).getOrElse(0)
+      ): tiling =>
+        val classes  = tiling.uniformityTree.flattenLeaves
+        val indexMap = classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
+        Some(indexMap)
 
   /** Toggles the visibility of the rotation axes. Does nothing if the editor is currently processing an
     * operation.
     */
   def toggleShowRotation(): Unit =
     ifNotProcessing:
-      val currentlyShown = showRotation.now()
-      if currentlyShown then
-        // Turning OFF: hide immediately
-        showRotation.set(false)
-      else
-        // Turning ON
-        val existing = rotationVertexIds.now()
-        if existing.nonEmpty then
-          // Already computed: show immediately
-          showRotation.set(true)
+      toggleComputedOverlay(
+        showFlag = showRotation,
+        cache = rotationVertexIds,
+        dataType = "Rotation",
+        sizeOf = _.map(_.size).getOrElse(1)
+      ): tiling =>
+        val vs = tiling.rotationalVertexIds
+        if vs.size > 1 then
+          Logger.debug(s"Rotation vertices: $vs")
+          Some(vs)
         else
-          // Compute first, then show
-          val tiling = currentTiling.now()
-          AsyncUtils
-            .withLoadingState { () =>
-
-              if tiling.isEmpty then None
-              else
-                val vs = tiling.rotationalVertexIds
-                if vs.size > 1 then
-                  Logger.debug(s"Rotation vertices: $vs")
-                  Some(vs)
-                else
-                  None
-            }
-            .foreach { computed =>
-              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
-              if !showRotation.now() then
-                rotationVertexIds.set(computed)
-                showRotation.set(true)
-                val size = computed.map(_.size).getOrElse(1)
-                displaySizeInfo(size, "Rotation")
-            }
+          None
 
   /** Toggles the visibility of the reflection axes. Does nothing if the editor is currently processing an
     * operation.
     */
   def toggleShowReflection(): Unit =
     ifNotProcessing:
-      val currentlyShown = showReflection.now()
-      if currentlyShown then
-        // Turning OFF: hide immediately
-        showReflection.set(false)
-      else
-        // Turning ON
-        val existing = reflectionVertexIds.now()
-        if existing.nonEmpty then
-          // Already computed: show immediately
-          showReflection.set(true)
+      toggleComputedOverlay(
+        showFlag = showReflection,
+        cache = reflectionVertexIds,
+        dataType = "Reflection",
+        sizeOf = _.map(_.size).getOrElse(0)
+      ): tiling =>
+        val vs = tiling.reflectionalVertexIds
+        if vs.nonEmpty then
+          Logger.debug(s"Reflection vertices: $vs")
+          Some(vs)
         else
-          // Compute first, then show
-          val tiling = currentTiling.now()
-          AsyncUtils
-            .withLoadingState { () =>
-
-              if tiling.isEmpty then None
-              else
-                val vs = tiling.reflectionalVertexIds
-                if vs.nonEmpty then
-                  Logger.debug(s"Reflection vertices: $vs")
-                  Some(vs)
-                else
-                  None
-            }
-            .foreach { computed =>
-              // Only apply if the user still intends to show (hasn't toggled off meanwhile)
-              if !showReflection.now() then
-                reflectionVertexIds.set(computed)
-                showReflection.set(true)
-                val size = computed.map(_.size).getOrElse(0)
-                displaySizeInfo(size, "Reflection")
-            }
+          None
 
   /** Checks if the current tiling is empty.
     * @return

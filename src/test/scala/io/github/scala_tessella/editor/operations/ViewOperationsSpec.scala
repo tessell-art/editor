@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.geometry.AngleDegree
-import io.github.scala_tessella.editor.models.ViewTransform
+import io.github.scala_tessella.editor.models.{EditorConfig, ViewTransform}
 import io.github.scala_tessella.editor.utils.geo.Geometry.Bounds
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import munit.FunSuite
@@ -9,6 +9,24 @@ import munit.FunSuite
 class ViewOperationsSpec extends FunSuite:
 
   private val delta = 1e-9
+
+  test("clampViewScale should clamp below minimum and above maximum") {
+    assertEquals(
+      ViewOperations.clampViewScale(EditorConfig.minViewScale / 2),
+      EditorConfig.minViewScale,
+      delta
+    )
+    assertEquals(
+      ViewOperations.clampViewScale(EditorConfig.maxViewScale * 2),
+      EditorConfig.maxViewScale,
+      delta
+    )
+  }
+
+  test("clampViewScale should keep values inside bounds unchanged") {
+    val mid = (EditorConfig.minViewScale + EditorConfig.maxViewScale) / 2
+    assertEquals(ViewOperations.clampViewScale(mid), mid, delta)
+  }
 
   test("anf") {
     val x = AngleDegree(90).toBigRadian

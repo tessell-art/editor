@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L._
+import com.raquo.laminar.api.features.unitArrows
 import org.scalajs.dom
 
 object PopupCommons:
@@ -23,6 +24,34 @@ object PopupCommons:
 
     state.set(false)
   }
+
+  def popupOverlay(
+      closeObserver: Observer[dom.MouseEvent],
+      overlayClassName: String = "popup-overlay",
+      extraMods: Modifier[HtmlElement]*
+  )(children: Modifier[HtmlElement]*): Element =
+    val mods =
+      List[Modifier[HtmlElement]](
+        className := overlayClassName,
+        onClick --> closeObserver
+      ) ++ extraMods.toList ++ children.toList
+    div(mods*)
+
+  def popupContent(
+      closeObserver: Observer[dom.MouseEvent],
+      contentClassName: String = "popup-content"
+  )(children: Modifier[HtmlElement]*): Element =
+    val mods =
+      List[Modifier[HtmlElement]](
+        className := contentClassName,
+        onClick.stopPropagation --> {},
+        button(
+          className := "popup-close-btn",
+          onClick --> closeObserver,
+          closeIcon
+        )
+      ) ++ children.toList
+    div(mods*)
 
   // Platform-aware primary modifier label
   val primaryModLabel: String =

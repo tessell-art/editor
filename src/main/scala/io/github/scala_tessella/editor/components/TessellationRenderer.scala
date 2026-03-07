@@ -288,51 +288,62 @@ object TessellationRenderer:
       measurementAngleArcDisplay
     )
 
-  def renderFanAnimation(animation: FanAnimation): Element =
-    val pivot           = tilingPointToCanvasView(animation.pivot)
-    val durationSeconds = animation.durationMs.toDouble / 1000.0
-    val stepDegrees     = animation.stepAngle.toDegrees
-    val staggerMs       = animation.staggerMs.toDouble
+  private def renderAnimationPolygons(facePoints: List[(FaceId, String)]): List[Element] =
+    facePoints.map: (faceId, pointsStr) =>
+      renderTilingPolygonFromPoints(pointsStr, faceId)
 
-    def renderFanPolygons(): List[Element] =
-      animation.facePoints.map: (faceId, pointsStr) =>
-        renderTilingPolygonFromPoints(pointsStr, faceId)
+  private def renderAnimatedPolygonGroup(
+      facePoints: List[(FaceId, String)],
+      durationMs: Int,
+      initialTransform: String = "",
+      delayMs: Double = 0.0
+  )(transformAtEasedProgress: Double => String): Element =
+    var cancel: () => Unit = () => ()
 
-    val copyGroups =
-      (0 until animation.copies).map: copyIndex =>
-        val targetDegrees      = stepDegrees * copyIndex
-        val delayMs            = staggerMs * copyIndex
-        var cancel: () => Unit = () => ()
+    svg.g(
+      svg.style := "pointer-events: none;",
+      renderAnimationPolygons(facePoints),
+      onMountCallback: ctx =>
+        val node      = ctx.thisNode.ref
+        var rafId     = 0
+        var startTime = -1.0
 
-        svg.g(
-          svg.style := "pointer-events: none;",
-          renderFanPolygons(),
-          onMountCallback: ctx =>
-            val node      = ctx.thisNode.ref
-            var rafId     = 0
-            var startTime = -1.0
-
-            lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-              if startTime < 0 then startTime = ts
-              val elapsed  = ts - startTime
-              val progress =
-                if durationSeconds <= 0 then 1.0
-                else Math.min(1.0, (elapsed - delayMs) / (durationSeconds * 1000.0))
-              val eased    = easeOutCubic(progress)
-              val angle    = targetDegrees * eased
-              node.setAttribute("transform", s"rotate($angle ${pivot.x} ${pivot.y})")
-              if progress < 1.0 then
-                rafId = dom.window.requestAnimationFrame(step)
-
-            cancel = () =>
-              if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
-
-            node.setAttribute("transform", s"rotate(0 ${pivot.x} ${pivot.y})")
+        lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+          if startTime < 0 then startTime = ts
+          val elapsed  = ts - startTime
+          val progress =
+            if durationMs <= 0 then 1.0
+            else Math.min(1.0, (elapsed - delayMs) / durationMs.toDouble)
+          val eased    = easeOutCubic(progress)
+          node.setAttribute("transform", transformAtEasedProgress(eased))
+          if progress < 1.0 then
             rafId = dom.window.requestAnimationFrame(step)
-          ,
-          onUnmountCallback: _ =>
-            cancel()
-        )
+
+        cancel = () =>
+          if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+
+        node.setAttribute("transform", initialTransform)
+        rafId = dom.window.requestAnimationFrame(step)
+      ,
+      onUnmountCallback: _ =>
+        cancel()
+    )
+
+  def renderFanAnimation(animation: FanAnimation): Element =
+    val pivot       = tilingPointToCanvasView(animation.pivot)
+    val stepDegrees = animation.stepAngle.toDegrees
+    val copyGroups  =
+      (0 until animation.copies).map: copyIndex =>
+        val targetDegrees = stepDegrees * copyIndex
+        val delayMs       = animation.staggerMs.toDouble * copyIndex
+        renderAnimatedPolygonGroup(
+          facePoints = animation.facePoints,
+          durationMs = animation.durationMs,
+          initialTransform = s"rotate(0 ${pivot.x} ${pivot.y})",
+          delayMs = delayMs
+        ): eased =>
+          val angle = targetDegrees * eased
+          s"rotate($angle ${pivot.x} ${pivot.y})"
 
     svg.g(
       svg.className := "fan-animation",
@@ -340,91 +351,33 @@ object TessellationRenderer:
     )
 
   def renderDoublingAnimation(animation: DoublingAnimation): Element =
-    val durationSeconds    = animation.durationMs.toDouble / 1000.0
-    var cancel: () => Unit = () => ()
-
-    def renderPolygons(): List[Element] =
-      animation.facePoints.map: (faceId, pointsStr) =>
-        renderTilingPolygonFromPoints(pointsStr, faceId)
-
     svg.g(
       svg.className := "doubling-animation",
       svg.g(
         svg.style := "pointer-events: none;",
-        renderPolygons()
+        renderAnimationPolygons(animation.facePoints)
       ),
-      svg.g(
-        svg.style := "pointer-events: none;",
-        renderPolygons(),
-        onMountCallback: ctx =>
-          val node      = ctx.thisNode.ref
-          var rafId     = 0
-          var startTime = -1.0
-
-          lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-            if startTime < 0 then startTime = ts
-            val elapsed  = ts - startTime
-            val progress =
-              if durationSeconds <= 0 then 1.0
-              else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
-            val eased    = easeOutCubic(progress)
-            val dx       = animation.delta.x * eased
-            val dy       = animation.delta.y * eased
-            node.setAttribute("transform", s"translate($dx $dy)")
-            if progress < 1.0 then
-              rafId = dom.window.requestAnimationFrame(step)
-
-          cancel = () =>
-            if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
-
-          node.setAttribute("transform", "translate(0 0)")
-          rafId = dom.window.requestAnimationFrame(step)
-        ,
-        onUnmountCallback: _ =>
-          cancel()
-      )
+      renderAnimatedPolygonGroup(
+        facePoints = animation.facePoints,
+        durationMs = animation.durationMs,
+        initialTransform = "translate(0 0)"
+      ): eased =>
+        val dx = animation.delta.x * eased
+        val dy = animation.delta.y * eased
+        s"translate($dx $dy)"
     )
 
   def renderMirrorAnimation(animation: MirrorAnimation): Element =
-    val durationSeconds    = animation.durationMs.toDouble / 1000.0
-    var cancel: () => Unit = () => ()
-
-    def renderPolygons(): List[Element] =
-      animation.facePoints.map: (faceId, pointsStr) =>
-        renderTilingPolygonFromPoints(pointsStr, faceId)
-
     svg.g(
       svg.className := "mirror-animation",
-      svg.g(
-        svg.style := "pointer-events: none;",
-        renderPolygons(),
-        onMountCallback: ctx =>
-          val node      = ctx.thisNode.ref
-          var rafId     = 0
-          var startTime = -1.0
-
-          lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-            if startTime < 0 then startTime = ts
-            val elapsed  = ts - startTime
-            val progress =
-              if durationSeconds <= 0 then 1.0
-              else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
-            val eased    = easeOutCubic(progress)
-            val sy       = 1.0 - (2.0 * eased)
-            val ty       = animation.axisY * (1.0 - sy)
-            node.setAttribute("transform", s"matrix(1 0 0 $sy 0 $ty)")
-            if progress < 1.0 then
-              rafId = dom.window.requestAnimationFrame(step)
-
-          cancel = () =>
-            if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
-
-          node.setAttribute("transform", "matrix(1 0 0 1 0 0)")
-          rafId = dom.window.requestAnimationFrame(step)
-        ,
-        onUnmountCallback: _ =>
-          cancel()
-      )
+      renderAnimatedPolygonGroup(
+        facePoints = animation.facePoints,
+        durationMs = animation.durationMs,
+        initialTransform = "matrix(1 0 0 1 0 0)"
+      ): eased =>
+        val sy = 1.0 - (2.0 * eased)
+        val ty = animation.axisY * (1.0 - sy)
+        s"matrix(1 0 0 $sy 0 $ty)"
     )
 
   private def easeOutCubic(t: Double): Double =

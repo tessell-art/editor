@@ -2,13 +2,11 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.components.popup.*
-import io.github.scala_tessella.editor.models.{AppState, EditorState, Theme, ViewTransform}
+import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState, Theme, ViewTransform}
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
 import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter, TemplateLoader}
 import io.github.scala_tessella.editor.utils.UndoManager
-
-import scala.math.{max, min}
 
 object MenuBarComponent:
 
@@ -296,12 +294,18 @@ object MenuBarComponent:
       div(className := "menu-separator"),
       dropdownLink(
         "Zoom In",
-        () => EditorState.viewTransform.update(t => t.copy(scale = min(t.scale * 1.2, 5.0))),
+        () =>
+          EditorState.viewTransform.update(t =>
+            t.copy(scale = ViewOperations.clampViewScale(t.scale * EditorConfig.menuZoomFactor))
+          ),
         shortcut = Some("+")
       ),
       dropdownLink(
         "Zoom Out",
-        () => EditorState.viewTransform.update(t => t.copy(scale = max(t.scale / 1.2, 0.1))),
+        () =>
+          EditorState.viewTransform.update(t =>
+            t.copy(scale = ViewOperations.clampViewScale(t.scale / EditorConfig.menuZoomFactor))
+          ),
         shortcut = Some("-")
       ),
       dropdownLink("Rotate Left", () => ViewOperations.rotateView(-30), shortcut = Some("E")),

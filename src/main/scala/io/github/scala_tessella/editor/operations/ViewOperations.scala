@@ -9,6 +9,9 @@ import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 
 object ViewOperations:
 
+  def clampViewScale(scale: Double): Double =
+    scale.max(minViewScale).min(maxViewScale)
+
   // Pure function to transform coordinates based on rotation
   private[operations] def transformCoordinates(coords: Iterable[Point], rotationDegrees: Int): List[Point] =
     val rotationRad = AngleDegree(rotationDegrees).toBigRadian.toBigDecimal.toDouble

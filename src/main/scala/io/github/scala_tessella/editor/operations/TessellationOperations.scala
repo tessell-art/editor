@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.operations
 
+import com.raquo.laminar.api.L.Var
 import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
@@ -26,6 +27,31 @@ import scala.scalajs.js.timers.setTimeout
 object TessellationOperations:
 
   type VertexCoord = (id: VertexId, point: Point)
+
+  private def clearAllAnimations(): Unit =
+    EditorState.fanAnimation.set(None)
+    EditorState.doublingAnimation.set(None)
+    EditorState.mirrorAnimation.set(None)
+
+  private def clearSymmetryOverlaysOnSuccess(): Unit =
+    AppState.clearSymmetryOverlays()
+
+  private def clearSymmetryAndPerimeterSelectionOnSuccess(): Unit =
+    clearSymmetryOverlaysOnSuccess()
+    EditorState.selectedPerimeterEdges.set(Set.empty)
+
+  private def scheduleAnimationCleanup[A <: AnyRef](
+      state: Var[Option[A]],
+      animation: A,
+      durationMs: Int
+  )(onDone: => Unit = ()): Unit =
+    setTimeout(durationMs) {
+      state.update {
+        case Some(current) if current eq animation => None
+        case other                                 => other
+      }
+      onDone
+    }: Unit
 
   extension (vertex: Vertex)
 
@@ -56,10 +82,9 @@ object TessellationOperations:
         UndoManager.saveState()
 
       currentTiling.set(TilingDCEL.empty)
-      AppState.clearSymmetryOverlays()
+      clearSymmetryAndPerimeterSelectionOnSuccess()
       EditorState.polygonColors.set(Map.empty)
       EditorState.selectedTilingPolygons.set(Set.empty)
-      EditorState.selectedPerimeterEdges.set(Set.empty)
 
   /** Select the irregular polygon in the palette (deselect regular if any). */
   def selectIrregularInPalette(): Unit =
@@ -89,8 +114,7 @@ object TessellationOperations:
   def attemptFaceDeletion(faceId: FaceId): Unit =
     val op = () => currentTiling.now().maybeDeleteFace(faceId)
     OperationRunner.runTilingOp(op)(
-      onSuccess =
-        AppState.clearSymmetryOverlays(),
+      onSuccess = clearSymmetryOverlaysOnSuccess(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
     )
 
@@ -98,8 +122,7 @@ object TessellationOperations:
   def attemptVertexDeletion(vertexId: VertexId): Unit =
     val op = () => currentTiling.now().maybeDeleteVertex(vertexId)
     OperationRunner.runTilingOp(op)(
-      onSuccess =
-        AppState.clearSymmetryOverlays(),
+      onSuccess = clearSymmetryOverlaysOnSuccess(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
     )
 
@@ -107,16 +130,13 @@ object TessellationOperations:
   def attemptEdgeDeletion(startVertexId: VertexId, endVertexId: VertexId): Unit =
     val op = () => currentTiling.now().maybeDeleteEdge(startVertexId, endVertexId)
     OperationRunner.runTilingOp(op)(
-      onSuccess =
-        AppState.clearSymmetryOverlays(),
+      onSuccess = clearSymmetryOverlaysOnSuccess(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
     )
 
   def attemptFanning(vertexId: VertexId): Unit =
     val tiling           = currentTiling.now()
-    EditorState.fanAnimation.set(None)
-    EditorState.doublingAnimation.set(None)
-    EditorState.mirrorAnimation.set(None)
+    clearAllAnimations()
     val faceIds          = tiling.innerFaces.map(_.id)
     val facePoints       = precomputeFacePoints(tiling)
     val maxFaceId        = faceIds.map(_.value).maxOption.getOrElse(0)
@@ -150,16 +170,16 @@ object TessellationOperations:
                   EditorConfig.fanAnimationStaggerMs
                 )
               EditorState.fanAnimation.set(Some(animation))
-              setTimeout(EditorConfig.fanAnimationDurationMs) {
-                EditorState.fanAnimation.update {
-                  case Some(current) if current eq animation => None
-                  case other                                 => other
-                }
+              scheduleAnimationCleanup(
+                EditorState.fanAnimation,
+                animation,
+                EditorConfig.fanAnimationDurationMs
+              ) {
                 if needsFit then ViewOperations.fitTilingToCanvas()
-              }: Unit
+              }
               fitDelayed = true
             case _                                        => ()
-        AppState.clearSymmetryOverlays()
+        clearSymmetryOverlaysOnSuccess()
         if needsFit && !fitDelayed then ViewOperations.fitTilingToCanvas()
       ,
       onFailure = err => ErrorOperations.showError(s"Cannot fan tiling: ${err.message}")
@@ -196,9 +216,7 @@ object TessellationOperations:
     val tiling = currentTiling.now()
     if tiling.isEmpty then ()
     else
-      EditorState.fanAnimation.set(None)
-      EditorState.doublingAnimation.set(None)
-      EditorState.mirrorAnimation.set(None)
+      clearAllAnimations()
       val faceIds        =
         tiling.innerFaces.map:
           _.id
@@ -231,17 +249,16 @@ object TessellationOperations:
               val delta     = next - orig
               val animation = DoublingAnimation(facePoints, delta, EditorConfig.fanAnimationDurationMs)
               EditorState.doublingAnimation.set(Some(animation))
-              val _         = setTimeout(EditorConfig.fanAnimationDurationMs) {
-                EditorState.doublingAnimation.update {
-                  case Some(current) if current eq animation => None
-                  case other                                 => other
-                }
+              scheduleAnimationCleanup(
+                EditorState.doublingAnimation,
+                animation,
+                EditorConfig.fanAnimationDurationMs
+              ) {
                 if needsFit then ViewOperations.fitTilingToCanvas()
               }
               fitDelayed = true
             case _                        => ()
-          AppState.clearSymmetryOverlays()
-          EditorState.selectedPerimeterEdges.set(Set.empty)
+          clearSymmetryAndPerimeterSelectionOnSuccess()
           if needsFit && !fitDelayed then ViewOperations.fitTilingToCanvas()
         ,
         onFailure = err =>
@@ -252,9 +269,7 @@ object TessellationOperations:
     val tiling = currentTiling.now()
     if tiling.isEmpty then ()
     else
-      EditorState.fanAnimation.set(None)
-      EditorState.doublingAnimation.set(None)
-      EditorState.mirrorAnimation.set(None)
+      clearAllAnimations()
       val facePoints = precomputeFacePoints(tiling)
       val op         = () =>
         try
@@ -269,17 +284,11 @@ object TessellationOperations:
               MirrorAnimation(
                 facePoints = facePoints,
                 axisY = EditorConfig.canvasCenter.y,
-                durationMs = EditorConfig.mirrorAnimationDurationMs
+                durationMs = EditorConfig.fanAnimationDurationMs
               )
             EditorState.mirrorAnimation.set(Some(animation))
-            setTimeout(animation.durationMs) {
-              EditorState.mirrorAnimation.update {
-                case Some(current) if current eq animation => None
-                case other                                 => other
-              }
-            }: Unit
-          AppState.clearSymmetryOverlays()
-          EditorState.selectedPerimeterEdges.set(Set.empty)
+            scheduleAnimationCleanup(EditorState.mirrorAnimation, animation, animation.durationMs)()
+          clearSymmetryAndPerimeterSelectionOnSuccess()
         ,
         onFailure = err =>
           ErrorOperations.showError(err.message)
@@ -312,9 +321,7 @@ object TessellationOperations:
 
         OperationRunner.runTilingOp(op)(
           onSuccess =
-            AppState.clearSymmetryOverlays()
-            EditorState.selectedPerimeterEdges.set(Set.empty)
-          ,
+            clearSymmetryAndPerimeterSelectionOnSuccess(),
           onFailure = err =>
             if edgeIndex < perimeterEdges.length then
               val selectedEdge = perimeterEdges(edgeIndex)
@@ -373,9 +380,7 @@ object TessellationOperations:
 
         OperationRunner.runTilingOp(op)(
           onSuccess =
-            AppState.clearSymmetryOverlays()
-            EditorState.selectedPerimeterEdges.set(Set.empty)
-          ,
+            clearSymmetryAndPerimeterSelectionOnSuccess(),
           onFailure = error => {
             val curr           = currentTiling.now()
             val maybeFaceId    = findFaceContainingEdge(curr, startVertexId, endVertexId)

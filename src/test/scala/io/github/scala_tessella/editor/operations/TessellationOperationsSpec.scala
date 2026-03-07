@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.EditorStateFixture
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{DoublingAnimation, EditorConfig, EditorState, FanAnimation}
+import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager, TilingBuilders}
 import io.github.scala_tessella.dcel.structure.VertexId
 import munit.FunSuite
@@ -100,6 +101,21 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
   test("attemptMirroring should trigger mirror animation on non-empty tiling") {
     val tiling = TilingBuilders.freshSquare()
     EditorState.currentTiling.set(tiling)
+    EditorState.fanAnimation.set(
+      Some(FanAnimation(
+        facePoints = Nil,
+        pivot = Point.origin,
+        copies = 2,
+        stepAngle = Radian.fromDegrees(180),
+        durationMs = 10,
+        staggerMs = 0
+      ))
+    )
+    EditorState.doublingAnimation.set(Some(DoublingAnimation(
+      facePoints = Nil,
+      delta = Point.origin,
+      durationMs = 10
+    )))
     EditorState.mirrorAnimation.set(None)
 
     val done = Promise[Unit]()
@@ -107,9 +123,13 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     TessellationOperations.attemptMirroring()
 
     setTimeout(200) {
-      val mirrored = EditorState.currentTiling.now()
+      val mirrored        = EditorState.currentTiling.now()
       assert(!mirrored.isEmpty)
-      assert(EditorState.mirrorAnimation.now().nonEmpty)
+      assertEquals(EditorState.fanAnimation.now(), None)
+      assertEquals(EditorState.doublingAnimation.now(), None)
+      val mirrorAnimation = EditorState.mirrorAnimation.now()
+      assert(mirrorAnimation.nonEmpty)
+      assertEquals(mirrorAnimation.get.durationMs, EditorConfig.fanAnimationDurationMs)
       done.success(())
     }: Unit
 

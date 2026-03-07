@@ -1,5 +1,6 @@
 package io.github.scala_tessella.editor.interactions
 
+import io.github.scala_tessella.editor.models.EditorConfig
 import munit.FunSuite
 
 class KeyboardEventHandlerSpec extends FunSuite:
@@ -12,10 +13,10 @@ class KeyboardEventHandlerSpec extends FunSuite:
     assertEquals(KeyboardEventHandler.rotationDeltaForKey("x"), None)
 
   test("zoomFactorForKey maps zoom keys"):
-    assertEquals(KeyboardEventHandler.zoomFactorForKey("+"), Some(1.1))
-    assertEquals(KeyboardEventHandler.zoomFactorForKey("="), Some(1.1))
-    assertEquals(KeyboardEventHandler.zoomFactorForKey("-"), Some(1.0 / 1.1))
-    assertEquals(KeyboardEventHandler.zoomFactorForKey("_"), Some(1.0 / 1.1))
+    assertEquals(KeyboardEventHandler.zoomFactorForKey("+"), Some(EditorConfig.keyboardZoomFactor))
+    assertEquals(KeyboardEventHandler.zoomFactorForKey("="), Some(EditorConfig.keyboardZoomFactor))
+    assertEquals(KeyboardEventHandler.zoomFactorForKey("-"), Some(1.0 / EditorConfig.keyboardZoomFactor))
+    assertEquals(KeyboardEventHandler.zoomFactorForKey("_"), Some(1.0 / EditorConfig.keyboardZoomFactor))
     assertEquals(KeyboardEventHandler.zoomFactorForKey("z"), None)
 
   test("undo/redo/save shortcut helpers detect modifiers"):

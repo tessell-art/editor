@@ -2,15 +2,13 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.file.SvgExporter
 import io.github.scala_tessella.editor.utils.UndoManager
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
-
-import scala.math.{max, min}
 
 object KeyboardEventHandler:
 
@@ -61,7 +59,7 @@ object KeyboardEventHandler:
 
           EditorState.viewTransform.update: t =>
             val next = t.scale * factor
-            t.copy(scale = min(max(next, 0.1), 5.0))
+            t.copy(scale = ViewOperations.clampViewScale(next))
         }(using owner): Unit
 
       keyDowns
@@ -86,8 +84,8 @@ object KeyboardEventHandler:
 
   private[interactions] def zoomFactorForKey(key: String): Option[Double] =
     key match
-      case "+" | "=" => Some(1.1)
-      case "-" | "_" => Some(1.0 / 1.1)
+      case "+" | "=" => Some(EditorConfig.keyboardZoomFactor)
+      case "-" | "_" => Some(1.0 / EditorConfig.keyboardZoomFactor)
       case _         => None
 
   private[interactions] def isUndoShortcut(key: String, primary: Boolean, shift: Boolean): Boolean =

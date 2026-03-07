@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L._
-import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.editor.components.IconsSVG
 import io.github.scala_tessella.editor.models.EditorState
 
@@ -12,17 +11,8 @@ object GuidePopup:
   private val closeGuide: Observer[org.scalajs.dom.MouseEvent] = closePopup(EditorState.showGuidePopup)
 
   def element: Element =
-    div(
-      className := "popup-overlay",
-      onClick --> closeGuide,
-      div(
-        className := "popup-content",
-        onClick.stopPropagation --> {},
-        button(
-          className := "popup-close-btn",
-          onClick --> closeGuide,
-          closeIcon
-        ),
+    popupOverlay(closeGuide)(
+      popupContent(closeGuide)(
         h2("Guide"),
         div(
           className := "popup-text-scrollable",

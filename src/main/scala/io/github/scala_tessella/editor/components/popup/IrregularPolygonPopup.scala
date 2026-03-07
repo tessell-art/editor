@@ -1,7 +1,6 @@
 package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L._
-import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.editor.components.PolygonPaletteComponent
 import io.github.scala_tessella.editor.models.EditorState
@@ -29,17 +28,8 @@ object IrregularPolygonPopup:
   private val flip: Observer[org.scalajs.dom.MouseEvent]       = modify(_.reflectAt(1))
 
   def element: Element =
-    div(
-      className := "popup-overlay",
-      onClick --> closeIrregular,
-      div(
-        className := "popup-content",
-        onClick.stopPropagation --> {},
-        button(
-          className := "popup-close-btn",
-          onClick --> closeIrregular,
-          closeIcon
-        ),
+    popupOverlay(closeIrregular)(
+      popupContent(closeIrregular)(
         h2("Adjust attaching edge"),
         div(
           className := "popup-text-scrollable",
