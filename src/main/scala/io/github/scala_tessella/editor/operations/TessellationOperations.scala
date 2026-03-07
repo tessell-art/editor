@@ -321,8 +321,13 @@ object TessellationOperations:
     // We look for a face whose boundary contains the directed edge (v1 -> v2).
     // If DCEL provides halfEdges on face with next pointers, prefer that; here we rely on vertex order on the face.
     tiling.innerFaces.find { face =>
-      val ids = tiling.findInnerFaceVertices(face.id).toOption.get.map(_.id).toVector
-      ids.slidingO(2).exists(pair => pair(0) == v1 && pair(1) == v2)
+
+      tiling
+        .findInnerFaceVertices(face.id)
+        .toOption
+        .exists(vertices =>
+          vertices.map(_.id).toVector.slidingO(2).exists(pair => pair(0) == v1 && pair(1) == v2)
+        )
     }.map(_.id)
 
   def attemptPolygonInsertion(startVertexId: VertexId, endVertexId: VertexId): Unit =
@@ -350,17 +355,23 @@ object TessellationOperations:
             EditorState.selectedPerimeterEdges.set(Set.empty)
           ,
           onFailure = error => {
-            val curr        = currentTiling.now()
-            val maybeFaceId = findFaceContainingEdge(curr, startVertexId, endVertexId)
-            val startCoords = tiling.findVertex(startVertexId).toOption.get.toCoords
-            val endCoords   = tiling.findVertex(endVertexId).toOption.get.toCoords
+            val curr           = currentTiling.now()
+            val maybeFaceId    = findFaceContainingEdge(curr, startVertexId, endVertexId)
+            val startCoordsOpt = tiling.findVertex(startVertexId).toOption.map(_.toCoords)
+            val endCoordsOpt   = tiling.findVertex(endVertexId).toOption.map(_.toCoords)
+            val edgeOpt        =
+              for
+                startCoords <- startCoordsOpt
+                endCoords   <- endCoordsOpt
+              yield (startCoords, endCoords)
+
             if maybeSides.isDefined then
               val placementOpt =
-                Some(
+                edgeOpt.map(edge =>
                   FailedPolygonPlacement(
                     edgeIndex = 0, // not needed for interior wireframe
                     angles = RegularPolygon(maybeSides.get).angles,
-                    edge = (startCoords, endCoords),
+                    edge = edge,
                     tiling = curr,
                     intoFace = maybeFaceId
                   )
@@ -370,15 +381,17 @@ object TessellationOperations:
                 placement = placementOpt
               )
             else
+              val maybeAngles  = EditorState.recentIrregularPolygon.now()
               val placementOpt =
-                Some(
-                  FailedPolygonPlacement(
-                    edgeIndex = 0, // not needed for interior wireframe
-                    angles = EditorState.recentIrregularPolygon.now().get,
-                    edge = (startCoords, endCoords),
-                    tiling = curr,
-                    intoFace = maybeFaceId
-                  )
+                for
+                  edge   <- edgeOpt
+                  angles <- maybeAngles
+                yield FailedPolygonPlacement(
+                  edgeIndex = 0, // not needed for interior wireframe
+                  angles = angles,
+                  edge = edge,
+                  tiling = curr,
+                  intoFace = maybeFaceId
                 )
               ErrorOperations.showError(
                 s"Cannot insert irregular polygon: ${error.message}",

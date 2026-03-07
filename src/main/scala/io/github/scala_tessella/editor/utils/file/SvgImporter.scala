@@ -100,7 +100,6 @@ object SvgImporter:
         asToast = true,
         severity = ErrorOperations.Severity.Error
       )
-      e.printStackTrace()
     }: Unit
 
   private def readPolygonFillsStrict(doc: dom.Document, expectedCount: Int): List[ColorRGB] =

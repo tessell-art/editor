@@ -198,7 +198,7 @@ object EditorCanvasComponent:
         if doubleOpt.isDefined || fanOpt.isDefined then None
         else if tiling.isEmpty then
           Some(noTessellationMessage())
-        else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.get then
+        else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.contains(true) then
           Some(onePolygonMessage())
         else None
     )

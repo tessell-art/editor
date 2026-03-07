@@ -651,7 +651,9 @@ object TessellationRenderer:
   private def renderInteriorEdgesForFace(tiling: TilingDCEL, faceId: FaceId): List[Element] =
     if tiling.isEmpty then Nil
     else
-      rawRender(faceId, tiling.findInnerFaceVertices(faceId).toOption.get)
+      tiling.findInnerFaceVertices(faceId).toOption match
+        case Some(vertices) => rawRender(faceId, vertices)
+        case None           => Nil
 
   private def renderInteriorEdge(
       edge: (VertexCoord, VertexCoord),

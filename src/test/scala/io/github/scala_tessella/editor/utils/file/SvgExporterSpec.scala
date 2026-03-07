@@ -281,6 +281,28 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(!result.contains("<g id=\"dual-tessellation\""))
   }
 
+  test("generateRotationXml should return empty string when rotation data is missing") {
+    EditorState.rotationVertexIds.set(None)
+
+    val result = SvgExporter.generateRotationXml(testCoordinates, 1.0, Point.origin)
+    assertEquals(result, "")
+  }
+
+  test("generateSvgContent should not fail when showRotation is true but rotation data is missing") {
+    EditorState.rotationVertexIds.set(None)
+
+    val result = SvgExporter.generateSvgContent(
+      squareTiling,
+      showNodeLabels = false,
+      showUniformity = false,
+      showRotation = true,
+      showReflection = false
+    )
+
+    assert(result.contains("<svg"))
+    assert(!result.contains("stroke=\"Gold\""))
+  }
+
   test("should calculate correct dimensions and offsets") {
     val result = SvgExporter.generateSvgContent(
       squareTiling,

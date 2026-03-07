@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.utils.file
 
 import io.github.scala_tessella.editor.utils.AsyncUtils
 import io.github.scala_tessella.editor.utils.file.SvgImporter.importTilingFromSVG
+import io.github.scala_tessella.editor.operations.ErrorOperations
 import org.scalajs.dom
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,7 +27,11 @@ object TemplateLoader:
           // and update the application state.
           AsyncUtils.withLoadingState(() => importTilingFromSVG(svgContent, fileName))
         case Failure(exception)  =>
-          // You could implement a more user-friendly error display here
-          println(s"Error loading template '$fileName': $exception")
-          dom.window.alert(s"Failed to load template: $fileName")
+          ErrorOperations.showError(
+            message = s"Failed to load template '$fileName': ${exception.getMessage}",
+            context = Some("Template Loader"),
+            hint = Some("Check your network connection and try again."),
+            asToast = true,
+            severity = ErrorOperations.Severity.Error
+          )
       }

@@ -189,21 +189,24 @@ object SvgExporter:
       val rotCoords = rotList.map:
         case BoundaryVertex(i)  => i -> coordinates(i)
         case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
-      val center    = rotCoords.map(_._2).centroid.toPoint.scaleAndTranslate(scale, offset)
-      val nodesXml  =
-        rotCoords.map { (vertexId, coords) =>
+      if rotCoords.isEmpty then ""
+      else
+        val center   = rotCoords.map(_._2).centroid.toPoint.scaleAndTranslate(scale, offset)
+        val nodesXml =
+          rotCoords.map { (_, coords) =>
 
-          val segment = LineSegment(center, coords.toPoint.scaleAndTranslate(scale, offset)).extendFromOrigin
-          s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${
-              SvgDsl.fmt4(
-                segment.p1.y
-              )
-            }"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
-        }.mkString("\n")
+            val segment =
+              LineSegment(center, coords.toPoint.scaleAndTranslate(scale, offset)).extendFromOrigin
+            s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${
+                SvgDsl.fmt4(
+                  segment.p1.y
+                )
+              }"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
+          }.mkString("\n")
 
-      s"""  <g id="node-reflection" stroke="Gold" stroke-width="1" stroke-dasharray="2,2" >
-         |$nodesXml
-         |  </g>""".stripMargin
+        s"""  <g id="node-reflection" stroke="Gold" stroke-width="1" stroke-dasharray="2,2" >
+           |$nodesXml
+           |  </g>""".stripMargin
 
   private[utils] def generateReflectionXml(
       coordinates: Map[VertexId, BigPoint],
