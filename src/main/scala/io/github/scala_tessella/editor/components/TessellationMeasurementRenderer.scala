@@ -8,6 +8,13 @@ import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object TessellationMeasurementRenderer:
 
+  private val clickablePointClickObserver: Observer[(ClickablePoint, Option[Tool])] =
+    Observer:
+      case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
+      case (point, Some(Tool.Fan))         => AppState.handlePointClickForFan(point)
+      case (point, Some(Tool.Inserter))    => AppState.handlePointClickForInsertion(point)
+      case (point, _)                      => AppState.handlePointClickForDeletion(point)
+
   def renderClickablePoint(
       p: ClickablePoint,
       toCanvasPoint: Point => Point
@@ -20,18 +27,11 @@ object TessellationMeasurementRenderer:
       svg.stroke        := "black",
       svg.strokeWidth   := "1",
       svg.className     := "clickable-point",
-      onMountCallback: ctx =>
-        // Guard the event stream at the source
-        gate(
-          ctx.thisNode.events(onClick.preventDefault.mapTo(p))
-        )
-          .withCurrentValueOf(EditorState.activeTool.signal)
-          .foreach {
-            case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
-            case (point, Some(Tool.Fan))         => AppState.handlePointClickForFan(point)
-            case (point, Some(Tool.Inserter))    => AppState.handlePointClickForInsertion(point)
-            case (point, _)                      => AppState.handlePointClickForDeletion(point)
-          }(using ctx.owner): Unit,
+      onClick.preventDefault
+        .mapTo(p)
+        .compose(stream =>
+          gate(stream).withCurrentValueOf(EditorState.activeTool.signal)
+        ) --> clickablePointClickObserver,
       svg.style         := "cursor: crosshair;",
       svg.style <-- EditorState.activeTool.signal.map: tool =>
         TessellationCursorStyles.clickablePointCursorCss(tool),
