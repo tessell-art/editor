@@ -171,8 +171,6 @@ object MenuBarComponent:
     )
 
   private def fileMenu(): Element =
-    val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
-    val hasFileName   = EditorState.currentFileName.signal.map(_.isDefined)
     menuItem(
       "File",
       dropdownLink(
@@ -190,30 +188,25 @@ object MenuBarComponent:
       dropdownLink(
         "Save SVG",
         () => SvgExporter.saveTilingToSVG(),
-        enabled = hasFileName.combineWith(isTilingEmpty).map(_ && !_),
+        enabled = EditorState.canSaveCurrentFileSignal,
         shortcut = Some("Ctrl+S")
       ),
       dropdownLink(
         "Save SVG as...",
         () => SvgExporter.saveAsTilingToSVG(),
-        enabled = isTilingEmpty.map(!_)
+        enabled = EditorState.hasTilingSignal
       ),
       div(className := "menu-separator"),
       dropdownLink(
         "Export to DOT...",
         () => DotExporter.exportTilingToDOT(),
-        enabled = isTilingEmpty.map(!_)
+        enabled = EditorState.hasTilingSignal
       ),
       div(className := "menu-separator"),
       dropdownLink("Settings...", () => EditorState.showSettingsPopup.set(true))
     )
 
   private def editMenu(): Element =
-    val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
-    val hasSelection  = EditorState.selectedTilingPolygons.signal
-      .combineWith(EditorState.selectedPerimeterEdges.signal)
-      .map((polys, edges) => polys.nonEmpty || edges.nonEmpty)
-
     menuItem(
       "Edit",
       dropdownLink("↶ Undo", () => UndoManager.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
@@ -223,10 +216,10 @@ object MenuBarComponent:
       dropdownLink(
         "Double (to infinite)",
         () => AppState.doubleTiling(),
-        enabled = isTilingEmpty.map(!_),
+        enabled = EditorState.hasTilingSignal,
         shortcut = Some("D")
       ),
-      dropdownLink("Mirror", () => AppState.mirrorTiling(), enabled = isTilingEmpty.map(!_)),
+      dropdownLink("Mirror", () => AppState.mirrorTiling(), enabled = EditorState.hasTilingSignal),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {
@@ -236,8 +229,13 @@ object MenuBarComponent:
 //        () => AppState.toggleEditorMode()
 //      ),
       div(className := "menu-separator"),
-      dropdownLink("Select All", () => AppState.selectAll(), isTilingEmpty.map(!_)),
-      dropdownLink("Deselect All", () => AppState.deselectAll(), hasSelection, shortcut = Some("Esc")),
+      dropdownLink("Select All", () => AppState.selectAll(), EditorState.hasTilingSignal),
+      dropdownLink(
+        "Deselect All",
+        () => AppState.deselectAll(),
+        EditorState.hasSelectionSignal,
+        shortcut = Some("Esc")
+      ),
       div(className := "menu-separator"),
       a(
         href        := "#",
@@ -262,7 +260,6 @@ object MenuBarComponent:
     )
 
   private def viewMenu(): Element =
-    val isTilingEmpty = EditorState.currentTiling.signal.map(_.isEmpty)
     menuItem(
       "View",
       dropdownLinkDynamic(
@@ -287,7 +284,7 @@ object MenuBarComponent:
       dropdownLink(
         "Fit to Canvas",
         () => AppState.fitTilingToCanvas(),
-        enabled = isTilingEmpty.map(!_),
+        enabled = EditorState.hasTilingSignal,
         shortcut = Some("F")
       ),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),

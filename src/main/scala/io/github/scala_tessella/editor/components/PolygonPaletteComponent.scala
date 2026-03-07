@@ -56,7 +56,7 @@ object PolygonPaletteComponent:
                         AppState.selectPolygonsByShape(angles)
                       }
                     },
-                    disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+                    disabled <-- EditorState.isTilingEmptySignal
                   )
                 )
               )
@@ -71,7 +71,7 @@ object PolygonPaletteComponent:
 
                       AppState.selectPolygonsBySides(s)
                     },
-                    disabled <-- EditorState.currentTiling.signal.map(_.isEmpty)
+                    disabled <-- EditorState.isTilingEmptySignal
                   )
                 )
               }

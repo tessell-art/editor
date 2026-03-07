@@ -214,6 +214,29 @@ object EditorState:
           if isSel then recent else None
 
   object DerivedState:
+    /** True when there is no active tiling. */
+    val isTilingEmptySignal: Signal[Boolean] =
+      TessellationState.currentTiling.signal.map(_.isEmpty)
+
+    /** True when a file name is set for the current document. */
+    val hasFileNameSignal: Signal[Boolean] =
+      FileState.currentFileName.signal.map(_.isDefined)
+
+    /** True when at least one perimeter edge or polygon is selected. */
+    val hasSelectionSignal: Signal[Boolean] =
+      TessellationState.selectedTilingPolygons.signal
+        .combineWith(TessellationState.selectedPerimeterEdges.signal)
+        .map: (polys, edges) =>
+          polys.nonEmpty || edges.nonEmpty
+
+    /** True when current tiling is non-empty. */
+    val hasTilingSignal: Signal[Boolean] =
+      isTilingEmptySignal.map(!_)
+
+    /** True when save to current file is possible. */
+    val canSaveCurrentFileSignal: Signal[Boolean] =
+      hasFileNameSignal.combineWith(isTilingEmptySignal).map(_ && !_)
+
     /** Checks if Inserter tool is active */
     val isInserterActive: Signal[Boolean] =
       ToolState.activeTool.signal.map:
