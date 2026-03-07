@@ -11,7 +11,8 @@ import io.github.scala_tessella.editor.models.{
   EditorConfig,
   EditorState,
   FailedPolygonPlacement,
-  FanAnimation
+  FanAnimation,
+  MirrorAnimation
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
@@ -115,6 +116,7 @@ object TessellationOperations:
     val tiling           = currentTiling.now()
     EditorState.fanAnimation.set(None)
     EditorState.doublingAnimation.set(None)
+    EditorState.mirrorAnimation.set(None)
     val faceIds          = tiling.innerFaces.map(_.id)
     val facePoints       = precomputeFacePoints(tiling)
     val maxFaceId        = faceIds.map(_.value).maxOption.getOrElse(0)
@@ -194,7 +196,9 @@ object TessellationOperations:
     val tiling = currentTiling.now()
     if tiling.isEmpty then ()
     else
+      EditorState.fanAnimation.set(None)
       EditorState.doublingAnimation.set(None)
+      EditorState.mirrorAnimation.set(None)
       val faceIds        =
         tiling.innerFaces.map:
           _.id
@@ -248,7 +252,11 @@ object TessellationOperations:
     val tiling = currentTiling.now()
     if tiling.isEmpty then ()
     else
-      val op = () =>
+      EditorState.fanAnimation.set(None)
+      EditorState.doublingAnimation.set(None)
+      EditorState.mirrorAnimation.set(None)
+      val facePoints = precomputeFacePoints(tiling)
+      val op         = () =>
         try
           Right(tiling.verticallyReflectedCopy)
         catch
@@ -256,6 +264,20 @@ object TessellationOperations:
 
       OperationRunner.runTilingOp(op)(
         onSuccess =
+          if facePoints.nonEmpty then
+            val animation =
+              MirrorAnimation(
+                facePoints = facePoints,
+                axisY = EditorConfig.canvasCenter.y,
+                durationMs = EditorConfig.mirrorAnimationDurationMs
+              )
+            EditorState.mirrorAnimation.set(Some(animation))
+            setTimeout(animation.durationMs) {
+              EditorState.mirrorAnimation.update {
+                case Some(current) if current eq animation => None
+                case other                                 => other
+              }
+            }: Unit
           AppState.clearSymmetryOverlays()
           EditorState.selectedPerimeterEdges.set(Set.empty)
         ,

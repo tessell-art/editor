@@ -34,6 +34,7 @@ trait EditorStateFixture:
     EditorState.previewPlacement.set(None)
     EditorState.fanAnimation.set(None)
     EditorState.doublingAnimation.set(None)
+    EditorState.mirrorAnimation.set(None)
     EditorState.clickablePoints.set(Nil)
     EditorState.measurementStartPoint.set(None)
     EditorState.measurementEndPoint.set(None)

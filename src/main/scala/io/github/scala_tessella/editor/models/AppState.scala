@@ -41,6 +41,12 @@ case class DoublingAnimation(
     durationMs: Int
 )
 
+case class MirrorAnimation(
+    facePoints: List[(FaceId, String)],
+    axisY: Double,
+    durationMs: Int
+)
+
 enum Anchor:
 
   case Vertex(vertexId: VertexId)

@@ -15,6 +15,7 @@ import io.github.scala_tessella.editor.models.{
   EditorState,
   FailedPolygonPlacement,
   FanAnimation,
+  MirrorAnimation,
   Tool
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
@@ -377,6 +378,48 @@ object TessellationRenderer:
             if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
 
           node.setAttribute("transform", "translate(0 0)")
+          rafId = dom.window.requestAnimationFrame(step)
+        ,
+        onUnmountCallback: _ =>
+          cancel()
+      )
+    )
+
+  def renderMirrorAnimation(animation: MirrorAnimation): Element =
+    val durationSeconds    = animation.durationMs.toDouble / 1000.0
+    var cancel: () => Unit = () => ()
+
+    def renderPolygons(): List[Element] =
+      animation.facePoints.map: (faceId, pointsStr) =>
+        renderTilingPolygonFromPoints(pointsStr, faceId)
+
+    svg.g(
+      svg.className := "mirror-animation",
+      svg.g(
+        svg.style := "pointer-events: none;",
+        renderPolygons(),
+        onMountCallback: ctx =>
+          val node      = ctx.thisNode.ref
+          var rafId     = 0
+          var startTime = -1.0
+
+          lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+            if startTime < 0 then startTime = ts
+            val elapsed  = ts - startTime
+            val progress =
+              if durationSeconds <= 0 then 1.0
+              else Math.min(1.0, elapsed / (durationSeconds * 1000.0))
+            val eased    = easeOutCubic(progress)
+            val sy       = 1.0 - (2.0 * eased)
+            val ty       = animation.axisY * (1.0 - sy)
+            node.setAttribute("transform", s"matrix(1 0 0 $sy 0 $ty)")
+            if progress < 1.0 then
+              rafId = dom.window.requestAnimationFrame(step)
+
+          cancel = () =>
+            if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
+
+          node.setAttribute("transform", "matrix(1 0 0 1 0 0)")
           rafId = dom.window.requestAnimationFrame(step)
         ,
         onUnmountCallback: _ =>

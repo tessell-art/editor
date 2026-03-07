@@ -169,6 +169,9 @@ object EditorState:
     /** Doubling animation overlay, if any */
     val doublingAnimation: Var[Option[DoublingAnimation]] = Var(None)
 
+    /** Mirror animation overlay, if any */
+    val mirrorAnimation: Var[Option[MirrorAnimation]] = Var(None)
+
   object MeasurementState:
     /** Starting point for measurement */
     val measurementStartPoint: Var[Option[ClickablePoint]] = Var(None)

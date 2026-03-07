@@ -87,12 +87,33 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("attemptMirroring should be a no-op on empty tiling") {
     EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.mirrorAnimation.set(None)
     UndoManager.clearHistory()
 
     TessellationOperations.attemptMirroring()
 
     assert(EditorState.currentTiling.now().isEmpty)
+    assertEquals(EditorState.mirrorAnimation.now(), None)
     assertEquals(UndoManager.undoCount.now(), 0)
+  }
+
+  test("attemptMirroring should trigger mirror animation on non-empty tiling") {
+    val tiling = TilingBuilders.freshSquare()
+    EditorState.currentTiling.set(tiling)
+    EditorState.mirrorAnimation.set(None)
+
+    val done = Promise[Unit]()
+
+    TessellationOperations.attemptMirroring()
+
+    setTimeout(200) {
+      val mirrored = EditorState.currentTiling.now()
+      assert(!mirrored.isEmpty)
+      assert(EditorState.mirrorAnimation.now().nonEmpty)
+      done.success(())
+    }: Unit
+
+    done.future
   }
 
   test("attemptFanning should replicate colors across fan copies") {

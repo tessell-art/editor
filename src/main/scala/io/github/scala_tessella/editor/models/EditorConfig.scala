@@ -27,3 +27,6 @@ object EditorConfig:
   // Fan animation duration (milliseconds)
   val fanAnimationDurationMs: Int = 3000
   val fanAnimationStaggerMs: Int  = 60
+
+  // Mirror animation duration (milliseconds)
+  val mirrorAnimationDurationMs: Int = 1200

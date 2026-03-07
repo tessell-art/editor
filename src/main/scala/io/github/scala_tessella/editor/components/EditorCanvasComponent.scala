@@ -173,8 +173,12 @@ object EditorCanvasComponent:
 
   private def contentGroup(): Element =
     val animationAndTilingSignal =
-      EditorState.doublingAnimation.signal
-        .combineWith(EditorState.fanAnimation.signal, EditorState.currentTiling.signal)
+      EditorState.mirrorAnimation.signal
+        .combineWith(
+          EditorState.doublingAnimation.signal,
+          EditorState.fanAnimation.signal,
+          EditorState.currentTiling.signal
+        )
 
     svg.g(
       svg.transform <-- EditorState.viewTransform.signal.map(transform =>
@@ -185,17 +189,20 @@ object EditorCanvasComponent:
       GridRenderer.element,
 
       // Render tessellation (or animations, if active)
-      child <-- animationAndTilingSignal.map: (doubleOpt, fanOpt, tiling) =>
-        doubleOpt match
-          case Some(animation) => TessellationRenderer.renderDoublingAnimation(animation)
+      child <-- animationAndTilingSignal.map: (mirrorOpt, doubleOpt, fanOpt, tiling) =>
+        mirrorOpt match
+          case Some(animation) => TessellationRenderer.renderMirrorAnimation(animation)
           case None            =>
-            fanOpt match
-              case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
-              case None            => TessellationRenderer.renderTiling(tiling),
+            doubleOpt match
+              case Some(animation) => TessellationRenderer.renderDoublingAnimation(animation)
+              case None            =>
+                fanOpt match
+                  case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
+                  case None            => TessellationRenderer.renderTiling(tiling),
 
       // Show message when no tessellation is available
-      child.maybe <-- animationAndTilingSignal.map: (doubleOpt, fanOpt, tiling) =>
-        if doubleOpt.isDefined || fanOpt.isDefined then None
+      child.maybe <-- animationAndTilingSignal.map: (mirrorOpt, doubleOpt, fanOpt, tiling) =>
+        if mirrorOpt.isDefined || doubleOpt.isDefined || fanOpt.isDefined then None
         else if tiling.isEmpty then
           Some(noTessellationMessage())
         else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.contains(true) then
