@@ -1,11 +1,9 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.geometry.{AngleDegree, BigLineSegment, BigPoint, RegularPolygon}
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
-import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
-import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
+import io.github.scala_tessella.dcel.structure.{FaceId, Vertex}
 import io.github.scala_tessella.editor.models.{
   AppState,
   ClickablePoint,
@@ -24,36 +22,14 @@ import io.github.scala_tessella.editor.operations.TessellationOperations.{Vertex
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.{
   circleCoordsRadius,
-  lineCoords,
-  textCoords,
-  uniformColorMap
+  lineCoords
 }
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
-import org.scalajs.dom
 import org.scalajs.dom.EndingType.transparent
 
-import scala.scalajs.js
-
 object TessellationRenderer:
-
-  private val colorPickerCursor   =
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 56 56'%3E%3Cpath fill='white' stroke='black' stroke-width='2' d='M39.6 28.9L40.3 28.1c1.1-1.2 1.1-2.6-.1-3.8L39.5 23.6c3.5-3.2 7.5-3.6 9.9-6.1 3.5-3.5 2.3-8.4-.1-10.9s-7.4-3.6-10.9-.1c-2.5 2.4-2.9 6.4-6.1 10l-.7-.7c-1.2-1.2-2.6-1.1-3.8.1l-.7.6c-1.4 1.4-1.2 2.6 0 3.8l1 1L10.6 39C3.3 46.2 6.8 45.1 2.9 50.7l2.1 2.2c5.4-3.9 4.7-0 12-7.3L34.8 27.8l1 1c1.2 1.2 2.4 1.5 3.8.1zM10.1 46.1c-.9-.9-.7-1.8.2-2.7L30.3 23.3l2.5 2.5L12.8 45.9c-.8.8-1.8 1-2.7.2z'/%3E%3C/svg%3E\") 2 24, auto"
-  private val selectByColorCursor =
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='31' viewBox='0 0 37.643265 44.674143'%3E%3Cg fill='white' stroke='black' stroke-width='1'%3E%3Cpath d='M 15.302,0 C 6.85,0 0,6.309 0,14.09 c 0,7.781 6.85,14.092 15.302,14.092 1.519,-8.259 4.996,-9.012 8.362,-9.012 0.751,0 1.497,0.038 2.214,0.038 2.521,0 4.687,-0.463 5.502,-4.646 C 32.744,7.586 23.752,0 15.302,0 Z m 14.335958,14.790305 c -0.744518,2.094393 -0.955291,2.261786 -3.024775,2.620009 -0.933269,0.161547 -0.832255,0.05748 -1.541035,-0.01983 -0.399,-0.01 -1.037565,-0.119539 -1.441565,-0.119539 -3.879,0 -7.639278,1.034464 -9.861278,8.777464 C 6.2285932,24.929856 1.9315932,19.753102 1.9315932,14.357102 c 0,-6.1150003 4.4505932,-12.4255088 13.5039578,-12.5590596 4.028562,-0.059427 9.877508,3.1268559 12.564508,6.3888559 0.901,1.0939997 2.079899,4.3374067 1.637899,6.6034067 z'/%3E%3Cpath d='m 10.26,15.943 c -1.565,0 -2.839,1.273 -2.839,2.839 0,1.566 1.273,2.839 2.839,2.839 1.564,0 2.838,-1.273 2.838,-2.839 0,-1.566 -1.273,-2.839 -2.838,-2.839 z m 0,4.178 c -0.738,0 -1.339,-0.602 -1.339,-1.339 0,-0.738 0.601,-1.339 1.339,-1.339 0.737,0 1.338,0.602 1.338,1.339 0,0.737 -0.6,1.339 -1.338,1.339 z'/%3E%3Ccircle cx='8.467' cy='11.012' r='2.0880001'/%3E%3Ccircle cx='13.296' cy='7.2950001' r='2.089'/%3E%3Ccircle cx='19.381001' cy='8.7869997' r='2.089'/%3E%3Ccircle cx='24.089001' cy='12.497' r='2.089'/%3E%3Cg transform='matrix(0.09071207,0,0,0.09071207,11.351823,13.156144)'%3E%3Cpolygon points='57.617,303.138 123.48,224.061 181.017,347.451 244.459,317.867 186.921,194.478 289.834,194.854 57.617,0'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\") 11 9, auto"
-  private val fanCursor           =
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 522.89362 522.89362'%3E%3Cpath fill='white' stroke='black' stroke-width='10' d='m 247.14894,448.78305 c -10.35722,-2.2429 -27.57447,-11.62749 -27.57447,-15.02999 0,-0.71388 6.69119,-7.43938 14.86931,-14.94556 8.17812,-7.50618 14.49727,-13.96448 14.04255,-14.35177 -0.45471,-0.3873 -56.43527,-24.72583 -124.40122,-54.08562 C 56.119149,321.01031 0.36023509,296.84559 0.17640896,296.67074 -3.0919826,293.56183 13.386374,242.78202 25.515216,218.5865 c 97.114854,-193.731934 374.748334,-193.731934 471.863184,0 12.12884,24.19552 28.6072,74.97533 25.33881,78.08424 -0.18383,0.17485 -55.94274,24.33957 -123.9087,53.69937 -67.96596,29.35979 -123.94651,53.69832 -124.40123,54.08562 -0.45471,0.38729 5.86443,6.84559 14.04256,14.35177 16.63075,15.26432 16.5145,15.05175 10.58168,19.34946 -14.66914,10.62627 -33.79399,14.54324 -51.88258,10.62609 z M 158.49421,329.87234 c 2.207,-4.77447 5.82314,-11.47034 8.03586,-14.87971 2.21272,-3.40938 4.02312,-6.46993 4.02312,-6.80123 0,-0.47948 -50.29929,-40.38272 -57.34514,-45.49281 -1.59087,-1.1538 -2.22412,-0.63254 -5.58317,4.59575 -8.257442,12.85256 -22.456816,46.14343 -20.058757,47.02839 0.425866,0.15716 15.250897,6.63309 32.944517,14.39096 30.76056,13.48714 32.20966,14.01175 33.07052,11.97235 0.49517,-1.17307 2.70604,-6.03923 4.91305,-10.8137 z m 245.93132,-2.05473 c 17.13192,-7.44743 31.27212,-13.64008 31.42269,-13.76145 3.42274,-2.75914 -22.63697,-53.91462 -26.16266,-51.35757 -7.66751,5.56097 -57.3442,45.03497 -57.34076,45.56402 0.002,0.37046 1.41671,2.74164 3.1429,5.2693 3.50505,5.13244 12.5306,22.88801 13.48005,26.51873 0.79115,3.02534 -1.3091,3.74993 35.45778,-12.23303 z M 188.79444,290.17435 c 4.72919,-3.94639 16.52251,-11.88042 18.83508,-12.67143 1.43274,-0.49006 2.28679,1.10467 -21.33358,-39.83494 l -17.54936,-30.41712 -9.05414,6.08492 c -10.41744,7.00113 -26.49084,20.95378 -32.75201,28.43064 l -4.2936,5.12728 29.82552,23.53076 c 34.14928,26.94197 30.24647,24.81984 36.32209,19.74989 z m 181.34029,-19.66395 30.11159,-23.61726 -4.29337,-5.127 c -11.19941,-13.37394 -39.39913,-35.12452 -41.93847,-32.34732 -1.97326,2.1581 -38.44001,65.84062 -38.44001,67.12847 0,0.60063 2.64255,2.71619 5.87234,4.70124 3.22978,1.98505 8.4,5.67739 11.48936,8.2052 3.08936,2.52781 5.94776,4.61355 6.35199,4.63498 0.40424,0.0214 14.28519,-10.58882 30.84657,-23.57831 z m -134.73048,-3.30712 c 3.37022,-0.82504 8.54043,-1.81153 11.48937,-2.19219 l 5.3617,-0.69212 v -41.07134 -41.07134 l -7.9149,0.80824 c -22.00222,2.24677 -58.46808,12.51182 -58.46808,16.45863 0,0.59725 3.60999,7.32431 8.0222,14.94903 4.41221,7.62472 13.42039,23.18573 20.01819,34.58002 9.20739,15.90103 12.38744,20.60231 13.67993,20.22401 0.92616,-0.27108 4.44138,-1.1679 7.81159,-1.99294 z m 82.5815,-32.39968 c 11.03635,-19.14738 19.84061,-35.17825 19.56502,-35.62415 -2.658,-4.30073 -38.73825,-14.279 -58.48694,-16.17501 l -8.42553,-0.80891 v 41.04007 41.04006 l 7.91489,1.164 c 4.35319,0.6402 9.98298,1.81127 12.51064,2.60236 2.52766,0.7911 5.10427,1.46911 5.72579,1.50668 0.62153,0.0376 10.15979,-15.59772 21.19613,-34.7451 z'/%3E%3C/svg%3E\") 14 26, auto"
-
-  private[components] val eraserViewBox: String = "0 0 507.85 507.85"
-  private val eraserCursor                      =
-    s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='${IconsSVG.eraserViewBox}'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='${IconsSVG.eraserPathD}'/%3E%3C/svg%3E\") 5 20, auto"
-  private val inserterCursor                    =
-    s"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='27' height='27' viewBox='${IconsSVG.inserterViewBox}'%3E%3Cpath fill='none' stroke='black' stroke-width='2' d='${IconsSVG.inserterPathD}'/%3E%3C/svg%3E\") 13 0, auto"
-  private val measurementCursor                 =
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-871 1129 256 256'%3E%3Cpath fill='white' stroke='black' stroke-width='8' d='M-871,1185.5l199.2,199.7l56.8-56.7l-199.2-199.7L-871,1185.5z M-627,1328.5l-36.3,36.3l-187.3-187.7l36.4-36.2l25.4,25.4 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12 l-11.2,11.2l6,6l11.2-11.2l12,12l-17.2,17.2l6,6l17.2-17.2l12,12l-11.2,11.2l6,6l11.2-11.2L-627,1328.5z M-820.3,1165.2c3.1,3,3.2,8,0.2,11.2c-3,3.1-8,3.2-11.2,0.2c-3.1-3-3.2-8-0.2-11.2 C-828.5,1162.3-823.5,1162.2-820.3,1165.2z'/%3E%3C/svg%3E\") 4 4, auto"
-  private val deleteCursor                      =
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='21' viewBox='0 0 32 32'%3E%3Cpath stroke='white' stroke-width='6' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3Cpath stroke='red' stroke-width='3' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3C/svg%3E\") 10 10, auto"
 
   private val selectionPattern: Element = svg.defs(
     svg.pattern(
@@ -126,17 +102,7 @@ object TessellationRenderer:
         .combineWith(EditorState.activeTool.signal)
         .map:
           case (hidden, mode, tool) =>
-            val cursor  = tool match
-              case Some(Tool.ColorPicker)         => s"cursor: $colorPickerCursor;"
-              case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
-              case Some(Tool.SelectByColor)       => s"cursor: $selectByColorCursor;"
-              case Some(Tool.Measurement)         => s"cursor: $measurementCursor;"
-              case Some(Tool.Fan)                 => s"cursor: $fanCursor;"
-              case Some(Tool.Eraser)              => s"cursor: $eraserCursor;"
-              case Some(Tool.Inserter)            => s"cursor: $inserterCursor;"
-              case _                              => mode match
-                  case EditorMode.Select => "cursor: pointer;"
-                  case EditorMode.Delete => s"cursor: $deleteCursor;"
+            val cursor  = TessellationCursorStyles.polygonCursorCss(mode, tool)
             val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
             cursor + opacity
       ,
@@ -194,22 +160,42 @@ object TessellationRenderer:
           case _                 => List.empty
 
     val nodeLabels = children <-- EditorState.showNodeLabels.signal.map: showLabels =>
-      if showLabels then renderNodeLabels(tiling.coordinates) else List.empty
+      if showLabels then
+        TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
+      else List.empty
 
     val nodeUniformity = children <-- EditorState.showUniformity.signal
       .combineWith(EditorState.uniformityMap.signal)
       .map: (showUni, uniOpt) =>
-        if showUni && uniOpt.nonEmpty then renderUniformity(tiling.coordinates, uniOpt.get) else List.empty
+        if showUni && uniOpt.nonEmpty then
+          TessellationOverlayRenderer.renderUniformity(
+            tiling.coordinates,
+            uniOpt.get,
+            tilingPointToCanvasView
+          )
+        else List.empty
 
     val nodeRotation = children <-- EditorState.showRotation.signal
       .combineWith(EditorState.rotationVertexIds.signal)
       .map: (showRot, rotOpt) =>
-        if showRot && rotOpt.nonEmpty then renderRotation(tiling.coordinates, rotOpt.get) else List.empty
+        if showRot && rotOpt.nonEmpty then
+          TessellationOverlayRenderer.renderRotation(
+            tiling.coordinates,
+            rotOpt.get,
+            tilingPointToCanvasView
+          )
+        else List.empty
 
     val nodeReflection = children <-- EditorState.showReflection.signal
       .combineWith(EditorState.reflectionVertexIds.signal)
       .map: (showRefl, reflOpt) =>
-        if showRefl && reflOpt.nonEmpty then renderReflection(tiling.coordinates, reflOpt.get) else List.empty
+        if showRefl && reflOpt.nonEmpty then
+          TessellationOverlayRenderer.renderReflection(
+            tiling.coordinates,
+            reflOpt.get,
+            tilingPointToCanvasView
+          )
+        else List.empty
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
@@ -288,239 +274,24 @@ object TessellationRenderer:
       measurementAngleArcDisplay
     )
 
-  private def renderAnimationPolygons(facePoints: List[(FaceId, String)]): List[Element] =
-    facePoints.map: (faceId, pointsStr) =>
-      renderTilingPolygonFromPoints(pointsStr, faceId)
-
-  private def renderAnimatedPolygonGroup(
-      facePoints: List[(FaceId, String)],
-      durationMs: Int,
-      initialTransform: String = "",
-      delayMs: Double = 0.0
-  )(transformAtEasedProgress: Double => String): Element =
-    var cancel: () => Unit = () => ()
-
-    svg.g(
-      svg.style := "pointer-events: none;",
-      renderAnimationPolygons(facePoints),
-      onMountCallback: ctx =>
-        val node      = ctx.thisNode.ref
-        var rafId     = 0
-        var startTime = -1.0
-
-        lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
-          if startTime < 0 then startTime = ts
-          val elapsed  = ts - startTime
-          val progress =
-            if durationMs <= 0 then 1.0
-            else Math.min(1.0, (elapsed - delayMs) / durationMs.toDouble)
-          val eased    = easeOutCubic(progress)
-          node.setAttribute("transform", transformAtEasedProgress(eased))
-          if progress < 1.0 then
-            rafId = dom.window.requestAnimationFrame(step)
-
-        cancel = () =>
-          if rafId != 0 then dom.window.cancelAnimationFrame(rafId)
-
-        node.setAttribute("transform", initialTransform)
-        rafId = dom.window.requestAnimationFrame(step)
-      ,
-      onUnmountCallback: _ =>
-        cancel()
-    )
-
   def renderFanAnimation(animation: FanAnimation): Element =
-    val pivot       = tilingPointToCanvasView(animation.pivot)
-    val stepDegrees = animation.stepAngle.toDegrees
-    val copyGroups  =
-      (0 until animation.copies).map: copyIndex =>
-        val targetDegrees = stepDegrees * copyIndex
-        val delayMs       = animation.staggerMs.toDouble * copyIndex
-        renderAnimatedPolygonGroup(
-          facePoints = animation.facePoints,
-          durationMs = animation.durationMs,
-          initialTransform = s"rotate(0 ${pivot.x} ${pivot.y})",
-          delayMs = delayMs
-        ): eased =>
-          val angle = targetDegrees * eased
-          s"rotate($angle ${pivot.x} ${pivot.y})"
-
-    svg.g(
-      svg.className := "fan-animation",
-      copyGroups
+    TessellationAnimationRenderer.renderFanAnimation(
+      animation = animation,
+      renderPolygon = renderTilingPolygonFromPoints,
+      toCanvasPoint = tilingPointToCanvasView
     )
 
   def renderDoublingAnimation(animation: DoublingAnimation): Element =
-    svg.g(
-      svg.className := "doubling-animation",
-      svg.g(
-        svg.style := "pointer-events: none;",
-        renderAnimationPolygons(animation.facePoints)
-      ),
-      renderAnimatedPolygonGroup(
-        facePoints = animation.facePoints,
-        durationMs = animation.durationMs,
-        initialTransform = "translate(0 0)"
-      ): eased =>
-        val dx = animation.delta.x * eased
-        val dy = animation.delta.y * eased
-        s"translate($dx $dy)"
+    TessellationAnimationRenderer.renderDoublingAnimation(
+      animation = animation,
+      renderPolygon = renderTilingPolygonFromPoints
     )
 
   def renderMirrorAnimation(animation: MirrorAnimation): Element =
-    svg.g(
-      svg.className := "mirror-animation",
-      renderAnimatedPolygonGroup(
-        facePoints = animation.facePoints,
-        durationMs = animation.durationMs,
-        initialTransform = "matrix(1 0 0 1 0 0)"
-      ): eased =>
-        val sy = 1.0 - (2.0 * eased)
-        val ty = animation.axisY * (1.0 - sy)
-        s"matrix(1 0 0 $sy 0 $ty)"
+    TessellationAnimationRenderer.renderMirrorAnimation(
+      animation = animation,
+      renderPolygon = renderTilingPolygonFromPoints
     )
-
-  private def easeOutCubic(t: Double): Double =
-    val clamped = t.max(0.0).min(1.0)
-    1.0 - Math.pow(1.0 - clamped, 3)
-
-  private def renderNodeLabels(coordinates: Map[VertexId, BigPoint]): List[Element] =
-    coordinates.toList.map: (vertexId, bigPoint) =>
-      val vertex = bigPoint.toPoint
-
-      // Convert tessella coordinates to canvas coordinates
-      val point = tilingPointToCanvasView(vertex)
-
-      // Offset the label slightly from the vertex to avoid overlap
-      val offset = point + Point(4, -4)
-
-      svg.text(
-        textCoords(offset),
-        svg.fontSize <-- EditorState.viewTransform.signal.map: transform =>
-          // Scale the font size with zoom but keep it readable
-          val baseFontSize = 12
-          val scaledSize   = (baseFontSize / transform.scale).max(8).min(20)
-          scaledSize.toString
-        ,
-        // Counter-rotate the text to keep it readable
-        svg.transform <-- EditorState.viewTransform.signal.map: transform =>
-          // Rotate around the text position to counter the canvas rotation
-          s"rotate(${-transform.rotationDegrees} ${offset.x} ${offset.y})",
-        svg.fill             := "#ffeb3b", // Bright yellow for visibility
-        svg.fontFamily       := "monospace",
-        svg.fontWeight       := "bold",
-        svg.textAnchor       := "start",
-        svg.dominantBaseline := "middle",
-        svg.className        := "node-label",
-        // Add stroke for better readability
-        svg.stroke           := "#000",
-        svg.strokeWidth <-- EditorState.viewTransform.signal.map: transform =>
-          (0.5 / transform.scale).max(0.2).min(1.0).toString,
-        svg.paintOrder       := "stroke fill",
-        vertexId.value
-      )
-
-  private def renderUniformity(
-      coordinates: Map[VertexId, BigPoint],
-      uniMap: Map[VertexId, Int]
-  ): List[Element] =
-
-    coordinates.toList
-      .filter: (vertexId, _) =>
-        uniMap.contains(vertexId)
-      .map: (vertexId, bigPoint) =>
-        val vertex = bigPoint.toPoint
-
-        // Convert tessella coordinates to canvas coordinates
-        val point = tilingPointToCanvasView(vertex)
-        val color = uniformColorMap.getOrElse(uniMap(vertexId), "black")
-
-        svg.circle(
-          circleCoordsRadius(point, 16),
-          svg.fill        := color,
-          svg.stroke      := color,
-          svg.strokeWidth := "1"
-        )
-
-  private def renderRotation(
-      coordinates: Map[VertexId, BigPoint],
-      rotList: List[BoundaryLocation],
-      durationSeconds: Int = 30
-  ): List[Element] =
-    val rotCoords = rotList.map:
-      case BoundaryVertex(i)  => i -> coordinates(i)
-      case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
-
-    if rotCoords.isEmpty then Nil
-    else
-      val center   = tilingPointToCanvasView(rotCoords.map(_._2).centroid.toPoint)
-      val elements = rotCoords.map: (id, coords) =>
-        val vertex     = tilingPointToCanvasView(coords.toPoint)
-        val segment    = LineSegment(center, vertex).extendFromOrigin
-        val p1         = segment.p1
-        val p2         = segment.p2
-        val width      = segment.length / 10
-        val vector     = segment.unitVector * width
-        val p3         = p2 + Point(-vector.y, vector.x)
-        val gradientId = s"rot-grad-${id.value}"
-
-        svg.g(
-          svg.defs(
-            svg.linearGradient(
-              svg.idAttr        := gradientId,
-              svg.gradientUnits := "userSpaceOnUse",
-              svg.x1            := p2.x.toString,
-              svg.y1            := p2.y.toString,
-              svg.x2            := p3.x.toString,
-              svg.y2            := p3.y.toString,
-              svg.stop(svg.offsetAttr := "0%", svg.stopColor   := "Gold", svg.stopOpacity := "0.8"),
-              svg.stop(svg.offsetAttr := "100%", svg.stopColor := "Blue", svg.stopOpacity := "0.0")
-            )
-          ),
-          svg.polygon(
-            svg.points        := s"${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}",
-            svg.fill          := s"url(#$gradientId)",
-            svg.stroke        := "none",
-            svg.pointerEvents := "none"
-          )
-        )
-
-      List(
-        svg.g(
-          elements,
-          svg.animateTransform(
-            svg.attributeName := "transform",
-            svg.attributeType := "XML",
-            svg.tpe           := "rotate",
-            svg.from          := s"360 ${center.x} ${center.y}",
-            svg.to            := s"0 ${center.x} ${center.y}",
-            svg.dur           := s"${durationSeconds}s",
-            svg.repeatCount   := "indefinite"
-          )
-        )
-      )
-
-  private def renderReflection(
-      coordinates: Map[VertexId, BigPoint],
-      refList: List[(BoundaryLocation, BoundaryLocation)]
-  ): List[Element] =
-
-    def locationToPoint(loc: BoundaryLocation): Point =
-      tilingPointToCanvasView(loc match
-        case BoundaryVertex(i)  => coordinates(i).toPoint
-        case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint)
-
-    refList.map: (loc1, loc2) =>
-      val vertex1          = locationToPoint(loc1)
-      val vertex2          = locationToPoint(loc2)
-      svg.line(
-        lineCoords(LineSegment(vertex1, vertex2).extendFromMidPoint),
-        svg.stroke          := "DarkOrange",
-        svg.strokeWidth     := "1",
-        svg.strokeDashArray := "5, 5",
-        svg.className       := "previous-measurement-line",
-        svg.pointerEvents   := "none"
-      )
 
   private def renderClickablePoint(p: ClickablePoint): Element =
     val point = tilingPointToCanvasView(p.point)
@@ -544,12 +315,8 @@ object TessellationRenderer:
             case (point, _)                      => AppState.handlePointClickForDeletion(point)
           }(using ctx.owner): Unit,
       svg.style         := "cursor: crosshair;",
-      svg.style <-- EditorState.activeTool.signal.map:
-        case Some(Tool.Measurement) => s"cursor: crosshair;"
-        case Some(Tool.Fan)         => s"cursor: pointer;"
-        case Some(Tool.Inserter)    => s"cursor: pointer;"
-        case _                      => s"cursor: $deleteCursor;"
-      ,
+      svg.style <-- EditorState.activeTool.signal.map: tool =>
+        TessellationCursorStyles.clickablePointCursorCss(tool),
       svg.pointerEvents := "visible"
     )
 
