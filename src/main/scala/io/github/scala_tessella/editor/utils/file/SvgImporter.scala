@@ -61,33 +61,27 @@ object SvgImporter:
             throw new Exception("No Tessella DCEL metadata found in the SVG.")
           )
 
-      // Collect polygon fills (in order) to restore colors
-      val svgPolys                  = doc.querySelectorAll("#tiling-polygons polygon")
-      val polyFills: List[ColorRGB] =
-        (0 until svgPolys.length)
-          .flatMap: i =>
-            val el = svgPolys(i)
-            parseColor(Option(el.getAttribute("fill")).getOrElse(""))
-          .toList
-
       val metadataStr = tessElem.outerHTML
 
       AsyncUtils.setLoadingMessage("Validating tessellation...")
 
       TilingSVG.fromMetadata(metadataStr) match
         case Left(err)                 =>
-          throw new Error(s"Failed to parse Tessella DCEL metadata: ${err.message}")
+          throw new Exception(s"Failed to parse Tessella DCEL metadata: ${err.message}")
         case Right(tiling: TilingDCEL) =>
+          val faces     = tiling.innerFaces
+          // Strict color preservation: require one valid fill for every imported face.
+          val polyFills = readPolygonFillsStrict(doc, expectedCount = faces.size)
+
           AppState.clearMeasurements()
           AppState.clearSymmetryOverlays()
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
 
-          // Map SVG polygon colors to faces by order (export preserves this order)
-          val faces    = tiling.innerFaces
+          // Map SVG polygon colors to faces by order (export preserves this order).
           val colorMap =
             faces
-              .zip(polyFills) // zip truncates safely if lengths differ
+              .zip(polyFills)
               .map:
                 case (face, rgb) => face.id -> rgb
               .toMap
@@ -108,3 +102,20 @@ object SvgImporter:
       )
       e.printStackTrace()
     }: Unit
+
+  private def readPolygonFillsStrict(doc: dom.Document, expectedCount: Int): List[ColorRGB] =
+    val svgPolys   = doc.querySelectorAll("#tiling-polygons polygon")
+    val foundCount = svgPolys.length
+
+    if foundCount != expectedCount then
+      throw new Exception(
+        s"Strict color import failed: expected $expectedCount polygon fills, found $foundCount."
+      )
+
+    (0 until foundCount).map { i =>
+      val el      = svgPolys(i)
+      val rawFill = Option(el.getAttribute("fill")).map(_.trim).getOrElse("")
+      parseColor(rawFill).getOrElse(
+        throw new Exception(s"Strict color import failed: invalid fill at polygon #${i + 1}: '$rawFill'.")
+      )
+    }.toList

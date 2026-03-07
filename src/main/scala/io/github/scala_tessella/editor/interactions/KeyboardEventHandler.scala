@@ -110,7 +110,7 @@ object KeyboardEventHandler:
 
   def handleKeyDown(event: KeyboardEvent, currentTiling: TilingDCEL, hasFileName: Boolean): Unit =
     if !isTargetInput(event) then
-      if event.key == "d" || event.key == "D" then
+      if (event.key == "d" || event.key == "D") && !currentTiling.isEmpty then
         event.preventDefault()
         AppState.doubleTiling()
       else if event.key == "f" || event.key == "F" then

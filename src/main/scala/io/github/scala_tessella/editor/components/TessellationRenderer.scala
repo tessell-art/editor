@@ -689,28 +689,30 @@ object TessellationRenderer:
               maybeAngles: Option[Vector[AngleDegree]],
               tiling: TilingDCEL
             ) =>
-          if isIrregular then
-            val angles = maybeAngles.get
-            EditorState.previewPlacement.set(
-              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
-                0,
-                angles,
-                edge,
-                tiling,
-                intoFace = Some(faceId)
-              ))
-            )
-          else
-            val sides = maybeSides.getOrElse(0)
-            EditorState.previewPlacement.set(
-              Some(io.github.scala_tessella.editor.models.FailedPolygonPlacement(
-                0,
-                RegularPolygon(sides).angles,
-                edge,
-                tiling,
-                intoFace = Some(faceId)
-              ))
-            )
+          val placementOpt =
+            if isIrregular then
+              maybeAngles.map { angles =>
+
+                io.github.scala_tessella.editor.models.FailedPolygonPlacement(
+                  0,
+                  angles,
+                  edge,
+                  tiling,
+                  intoFace = Some(faceId)
+                )
+              }
+            else
+              maybeSides.filter(_ >= 3).map { sides =>
+
+                io.github.scala_tessella.editor.models.FailedPolygonPlacement(
+                  0,
+                  RegularPolygon(sides).angles,
+                  edge,
+                  tiling,
+                  intoFace = Some(faceId)
+                )
+              }
+          EditorState.previewPlacement.set(placementOpt)
       },
       onMouseLeave.compose(gate) --> { _ =>
 
@@ -787,17 +789,26 @@ object TessellationRenderer:
               maybeAngles: Option[Vector[AngleDegree]],
               tiling: TilingDCEL
             ) =>
-          val angles =
+          val placementOpt =
             if isIrregular then
-              maybeAngles.get
+              maybeAngles.map(angles =>
+                FailedPolygonPlacement(
+                  edgeIndex,
+                  angles,
+                  edge,
+                  tiling
+                )
+              )
             else
-              RegularPolygon(maybeSides.get).angles
-          EditorState.previewPlacement.set(Some(FailedPolygonPlacement(
-            edgeIndex,
-            angles,
-            edge,
-            tiling
-          )))
+              maybeSides.filter(_ >= 3).map(sides =>
+                FailedPolygonPlacement(
+                  edgeIndex,
+                  RegularPolygon(sides).angles,
+                  edge,
+                  tiling
+                )
+              )
+          EditorState.previewPlacement.set(placementOpt)
       },
       onMouseLeave.compose(gate) --> { _ =>
 

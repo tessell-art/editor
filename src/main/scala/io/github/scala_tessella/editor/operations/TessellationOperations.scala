@@ -191,72 +191,77 @@ object TessellationOperations:
       Some(Point(sx / count, sy / count))
 
   def attemptDoubling(): Unit =
-    val tiling         = currentTiling.now()
-    EditorState.doublingAnimation.set(None)
-    val faceIds        =
-      tiling.innerFaces.map:
-        _.id
-    val facePoints     = precomputeFacePoints(tiling)
-    val originalCenter = averagePoint(faceIds.flatMap(id => faceCentroid(tiling, id)))
-    val maxFaceId      =
-      faceIds
-        .map: faceId =>
-          faceId.value
-        .max
-    val colors         = polygonColors.now()
-    val op             = () =>
-      try
-        tiling.doubleArea
-      catch
-        case e: Exception => Left(ValidationError(s"Error doubling: ${e.getMessage}"))
+    val tiling = currentTiling.now()
+    if tiling.isEmpty then ()
+    else
+      EditorState.doublingAnimation.set(None)
+      val faceIds        =
+        tiling.innerFaces.map:
+          _.id
+      val facePoints     = precomputeFacePoints(tiling)
+      val originalCenter = averagePoint(faceIds.flatMap(id => faceCentroid(tiling, id)))
+      val maxFaceId      =
+        faceIds
+          .map: faceId =>
+            faceId.value
+          .max
+      val colors         = polygonColors.now()
+      val fillFallback   = EditorState.fillColor.now()
+      val op             = () =>
+        try
+          tiling.doubleArea
+        catch
+          case e: Exception => Left(ValidationError(s"Error doubling: ${e.getMessage}"))
 
-    OperationRunner.runTilingOp(op)(
-      onSuccess =
-        faceIds.indices.foreach: id =>
-          val rgb = colors(faceIds(id))
-          polygonColors.update(_ + (FaceId(maxFaceId + id + 1) -> rgb))
-        val newFaceIds = faceIds.indices.map(id => FaceId(maxFaceId + id + 1))
-        val newCenter  = averagePoint(newFaceIds.flatMap(id => faceCentroid(currentTiling.now(), id)))
-        val needsFit   = ViewOperations.isTilingLargerThanCanvas
-        var fitDelayed = false
-        (originalCenter, newCenter) match
-          case (Some(orig), Some(next)) =>
-            val delta     = next - orig
-            val animation = DoublingAnimation(facePoints, delta, EditorConfig.fanAnimationDurationMs)
-            EditorState.doublingAnimation.set(Some(animation))
-            val _         = setTimeout(EditorConfig.fanAnimationDurationMs) {
-              EditorState.doublingAnimation.update {
-                case Some(current) if current eq animation => None
-                case other                                 => other
+      OperationRunner.runTilingOp(op)(
+        onSuccess =
+          faceIds.indices.foreach: id =>
+            val rgb = colors.getOrElse(faceIds(id), fillFallback)
+            polygonColors.update(_ + (FaceId(maxFaceId + id + 1) -> rgb))
+          val newFaceIds = faceIds.indices.map(id => FaceId(maxFaceId + id + 1))
+          val newCenter  = averagePoint(newFaceIds.flatMap(id => faceCentroid(currentTiling.now(), id)))
+          val needsFit   = ViewOperations.isTilingLargerThanCanvas
+          var fitDelayed = false
+          (originalCenter, newCenter) match
+            case (Some(orig), Some(next)) =>
+              val delta     = next - orig
+              val animation = DoublingAnimation(facePoints, delta, EditorConfig.fanAnimationDurationMs)
+              EditorState.doublingAnimation.set(Some(animation))
+              val _         = setTimeout(EditorConfig.fanAnimationDurationMs) {
+                EditorState.doublingAnimation.update {
+                  case Some(current) if current eq animation => None
+                  case other                                 => other
+                }
+                if needsFit then ViewOperations.fitTilingToCanvas()
               }
-              if needsFit then ViewOperations.fitTilingToCanvas()
-            }
-            fitDelayed = true
-          case _                        => ()
-        AppState.clearSymmetryOverlays()
-        EditorState.selectedPerimeterEdges.set(Set.empty)
-        if needsFit && !fitDelayed then ViewOperations.fitTilingToCanvas()
-      ,
-      onFailure = err =>
-        ErrorOperations.showError(err.message)
-    )
+              fitDelayed = true
+            case _                        => ()
+          AppState.clearSymmetryOverlays()
+          EditorState.selectedPerimeterEdges.set(Set.empty)
+          if needsFit && !fitDelayed then ViewOperations.fitTilingToCanvas()
+        ,
+        onFailure = err =>
+          ErrorOperations.showError(err.message)
+      )
 
   def attemptMirroring(): Unit =
     val tiling = currentTiling.now()
-    val op     = () =>
-      try
-        Right(tiling.verticallyReflectedCopy)
-      catch
-        case e: Exception => Left(ValidationError(s"Error mirroring: ${e.getMessage}"))
+    if tiling.isEmpty then ()
+    else
+      val op = () =>
+        try
+          Right(tiling.verticallyReflectedCopy)
+        catch
+          case e: Exception => Left(ValidationError(s"Error mirroring: ${e.getMessage}"))
 
-    OperationRunner.runTilingOp(op)(
-      onSuccess =
-        AppState.clearSymmetryOverlays()
-        EditorState.selectedPerimeterEdges.set(Set.empty)
-      ,
-      onFailure = err =>
-        ErrorOperations.showError(err.message)
-    )
+      OperationRunner.runTilingOp(op)(
+        onSuccess =
+          AppState.clearSymmetryOverlays()
+          EditorState.selectedPerimeterEdges.set(Set.empty)
+        ,
+        onFailure = err =>
+          ErrorOperations.showError(err.message)
+      )
 
   // Handle perimeter-edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =

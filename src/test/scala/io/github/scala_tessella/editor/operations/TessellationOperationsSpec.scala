@@ -54,6 +54,28 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     assert(EditorState.errorMessage.now().exists(_.contains("No tiling available to grow")))
   }
 
+  test("attemptDoubling should be a no-op on empty tiling") {
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.polygonColors.set(Map.empty)
+    UndoManager.clearHistory()
+
+    TessellationOperations.attemptDoubling()
+
+    assert(EditorState.currentTiling.now().isEmpty)
+    assertEquals(EditorState.polygonColors.now(), Map.empty)
+    assertEquals(UndoManager.undoCount.now(), 0)
+  }
+
+  test("attemptMirroring should be a no-op on empty tiling") {
+    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    UndoManager.clearHistory()
+
+    TessellationOperations.attemptMirroring()
+
+    assert(EditorState.currentTiling.now().isEmpty)
+    assertEquals(UndoManager.undoCount.now(), 0)
+  }
+
   test("attemptFanning should replicate colors across fan copies") {
     val tiling        = TilingBuilders.freshSquare()
     val faceIds       = tiling.innerFaces.map(_.id)

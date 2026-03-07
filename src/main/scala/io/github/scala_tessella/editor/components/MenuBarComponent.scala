@@ -222,8 +222,13 @@ object MenuBarComponent:
       dropdownLink("↷ Redo", () => UndoManager.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
       dropdownLink("Clear Tiling", () => AppState.clearTiling()),
-      dropdownLink("Double (to infinite)", () => AppState.doubleTiling(), shortcut = Some("D")),
-      dropdownLink("Mirror", () => AppState.mirrorTiling()),
+      dropdownLink(
+        "Double (to infinite)",
+        () => AppState.doubleTiling(),
+        enabled = isTilingEmpty.map(!_),
+        shortcut = Some("D")
+      ),
+      dropdownLink("Mirror", () => AppState.mirrorTiling(), enabled = isTilingEmpty.map(!_)),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {
