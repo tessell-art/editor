@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.geometry.AngleDegree
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
@@ -11,43 +12,54 @@ import io.github.scala_tessella.ring_seq.RingSeq.{isRotationOrReflectionOf, slid
 
 object SelectionOperations:
 
+  private case class PerimeterClickContext(
+      tiling: TilingDCEL,
+      selectedPolygon: Option[Int],
+      isIrregularSelected: Boolean
+  )
+
+  private def withNonEmptyTiling(op: TilingDCEL => Unit): Unit =
+    val tiling = EditorState.currentTiling.now()
+    if !tiling.isEmpty then op(tiling)
+
+  private def deactivateActiveTool(): Unit =
+    EditorState.activeTool.set(None)
+
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
       val startOpt = EditorState.measurementStartPoint.now()
       val endOpt   = EditorState.measurementEndPoint.now()
 
-      if startOpt.isEmpty then
-        // No start point, so set this as the start point
-        EditorState.measurementStartPoint.set(Some(point))
-        EditorState.measurementResult.set(None)
-      else if startOpt.contains(point) then
-        // Clicked on the start point, clear both start and end points
-        EditorState.measurementStartPoint.set(None)
-        EditorState.measurementEndPoint.set(None)
-        EditorState.measurementPreviousEndPoint.set(None)
-        EditorState.measurementResult.set(None)
-      else if endOpt.contains(point) then
-        // Clicked on the end point, clear only the end point
-        EditorState.measurementEndPoint.set(None)
-        EditorState.measurementPreviousEndPoint.set(None)
-        EditorState.measurementResult.set(None)
-      else
-        // Start point is set, so set this as the end point
-        val start                      = startOpt.get // Safe due to the first check
-        // If there was an endpoint before this click, save its position.
-        EditorState.measurementPreviousEndPoint.set(endOpt.map(_.point))
-        EditorState.measurementEndPoint.set(Some(point))
-        val distance                   = point.point.distanceTo(start.point)
-        EditorState.measurementResult.set(Some(distance))
-        val maybeAngle: Option[Double] = endOpt.map(clickable =>
-          val angle1          = LineSegment(start.point, clickable.point).horizontalAngle // .normalize
-          val angle2          = LineSegment(start.point, point.point).horizontalAngle     // .normalize
-          // Normalize the difference to be within the [0, 2*PI) range
-          val diffRad: Double = (angle2 - angle1).normalize.toDouble
-          // The angle is the smaller of the two conjugate angles, which is in [0, PI]
-          Math.min(diffRad, Radian.TAU.toDouble - diffRad)
-        )
-        EditorState.measurementAngle.set(maybeAngle.map(Radian(_)))
+      (startOpt, endOpt) match
+        case (None, _)                          =>
+          // No start point, so set this as the start point.
+          EditorState.measurementStartPoint.set(Some(point))
+          EditorState.measurementResult.set(None)
+        case (Some(start), _) if start == point =>
+          // Clicked on the start point, clear both start and end points.
+          EditorState.measurementStartPoint.set(None)
+          EditorState.measurementEndPoint.set(None)
+          EditorState.measurementPreviousEndPoint.set(None)
+          EditorState.measurementResult.set(None)
+        case (_, Some(end)) if end == point     =>
+          // Clicked on the end point, clear only the end point.
+          EditorState.measurementEndPoint.set(None)
+          EditorState.measurementPreviousEndPoint.set(None)
+          EditorState.measurementResult.set(None)
+        case (Some(start), previousEndOpt)      =>
+          // Start point is set, so set this as the end point.
+          EditorState.measurementPreviousEndPoint.set(previousEndOpt.map(_.point))
+          EditorState.measurementEndPoint.set(Some(point))
+          val distance   = point.point.distanceTo(start.point)
+          EditorState.measurementResult.set(Some(distance))
+          val maybeAngle =
+            previousEndOpt.map: clickable =>
+              val angle1 = LineSegment(start.point, clickable.point).horizontalAngle
+              val angle2 = LineSegment(start.point, point.point).horizontalAngle
+              val diff   = (angle2 - angle1).normalize.toDouble
+              // Use the smaller conjugate angle in [0, PI].
+              Math.min(diff, Radian.TAU.toDouble - diff)
+          EditorState.measurementAngle.set(maybeAngle.map(Radian(_)))
 
   def handlePointClickForFan(point: ClickablePoint): Unit =
     ifNotProcessing:
@@ -84,16 +96,14 @@ object SelectionOperations:
 
   def selectAllPolygons(): Unit =
     ifNotProcessing:
-      val tiling = EditorState.currentTiling.now()
-      if !tiling.isEmpty then
+      withNonEmptyTiling: tiling =>
         val allPolygonIds = tiling.innerFaces.map(_.id).toSet
         EditorState.selectedTilingPolygons.set(allPolygonIds)
         EditorState.selectedPerimeterEdges.set(Set.empty)
 
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
-      val tiling = EditorState.currentTiling.now()
-      if !tiling.isEmpty then
+      withNonEmptyTiling: tiling =>
         val polygonIdsToAdd =
           tiling.innerFaces
             .collect:
@@ -107,8 +117,7 @@ object SelectionOperations:
 
   def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
     ifNotProcessing:
-      val tiling = EditorState.currentTiling.now()
-      if !tiling.isEmpty then
+      withNonEmptyTiling: tiling =>
         val polygonIdsToAdd =
           tiling.innerFaces
             .collect:
@@ -122,13 +131,13 @@ object SelectionOperations:
 
   def selectPolygonsByColor(faceId: FaceId): Unit =
     ifNotProcessing:
-      EditorState.polygonColors.now().get(faceId).foreach { color =>
-        val polygonIdsToAdd = EditorState.polygonColors.now().collect {
+      val colors = EditorState.polygonColors.now()
+      colors.get(faceId).foreach: color =>
+        val polygonIdsToAdd = colors.collect {
           case (tag, c) if c == color => tag
         }.toSet
         EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
-      }
-      EditorState.activeTool.set(None) // Deactivate after picking
+      deactivateActiveTool()
 
   def toggleTilingPolygonSelection(faceId: FaceId): Unit =
     ifNotProcessing:
@@ -147,12 +156,13 @@ object SelectionOperations:
       }
 
   def handleTilingPolygonClick(faceId: FaceId): Unit =
-    EditorState.activeTool.now() match
+    val activeTool = EditorState.activeTool.now()
+    activeTool match
       case Some(Tool.ColorPicker)         =>
-        EditorState.polygonColors.now().get(faceId).foreach { color =>
+        val colors = EditorState.polygonColors.now()
+        colors.get(faceId).foreach: color =>
           EditorState.fillColor.set(color)
-          EditorState.activeTool.set(None) // Deactivate after picking
-        }
+          deactivateActiveTool()
       case Some(Tool.ShapeAndColorPicker) =>
         val tiling     = EditorState.currentTiling.now()
         val maybeFace  = tiling.findInnerFace(faceId).toOption
@@ -170,7 +180,7 @@ object SelectionOperations:
                 EditorState.recentIrregularPolygon.set(Some(angles.toVector)) // remember latest irregular
                 EditorState.selectedPolygon.set(None)
                 EditorState.isIrregularSelected.set(true)                     // select irregular
-            EditorState.activeTool.set(None) // Deactivate after picking
+            deactivateActiveTool()
           case None                =>
             ()
       case Some(Tool.SelectByColor)       =>
@@ -184,7 +194,8 @@ object SelectionOperations:
       case Some(Tool.Inserter)            =>
         setupFaceClickablePoints(faceId, edgesOnly = true)
       case _                              =>
-        EditorState.editorMode.now() match
+        val editorMode = EditorState.editorMode.now()
+        editorMode match
           case EditorMode.Select =>
             toggleTilingPolygonSelection(faceId)
           case EditorMode.Delete =>
@@ -195,24 +206,18 @@ object SelectionOperations:
       edgesOnly: Boolean = false,
       boundaryVerticesOnly: Boolean = false
   ): Unit =
-    EditorState.currentTiling.now() match
-      case tiling if !tiling.isEmpty =>
+    withNonEmptyTiling: tiling =>
+      tiling.findInnerFace(faceId).toOption match
+        case Some(face) =>
+          EditorState.highlightedPolygonId.set(Some(faceId))
 
-        tiling.innerFaces.find { face =>
-          val tag = face.id
-          tag == faceId
-        } match
-          case Some(face) =>
-            EditorState.highlightedPolygonId.set(Some(faceId))
-
-            if edgesOnly then
-              EditorState.clickablePoints.set(Nil)
-            else
-              val faceVertices       = tiling.findInnerFaceVertices(face.id).toOption.get
+          if edgesOnly then
+            EditorState.clickablePoints.set(Nil)
+          else
+            tiling.findInnerFaceVertices(face.id).toOption.foreach: faceVertices =>
               val vertices           = faceVertices.map(_.coords).map(_.toPoint)
               val vertexIdsAndPoints = faceVertices.map(_.id).zip(vertices)
               val edges              = vertexIdsAndPoints.toVector.slidingO(2).toList
-              //            val edges = polygonNodes.zip(polygonNodes.tail :+ polygonNodes.head)
               val midPoints          =
                 edges.map: edge =>
                   val p1 = edge(0)._2
@@ -238,17 +243,18 @@ object SelectionOperations:
               else
                 EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
 
-          case None => ()
-      case _ => ()
+        case None => ()
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     ifNotProcessing:
-      (
-        EditorState.currentTiling.now(),
-        EditorState.selectedPolygon.now(),
-        EditorState.isIrregularSelected.now()
-      ) match
-        case (_, None, false)                  => togglePerimeterEdgeSelection(edgeId)
-        case (tiling, _, _) if !tiling.isEmpty =>
+      val context = PerimeterClickContext(
+        tiling = EditorState.currentTiling.now(),
+        selectedPolygon = EditorState.selectedPolygon.now(),
+        isIrregularSelected = EditorState.isIrregularSelected.now()
+      )
+      context match
+        case PerimeterClickContext(_, None, false)                  => togglePerimeterEdgeSelection(edgeId)
+        case PerimeterClickContext(tiling, _, _) if !tiling.isEmpty =>
           TessellationOperations.attemptPolygonAddition(edgeId, edgeIndex)
-        case (_, _, _)                         => ErrorOperations.showError("No tiling available to grow")
+        case _                                                      =>
+          ErrorOperations.showError("No tiling available to grow")

@@ -74,6 +74,25 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     done.future
   }
 
+  test("attemptPolygonInsertion should not crash for irregular insertion when edge vertices are missing") {
+    val tiling = TilingBuilders.freshSquare()
+    EditorState.currentTiling.set(tiling)
+    EditorState.selectedPolygon.set(None)
+    EditorState.isIrregularSelected.set(true)
+    EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
+    EditorState.errorMessage.set(None)
+    val done   = Promise[Unit]()
+
+    TessellationOperations.attemptPolygonInsertion(VertexId(9999), VertexId(10000))
+
+    setTimeout(200) {
+      assert(EditorState.errorMessage.now().exists(_.contains("Cannot insert irregular polygon")))
+      done.success(())
+    }: Unit
+
+    done.future
+  }
+
   test("attemptDoubling should be a no-op on empty tiling") {
     EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
     EditorState.polygonColors.set(Map.empty)
