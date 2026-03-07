@@ -237,6 +237,22 @@ object EditorState:
     val canSaveCurrentFileSignal: Signal[Boolean] =
       hasFileNameSignal.combineWith(isTilingEmptySignal).map(_ && !_)
 
+    /** True when no operation is currently running. */
+    val isIdleSignal: Signal[Boolean] =
+      UIState.isProcessing.signal.map(!_)
+
+    /** True when tiling-dependent mutating actions should be enabled. */
+    val canMutateTilingSignal: Signal[Boolean] =
+      hasTilingSignal.combineWith(isIdleSignal).map(_ && _)
+
+    /** True when save-to-current-file action should be enabled. */
+    val canSaveCurrentFileWhenIdleSignal: Signal[Boolean] =
+      canSaveCurrentFileSignal.combineWith(isIdleSignal).map(_ && _)
+
+    /** True when deselection can run (there is a selection and editor is idle). */
+    val canDeselectAllSignal: Signal[Boolean] =
+      hasSelectionSignal.combineWith(isIdleSignal).map(_ && _)
+
     /** Checks if Inserter tool is active */
     val isInserterActive: Signal[Boolean] =
       ToolState.activeTool.signal.map:

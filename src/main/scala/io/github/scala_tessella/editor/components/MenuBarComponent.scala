@@ -188,19 +188,19 @@ object MenuBarComponent:
       dropdownLink(
         "Save SVG",
         () => SvgExporter.saveTilingToSVG(),
-        enabled = EditorState.canSaveCurrentFileSignal,
+        enabled = EditorState.canSaveCurrentFileWhenIdleSignal,
         shortcut = Some("Ctrl+S")
       ),
       dropdownLink(
         "Save SVG as...",
         () => SvgExporter.saveAsTilingToSVG(),
-        enabled = EditorState.hasTilingSignal
+        enabled = EditorState.canMutateTilingSignal
       ),
       div(className := "menu-separator"),
       dropdownLink(
         "Export to DOT...",
         () => DotExporter.exportTilingToDOT(),
-        enabled = EditorState.hasTilingSignal
+        enabled = EditorState.canMutateTilingSignal
       ),
       div(className := "menu-separator"),
       dropdownLink("Settings...", () => EditorState.showSettingsPopup.set(true))
@@ -216,10 +216,10 @@ object MenuBarComponent:
       dropdownLink(
         "Double (to infinite)",
         () => AppState.doubleTiling(),
-        enabled = EditorState.hasTilingSignal,
+        enabled = EditorState.canMutateTilingSignal,
         shortcut = Some("D")
       ),
-      dropdownLink("Mirror", () => AppState.mirrorTiling(), enabled = EditorState.hasTilingSignal),
+      dropdownLink("Mirror", () => AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {
@@ -229,11 +229,11 @@ object MenuBarComponent:
 //        () => AppState.toggleEditorMode()
 //      ),
       div(className := "menu-separator"),
-      dropdownLink("Select All", () => AppState.selectAll(), EditorState.hasTilingSignal),
+      dropdownLink("Select All", () => AppState.selectAll(), EditorState.canMutateTilingSignal),
       dropdownLink(
         "Deselect All",
         () => AppState.deselectAll(),
-        EditorState.hasSelectionSignal,
+        EditorState.canDeselectAllSignal,
         shortcut = Some("Esc")
       ),
       div(className := "menu-separator"),
@@ -284,7 +284,7 @@ object MenuBarComponent:
       dropdownLink(
         "Fit to Canvas",
         () => AppState.fitTilingToCanvas(),
-        enabled = EditorState.hasTilingSignal,
+        enabled = EditorState.canMutateTilingSignal,
         shortcut = Some("F")
       ),
       dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),

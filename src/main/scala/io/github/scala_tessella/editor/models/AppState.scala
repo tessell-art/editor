@@ -196,6 +196,24 @@ object AppState:
     */
   def isTilingEmpty: Boolean = currentTiling.now().isEmpty
 
+  /** True when at least one polygon or perimeter edge is selected in the current state snapshot. */
+  private def hasSelectionNow: Boolean =
+    selectedTilingPolygons.now().nonEmpty || selectedPerimeterEdges.now().nonEmpty
+
+  /** Runs a mutating selection operation only when not processing and a tiling exists, saving undo first. */
+  private def withUndoOnNonEmptyTiling(op: => Unit): Unit =
+    ifNotProcessing:
+      if !isTilingEmpty then
+        UndoManager.saveState()
+        op
+
+  /** Runs a mutating selection operation only when not processing and there is an active selection. */
+  private def withUndoOnSelection(op: => Unit): Unit =
+    ifNotProcessing:
+      if hasSelectionNow then
+        UndoManager.saveState()
+        op
+
   // Delegate to operation objects
 
   /** Selects a polygon with the specified number of sides.
@@ -327,10 +345,8 @@ object AppState:
     *   The number of sides of the polygons to select
     */
   def selectPolygonsBySides(sides: Int): Unit =
-    ifNotProcessing:
-      if !isTilingEmpty then
-        UndoManager.saveState()
-        SelectionOperations.selectPolygonsBySides(sides)
+    withUndoOnNonEmptyTiling:
+      SelectionOperations.selectPolygonsBySides(sides)
 
   /** Selects all polygons with the same shape. Does nothing if the editor is processing or if the tiling is
     * empty.
@@ -339,27 +355,21 @@ object AppState:
     *   The interior angles of the polygons to select
     */
   def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
-    ifNotProcessing:
-      if !isTilingEmpty then
-        UndoManager.saveState()
-        SelectionOperations.selectPolygonsByShape(angles)
+    withUndoOnNonEmptyTiling:
+      SelectionOperations.selectPolygonsByShape(angles)
 
   /** Selects all polygons in the tiling. Does nothing if the editor is processing or if the tiling is empty.
     */
   def selectAll(): Unit =
-    ifNotProcessing:
-      if !isTilingEmpty then
-        UndoManager.saveState()
-        SelectionOperations.selectAllPolygons()
+    withUndoOnNonEmptyTiling:
+      SelectionOperations.selectAllPolygons()
 
   /** Deselects all selected polygons and edges. Does nothing if the editor is processing or if nothing is
     * selected.
     */
   def deselectAll(): Unit =
-    ifNotProcessing:
-      if selectedTilingPolygons.now().nonEmpty || selectedPerimeterEdges.now().nonEmpty then
-        UndoManager.saveState()
-        SelectionOperations.clearAllSelections()
+    withUndoOnSelection:
+      SelectionOperations.clearAllSelections()
 
   /** Adjusts the view to fit the entire tiling in the canvas.
     */
