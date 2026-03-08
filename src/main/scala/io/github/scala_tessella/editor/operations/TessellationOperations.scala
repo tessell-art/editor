@@ -152,6 +152,15 @@ object TessellationOperations:
   private def newFaceIdsFrom(startingFrom: Int, count: Int): Vector[FaceId] =
     (0 until count).map(offset => FaceId(startingFrom + offset + 1)).toVector
 
+  private def mirrorAxisYFor(tiling: TilingDCEL): Double =
+    val ys =
+      tiling.innerFacesVertices
+        .flatMap: (_, faceVertices) =>
+          faceVertices.map: vertex =>
+            tilingPointToCanvasView(vertex.coords.toPoint).y
+    if ys.isEmpty then EditorConfig.canvasCenter.y
+    else (ys.min + ys.max) / 2.0
+
   def selectPolygon(sides: Int): Unit =
     ifNotProcessing:
       // Selecting a regular polygon deselects the irregular
@@ -350,6 +359,7 @@ object TessellationOperations:
     else
       clearAllAnimations()
       val facePoints = precomputeFacePoints(tiling)
+      val axisY      = mirrorAxisYFor(tiling)
       val op         = () =>
         try
           Right(tiling.verticallyReflectedCopy)
@@ -362,7 +372,7 @@ object TessellationOperations:
             val animation =
               MirrorAnimation(
                 facePoints = facePoints,
-                axisY = EditorConfig.canvasCenter.y,
+                axisY = axisY,
                 durationMs = EditorConfig.fanAnimationDurationMs
               )
             EditorState.mirrorAnimation.set(Some(animation))

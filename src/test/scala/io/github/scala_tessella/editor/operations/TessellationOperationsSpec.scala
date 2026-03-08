@@ -1,7 +1,10 @@
 package io.github.scala_tessella.editor.operations
 
+import io.github.scala_tessella.dcel.geometry.AngleDegree
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.{DoublingAnimation, EditorConfig, EditorState, FanAnimation}
+import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.{tilingPointToCanvasView, toPoint}
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager, TilingBuilders}
 import io.github.scala_tessella.dcel.structure.VertexId
@@ -155,6 +158,32 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     done.future
   }
 
+  test("attemptMirroring should use tiling vertical midpoint as mirror axis") {
+    val squareAngles = Vector.fill(4)(AngleDegree(90))
+    val tiling       = TilingDCEL.createSimplePolygon(squareAngles).toOption.get
+    val ys           =
+      tiling.innerFacesVertices.flatMap: (_, vertices) =>
+        vertices.map: vertex =>
+          tilingPointToCanvasView(vertex.coords.toPoint).y
+    val expectedAxis = (ys.min + ys.max) / 2.0
+
+    EditorState.currentTiling.set(tiling)
+    EditorState.mirrorAnimation.set(None)
+    val done = Promise[Unit]()
+
+    TessellationOperations.attemptMirroring()
+
+    setTimeout(200) {
+      val mirrorAnimation = EditorState.mirrorAnimation.now()
+      assert(mirrorAnimation.nonEmpty)
+      assertEqualsDouble(mirrorAnimation.get.axisY, expectedAxis, 1e-9)
+      assert(Math.abs(expectedAxis - EditorConfig.canvasCenter.y) > 1e-9)
+      done.success(())
+    }: Unit
+
+    done.future
+  }
+
   test("attemptFanning should replicate colors across fan copies") {
     val tiling        = TilingBuilders.freshSquare()
     val faceIds       = tiling.innerFaces.map(_.id)
@@ -181,3 +210,9 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
     done.future
   }
+
+  private def assertEqualsDouble(obtained: Double, expected: Double, delta: Double): Unit =
+    assert(
+      Math.abs(obtained - expected) <= delta,
+      s"obtained=$obtained expected=$expected delta=$delta"
+    )
