@@ -60,7 +60,7 @@ object TessellationEdgeRenderer:
       tiling: TilingDCEL,
       toCanvasPoint: Point => Point
   ): List[Element] =
-    tiling.boundaryVertices
+    tiling.boundaryVertices.toOption.get
       .map(_.toCoords)
       .slidingO(2).toList.zipWithIndex
       .map: (vs, index) =>

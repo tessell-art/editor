@@ -242,7 +242,7 @@ object SelectionOperations:
               val centerPoint  = ClickablePoint(Point(centerX, centerY), Anchor.Center(face.id))
 
               if boundaryVerticesOnly then
-                val boundaryVertexIds    = tiling.boundaryVertices.map(_.id).toSet
+                val boundaryVertexIds    = tiling.boundaryVertices.toOption.get.map(_.id).toSet
                 val vertexBoundaryPoints =
                   vertexIdsAndPoints
                     .filter: (vertexId, _) =>

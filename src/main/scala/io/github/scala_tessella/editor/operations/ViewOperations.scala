@@ -97,7 +97,7 @@ object ViewOperations:
     val tiling = EditorState.currentTiling.now()
     if !tiling.isEmpty then
 
-      val coords = tiling.boundaryVertices.map(_.coords.toPoint).map(_.scale(canvasScale))
+      val coords = tiling.boundaryVertices.toOption.get.map(_.coords.toPoint).map(_.scale(canvasScale))
       if coords.nonEmpty then
 
         EditorState.canvasElementRef.now().foreach { canvasElement =>
@@ -118,7 +118,7 @@ object ViewOperations:
     val tiling = EditorState.currentTiling.now()
     if tiling.isEmpty then false
     else
-      val coords = tiling.boundaryVertices.map(_.coords.toPoint).map(_.scale(canvasScale))
+      val coords = tiling.boundaryVertices.toOption.get.map(_.coords.toPoint).map(_.scale(canvasScale))
 
       val transform = EditorState.viewTransform.now()
       val rotation  = Radian(AngleDegree(transform.rotationDegrees).toBigRadian.toBigDecimal.toDouble)

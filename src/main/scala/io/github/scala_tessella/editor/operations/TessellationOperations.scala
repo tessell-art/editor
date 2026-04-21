@@ -394,7 +394,7 @@ object TessellationOperations:
     currentPolygonPlacementContext("No tiling available to grow").foreach: context =>
 
       val tiling         = context.tiling
-      val perimeterEdges = tiling.boundaryVertices.map(_.toCoords).slidingO(2).toList
+      val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.toCoords).slidingO(2).toList
       val op             = () =>
         try
           if edgeIndex < perimeterEdges.length then

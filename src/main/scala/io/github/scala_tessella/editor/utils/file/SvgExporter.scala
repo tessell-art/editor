@@ -147,7 +147,7 @@ object SvgExporter:
       offset: Point,
       strokeWidthPeri: Double
   ): String =
-    val perimeterNodes = tiling.boundaryVertices
+    val perimeterNodes = tiling.boundaryVertices.toOption.get
     if perimeterNodes.isEmpty then ""
     else
       val points   = pointsString(perimeterNodes, scale, offset)
