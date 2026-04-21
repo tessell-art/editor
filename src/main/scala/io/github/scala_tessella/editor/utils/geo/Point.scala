@@ -69,8 +69,7 @@ object Point:
       (point.x * cot - point.y * sit, point.x * sit + point.y * cot)
 
     /** Rotate around an origin point */
-    def rotateAround(origin: Point, theta: Radian): Point =
-      (point - origin).rotate(theta) + origin
+    def rotateAround(origin: Point, theta: Radian): Point = (point - origin).rotate(theta) + origin
 
     def offsetPolar(radius: Double, theta: Radian): Point =
       (point.x + radius * Math.cos(theta.toDouble), point.y + radius * Math.sin(theta.toDouble))
@@ -83,8 +82,8 @@ object Point:
       LineSegment(point, other).length
 
     /** New point moved to align with reference to two other points */
-    def alignWithStart(first: Point, second: Point): Point =
-      (point - first).rotate(Radian.TAU - first.angleTo(second))
+    def alignWithStart(first: Point, second: Point): Point = (point - first).rotate(Radian.TAU -
+      first.angleTo(second))
 
     /** Get the length (magnitude) of this point as a vector */
     def magnitude: Double =

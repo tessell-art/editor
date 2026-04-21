@@ -16,6 +16,7 @@ object IrregularPolygonPopup:
   // Controls
   private def modify(f: Vector[AngleDegree] => Vector[AngleDegree]): Observer[org.scalajs.dom.MouseEvent] =
     Observer { e =>
+
       e.stopPropagation()
       EditorState.recentIrregularPolygon.update {
         case Some(v) if v.nonEmpty => Some(f(v))

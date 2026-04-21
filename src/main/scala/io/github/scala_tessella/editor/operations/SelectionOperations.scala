@@ -54,6 +54,7 @@ object SelectionOperations:
           EditorState.measurementResult.set(Some(distance))
           val maybeAngle =
             previousEndOpt.map: clickable =>
+
               val angle1 = LineSegment(start.point, clickable.point).horizontalAngle
               val angle2 = LineSegment(start.point, point.point).horizontalAngle
               val diff   = (angle2 - angle1).normalize.toDouble
@@ -97,6 +98,7 @@ object SelectionOperations:
   def selectAllPolygons(): Unit =
     ifNotProcessing:
       withNonEmptyTiling: tiling =>
+
         val allPolygonIds = tiling.innerFaces.map(_.id).toSet
         EditorState.selectedTilingPolygons.set(allPolygonIds)
         EditorState.selectedPerimeterEdges.set(Set.empty)
@@ -104,6 +106,7 @@ object SelectionOperations:
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
       withNonEmptyTiling: tiling =>
+
         val polygonIdsToAdd =
           tiling.innerFaces
             .collect:
@@ -118,6 +121,7 @@ object SelectionOperations:
   def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
     ifNotProcessing:
       withNonEmptyTiling: tiling =>
+
         val polygonIdsToAdd =
           tiling.innerFaces
             .collect:
@@ -133,6 +137,7 @@ object SelectionOperations:
     ifNotProcessing:
       val colors = EditorState.polygonColors.now()
       colors.get(faceId).foreach: color =>
+
         val polygonIdsToAdd = colors.collect {
           case (tag, c) if c == color => tag
         }.toSet
@@ -161,6 +166,7 @@ object SelectionOperations:
       case Some(Tool.ColorPicker)         =>
         val colors = EditorState.polygonColors.now()
         colors.get(faceId).foreach: color =>
+
           EditorState.fillColor.set(color)
           deactivateActiveTool()
       case Some(Tool.ShapeAndColorPicker) =>
@@ -172,14 +178,16 @@ object SelectionOperations:
             EditorState.fillColor.set(color)
             if face.hasEqualAngles.toOption.contains(true) then
               face.halfEdges.toOption.foreach: edges =>
+
                 val sides = edges.size
                 EditorState.isIrregularSelected.set(false)
                 EditorState.selectedPolygon.set(Some(sides))
             else
               face.angles.toOption.foreach: angles =>
+
                 EditorState.recentIrregularPolygon.set(Some(angles.toVector)) // remember latest irregular
                 EditorState.selectedPolygon.set(None)
-                EditorState.isIrregularSelected.set(true)                     // select irregular
+                EditorState.isIrregularSelected.set(true) // select irregular
             deactivateActiveTool()
           case None                =>
             ()
@@ -215,11 +223,13 @@ object SelectionOperations:
             EditorState.clickablePoints.set(Nil)
           else
             tiling.findInnerFaceVertices(face.id).toOption.foreach: faceVertices =>
+
               val vertices           = faceVertices.map(_.coords).map(_.toPoint)
               val vertexIdsAndPoints = faceVertices.map(_.id).zip(vertices)
               val edges              = vertexIdsAndPoints.toVector.slidingO(2).toList
               val midPoints          =
                 edges.map: edge =>
+
                   val p1 = edge(0)._2
                   val p2 = edge(1)._2
                   ClickablePoint(LineSegment(p1, p2).midPoint, Anchor.MidPoint(edge(0)._1, edge(1)._1))

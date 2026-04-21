@@ -25,6 +25,7 @@ object SvgImporter:
     inputEl.onchange = _ => {
       val fileOpt = Option(inputEl.files).flatMap(fs => Option(fs.item(0)))
       fileOpt.foreach: file =>
+
         val reader = new FileReader()
         reader.onload = (_: ProgressEvent) => {
           val content =
@@ -112,6 +113,7 @@ object SvgImporter:
       )
 
     (0 until foundCount).map { i =>
+
       val el      = svgPolys(i)
       val rawFill = Option(el.getAttribute("fill")).map(_.trim).getOrElse("")
       parseColor(rawFill).getOrElse(

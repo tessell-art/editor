@@ -51,6 +51,7 @@ object SettingsPopup:
             _.toRgba
           ,
           _.onChange.map { event =>
+
             val color = event.target._colorValue._rgb
             ColorRGB(color.r.toInt, color.g.toInt, color.b.toInt)
           } --> EditorState.tempSettingsPickerColor.writer

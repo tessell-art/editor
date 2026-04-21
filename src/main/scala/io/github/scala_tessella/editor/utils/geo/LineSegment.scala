@@ -21,8 +21,7 @@ object LineSegment:
     def dy: Double =
       p2.y - p1.y
 
-    def midPoint: Point =
-      (p1 + p2) / 2.0
+    def midPoint: Point = (p1 + p2) / 2.0
 
     def length: Double =
       Math.hypot(dx, dy)

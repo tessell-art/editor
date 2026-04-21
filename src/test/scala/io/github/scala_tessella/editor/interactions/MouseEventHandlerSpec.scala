@@ -9,8 +9,7 @@ class MouseEventHandlerSpec extends FunSuite:
   private def worldPoint(
       screen: Point,
       transform: ViewTransform
-  ): Point =
-    (screen - transform.pan) / transform.scale
+  ): Point = (screen - transform.pan) / transform.scale
 
   test("calculateZoomTransform keeps the world point under the cursor"):
     val transform = ViewTransform(scale = 1.0, rotationDegrees = 0, pan = Point.origin)

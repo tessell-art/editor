@@ -31,6 +31,7 @@ object SvgExporter:
 
         if newName.nonEmpty then
           AsyncUtils.withLoadingState { () =>
+
             val finalName  = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
             val svgContent =
               generateSvgContent(
@@ -49,6 +50,7 @@ object SvgExporter:
   def saveTilingToSVG(): Unit =
     AsyncUtils.withLoadingState(() =>
       EditorState.currentFileName.now().foreach { fileName =>
+
         val tiling = EditorState.currentTiling.now()
         if !tiling.isEmpty then
           val svgContent =
@@ -128,6 +130,7 @@ object SvgExporter:
   ): String =
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
+
         val color    = AppState.getPolygonColor(faceId).getOrElse(EditorConfig.defaultPolygonColor).toRgb
         val points   = pointsString(faceVertices, scale, offset)
         val nodesStr = "" // nodes.map(_.toString).mkString(",")

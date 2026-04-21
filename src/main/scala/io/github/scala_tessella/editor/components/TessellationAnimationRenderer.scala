@@ -30,11 +30,13 @@ object TessellationAnimationRenderer:
       svg.style := "pointer-events: none;",
       renderAnimationPolygons(facePoints, renderPolygon),
       onMountCallback: ctx =>
+
         val node      = ctx.thisNode.ref
         var rafId     = 0
         var startTime = -1.0
 
         lazy val step: js.Function1[Double, Unit] = (ts: Double) =>
+
           if startTime < 0 then startTime = ts
           val elapsed  = ts - startTime
           val progress =
@@ -62,19 +64,20 @@ object TessellationAnimationRenderer:
   ): Element =
     val pivot       = toCanvasPoint(animation.pivot)
     val stepDegrees = animation.stepAngle.toDegrees
-    val copyGroups  =
-      (0 until animation.copies).map: copyIndex =>
-        val targetDegrees = stepDegrees * copyIndex
-        val delayMs       = animation.staggerMs.toDouble * copyIndex
-        renderAnimatedPolygonGroup(
-          facePoints = animation.facePoints,
-          durationMs = animation.durationMs,
-          renderPolygon = renderPolygon,
-          initialTransform = s"rotate(0 ${pivot.x} ${pivot.y})",
-          delayMs = delayMs
-        ): eased =>
-          val angle = targetDegrees * eased
-          s"rotate($angle ${pivot.x} ${pivot.y})"
+    val copyGroups  = (0 until animation.copies).map: copyIndex =>
+
+      val targetDegrees = stepDegrees * copyIndex
+      val delayMs       = animation.staggerMs.toDouble * copyIndex
+      renderAnimatedPolygonGroup(
+        facePoints = animation.facePoints,
+        durationMs = animation.durationMs,
+        renderPolygon = renderPolygon,
+        initialTransform = s"rotate(0 ${pivot.x} ${pivot.y})",
+        delayMs = delayMs
+      ): eased =>
+
+        val angle = targetDegrees * eased
+        s"rotate($angle ${pivot.x} ${pivot.y})"
 
     svg.g(
       svg.className := "fan-animation",
@@ -97,6 +100,7 @@ object TessellationAnimationRenderer:
         renderPolygon = renderPolygon,
         initialTransform = "translate(0 0)"
       ): eased =>
+
         val dx = animation.delta.x * eased
         val dy = animation.delta.y * eased
         s"translate($dx $dy)"
@@ -114,6 +118,7 @@ object TessellationAnimationRenderer:
         renderPolygon = renderPolygon,
         initialTransform = "matrix(1 0 0 1 0 0)"
       ): eased =>
+
         val sy = 1.0 - (2.0 * eased)
         val ty = animation.axisY * (1.0 - sy)
         s"matrix(1 0 0 $sy 0 $ty)"

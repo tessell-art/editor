@@ -66,6 +66,7 @@ object Geometry:
       if sides % 2 != 0 then Radian.TAU_2 / 2
       else Radian.TAU_2 / 2 + Radian.TAU_2 / sides
     (0 until sides).map { i =>
+
       val angle = (Radian.TAU * i / sides) - shift // Start from the top
       center + Point.fromPolar(radius, angle)
     }

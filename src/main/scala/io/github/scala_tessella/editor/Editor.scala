@@ -28,6 +28,7 @@ def Editor(): Unit =
 object EditorApp:
   private val applyThemeToBodyObserver: Observer[Theme] =
     Observer: theme =>
+
       val body = dom.document.body
       body.classList.toggle("light-mode", theme == Theme.Light): Unit
       body.classList.toggle("dark-mode", theme == Theme.Dark): Unit
@@ -35,6 +36,7 @@ object EditorApp:
   def element: Element =
     div(
       onMountCallback: ctx =>
+
         val owner     = ctx.owner
         val windowDyn = js.Dynamic.global.selectDynamic("window")
         if js.typeOf(windowDyn) != "undefined" && js.typeOf(windowDyn.matchMedia) == "function" then

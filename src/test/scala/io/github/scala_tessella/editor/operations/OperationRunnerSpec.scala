@@ -23,6 +23,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     )
 
     done.future.map { _ =>
+
       assertEquals(UndoManager.undoCount.now(), 0)
       assertEquals(EditorState.currentTiling.now(), tiling)
     }
@@ -42,6 +43,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     )
 
     done.future.map { _ =>
+
       val colors = EditorState.polygonColors.now()
       val ids    = newTiling.innerFaces.map(_.id)
       assertEquals(UndoManager.undoCount.now(), 1)
@@ -63,6 +65,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     )
 
     done.future.map { _ =>
+
       assertEquals(UndoManager.undoCount.now(), 0)
       assertEquals(EditorState.currentTiling.now(), tiling)
     }
@@ -87,6 +90,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     )
 
     done.future.map { _ =>
+
       val colors = EditorState.polygonColors.now()
       assert(newFaces.nonEmpty)
       assertEquals(colors.keySet, newFaces)

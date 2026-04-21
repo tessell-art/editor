@@ -26,6 +26,7 @@ class GeometryPropertySpec extends ScalaCheckSuite:
 
   property("rotate preserves distance from origin"):
     forAll(pointGen, angleGen): (p, angle) =>
+
       val rotated = p.rotate(angle)
       val d1      = Point.origin.distanceTo(p)
       val d2      = Point.origin.distanceTo(rotated)
@@ -33,6 +34,7 @@ class GeometryPropertySpec extends ScalaCheckSuite:
 
   property("normalized unit vectors have magnitude 1 for non-zero points"):
     forAll(pointGen): p =>
+
       val mag = p.magnitude
       if mag > 1e-6 then
         math.abs(p.normalized.magnitude - 1.0) <= 1e-9
@@ -43,6 +45,7 @@ class GeometryPropertySpec extends ScalaCheckSuite:
     val sidesGen  = Gen.chooseNum(3, 20)
     val centerGen = pointGen
     forAll(sidesGen, positiveDoubleGen, centerGen): (sides, radius, center) =>
+
       val pts = regularPolygonPoints(sides, radius, center)
       (pts.size == sides) && pts.forall: p =>
         math.abs(center.distanceTo(p) - radius) <= 1e-7
@@ -53,8 +56,10 @@ class GeometryPropertySpec extends ScalaCheckSuite:
     val padGen    = Gen.chooseNum(0.0, 50.0)
 
     forAll(pointsGen, scaleGen, padGen): (pts, scale, pad) =>
+
       val (w, h, off) = pts.fitPointsToViewBox(scale, pad)
       pts.forall: p =>
+
         val t = p.scaleAndTranslate(scale, off)
         t.x >= pad - eps && t.x <= w - pad + eps &&
         t.y >= pad - eps && t.y <= h - pad + eps
@@ -62,6 +67,7 @@ class GeometryPropertySpec extends ScalaCheckSuite:
   property("buildUnitEdgePolygon produces unit-length steps"):
     val anglesGen = Gen.chooseNum(1, 20).flatMap(n => Gen.listOfN(n, angleGen))
     forAll(anglesGen): angles =>
+
       val pts = buildUnitEdgePolygon(angles)
       pts.sliding(2).forall:
         case Seq(a, b) => math.abs(a.distanceTo(b) - 1.0) <= 1e-7

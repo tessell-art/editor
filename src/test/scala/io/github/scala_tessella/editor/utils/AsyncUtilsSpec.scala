@@ -14,6 +14,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     assert(!EditorState.isProcessing.now())
 
     val future = AsyncUtils.withLoadingState { () =>
+
       // Note: the processing state is set asynchronously after a 50ms delay
       executed = true
       "result"
@@ -24,6 +25,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
 
     // Wait for the future to complete
     future.map: result =>
+
       assert(executed)
       assertEquals(result, "result")
       // Processing state should be cleared after completion
@@ -41,6 +43,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
 
     // Wait for the future to complete
     future.failed.map: exception =>
+
       assertEquals(exception.getMessage, "Test exception")
       // Processing state should be cleared even after exception
       assert(!EditorState.isProcessing.now())
@@ -58,6 +61,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.loadingMessage.now(), Some("Working..."))
 
     future.map: result =>
+
       assertEquals(result, "ok")
       assertEquals(EditorState.loadingMessage.now(), None)
 
@@ -70,6 +74,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.loadingMessage.now(), Some("Halfway there..."))
 
     future.map: result =>
+
       assertEquals(result, "ok")
       assertEquals(EditorState.loadingMessage.now(), None)
 
@@ -84,5 +89,6 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
 
     // Both futures should complete successfully
     Future.sequence(List(future1, future2)).map: results =>
+
       assertEquals(results.toSet, Set("first", "second"))
       assert(!EditorState.isProcessing.now())

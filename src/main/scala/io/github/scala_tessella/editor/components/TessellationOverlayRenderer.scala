@@ -22,6 +22,7 @@ object TessellationOverlayRenderer:
       toCanvasPoint: Point => Point
   ): List[Element] =
     coordinates.toList.map: (vertexId, bigPoint) =>
+
       val vertex = bigPoint.toPoint
       val point  = toCanvasPoint(vertex)
       val offset = point + Point(4, -4)
@@ -29,6 +30,7 @@ object TessellationOverlayRenderer:
       svg.text(
         textCoords(offset),
         svg.fontSize <-- EditorState.viewTransform.signal.map: transform =>
+
           val baseFontSize = 12
           val scaledSize   = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
@@ -57,6 +59,7 @@ object TessellationOverlayRenderer:
       .filter: (vertexId, _) =>
         uniMap.contains(vertexId)
       .map: (vertexId, bigPoint) =>
+
         val point = toCanvasPoint(bigPoint.toPoint)
         val color = uniformColorMap.getOrElse(uniMap(vertexId), "black")
 
@@ -81,6 +84,7 @@ object TessellationOverlayRenderer:
     else
       val center   = toCanvasPoint(rotCoords.map(_._2).centroid.toPoint)
       val elements = rotCoords.map: (id, coords) =>
+
         val vertex     = toCanvasPoint(coords.toPoint)
         val segment    = LineSegment(center, vertex).extendFromOrigin
         val p1         = segment.p1
@@ -138,6 +142,7 @@ object TessellationOverlayRenderer:
         case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint)
 
     refList.map: (loc1, loc2) =>
+
       val vertex1          = locationToPoint(loc1)
       val vertex2          = locationToPoint(loc2)
       svg.line(

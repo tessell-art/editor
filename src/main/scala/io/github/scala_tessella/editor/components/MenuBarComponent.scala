@@ -176,6 +176,7 @@ object MenuBarComponent:
       dropdownLink(
         "New",
         () =>
+
           AppState.clearTiling()
           EditorState.currentFileName.set(None)
           UndoManager.clearHistory()
@@ -244,6 +245,7 @@ object MenuBarComponent:
           _.withCurrentValueOf(EditorState.fillColor.signal)
             .map((_, color) => color)
         ) --> { color =>
+
           EditorState.tempColor.set(color)
           EditorState.showColorPicker.set(true)
           EditorState.isMenuOpen.set(false)

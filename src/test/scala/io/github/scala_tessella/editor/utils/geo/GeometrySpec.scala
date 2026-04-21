@@ -103,6 +103,7 @@ class GeometrySpec extends FunSuite:
     assertEquals(pts.size, sides)
     // All points should lie at radius r from center
     pts.foreach { p =>
+
       val dist = Point(0, 0).distanceTo(p)
       assertEqualsDouble(dist, r, 1e-9)
     }

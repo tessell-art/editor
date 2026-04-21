@@ -7,6 +7,7 @@ object DotExporter:
 
   def exportTilingToDOT(): Unit =
     AsyncUtils.withLoadingState { () =>
+
       val tiling = EditorState.currentTiling.now()
       if !tiling.isEmpty then
         val dotContent = tiling.toDOT

@@ -132,6 +132,7 @@ object AppState:
             else compute(tiling)
           }
           .foreach { computed =>
+
             // Only apply if the user still intends to show (hasn't toggled off meanwhile)
             if !showFlag.now() then
               cache.set(computed)
@@ -150,6 +151,7 @@ object AppState:
         dataType = "Uniformity",
         sizeOf = _.map(_.values.toSet.size).getOrElse(0)
       ): tiling =>
+
         val classes  = tiling.uniformityTree.flattenLeaves
         val indexMap = classes.zipWithIndex.flatMap((vertexIds, index) => vertexIds.map((_, index))).toMap
         Some(indexMap)
@@ -165,6 +167,7 @@ object AppState:
         dataType = "Rotation",
         sizeOf = _.map(_.size).getOrElse(1)
       ): tiling =>
+
         val vs = tiling.rotationalVertexIds
         if vs.size > 1 then
           Logger.debug(s"Rotation vertices: $vs")
@@ -183,6 +186,7 @@ object AppState:
         dataType = "Reflection",
         sizeOf = _.map(_.size).getOrElse(0)
       ): tiling =>
+
         val vs = tiling.reflectionalVertexIds
         if vs.nonEmpty then
           Logger.debug(s"Reflection vertices: $vs")

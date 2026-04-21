@@ -85,6 +85,7 @@ trait EditorStateFixture:
   override def afterEach(context: AfterEach): Unit =
     // Restore the structural snapshot
     saved.foreach { s =>
+
       EditorState.currentTiling.set(s.tiling)
       EditorState.selectedPolygon.set(s.selectedPolygon)
       EditorState.selectedPerimeterEdges.set(s.selectedPerimeterEdges)

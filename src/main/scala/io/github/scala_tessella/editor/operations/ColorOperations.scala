@@ -44,6 +44,7 @@ object ColorOperations:
     if faceIds.nonEmpty then
       val faceIdSet = faceIds.toSet
       EditorState.polygonColors.update: currentColors =>
+
         val base =
           if trimMissing then
             currentColors.filter: (faceId, _) =>

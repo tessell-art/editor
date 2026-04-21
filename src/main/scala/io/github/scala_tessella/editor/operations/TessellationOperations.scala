@@ -149,8 +149,9 @@ object TessellationOperations:
       fillFallback = EditorState.fillColor.now()
     )
 
-  private def newFaceIdsFrom(startingFrom: Int, count: Int): Vector[FaceId] =
-    (0 until count).map(offset => FaceId(startingFrom + offset + 1)).toVector
+  private def newFaceIdsFrom(startingFrom: Int, count: Int): Vector[FaceId] = (0 until count).map(offset =>
+    FaceId(startingFrom + offset + 1)
+  ).toVector
 
   private def mirrorAxisYFor(tiling: TilingDCEL): Double =
     val ys =
@@ -252,6 +253,7 @@ object TessellationOperations:
           val fillFallback = EditorState.fillColor.now()
           (1 until copies).foreach: copyIndex =>
             context.faceIds.indices.foreach: id =>
+
               val rgb   = context.colors.getOrElse(context.faceIds(id), fillFallback)
               val newId = FaceId(context.maxFaceId + (copyIndex - 1) * context.faceCount + id + 1)
               polygonColors.update(_ + (newId -> rgb))
@@ -291,14 +293,17 @@ object TessellationOperations:
 
   private def precomputeFacePoints(tiling: TilingDCEL): List[(FaceId, String)] =
     tiling.innerFacesVertices.map: (faceId, faceVertices) =>
+
       val pointStrings =
         faceVertices.map: vertex =>
+
           val point = tilingPointToCanvasView(vertex.coords.toPoint)
           s"${point.x},${point.y}"
       (faceId, pointStrings.mkString(" "))
 
   private def faceCentroid(tiling: TilingDCEL, faceId: FaceId): Option[Point] =
     tiling.findInnerFaceVertices(faceId).toOption.map: vertices =>
+
       val points = vertices.map(_.coords.toPoint).map(tilingPointToCanvasView)
       averagePoint(points).getOrElse(Point.origin)
 
@@ -325,6 +330,7 @@ object TessellationOperations:
         onSuccess =
           val newFaceIds    = newFaceIdsFrom(context.maxFaceId, context.faceIds.size)
           context.faceIds.indices.foreach: id =>
+
             val rgb = context.colors.getOrElse(context.faceIds(id), context.fillFallback)
             polygonColors.update(_ + (newFaceIds(id) -> rgb))
           val updatedTiling = currentTiling.now()
@@ -386,6 +392,7 @@ object TessellationOperations:
   // Handle perimeter-edge click with polygon growth
   def attemptPolygonAddition(edgeId: String, edgeIndex: Int): Unit =
     currentPolygonPlacementContext("No tiling available to grow").foreach: context =>
+
       val tiling         = context.tiling
       val perimeterEdges = tiling.boundaryVertices.map(_.toCoords).slidingO(2).toList
       val op             = () =>
@@ -443,6 +450,7 @@ object TessellationOperations:
 
   def attemptPolygonInsertion(startVertexId: VertexId, endVertexId: VertexId): Unit =
     currentPolygonPlacementContext("No tiling available for insertion").foreach: context =>
+
       val tiling = context.tiling
       val op     = () =>
         try

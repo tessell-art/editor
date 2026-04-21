@@ -31,7 +31,7 @@ object SvgDsl:
       fill: String = Defaults.fill,
       stroke: String = Defaults.stroke,
       strokeW: String = Defaults.strokeWidthThin
-  ): Element        =
+  ): Element =
     svg.polygon(
       polygonCoords(points),
       svg.fill        := fill,

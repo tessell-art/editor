@@ -12,6 +12,7 @@ object ColorRGB:
 
   def parseColor(colorStr: String): Option[ColorRGB] =
     Option(colorStr).flatMap { s =>
+
       val rgbRegex = new RegExp("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)")
       Option(rgbRegex.exec(s)).flatMap { result =>
 
@@ -30,6 +31,7 @@ object ColorRGB:
 
   def parseHex(colorStr: String): Option[ColorRGB] =
     Option(colorStr).map(_.trim).flatMap: s =>
+
       val hex = if s.startsWith("#") then s.drop(1) else s
       if hex.length == 6 && hex.forall: x =>
           x.isDigit || "abcdefABCDEF".contains(x)

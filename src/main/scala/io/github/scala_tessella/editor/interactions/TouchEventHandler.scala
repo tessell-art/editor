@@ -68,6 +68,7 @@ object TouchEventHandler:
 
       // Set an anchor point for zooming
       EditorState.canvasElementRef.now().foreach: canvasElement =>
+
         val pointer    = getPointer(canvasElement, segment)
         val worldPoint = screenToWorld(pointer, currentTransform)
         pinchAnchorPoint.set(Some(worldPoint))
@@ -84,6 +85,7 @@ object TouchEventHandler:
       val lastPanOpt    = lastPanPoint.now()
 
       startPointOpt.foreach: startPoint =>
+
         val touch      = touches(0)
         val touchPoint = touch.toPoint
         if !dragging then
@@ -94,6 +96,7 @@ object TouchEventHandler:
         if isDragging.now() then
           event.preventDefault()
           lastPanOpt.foreach: lastPoint =>
+
             val panD = touchPoint - lastPoint
             EditorState.viewTransform.update(t =>
               t.copy(
@@ -127,6 +130,7 @@ object TouchEventHandler:
           val gestureCenter = segment.midPoint
 
           EditorState.canvasElementRef.now().foreach: canvasElement =>
+
             val pointer = getPointer(canvasElement, segment)
             val newPan  = pointer - transformedPoint
             EditorState.viewTransform.update(_.copy(

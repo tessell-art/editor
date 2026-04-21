@@ -11,12 +11,14 @@ class ViewTransformPropertySpec extends ScalaCheckSuite:
 
   property("normalizeRotation always returns [0, 360) for any input"):
     forAll(intGen): deg =>
+
       val t   = ViewTransform()
       val out = t.normalizeRotation(deg)
       out >= 0 && out < 360
 
   property("withRotation applies normalizeRotation"):
     forAll(intGen): deg =>
+
       val t   = ViewTransform()
       val out = t.withRotation(deg).rotationDegrees
       out == t.normalizeRotation(deg)

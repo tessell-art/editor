@@ -77,6 +77,7 @@ object ViewOperations:
     else
       val rotatedCoords = transformCoordinates(coords, currentTransform.rotationDegrees)
       rotatedCoords.maybeBounds.flatMap { bounds =>
+
         val tilingWidth  = bounds.width
         val tilingHeight = bounds.height
 
@@ -100,6 +101,7 @@ object ViewOperations:
       if coords.nonEmpty then
 
         EditorState.canvasElementRef.now().foreach { canvasElement =>
+
           val canvasRect       = canvasElement.getBoundingClientRect()
           val currentTransform = EditorState.viewTransform.now()
 
@@ -124,6 +126,7 @@ object ViewOperations:
       val height    = canvasCenter.y * 2
 
       coords.exists { point =>
+
         val screenPoint = transform.pan + forwardTransform(point, canvasCenter, transform.scale, rotation)
         screenPoint.x < 0 || screenPoint.x > width || screenPoint.y < 0 || screenPoint.y > height
       }

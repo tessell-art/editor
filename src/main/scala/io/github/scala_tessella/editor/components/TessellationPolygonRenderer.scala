@@ -31,8 +31,10 @@ object TessellationPolygonRenderer:
   ): List[Element] =
     val facesData: List[(FaceId, String)] =
       tiling.innerFacesVertices.map: (faceId, faceVertices) =>
+
         val pointStrings =
           faceVertices.map: vertex =>
+
             val point = toCanvasPoint(vertex.coords.toPoint)
             s"${point.x},${point.y}"
         (faceId, pointStrings.mkString(" "))
@@ -91,14 +93,15 @@ object TessellationPolygonRenderer:
         case EditorMode.Delete => "tiling-polygon delete-mode"
       ,
       // Cursor style and conditional opacity
-      svg.style <-- shouldHideForDeletion
-        .combineWith(EditorState.editorMode.signal)
-        .combineWith(EditorState.activeTool.signal)
-        .map:
-          case (hidden, mode, tool) =>
-            val cursor  = TessellationCursorStyles.polygonCursorCss(mode, tool)
-            val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
-            cursor + opacity
+      svg.style <--
+        shouldHideForDeletion
+          .combineWith(EditorState.editorMode.signal)
+          .combineWith(EditorState.activeTool.signal)
+          .map:
+            case (hidden, mode, tool) =>
+              val cursor  = TessellationCursorStyles.polygonCursorCss(mode, tool)
+              val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
+              cursor + opacity
       ,
       onClick.compose(gate) --> { _ =>
 
@@ -116,8 +119,9 @@ object TessellationPolygonRenderer:
 
     svg.g(
       basePolygon,
-      child.maybe <-- isSelected
-        .combineWith(shouldHideForDeletion)
-        .map:
-          case (selected, hidden) => if selected && !hidden then Some(patternOverlay) else None
+      child.maybe <--
+        isSelected
+          .combineWith(shouldHideForDeletion)
+          .map:
+            case (selected, hidden) => if selected && !hidden then Some(patternOverlay) else None
     )

@@ -16,10 +16,11 @@ object ErrorMessageComponent:
           button(
             className    := "error-close",
             "×",
-            onClick --> { _ =>
+            onClick -->
+              { _ =>
 
-              clearError()
-            } // This now clears both error and wireframe
+                clearError()
+              } // This now clears both error and wireframe
           )
         )
       ))

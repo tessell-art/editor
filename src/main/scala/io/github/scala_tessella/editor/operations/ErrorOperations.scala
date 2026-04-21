@@ -145,6 +145,7 @@ object ErrorOperations:
 
         // Animate in
         dom.window.requestAnimationFrame { _ =>
+
           toast.style.opacity = "1"
           toast.style.transform = "translateY(0)"
         }: Unit

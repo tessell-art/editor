@@ -58,6 +58,7 @@ object PolygonPlacementGeometry:
 
         // Rotate and scale each local point, then translate so that local (0,0) maps to vertex1
         val world = local.map { p =>
+
           val scaled  = p.scale(edgeLen)
           val rotated = scaled.rotate(edgeAngle)
           vertex1 + rotated
@@ -124,8 +125,8 @@ object PolygonPlacementGeometry:
       startAngle: Radian,
       angleStep: AngleDegree,
       winding: Int
-  ): Vector[Point] =
-    (0 until polygonSides).map { i =>
-      val theta = startAngle + Radian((angleStep * winding * i).toBigRadian.toBigDecimal.toDouble)
-      tilingPointToCanvasView(center.offsetPolar(radius, theta))
-    }.toVector
+  ): Vector[Point] = (0 until polygonSides).map { i =>
+
+    val theta = startAngle + Radian((angleStep * winding * i).toBigRadian.toBigDecimal.toDouble)
+    tilingPointToCanvasView(center.offsetPolar(radius, theta))
+  }.toVector

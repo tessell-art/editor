@@ -24,6 +24,7 @@ object ColorPickerPopupComponent:
           _.simplified := true,
           _.value <-- tempColor.signal.map(_.toRgba),
           _.onChange.map { event =>
+
             val color = event.target._colorValue._rgb
             ColorRGB(color.r.toInt, color.g.toInt, color.b.toInt)
           } --> tempColor.writer
@@ -43,6 +44,7 @@ object ColorPickerPopupComponent:
               _.withCurrentValueOf(tempColor.signal)
                 .map((_, color) => color)
             ) --> { newColor =>
+
               EditorState.fillColor.set(newColor)
 
               // Apply the new color to all currently selected polygons

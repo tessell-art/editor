@@ -19,6 +19,7 @@ object PolygonPaletteComponent:
 
   private def polygonButtonClass(baseClasses: String, isSelectedSignal: Signal[Boolean]): Signal[String] =
     isSelectedSignal.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
+
       val fullBaseClasses = if selected then s"$baseClasses selected" else baseClasses
       if processing then s"$fullBaseClasses disabled" else fullBaseClasses
     }
@@ -35,47 +36,49 @@ object PolygonPaletteComponent:
       ),
       div(
         className := "selected-info",
-        child.maybe <-- EditorState.selectedPolygon.signal
-          .combineWith(EditorState.isIrregularSelected.signal)
-          .map((maybeSides, isIrregular) =>
-            if isIrregular then
-              Option(
-                div(
-                  button(
-                    className := "select-all-by-type-btn",
-                    s"Select irregular shape",
-                    // Replace with gated click composed with current angles
-                    inContext { btn =>
+        child.maybe <--
+          EditorState.selectedPolygon.signal
+            .combineWith(EditorState.isIrregularSelected.signal)
+            .map((maybeSides, isIrregular) =>
+              if isIrregular then
+                Option(
+                  div(
+                    button(
+                      className := "select-all-by-type-btn",
+                      s"Select irregular shape",
+                      // Replace with gated click composed with current angles
+                      inContext { btn =>
 
-                      gate(btn.events(onClick))
-                        .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
-                        .collect { case (_, Some(angles)) =>
-                          angles
-                        } --> { angles =>
+                        gate(btn.events(onClick))
+                          .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+                          .collect { case (_, Some(angles)) =>
+                            angles
+                          } --> { angles =>
 
-                        AppState.selectPolygonsByShape(angles)
-                      }
-                    },
-                    disabled <-- EditorState.isTilingEmptySignal
+                          AppState.selectPolygonsByShape(angles)
+                        }
+                      },
+                      disabled <-- EditorState.isTilingEmptySignal
+                    )
                   )
                 )
-              )
-            else
-              maybeSides.map { sides =>
-                val polygonName = PolygonNameGenerator.polygonName(sides)
-                div(
-                  button(
-                    className := "select-all-by-type-btn",
-                    s"Select all ${polygonName}s",
-                    onClick.preventDefault.map(_ => sides) --> { s =>
+              else
+                maybeSides.map { sides =>
 
-                      AppState.selectPolygonsBySides(s)
-                    },
-                    disabled <-- EditorState.isTilingEmptySignal
+                  val polygonName = PolygonNameGenerator.polygonName(sides)
+                  div(
+                    button(
+                      className := "select-all-by-type-btn",
+                      s"Select all ${polygonName}s",
+                      onClick.preventDefault.map(_ => sides) --> { s =>
+
+                        AppState.selectPolygonsBySides(s)
+                      },
+                      disabled <-- EditorState.isTilingEmptySignal
+                    )
                   )
-                )
-              }
-          )
+                }
+            )
       )
     )
 
@@ -109,6 +112,7 @@ object PolygonPaletteComponent:
           .map { case (_, validatedSides) =>
             validatedSides
           } --> { validatedSides =>
+
           updateSides(validatedSides)
           selectPolygon(validatedSides)
         }
@@ -145,6 +149,7 @@ object PolygonPaletteComponent:
       inContext { thisBtn =>
 
         gate(thisBtn.events(onClick)) --> { _ =>
+
           EditorState.isIrregularSelected.set(false)
           selectPolygon(sides)
         }
@@ -166,12 +171,13 @@ object PolygonPaletteComponent:
       className <-- btnClass,
       tpe   := "button",
       title := "Irregular polygon",
-      disabled <-- EditorState.isProcessing.signal
-        .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
-        .map { (processing, noneRecent) =>
+      disabled <--
+        EditorState.isProcessing.signal
+          .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
+          .map { (processing, noneRecent) =>
 
-          processing || noneRecent
-        },
+            processing || noneRecent
+          },
       // replace filter+now() with gated click + current state
       inContext { thisBtn =>
 
@@ -180,6 +186,7 @@ object PolygonPaletteComponent:
           .collect { case (_, Some(_)) =>
             ()
           } --> { _ =>
+
           initializeWithIrregularIfEmpty()
           selectIrregularInPalette()
         }

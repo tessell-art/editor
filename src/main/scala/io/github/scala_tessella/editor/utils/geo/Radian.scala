@@ -41,8 +41,7 @@ object Radian:
       *   - (-π/2).normalize == 3π/2
       *   - (-2π).normalize == 0
       */
-    def normalize: Radian =
-      (r % Radian.TAU + Radian.TAU) % Radian.TAU
+    def normalize: Radian = (r % Radian.TAU + Radian.TAU) % Radian.TAU
 
     /** Normalize a signed angular difference to the interval (-PI, PI].
       *
@@ -67,8 +66,7 @@ object Radian:
         d
 
     /** Normalize delta angle to (-PI, PI]. */
-    def normalizeDeltaAngle(other: Radian): Radian =
-      (r - other).normalizeDelta
+    def normalizeDeltaAngle(other: Radian): Radian = (r - other).normalizeDelta
 
     @targetName("plus")
     def +(that: Radian): Radian =

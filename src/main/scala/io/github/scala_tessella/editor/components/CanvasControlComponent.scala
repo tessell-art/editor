@@ -14,9 +14,9 @@ object CanvasControlComponent:
         if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter || t == Tool.Fan then
           AppState.clearMeasurements()
         None // Deactivate if it's the current tool
-      case _                    =>
+      case _ =>
         AppState.clearMeasurements() // Clear measurements when switching
-        Some(tool)                   // Activate the new tool
+        Some(tool) // Activate the new tool
     }
 
   private def createToolButton(tool: Tool, titleText: String, icon: Element): Element =

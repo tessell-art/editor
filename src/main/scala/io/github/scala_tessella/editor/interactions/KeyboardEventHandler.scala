@@ -22,6 +22,7 @@ object KeyboardEventHandler:
 
   def keyboardEventHandlers: Mod[HtmlElement] =
     onMountCallback: ctx =>
+
       val owner    = ctx.owner
       // Gate the stream using the processing signal without calling .now() per keydown
       val keyDowns = windowEvents(_.onKeyDown)
@@ -34,6 +35,7 @@ object KeyboardEventHandler:
           if isTargetInput(event) then None
           else
             rotationDeltaForKey(event.key).map: delta =>
+
               event.preventDefault()
               delta
         .collect:
@@ -44,6 +46,7 @@ object KeyboardEventHandler:
           if isTargetInput(event) then None
           else
             zoomFactorForKey(event.key).map: factor =>
+
               event.preventDefault()
               factor
         .collect:
@@ -58,6 +61,7 @@ object KeyboardEventHandler:
         .foreach { factor =>
 
           EditorState.viewTransform.update: t =>
+
             val next = t.scale * factor
             t.copy(scale = ViewOperations.clampViewScale(next))
         }(using owner): Unit

@@ -43,6 +43,7 @@ object MouseEventHandler:
 
     if dragging then
       dragStartOpt.foreach { start =>
+
         val eventPoint   = Point(event.clientX, event.clientY)
         val delta: Point = eventPoint - start
         EditorState.viewTransform.update(t =>
@@ -63,6 +64,7 @@ object MouseEventHandler:
   private def getCanvasRelativePosition(event: WheelEvent): Option[Point] =
     // Snapshot once
     EditorState.canvasElementRef.now().map { canvasElement =>
+
       val rect = canvasElement.getBoundingClientRect()
       Point(
         event.clientX - rect.left,
@@ -77,6 +79,7 @@ object MouseEventHandler:
     val currentTransform = EditorState.viewTransform.now()
 
     getCanvasRelativePosition(event).foreach { (mousePos: Point) =>
+
       val scaleFactor  =
         if event.deltaY < 0 then EditorConfig.mouseWheelZoomInFactor
         else EditorConfig.mouseWheelZoomOutFactor

@@ -28,38 +28,41 @@ object TessellationRenderer:
         TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
       else List.empty
 
-    val nodeUniformity = children <-- EditorState.showUniformity.signal
-      .combineWith(EditorState.uniformityMap.signal)
-      .map: (showUni, uniOpt) =>
-        if showUni && uniOpt.nonEmpty then
-          TessellationOverlayRenderer.renderUniformity(
-            tiling.coordinates,
-            uniOpt.get,
-            tilingPointToCanvasView
-          )
-        else List.empty
+    val nodeUniformity = children <--
+      EditorState.showUniformity.signal
+        .combineWith(EditorState.uniformityMap.signal)
+        .map: (showUni, uniOpt) =>
+          if showUni && uniOpt.nonEmpty then
+            TessellationOverlayRenderer.renderUniformity(
+              tiling.coordinates,
+              uniOpt.get,
+              tilingPointToCanvasView
+            )
+          else List.empty
 
-    val nodeRotation = children <-- EditorState.showRotation.signal
-      .combineWith(EditorState.rotationVertexIds.signal)
-      .map: (showRot, rotOpt) =>
-        if showRot && rotOpt.nonEmpty then
-          TessellationOverlayRenderer.renderRotation(
-            tiling.coordinates,
-            rotOpt.get,
-            tilingPointToCanvasView
-          )
-        else List.empty
+    val nodeRotation = children <--
+      EditorState.showRotation.signal
+        .combineWith(EditorState.rotationVertexIds.signal)
+        .map: (showRot, rotOpt) =>
+          if showRot && rotOpt.nonEmpty then
+            TessellationOverlayRenderer.renderRotation(
+              tiling.coordinates,
+              rotOpt.get,
+              tilingPointToCanvasView
+            )
+          else List.empty
 
-    val nodeReflection = children <-- EditorState.showReflection.signal
-      .combineWith(EditorState.reflectionVertexIds.signal)
-      .map: (showRefl, reflOpt) =>
-        if showRefl && reflOpt.nonEmpty then
-          TessellationOverlayRenderer.renderReflection(
-            tiling.coordinates,
-            reflOpt.get,
-            tilingPointToCanvasView
-          )
-        else List.empty
+    val nodeReflection = children <--
+      EditorState.showReflection.signal
+        .combineWith(EditorState.reflectionVertexIds.signal)
+        .map: (showRefl, reflOpt) =>
+          if showRefl && reflOpt.nonEmpty then
+            TessellationOverlayRenderer.renderReflection(
+              tiling.coordinates,
+              reflOpt.get,
+              tilingPointToCanvasView
+            )
+          else List.empty
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
@@ -67,6 +70,7 @@ object TessellationRenderer:
         .combineWith(EditorState.isInserterActive, EditorState.selectedFaceForInsertion)
         .map: (placementOpt, isInserter, faceIdOpt) =>
           placementOpt.map: p =>
+
             val adjusted =
               (isInserter, faceIdOpt) match
                 case (true, Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
@@ -83,14 +87,15 @@ object TessellationRenderer:
 //      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
       None
 
-    val clickablePointsDisplay = children <-- EditorState.clickablePoints.signal
-      .combineWith(EditorState.measurementStartPoint.signal)
-      .map: (points, startPointOpt) =>
-        points
-          .filterNot: p =>
-            startPointOpt.contains(p)
-          .map: p =>
-            TessellationMeasurementRenderer.renderClickablePoint(p, tilingPointToCanvasView)
+    val clickablePointsDisplay = children <--
+      EditorState.clickablePoints.signal
+        .combineWith(EditorState.measurementStartPoint.signal)
+        .map: (points, startPointOpt) =>
+          points
+            .filterNot: p =>
+              startPointOpt.contains(p)
+            .map: p =>
+              TessellationMeasurementRenderer.renderClickablePoint(p, tilingPointToCanvasView)
 
     val measurementSignals =
       EditorState.measurementStartPoint.signal
