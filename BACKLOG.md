@@ -83,25 +83,31 @@ Options to evaluate in ADR-002:
   (`-->`, `child <--`) clean up automatically. Any `signal.foreach { … }` living
   outside an element needs an explicit `Owner`.
 
-### P1#3 — Reactive-first discipline: eliminate accidental `.now()` reads
-**ADR:** no — document as a **coding convention** in
-`docs/laminar-conventions.md` (referenced by ADR-002).
+### P1#3 — Reactive-first discipline: eliminate accidental `.now()` reads ✅
+**Convention doc:** [`docs/laminar-conventions.md`](docs/laminar-conventions.md)
+(written 2026-04-22).
 
-`.now()` is called **110 times across 9 files**. Two existing comments
-(`KeyboardEventHandler.scala:27`, `EditorCanvasComponent.scala:99`) already
-document avoiding `.now()`; the discipline should be propagated. Example hot
-spots:
-- `TouchEventHandler.scala:108-112` — five `.now()` reads in a row, perfect
-  candidate for `signal.withCurrentValueOf(…).foreach`.
-- `AppStateSnapshot.fromCurrentState` — ten `.now()` reads to produce a
-  snapshot; collapses to `state.now()` if P1#2 option B is chosen.
+Covers:
+- `.now()` vs `.signal` decision rule (event-boundary snapshot vs reactive
+  subscription).
+- Writes: `.set(Initial)` / `.update(_.copy(…))` / `.update(s => …)`.
+- Post-ADR-002 helper patterns (lens-lambda, signal+observer pair, by-name
+  close action).
+- Observer-wiring preference over callbacks.
+- Pitfalls hit during migration (`_ + X` underscore-lambda,
+  `onClick.compose(...).map(...)` compile error, name shadowing, unused
+  `Var.writer` / `Var.zoom`).
 
-**Convention to codify:**
-- `.now()` is allowed only when *snapshotting at an event boundary*
-  (e.g. handling a mousedown, persisting to storage). Anywhere inside a
-  `.foreach`/`.map` on a signal, use `.withCurrentValueOf` or `combineWith`.
-- Rendering: prefer `child <-- signal`, `children <-- signal`, `--> observer`
-  over imperative `.now()` in component bodies.
+`.now()` went from 110 → 98 calls after ADR-002 rollout, but the raw count
+isn't the metric — the remaining ~98 are mostly legitimate event-boundary
+reads (operations triggered by user actions, snapshot construction, guard
+reads in `OperationGuard`/`UndoManager`). The two deliberate `.now()`
+avoidances (`KeyboardEventHandler:28`, `EditorCanvasComponent:99`) remain
+the referenced models for reactive-first patterns.
+
+Ongoing: when touching a file that calls `.now()` inside a
+`signal.foreach`/`.map`, apply the reactive rewrite. Not a tracked
+backlog item — normal maintenance under the conventions doc.
 
 ---
 
