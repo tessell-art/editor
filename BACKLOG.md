@@ -265,13 +265,45 @@ Followups:
   50ms-debounced compute). Flake risk is low but not zero — revisit
   if CI ever flakes.
 
-### P2#18 — Property-based specs for `Radian` and `PolygonPlacementGeometry`
-Two property specs exist (`GeometryPropertySpec`, `ViewOperationsPropertySpec`);
-both pay off well. Add:
-- `RadianPropertySpec` — normalisation idempotence, addition commutative
-  mod 2π, `toBigDecimal` round-trip within ε.
-- `PolygonPlacementPropertySpec` — placed regular polygon vertices lie on
-  the expected circle, edge length invariants.
+### P2#18 — Property-based specs for `Radian` and `PolygonPlacementGeometry` ✅
+Resolved 2026-04-22. Two new property specs (13 properties total).
+
+`RadianPropertySpec` (8 properties) — covers the opaque-`Radian`
+contract:
+- `normalize` maps any angle into `[0, TAU)`.
+- `normalize` is idempotent.
+- `normalize` is invariant under shifts of `k * TAU` for any integer k.
+- `normalizeDelta` maps any angle into `(-π, π]`.
+- Addition is commutative modulo TAU.
+- `Radian.fromDegrees(d).toDegrees ≈ d` within scaled ε. The original
+  backlog wording mentioned `toBigDecimal` round-trip; that helper lives
+  on `AngleDegree` (dcel library), not `Radian`. The degree round-trip
+  is the equivalent contract here.
+- `normalizeDeltaAngle` returns the smallest signed rotation
+  (`|delta| ≤ π`).
+- `(r * n) / n == r` for non-zero `n`.
+
+`PolygonPlacementPropertySpec` (5 properties) — covers
+`PolygonPlacementGeometry.computeWireframePoints` for regular polygons
+attached to a perimeter edge of `TilingBuilders.square`:
+- Returns exactly `sides` vertices.
+- All vertices lie on a common circle around their centroid (equal radii
+  within ε) — i.e. the result is inscribed in a circle.
+- Consecutive vertex distances are equal (uniform side length).
+- Side length equals `tilingEdgeLen × canvasScale` within ε (proves the
+  canvas-coord scaling is applied correctly).
+- Returns `Vector.empty` for a degenerate zero-length edge.
+
+Generators range over `sides ∈ [3, 12]` and `edgeIndex ∈ [0, 3]` (the
+square's four perimeter edges), so each property exercises 100 random
+combinations.
+
+The "distance symmetry" property mentioned earlier (P2#17 scope note)
+isn't included — `MeasurementOperations` exposes no `distance` helper;
+the symmetric `Point#distanceTo` from `utils.geo` already has implicit
+coverage via every other geometry test. Not worth a one-line property.
+
+Suite totals: **261 tests / 35 suites** (was 248 / 33).
 
 ### P2#7 — `ErrorOperations.messageTimeoutId: private var Option[Int]` race ✅
 Resolved 2026-04-22. The actual race was not just the tracked 10s
@@ -442,8 +474,7 @@ ADRs 001 and 002 plus the original P2 wave are done. Open items:
 
 1. ~~**P3#19** (test-code hygiene)~~ ✅ done 2026-04-22.
 2. ~~**P2#17** (operations + interactions coverage gaps)~~ ✅ done 2026-04-22.
-3. **P2#18** (property specs for `Radian`, `PolygonPlacementGeometry`).
-   Independent, small.
+3. ~~**P2#18** (property specs for `Radian`, `PolygonPlacementGeometry`)~~ ✅ done 2026-04-22.
 4. **ADR-003** (P1#16 — test strategy). Decide and accept *before* writing
    the first Laminar-in-JSDOM mount test or wiring up Playwright.
 5. **P3#20** (extract pure-function helpers from components). Apply
