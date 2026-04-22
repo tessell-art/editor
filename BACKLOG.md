@@ -84,7 +84,37 @@ Options to evaluate in ADR-002:
   outside an element needs an explicit `Owner`.
 
 ### P1#16 — Test strategy: Laminar-in-JSDOM + Playwright (no Selenium)
-**ADR:** [ADR-003 — Test strategy](docs/adr/003-test-strategy.md) (Proposed).
+**ADR:** [ADR-003 — Test strategy](docs/adr/003-test-strategy.md)
+(Accepted — Tier 1 scaffolding landed 2026-04-22; Tier 2 deferred).
+
+**First-phase landing** — crystallised the mount/unmount helper and first
+component spec:
+- `LaminarTestSupport` trait
+  (`src/test/.../components/LaminarTestSupport.scala`, ~60 lines):
+  `mount(HtmlElement)`, `querySelector` / `querySelectorAll` scoped to
+  the container, `clickOn(selector)`. Auto-cleans the container and
+  unmounts the `RootNode` in `afterEach`. Mix *last* after
+  `EditorStateFixture` so unmount runs before state restore.
+- `AboutPopupSpec` (4 mount-tests) as the first ADR-003 Tier-1 spec:
+  static content renders, close button closes, overlay closes, clicking
+  content does **not** close (asserts `PopupCommons`' `stopPropagation`
+  wiring). Total surface: ~35 lines.
+
+The trait pattern validates the ADR's key assumption — mount-based tests
+work under the existing `JSDOMNodeJSEnv` with no new build-sbt wiring,
+no external dev dependency, and no per-spec ceremony beyond
+`with LaminarTestSupport`.
+
+Next for this item (not urgent — do opportunistically):
+1. Mount specs for the remaining popups (`GuidePopup`,
+   `ShortcutsPopup`, `SettingsPopup`, `IrregularPolygonPopup`) — reuse
+   the `popup-overlay` / `popup-close-btn` / `popup-content` assertion
+   shape from `AboutPopupSpec`.
+2. Mount specs for `UndoComponent`, `ErrorMessageComponent`,
+   `ColorPickerPopupComponent` — each small, state-driven.
+3. Tier 2 (Playwright smoke) — only after the Tier-1 sweep reaches a
+   natural ceiling. Canvas rendering + real pointer/touch + visual
+   regression is what's left.
 
 Static analysis on 2026-04-22 reports 217 tests across 27 suites, but the
 distribution is uneven:
@@ -497,13 +527,14 @@ ADRs 001 and 002 plus the original P2 wave are done. Open items:
 1. ~~**P3#19** (test-code hygiene)~~ ✅ done 2026-04-22.
 2. ~~**P2#17** (operations + interactions coverage gaps)~~ ✅ done 2026-04-22.
 3. ~~**P2#18** (property specs for `Radian`, `PolygonPlacementGeometry`)~~ ✅ done 2026-04-22.
-4. **ADR-003** (P1#16 — test strategy). Decide and accept *before* writing
-   the first Laminar-in-JSDOM mount test or wiring up Playwright.
-5. **P3#20** (extract pure-function helpers from components). Apply
-   opportunistically when touching a component for other reasons.
-6. **Implementation of ADR-003 tier 1** — Laminar-in-JSDOM mount tests for
-   popups and components, helped along by P3#20.
-7. **Implementation of ADR-003 tier 2** — small Playwright smoke suite.
+4. ~~**ADR-003** (P1#16 — test strategy)~~ ✅ Accepted 2026-04-22; scaffolding
+   (`LaminarTestSupport` + first mount spec) landed same day.
+5. **P3#20** (extract pure-function helpers from components) — first batch
+   done 2026-04-22; continue opportunistically when touching each file.
+6. **Implementation of ADR-003 Tier 1** — mount specs for remaining popups
+   and small components. Helped along by P3#20. No ADR dependency, no new
+   tooling; just reuses `LaminarTestSupport`.
+7. **Implementation of ADR-003 Tier 2** — small Playwright smoke suite.
    Last, deliberately.
 8. Remaining P3 items (P3#8 dcel pin, P3#10 README architecture section,
    P3#11 scalafix `var` rule).
@@ -517,7 +548,7 @@ ADRs live under `docs/adr/`:
 - [`000-template.md`](docs/adr/000-template.md) — template for new ADRs.
 - [`001-package-layering.md`](docs/adr/001-package-layering.md) — Accepted.
 - [`002-state-container.md`](docs/adr/002-state-container.md) — Accepted.
-- [`003-test-strategy.md`](docs/adr/003-test-strategy.md) — Proposed.
+- [`003-test-strategy.md`](docs/adr/003-test-strategy.md) — Accepted.
 
 Each ADR follows the standard template: **Status** (Proposed / Accepted /
 Superseded), **Context**, **Decision**, **Consequences**, **Alternatives
