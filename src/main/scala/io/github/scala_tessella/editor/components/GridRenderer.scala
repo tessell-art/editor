@@ -8,8 +8,8 @@ object GridRenderer:
 
   // Visual stroke width that stays roughly constant on screen at any zoom level.
   // Inverse of the view scale, clamped to a sensible visible range.
-  private[components] def strokeWidthForScale(scale: Double): String =
-    (1.0 / scale).max(0.1).min(2.0).toString
+  private[components] def strokeWidthForScale(scale: Double)
+      : String = (1.0 / scale).max(0.1).min(2.0).toString
 
   // Defines an SVG pattern for the grid
   def patternDef: Element =
