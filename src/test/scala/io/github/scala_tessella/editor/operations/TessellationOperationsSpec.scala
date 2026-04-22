@@ -189,7 +189,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     val faceIds       = tiling.innerFaces.map(_.id)
     val originalColor = ColorRGB(200, 100, 50)
     val fillColor     = ColorRGB(1, 2, 3)
-    val vertexId      = tiling.boundaryVertices.head.id
+    val vertexId      = tiling.boundaryVertices.toOption.get.head.id
 
     EditorState.currentTiling.set(tiling)
     EditorState.fillColor.set(fillColor)
