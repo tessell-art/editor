@@ -209,36 +209,61 @@ Resolved under ADR-001 Phase 2 on 2026-04-22. `utils/UndoManager`,
 `*Operations` directly instead of going through `AppState`. Enforced by
 the `checkLayering` sbt task.
 
-### P2#17 — Close `operations` and `interactions` coverage gaps
-Depends on ADR-003 only for the *style* of UI tests; the items below are
-plain MUnit + `EditorStateFixture` and can start immediately.
+### P2#17 — Close `operations` and `interactions` coverage gaps ✅
+Resolved 2026-04-22. Six new specs, two deepened. Suite totals went
+from 208 tests / 27 suites to **248 tests / 33 suites** (+40 tests).
 
-Untested `operations` (each is small, all read/write `EditorState`):
-- `DeletionOperations` — `attemptFaceDeletion`, `attemptVertexDeletion`,
-  `attemptEdgeDeletion`. Cover empty-tiling no-op, valid deletion, and
-  failure → `ErrorOperations` path (mirrors the `attemptPolygonAddition`
-  test in `TessellationOperationsSpec`).
-- `SymmetryOperations` — six toggle/overlay methods; assert the relevant
-  `ViewState` / overlay flag flips and that `displaySizeInfo` renders the
-  expected message on a known tiling.
-- `MeasurementOperations` — distance + angle between two `ClickablePoint`s,
-  `clearAll` reset. Property test for `distance(a, b) == distance(b, a)`.
-- `SettingsOperations` — `applySettings` / `resetFillColorToDefault` round-trip
-  with `SettingsStorage` (already exercised under JSDOM in
-  `SettingsStorageSpec`).
-- `OperationGuard` — exercise each guard predicate against representative
-  states.
+New specs (all under `EditorStateFixture`):
 
-Partial coverage to deepen:
-- `KeyboardEventHandler.handleKeyDown` — dispatch a synthetic
-  `KeyboardEvent` against the JSDOM document and assert the bound
-  operation ran (undo, zoom, rotation). The pure helpers are already
-  covered.
-- `MouseEventHandler` — `handleWheel`, `handleMouseDown`/`Move`/`Up`,
-  `getCanvasRelativePosition`. Same JSDOM event-dispatch pattern.
-- `PlacementOperations` — currently only the empty-tiling early-return
-  branches. Add success-path tests for both `attemptPolygonAddition` and
-  `attemptPolygonInsertion` on a non-empty tiling.
+| Spec | Tests | Notes |
+|---|---|---|
+| `DeletionOperationsSpec` | 5 | empty-tiling + unknown-id failure paths for face/vertex/edge; success-path overlay-clear |
+| `SymmetryOperationsSpec` | 6 | `clearOverlays` atomic reset; sync hide / sync show-from-cache for `toggleShowUniformity`; async compute path for `toggleShowRotation`; empty-tiling no-op for `toggleShowReflection`; `ifNotProcessing` gate |
+| `MeasurementOperationsSpec` | 3 | `clearAll` resets the 7 per-measurement fields; preserves `isAngleShownInRad`; idempotent on initial state |
+| `SettingsOperationsSpec` | 4 | `applySettings` writes state + persists; `resetFillColorToDefault`; `refreshSettingsTempValues`; round-trip through a rebuilt `ColorState.initial` |
+| `OperationGuardSpec` | 4 | `ifNotProcessing(boolean)`, the EditorState-reading variant, and `gate(EventStream)` (drops events while processing) |
+| `PlacementOperationsSpec` | 5 | success-path tiling growth for `attemptPolygonAddition` (palette colour inherited, undo recorded); invalid edge index; silent no-op when no shape selected; silent no-op when both regular and irregular selected; empty-tiling error for `attemptPolygonInsertion` |
+
+Deepened specs:
+
+| Spec | Was | Now | Added |
+|---|---|---|---|
+| `MouseEventHandlerSpec` | 2 | 9 | `handleMouseDown/Move/Up` (drag pan + no-op when not dragging); `handleWheel` zoom-in/zoom-out using a JSDOM-created canvas ref; `handleWheel` no-op when no canvas registered |
+| `KeyboardEventHandlerSpec` | 3 | 9 | `handleKeyDown` for Escape (clears selections), undo/redo via primary+z and primary+shift+Z (asserts tiling restored + redo stack), `<input>` target ignored, unmapped key no-op, 'd' on empty tiling no-op |
+
+Untested adjustments:
+- `MeasurementOperations` had no `distance`/`angle` helpers as the
+  original backlog implied — those live in geometry. Spec scoped to
+  `clearAll` only, with `MeasurementState.initial` round-trip as the
+  third test. Property test for distance symmetry rolled into P2#18
+  (geometry-layer), where it actually belongs.
+- `SymmetryOperations.displaySizeInfo` writes via
+  `ErrorOperations.info`, which deliberately does **not** set
+  `errorMessage`, so the spec asserts the visibility-flag flip and
+  cache state instead of a user-facing message.
+
+Test-event construction pattern for the JSDOM dispatch:
+```scala
+val init = js.Dynamic
+  .literal(key = "z", ctrlKey = true, metaKey = true, shiftKey = false)
+  .asInstanceOf[dom.KeyboardEventInit]
+new dom.KeyboardEvent("keydown", init)
+```
+This is reusable for any future component-level test that needs a
+synthetic `KeyboardEvent`/`MouseEvent`/`WheelEvent` and avoids needing
+to mock anything.
+
+Async tests use the same `Promise[Unit]` + `setTimeout(200)` pattern
+already established by `TessellationOperationsSpec`, factored into a
+local `afterAsync` helper in each new spec.
+
+Followups:
+- Several specs use a duplicated `afterAsync` helper. Worth extracting
+  into a shared trait alongside `EditorStateFixture` if it appears in
+  one more place.
+- Symmetry compute tests are timing-sensitive (200ms wait for the
+  50ms-debounced compute). Flake risk is low but not zero — revisit
+  if CI ever flakes.
 
 ### P2#18 — Property-based specs for `Radian` and `PolygonPlacementGeometry`
 Two property specs exist (`GeometryPropertySpec`, `ViewOperationsPropertySpec`);
@@ -416,9 +441,7 @@ separate "utils/file/ is really I/O operations" issue, not in scope.
 ADRs 001 and 002 plus the original P2 wave are done. Open items:
 
 1. ~~**P3#19** (test-code hygiene)~~ ✅ done 2026-04-22.
-2. **P2#17** (operations + interactions coverage gaps). Plain MUnit +
-   `EditorStateFixture` — no new tooling needed. Closes most of the
-   currently-uncovered code.
+2. ~~**P2#17** (operations + interactions coverage gaps)~~ ✅ done 2026-04-22.
 3. **P2#18** (property specs for `Radian`, `PolygonPlacementGeometry`).
    Independent, small.
 4. **ADR-003** (P1#16 — test strategy). Decide and accept *before* writing
