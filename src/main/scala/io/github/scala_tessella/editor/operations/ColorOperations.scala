@@ -9,7 +9,7 @@ object ColorOperations:
 
   def applyColorToSelectedPolygons(color: ColorRGB): Unit =
     ifNotProcessing:
-      val selectedIds = EditorState.selectedTilingPolygons.now()
+      val selectedIds = EditorState.tessellationState.now().selectedTilingPolygons
       if selectedIds.nonEmpty then
         UndoManager.saveState()
         EditorState.polygonColors.update { currentColors =>

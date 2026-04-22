@@ -12,7 +12,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
   test("Editor should start with empty tiling") {
     assert(AppState.isTilingEmpty)
-    assert(EditorState.currentTiling.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
   }
 
   test("Error message should be empty by default") {
@@ -45,19 +45,19 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
     // Now tiling should be created
     assert(!AppState.isTilingEmpty)
-    assert(!EditorState.currentTiling.now().isEmpty)
+    assert(!EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.toolState.now().selectedPolygon, Some(3))
   }
 
   test("Polygon selection should not change existing tiling") {
     // Start with a tiling by selecting hexagon
     selectPolygon(6)
-    val initialTiling = EditorState.currentTiling.now()
+    val initialTiling = EditorState.tessellationState.now().currentTiling
     assert(!initialTiling.isEmpty)
 
     // Select a different polygon - should not change tiling
     selectPolygon(4)
-    val afterTiling = EditorState.currentTiling.now()
+    val afterTiling = EditorState.tessellationState.now().currentTiling
 
     // Tiling should be the same
     assertEquals(afterTiling, initialTiling)
@@ -78,7 +78,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     AppState.handlePerimeterEdgeClick(edgeId, 0)
 
     // Should toggle selection (no error because we have a tiling, just no polygon selected)
-    assert(EditorState.selectedPerimeterEdges.now().contains(edgeId))
+    assert(EditorState.tessellationState.now().selectedPerimeterEdges.contains(edgeId))
   }
 
   test("Clear tiling should reset to empty state") {
@@ -91,9 +91,9 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
     // Should be empty again
     assert(AppState.isTilingEmpty)
-    assert(EditorState.currentTiling.now().isEmpty)
-    assert(EditorState.selectedTilingPolygons.now().isEmpty)
-    assert(EditorState.selectedPerimeterEdges.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
+    assert(EditorState.tessellationState.now().selectedTilingPolygons.isEmpty)
+    assert(EditorState.tessellationState.now().selectedPerimeterEdges.isEmpty)
   }
 
   test("Clear tiling should not affect node label visibility or error messages") {
@@ -117,7 +117,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
     // Create a tiling and set up selections
     selectPolygon(6)
-    EditorState.selectedTilingPolygons.set(Set(FaceId(1)))
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set(FaceId(1))))
     clearAllSelections()
 
     // Node labels visibility and error should remain unchanged
@@ -128,21 +128,21 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
   test("Polygon selection preserves existing tiling complexity") {
     // Start with a hexagon tiling
     selectPolygon(6)
-    val initialTiling = EditorState.currentTiling.now()
+    val initialTiling = EditorState.tessellationState.now().currentTiling
     assert(!initialTiling.isEmpty)
 
     // Simulate growing the tiling by adding selections
-    EditorState.selectedTilingPolygons.set(Set(FaceId(1), FaceId(2)))
-    EditorState.selectedPerimeterEdges.set(Set("edge1"))
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set(FaceId(1), FaceId(2))))
+    EditorState.tessellationState.update(_.copy(selectedPerimeterEdges = Set("edge1")))
 
     // Change polygon selection
     selectPolygon(4)
 
     // Tiling should remain the same
-    assertEquals(EditorState.currentTiling.now(), initialTiling)
+    assertEquals(EditorState.tessellationState.now().currentTiling, initialTiling)
     // Selections should be preserved
-    assertEquals(EditorState.selectedTilingPolygons.now(), Set(FaceId(1), FaceId(2)))
-    assertEquals(EditorState.selectedPerimeterEdges.now(), Set("edge1"))
+    assertEquals(EditorState.tessellationState.now().selectedTilingPolygons, Set(FaceId(1), FaceId(2)))
+    assertEquals(EditorState.tessellationState.now().selectedPerimeterEdges, Set("edge1"))
     // Only the selected polygon type should change
     assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
   }

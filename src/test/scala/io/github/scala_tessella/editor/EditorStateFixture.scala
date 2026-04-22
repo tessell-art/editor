@@ -1,6 +1,5 @@
 package io.github.scala_tessella.editor
 
-import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.*
 import munit.FunSuite
 
@@ -45,9 +44,7 @@ trait EditorStateFixture:
     EditorState.isAngleShownInRad.set(true)
 
     // Reset selection & tiling to a known base
-    EditorState.currentTiling.set(TilingDCEL.empty)
-    EditorState.selectedPerimeterEdges.set(Set.empty)
-    EditorState.selectedTilingPolygons.set(Set.empty)
+    EditorState.tessellationState.set(TessellationState.initial)
     EditorState.polygonColors.set(Map.empty)
     EditorState.toolState.update(_.copy(selectedPolygon = None, activeTool = None))
     EditorState.isIrregularSelected.set(false)
@@ -85,9 +82,13 @@ trait EditorStateFixture:
     // Restore the structural snapshot
     saved.foreach { s =>
 
-      EditorState.currentTiling.set(s.tiling)
-      EditorState.selectedPerimeterEdges.set(s.selectedPerimeterEdges)
-      EditorState.selectedTilingPolygons.set(s.selectedTilingPolygons)
+      EditorState.tessellationState.set(
+        TessellationState(
+          currentTiling = s.tiling,
+          selectedPerimeterEdges = s.selectedPerimeterEdges,
+          selectedTilingPolygons = s.selectedTilingPolygons
+        )
+      )
       EditorState.polygonColors.set(s.polygonColors)
       EditorState.fillColor.set(s.fillColor)
       EditorState.toolState.set(

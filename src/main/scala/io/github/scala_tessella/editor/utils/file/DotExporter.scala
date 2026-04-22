@@ -8,7 +8,7 @@ object DotExporter:
   def exportTilingToDOT(): Unit =
     AsyncUtils.withLoadingState { () =>
 
-      val tiling = EditorState.currentTiling.now()
+      val tiling = EditorState.tessellationState.now().currentTiling
       if !tiling.isEmpty then
         val dotContent = tiling.toDOT
         FileDownloader.trigger(dotContent, "tessellation.gv", "text/plain;charset=utf-8")

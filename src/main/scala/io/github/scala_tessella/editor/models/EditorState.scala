@@ -3,7 +3,6 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
-import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
 import io.github.scala_tessella.editor.models.EditorConfig
@@ -67,15 +66,12 @@ object EditorState:
         case Theme.Light => "#222222" // dark gray for light mode
         case Theme.Dark  => "#ffffff" // white for dark mode
 
-  object TessellationState:
-    /** Current tiling being edited */
-    val currentTiling: Var[TilingDCEL] = Var(TilingDCEL.empty)
-
-    /** Set of selected perimeter-edge IDs */
-    val selectedPerimeterEdges: Var[Set[String]] = Var(Set.empty)
-
-    /** Set of selected tiling polygon IDs */
-    val selectedTilingPolygons: Var[Set[FaceId]] = Var(Set.empty)
+  /** Tessellation-state aggregate — single source of truth for the current tiling and selection sets. See
+    * `TessellationState` in EditorData.scala. Per ADR-002, reads go through
+    * `tessellationState.signal.map(_.field).distinct`; writes through
+    * `tessellationState.update(_.copy(field = …))` (or replace the whole value for atomic restores).
+    */
+  val tessellationState: Var[TessellationState] = Var(TessellationState.initial)
 
   object ColorState:
     /** Default fill color for new tilings (can be customized in settings) */
@@ -213,7 +209,7 @@ object EditorState:
   object DerivedState:
     /** True when there is no active tiling. */
     val isTilingEmptySignal: Signal[Boolean] =
-      TessellationState.currentTiling.signal.map(_.isEmpty)
+      tessellationState.signal.map(_.currentTiling.isEmpty).distinct
 
     /** True when a file name is set for the current document. */
     val hasFileNameSignal: Signal[Boolean] =
@@ -221,10 +217,9 @@ object EditorState:
 
     /** True when at least one perimeter edge or polygon is selected. */
     val hasSelectionSignal: Signal[Boolean] =
-      TessellationState.selectedTilingPolygons.signal
-        .combineWith(TessellationState.selectedPerimeterEdges.signal)
-        .map: (polys, edges) =>
-          polys.nonEmpty || edges.nonEmpty
+      tessellationState.signal
+        .map(t => t.selectedTilingPolygons.nonEmpty || t.selectedPerimeterEdges.nonEmpty)
+        .distinct
 
     /** True when current tiling is non-empty. */
     val hasTilingSignal: Signal[Boolean] =
@@ -261,7 +256,6 @@ object EditorState:
   export FileState.*
   export ViewState.*
   export ThemeState.*
-  export TessellationState.*
   export ColorState.*
   export UIState.*
   export PopupState.*

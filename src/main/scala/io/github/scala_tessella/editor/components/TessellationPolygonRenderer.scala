@@ -45,7 +45,7 @@ object TessellationPolygonRenderer:
 
   def renderTilingPolygonFromPoints(pointsStr: String, faceId: FaceId): Element =
     val isSelected =
-      EditorState.selectedTilingPolygons.signal.map:
+      EditorState.tessellationState.signal.map(_.selectedTilingPolygons).distinct.map:
         _.contains(faceId)
 
     val rgbSignal =

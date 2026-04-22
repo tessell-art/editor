@@ -22,7 +22,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
   test("applyColorToSelectedPolygons should apply the current fill color to selected polygons") {
     // Given
     val selectedIds = Set(F1, F2)
-    EditorState.selectedTilingPolygons.set(selectedIds)
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = selectedIds))
     val color       = ColorRGB(100, 150, 200)
     EditorState.fillColor.set(color)
 
@@ -39,7 +39,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     // Given
     EditorState.polygonColors.set(Map(F3 -> ColorRGB(0, 0, 255)))
     val selectedIds = Set(F1)
-    EditorState.selectedTilingPolygons.set(selectedIds)
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = selectedIds))
     val color       = ColorRGB(100, 150, 200)
 
     // When
@@ -55,7 +55,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     // Given
     val initialColors = Map(F3 -> ColorRGB(0, 0, 255))
     EditorState.polygonColors.set(initialColors)
-    EditorState.selectedTilingPolygons.set(Set.empty)
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
     val color         = ColorRGB(100, 150, 200)
 
     // When

@@ -177,7 +177,7 @@ object EditorCanvasComponent:
         .combineWith(
           EditorState.doublingAnimation.signal,
           EditorState.fanAnimation.signal,
-          EditorState.currentTiling.signal
+          EditorState.tessellationState.signal.map(_.currentTiling).distinct
         )
 
     svg.g(

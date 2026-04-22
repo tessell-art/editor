@@ -41,8 +41,8 @@ Proposed target layering (to be ratified in ADR-001):
 
 ### P1#2 — Redesign the `EditorState` god-object
 **ADR:** [ADR-002 — State container design](docs/adr/002-state-container.md)
-(Spike on `ToolState` completed 2026-04-22; Option B recommended;
-rollout to remaining 13 aggregates pending approval).
+(Accepted — Option B. 2 of 14 aggregates migrated 2026-04-22:
+`ToolState`, `TessellationState`. Remaining 12 pending, one PR each.)
 
 `EditorState.scala` currently exposes **66 `Var[…]`** across 14 nested `object`s
 (`FileState`, `ToolState`, …, `DerivedState`), all re-exported flat via

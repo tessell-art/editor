@@ -19,7 +19,7 @@ object SelectionOperations:
   )
 
   private def withNonEmptyTiling(op: TilingDCEL => Unit): Unit =
-    val tiling = EditorState.currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     if !tiling.isEmpty then op(tiling)
 
   private def deactivateActiveTool(): Unit =
@@ -92,16 +92,16 @@ object SelectionOperations:
 
   def clearAllSelections(): Unit =
     ifNotProcessing:
-      EditorState.selectedTilingPolygons.set(Set.empty)
-      EditorState.selectedPerimeterEdges.set(Set.empty)
+      EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
+      EditorState.tessellationState.update(_.copy(selectedPerimeterEdges = Set.empty))
 
   def selectAllPolygons(): Unit =
     ifNotProcessing:
       withNonEmptyTiling: tiling =>
 
         val allPolygonIds = tiling.innerFaces.map(_.id).toSet
-        EditorState.selectedTilingPolygons.set(allPolygonIds)
-        EditorState.selectedPerimeterEdges.set(Set.empty)
+        EditorState.tessellationState.update(_.copy(selectedTilingPolygons = allPolygonIds))
+        EditorState.tessellationState.update(_.copy(selectedPerimeterEdges = Set.empty))
 
   def selectPolygonsBySides(sides: Int): Unit =
     ifNotProcessing:
@@ -116,7 +116,7 @@ object SelectionOperations:
                     face.hasEqualAngles.toOption.contains(true) =>
                 face.id
             .toSet
-        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+        EditorState.tessellationState.update(_.copy(selectedTilingPolygons = polygonIdsToAdd))
 
   def selectPolygonsByShape(angles: Vector[AngleDegree]): Unit =
     ifNotProcessing:
@@ -131,7 +131,7 @@ object SelectionOperations:
                     face.angles.toOption.exists(_.isRotationOrReflectionOf(angles)) =>
                 face.id
             .toSet
-        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+        EditorState.tessellationState.update(_.copy(selectedTilingPolygons = polygonIdsToAdd))
 
   def selectPolygonsByColor(faceId: FaceId): Unit =
     ifNotProcessing:
@@ -141,24 +141,26 @@ object SelectionOperations:
         val polygonIdsToAdd = colors.collect {
           case (tag, c) if c == color => tag
         }.toSet
-        EditorState.selectedTilingPolygons.set(polygonIdsToAdd)
+        EditorState.tessellationState.update(_.copy(selectedTilingPolygons = polygonIdsToAdd))
       deactivateActiveTool()
 
   def toggleTilingPolygonSelection(faceId: FaceId): Unit =
     ifNotProcessing:
-      EditorState.selectedTilingPolygons.update { selected =>
+      EditorState.tessellationState.update: s =>
 
-        if selected.contains(faceId) then selected - faceId
-        else selected + faceId
-      }
+        val next =
+          if s.selectedTilingPolygons.contains(faceId) then s.selectedTilingPolygons - faceId
+          else s.selectedTilingPolygons + faceId
+        s.copy(selectedTilingPolygons = next)
 
   def togglePerimeterEdgeSelection(edgeId: String): Unit =
     ifNotProcessing:
-      EditorState.selectedPerimeterEdges.update { selected =>
+      EditorState.tessellationState.update: s =>
 
-        if selected.contains(edgeId) then selected - edgeId
-        else selected + edgeId
-      }
+        val next =
+          if s.selectedPerimeterEdges.contains(edgeId) then s.selectedPerimeterEdges - edgeId
+          else s.selectedPerimeterEdges + edgeId
+        s.copy(selectedPerimeterEdges = next)
 
   def handleTilingPolygonClick(faceId: FaceId): Unit =
     val tools = EditorState.toolState.now()
@@ -170,7 +172,7 @@ object SelectionOperations:
           EditorState.fillColor.set(color)
           deactivateActiveTool()
       case Some(Tool.ShapeAndColorPicker) =>
-        val tiling     = EditorState.currentTiling.now()
+        val tiling     = EditorState.tessellationState.now().currentTiling
         val maybeFace  = tiling.findInnerFace(faceId).toOption
         val maybeColor = EditorState.polygonColors.now().get(faceId)
         (for color <- maybeColor; face <- maybeFace yield (color, face)) match
@@ -257,7 +259,7 @@ object SelectionOperations:
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     ifNotProcessing:
       val context = PerimeterClickContext(
-        tiling = EditorState.currentTiling.now(),
+        tiling = EditorState.tessellationState.now().currentTiling,
         selectedPolygon = EditorState.toolState.now().selectedPolygon,
         isIrregularSelected = EditorState.isIrregularSelected.now()
       )

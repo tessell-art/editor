@@ -23,12 +23,12 @@ object OperationRunner:
   ): Unit =
     AsyncUtils.withLoadingState(op).foreach {
       case Right(newTiling) =>
-        val current = EditorState.currentTiling.now()
+        val current = EditorState.tessellationState.now().currentTiling
         if newTiling != current then
           // Save the pre-change snapshot only if the result will differ
           UndoManager.saveState()
           val newFaces = newTiling.innerFaces.map(_.id).toSet
-          EditorState.currentTiling.set(newTiling)
+          EditorState.tessellationState.update(_.copy(currentTiling = newTiling))
           syncColorsForFaces(newFaces, EditorState.fillColor.now())
         // Clear error and allow caller extras (e.g., clearing selections)
         ErrorOperations.clearError()

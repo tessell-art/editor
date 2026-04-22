@@ -25,10 +25,10 @@ object AppStateSnapshot:
   def fromCurrentState: AppStateSnapshot =
     val tools = EditorState.toolState.now()
     AppStateSnapshot(
-      tiling = EditorState.currentTiling.now(),
+      tiling = EditorState.tessellationState.now().currentTiling,
       selectedPolygon = tools.selectedPolygon,
-      selectedPerimeterEdges = EditorState.selectedPerimeterEdges.now(),
-      selectedTilingPolygons = EditorState.selectedTilingPolygons.now(),
+      selectedPerimeterEdges = EditorState.tessellationState.now().selectedPerimeterEdges,
+      selectedTilingPolygons = EditorState.tessellationState.now().selectedTilingPolygons,
       polygonColors = EditorState.polygonColors.now(),
       fillColor = EditorState.fillColor.now(),
       editorMode = tools.editorMode,

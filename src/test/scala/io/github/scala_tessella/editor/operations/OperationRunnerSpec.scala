@@ -13,7 +13,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
 
   test("runTilingOp should not save undo when tiling is unchanged") {
     val tiling = TilingBuilders.freshSquare()
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     UndoManager.clearHistory()
 
     val done = Promise[Unit]()
@@ -25,7 +25,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     done.future.map { _ =>
 
       assertEquals(UndoManager.undoCount.now(), 0)
-      assertEquals(EditorState.currentTiling.now(), tiling)
+      assertEquals(EditorState.tessellationState.now().currentTiling, tiling)
     }
   }
 
@@ -33,7 +33,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     val newTiling = TilingBuilders.freshSquare()
     val fill      = ColorRGB(9, 8, 7)
     EditorState.fillColor.set(fill)
-    EditorState.currentTiling.set(TilingBuilders.freshTriangle())
+    EditorState.tessellationState.update(_.copy(currentTiling = TilingBuilders.freshTriangle()))
     UndoManager.clearHistory()
 
     val done = Promise[Unit]()
@@ -47,7 +47,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
       val colors = EditorState.polygonColors.now()
       val ids    = newTiling.innerFaces.map(_.id)
       assertEquals(UndoManager.undoCount.now(), 1)
-      assertEquals(EditorState.currentTiling.now(), newTiling)
+      assertEquals(EditorState.tessellationState.now().currentTiling, newTiling)
       assert(ids.nonEmpty)
       assert(ids.forall(id => colors.get(id).contains(fill)))
     }
@@ -55,7 +55,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
 
   test("runTilingOp should not change tiling or undo on failure") {
     val tiling = TilingBuilders.freshSquare()
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     UndoManager.clearHistory()
 
     val done = Promise[Unit]()
@@ -67,7 +67,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     done.future.map { _ =>
 
       assertEquals(UndoManager.undoCount.now(), 0)
-      assertEquals(EditorState.currentTiling.now(), tiling)
+      assertEquals(EditorState.tessellationState.now().currentTiling, tiling)
     }
   }
 
@@ -78,7 +78,7 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     val newFaces  = newTiling.innerFaces.map(_.id).toSet
     val staleId   = io.github.scala_tessella.dcel.structure.FaceId(9999)
 
-    EditorState.currentTiling.set(oldTiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = oldTiling))
     EditorState.fillColor.set(fill)
     EditorState.polygonColors.set(Map(staleId -> ColorRGB(1, 2, 3)))
     UndoManager.clearHistory()

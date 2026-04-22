@@ -13,7 +13,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
     val color  = ColorRGB(12, 34, 56)
 
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.polygonColors.set(Map(faceId -> color))
 
     val svg = SvgExporter.generateSvgContent(
@@ -24,13 +24,15 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
       showReflection = false
     )
 
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.polygonColors.set(Map.empty)
     EditorState.errorMessage.set(None)
 
     SvgImporter.importTilingFromSVG(svg, "strict.svg")
 
-    val imported = EditorState.currentTiling.now()
+    val imported = EditorState.tessellationState.now().currentTiling
     assert(!imported.isEmpty)
     assertEquals(imported.toMetadata, tiling.toMetadata)
     assertEquals(EditorState.currentFileName.now(), Some("strict.svg"))
@@ -43,7 +45,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     val faceId = tiling.innerFaces.head.id
 
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.polygonColors.set(Map(faceId -> ColorRGB(100, 120, 140)))
 
     val svg            = SvgExporter.generateSvgContent(
@@ -55,14 +57,16 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     )
     val invalidFillSvg = svg.replaceFirst("""fill="rgb\([^)]+\)"""", """fill="not-a-color"""")
 
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.polygonColors.set(Map.empty)
     EditorState.errorMessage.set(None)
     EditorState.currentFileName.set(None)
 
     SvgImporter.importTilingFromSVG(invalidFillSvg, "invalid-fill.svg")
 
-    assert(EditorState.currentTiling.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.polygonColors.now(), Map.empty)
     assertEquals(EditorState.currentFileName.now(), None)
     assert(EditorState.errorMessage.now().exists(_.contains("Strict color import failed")))
@@ -73,7 +77,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     val faceId = tiling.innerFaces.head.id
 
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.polygonColors.set(Map(faceId -> ColorRGB(10, 20, 30)))
 
     val svg               = SvgExporter.generateSvgContent(
@@ -86,13 +90,15 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val missingPolygonSvg =
       svg.replaceFirst("""(?s)(<g id="tiling-polygons"[^>]*>)(.*?)(</g>)""", "$1$3")
 
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.polygonColors.set(Map.empty)
     EditorState.errorMessage.set(None)
 
     SvgImporter.importTilingFromSVG(missingPolygonSvg, "missing-polygon.svg")
 
-    assert(EditorState.currentTiling.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.polygonColors.now(), Map.empty)
     assert(EditorState.errorMessage.now().exists(_.contains("Strict color import failed")))
     assert(EditorState.errorMessage.now().exists(_.contains("expected 1 polygon fills, found 0")))

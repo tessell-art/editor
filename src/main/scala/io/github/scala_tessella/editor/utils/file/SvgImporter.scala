@@ -79,7 +79,7 @@ object SvgImporter:
           MeasurementOperations.clearAll()
           SymmetryOperations.clearOverlays()
           // Load the tiling into the editor
-          EditorState.currentTiling.set(tiling)
+          EditorState.tessellationState.update(_.copy(currentTiling = tiling))
 
           // Map SVG polygon colors to faces by order (export preserves this order).
           val colorMap =

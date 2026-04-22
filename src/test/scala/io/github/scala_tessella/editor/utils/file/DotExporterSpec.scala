@@ -9,7 +9,7 @@ class DotExporterSpec extends FunSuite with EditorStateFixture:
 
   test("exportTilingToDOT should not export when tiling is empty") {
     // Given empty tiling
-    assert(EditorState.currentTiling.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
 
     // When trying to export (would need to mock FileDownloader.trigger)
     DotExporter.exportTilingToDOT()
@@ -31,7 +31,7 @@ class DotExporterSpec extends FunSuite with EditorStateFixture:
 
   test("tiling should generate structurally valid DOT content (header, braces, non-empty body)") {
     val tiling = freshSquare()
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
 
     val dotContent = tiling.toDOT
 

@@ -94,7 +94,7 @@ object ViewOperations:
       }
 
   def fitTilingToCanvas(): Unit =
-    val tiling = EditorState.currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     if !tiling.isEmpty then
 
       val coords = tiling.boundaryVertices.toOption.get.map(_.coords.toPoint).map(_.scale(canvasScale))
@@ -115,7 +115,7 @@ object ViewOperations:
         }
 
   def isTilingLargerThanCanvas: Boolean =
-    val tiling = EditorState.currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     if tiling.isEmpty then false
     else
       val coords = tiling.boundaryVertices.toOption.get.map(_.coords.toPoint).map(_.scale(canvasScale))

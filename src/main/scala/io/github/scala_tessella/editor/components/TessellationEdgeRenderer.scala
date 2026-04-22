@@ -24,7 +24,7 @@ object TessellationEdgeRenderer:
     EditorState.toolState.signal.map(_.selectedPolygon).distinct
       .combineWith(EditorState.isIrregularSelected.signal)
       .combineWith(EditorState.recentIrregularPolygon.signal)
-      .combineWith(EditorState.currentTiling.signal)
+      .combineWith(EditorState.tessellationState.signal.map(_.currentTiling).distinct)
       .map:
         case (maybeSides, isIrregular, maybeAngles, tiling) =>
           (maybeSides, isIrregular, maybeAngles, tiling)

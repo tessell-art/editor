@@ -16,13 +16,15 @@ import scala.scalajs.js.timers.setTimeout
 class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("selectPolygon should save undo and assign default colors on empty tiling") {
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.fillColor.set(ColorRGB(10, 20, 30))
     UndoManager.clearHistory()
 
     TessellationOperations.selectPolygon(4)
 
-    val tiling = EditorState.currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     assert(!tiling.isEmpty)
     assertEquals(UndoManager.undoCount.now(), 1)
     assert(tiling.innerFaces.nonEmpty)
@@ -34,13 +36,15 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
   test("initializeWithIrregularIfEmpty should save undo and assign colors") {
     val fill = ColorRGB(7, 8, 9)
     EditorState.fillColor.set(fill)
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
     UndoManager.clearHistory()
 
     TessellationOperations.initializeWithIrregularIfEmpty()
 
-    val tiling = EditorState.currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     assert(!tiling.isEmpty)
     assertEquals(UndoManager.undoCount.now(), 1)
     assert(tiling.innerFaces.nonEmpty)
@@ -50,7 +54,9 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
   }
 
   test("attemptPolygonAddition should show error when tiling is empty") {
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
     EditorState.errorMessage.set(None)
 
@@ -61,7 +67,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("attemptPolygonInsertion should not crash when edge vertices are missing") {
     val tiling = TilingBuilders.freshSquare()
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
     EditorState.isIrregularSelected.set(false)
     EditorState.errorMessage.set(None)
@@ -79,7 +85,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("attemptPolygonInsertion should not crash for irregular insertion when edge vertices are missing") {
     val tiling = TilingBuilders.freshSquare()
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = None))
     EditorState.isIrregularSelected.set(true)
     EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
@@ -97,32 +103,36 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
   }
 
   test("attemptDoubling should be a no-op on empty tiling") {
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.polygonColors.set(Map.empty)
     UndoManager.clearHistory()
 
     TessellationOperations.attemptDoubling()
 
-    assert(EditorState.currentTiling.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.polygonColors.now(), Map.empty)
     assertEquals(UndoManager.undoCount.now(), 0)
   }
 
   test("attemptMirroring should be a no-op on empty tiling") {
-    EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
+    EditorState.tessellationState.update(_.copy(currentTiling =
+      io.github.scala_tessella.dcel.TilingDCEL.empty
+    ))
     EditorState.mirrorAnimation.set(None)
     UndoManager.clearHistory()
 
     TessellationOperations.attemptMirroring()
 
-    assert(EditorState.currentTiling.now().isEmpty)
+    assert(EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.mirrorAnimation.now(), None)
     assertEquals(UndoManager.undoCount.now(), 0)
   }
 
   test("attemptMirroring should trigger mirror animation on non-empty tiling") {
     val tiling = TilingBuilders.freshSquare()
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.fanAnimation.set(
       Some(FanAnimation(
         facePoints = Nil,
@@ -145,7 +155,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     TessellationOperations.attemptMirroring()
 
     setTimeout(200) {
-      val mirrored        = EditorState.currentTiling.now()
+      val mirrored        = EditorState.tessellationState.now().currentTiling
       assert(!mirrored.isEmpty)
       assertEquals(EditorState.fanAnimation.now(), None)
       assertEquals(EditorState.doublingAnimation.now(), None)
@@ -167,7 +177,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
           tilingPointToCanvasView(vertex.coords.toPoint).y
     val expectedAxis = (ys.min + ys.max) / 2.0
 
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.mirrorAnimation.set(None)
     val done = Promise[Unit]()
 
@@ -191,7 +201,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     val fillColor     = ColorRGB(1, 2, 3)
     val vertexId      = tiling.boundaryVertices.toOption.get.head.id
 
-    EditorState.currentTiling.set(tiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.fillColor.set(fillColor)
     EditorState.polygonColors.set(faceIds.map(_ -> originalColor).toMap)
 
@@ -200,7 +210,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     TessellationOperations.attemptFanning(vertexId)
 
     setTimeout(200) {
-      val newFaceIds = EditorState.currentTiling.now().innerFaces.map(_.id)
+      val newFaceIds = EditorState.tessellationState.now().currentTiling.innerFaces.map(_.id)
       val colors     = EditorState.polygonColors.now()
 
       assert(newFaceIds.size > faceIds.size)

@@ -25,7 +25,7 @@ object SvgExporter:
 
   // "Save As..." functionality
   def saveAsTilingToSVG(): Unit =
-    val tiling = EditorState.currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     if !tiling.isEmpty then
       val currentName = EditorState.currentFileName.now().getOrElse("tessellation.svg")
       Option(dom.window.prompt("Enter file name for the SVG:", currentName)).foreach { newName =>
@@ -52,7 +52,7 @@ object SvgExporter:
     AsyncUtils.withLoadingState(() =>
       EditorState.currentFileName.now().foreach { fileName =>
 
-        val tiling = EditorState.currentTiling.now()
+        val tiling = EditorState.tessellationState.now().currentTiling
         if !tiling.isEmpty then
           val svgContent =
             generateSvgContent(

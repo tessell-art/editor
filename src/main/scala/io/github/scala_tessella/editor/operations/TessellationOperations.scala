@@ -6,7 +6,7 @@ import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
-import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
+import io.github.scala_tessella.editor.models.EditorState.polygonColors
 import io.github.scala_tessella.editor.models.{
   DoublingAnimation,
   EditorConfig,
@@ -68,7 +68,7 @@ object TessellationOperations:
 
   private def clearSymmetryAndPerimeterSelectionOnSuccess(): Unit =
     clearSymmetryOverlaysOnSuccess()
-    EditorState.selectedPerimeterEdges.set(Set.empty)
+    EditorState.tessellationState.update(_.copy(selectedPerimeterEdges = Set.empty))
 
   private def scheduleAnimationCleanup[A <: AnyRef](
       state: Var[Option[A]],
@@ -109,7 +109,7 @@ object TessellationOperations:
             None
 
   private def currentPolygonPlacementContext(emptyTilingMessage: String): Option[PolygonPlacementContext] =
-    val tiling      = currentTiling.now()
+    val tiling      = EditorState.tessellationState.now().currentTiling
     val maybeSides  = EditorState.toolState.now().selectedPolygon
     val isIrregular = EditorState.isIrregularSelected.now()
     val recentShape = EditorState.recentIrregularPolygon.now()
@@ -121,7 +121,7 @@ object TessellationOperations:
         PolygonPlacementContext(tiling, placement)
 
   private def snapshotFanContext(vertexId: VertexId): FanContext =
-    val tiling           = currentTiling.now()
+    val tiling           = EditorState.tessellationState.now().currentTiling
     val faceIds          = tiling.innerFaces.map(_.id)
     val boundaryAngleOpt = boundaryInnerAngleAt(tiling, vertexId)
     FanContext(
@@ -166,11 +166,11 @@ object TessellationOperations:
       EditorState.isIrregularSelected.set(false)
       EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
 
-      if currentTiling.now().isEmpty then
+      if EditorState.tessellationState.now().currentTiling.isEmpty then
         UndoManager.saveState()
         try
           val tiling = TilingDCEL.createRegularPolygon(RegularPolygon(sides))
-          currentTiling.set(tiling)
+          EditorState.tessellationState.update(_.copy(currentTiling = tiling))
           ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.fillColor.now())
           SelectionOperations.clearAllSelections()
         catch
@@ -180,13 +180,13 @@ object TessellationOperations:
 
   def clearTiling(): Unit =
     ifNotProcessing:
-      if !currentTiling.now().isEmpty then
+      if !EditorState.tessellationState.now().currentTiling.isEmpty then
         UndoManager.saveState()
 
-      currentTiling.set(TilingDCEL.empty)
+      EditorState.tessellationState.update(_.copy(currentTiling = TilingDCEL.empty))
       clearSymmetryAndPerimeterSelectionOnSuccess()
       EditorState.polygonColors.set(Map.empty)
-      EditorState.selectedTilingPolygons.set(Set.empty)
+      EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
 
   /** Select the irregular polygon in the palette (deselect regular if any). */
   def selectIrregularInPalette(): Unit =
@@ -198,13 +198,13 @@ object TessellationOperations:
   /** If the tiling is empty and a recent irregular exists, initialize the tiling with it. */
   def initializeWithIrregularIfEmpty(): Unit =
     ifNotProcessing:
-      if currentTiling.now().isEmpty then
+      if EditorState.tessellationState.now().currentTiling.isEmpty then
         EditorState.recentIrregularPolygon.now() match
           case Some(angles) =>
             UndoManager.saveState()
             TilingDCEL.createSimplePolygon(angles).toOption match
               case Some(tiling) =>
-                currentTiling.set(tiling)
+                EditorState.tessellationState.update(_.copy(currentTiling = tiling))
                 ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.fillColor.now())
                 SelectionOperations.clearAllSelections()
               case None         =>
@@ -214,7 +214,7 @@ object TessellationOperations:
 
   // Attempt to delete a face by FaceId (stable, DCEL-native)
   def attemptFaceDeletion(faceId: FaceId): Unit =
-    val op = () => currentTiling.now().maybeDeleteFace(faceId)
+    val op = () => EditorState.tessellationState.now().currentTiling.maybeDeleteFace(faceId)
     OperationRunner.runTilingOp(op)(
       onSuccess = clearSymmetryOverlaysOnSuccess(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove polygon: ${err.message}")
@@ -222,7 +222,7 @@ object TessellationOperations:
 
   // Attempt to delete a vertex by VertexId
   def attemptVertexDeletion(vertexId: VertexId): Unit =
-    val op = () => currentTiling.now().maybeDeleteVertex(vertexId)
+    val op = () => EditorState.tessellationState.now().currentTiling.maybeDeleteVertex(vertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess = clearSymmetryOverlaysOnSuccess(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove vertex: ${err.message}")
@@ -230,7 +230,8 @@ object TessellationOperations:
 
   // Attempt to delete an edge by endpoints (stable VertexId pair)
   def attemptEdgeDeletion(startVertexId: VertexId, endVertexId: VertexId): Unit =
-    val op = () => currentTiling.now().maybeDeleteEdge(startVertexId, endVertexId)
+    val op =
+      () => EditorState.tessellationState.now().currentTiling.maybeDeleteEdge(startVertexId, endVertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess = clearSymmetryOverlaysOnSuccess(),
       onFailure = err => ErrorOperations.showError(s"Cannot remove edge: ${err.message}")
@@ -242,7 +243,7 @@ object TessellationOperations:
     val op      = () => context.tiling.fanAt(vertexId)
     OperationRunner.runTilingOp(op)(
       onSuccess =
-        val newFaceCount = currentTiling.now().innerFaces.size
+        val newFaceCount = EditorState.tessellationState.now().currentTiling.innerFaces.size
         val needsFit     = ViewOperations.isTilingLargerThanCanvas
         var fitDelayed   = false
         if context.faceCount > 0 && newFaceCount > context.faceCount && newFaceCount % context.faceCount == 0
@@ -313,7 +314,7 @@ object TessellationOperations:
       Some(Point(sx / count, sy / count))
 
   def attemptDoubling(): Unit =
-    val tiling = currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     if tiling.isEmpty then ()
     else
       val context = snapshotDoublingContext(tiling)
@@ -331,7 +332,7 @@ object TessellationOperations:
 
             val rgb = context.colors.getOrElse(context.faceIds(id), context.fillFallback)
             polygonColors.update(_ + (newFaceIds(id) -> rgb))
-          val updatedTiling = currentTiling.now()
+          val updatedTiling = EditorState.tessellationState.now().currentTiling
           val newCenter     = averagePoint(newFaceIds.flatMap(id => faceCentroid(updatedTiling, id)))
           val needsFit      = ViewOperations.isTilingLargerThanCanvas
           var fitDelayed    = false
@@ -358,7 +359,7 @@ object TessellationOperations:
       )
 
   def attemptMirroring(): Unit =
-    val tiling = currentTiling.now()
+    val tiling = EditorState.tessellationState.now().currentTiling
     if tiling.isEmpty then ()
     else
       clearAllAnimations()
@@ -464,7 +465,7 @@ object TessellationOperations:
         onSuccess =
           clearSymmetryAndPerimeterSelectionOnSuccess(),
         onFailure = error => {
-          val curr           = currentTiling.now()
+          val curr           = EditorState.tessellationState.now().currentTiling
           val maybeFaceId    = findFaceContainingEdge(curr, startVertexId, endVertexId)
           val startCoordsOpt = tiling.findVertex(startVertexId).toOption.map(_.toCoords)
           val endCoordsOpt   = tiling.findVertex(endVertexId).toOption.map(_.toCoords)

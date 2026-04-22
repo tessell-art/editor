@@ -72,7 +72,10 @@ object KeyboardEventHandler:
           !isTargetInput(event) &&
             rotationDeltaForKey(event.key).isEmpty &&
             zoomFactorForKey(event.key).isEmpty
-        .withCurrentValueOf(EditorState.currentTiling.signal, EditorState.currentFileName.signal)
+        .withCurrentValueOf(
+          EditorState.tessellationState.signal.map(_.currentTiling).distinct,
+          EditorState.currentFileName.signal
+        )
         .foreach { (event, tiling, fileNameOpt) =>
 
           handleKeyDown(event, tiling, fileNameOpt.isDefined)

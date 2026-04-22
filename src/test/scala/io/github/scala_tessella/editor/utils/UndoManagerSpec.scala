@@ -26,7 +26,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   test("saveState adds to undo stack and clears redo stack") {
     // Create a state and undo it to populate the redo stack
     UndoManager.saveState()
-    EditorState.currentTiling.set(freshSquare())
+    EditorState.tessellationState.update(_.copy(currentTiling = freshSquare()))
     UndoManager.undo()
 
     assertEquals(UndoManager.redoCount.now(), 1)
@@ -39,26 +39,26 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   }
 
   test("undo restores previous state and adds to redo stack") {
-    val initialTiling = EditorState.currentTiling.now()
+    val initialTiling = EditorState.tessellationState.now().currentTiling
     UndoManager.saveState()
 
     val newTiling = freshSquare()
-    EditorState.currentTiling.set(newTiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = newTiling))
 
     UndoManager.undo()
 
     assertEquals(UndoManager.undoCount.now(), 0)
     assertEquals(UndoManager.redoCount.now(), 1)
     assertEquals(UndoManager.canRedo.now(), true)
-    assertEquals(EditorState.currentTiling.now(), initialTiling)
+    assertEquals(EditorState.tessellationState.now().currentTiling, initialTiling)
   }
 
   test("redo restores undone state and adds to undo stack") {
-    val initialTiling = EditorState.currentTiling.now()
+    val initialTiling = EditorState.tessellationState.now().currentTiling
     UndoManager.saveState()
 
     val newTiling = freshSquare()
-    EditorState.currentTiling.set(newTiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = newTiling))
 
     UndoManager.undo()
     UndoManager.redo()
@@ -66,12 +66,12 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     assertEquals(UndoManager.undoCount.now(), 1)
     assertEquals(UndoManager.redoCount.now(), 0)
     assertEquals(UndoManager.canRedo.now(), false)
-    assertEquals(EditorState.currentTiling.now(), newTiling)
+    assertEquals(EditorState.tessellationState.now().currentTiling, newTiling)
   }
 
   test("clearHistory clears both undo and redo stacks") {
     UndoManager.saveState()
-    EditorState.currentTiling.set(freshTriangle())
+    EditorState.tessellationState.update(_.copy(currentTiling = freshTriangle()))
     UndoManager.undo()
 
     UndoManager.clearHistory()
@@ -94,17 +94,19 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     // This state will be pushed out of the stack
     val discardedTiling = freshTriangle()
     UndoManager.saveState()
-    EditorState.currentTiling.set(discardedTiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = discardedTiling))
 
     // This is the first state that should be kept
     val firstKeptTiling = freshSquare()
     UndoManager.saveState()
-    EditorState.currentTiling.set(firstKeptTiling)
+    EditorState.tessellationState.update(_.copy(currentTiling = firstKeptTiling))
 
     // Fill the undo stack up to MAX_UNDO_DEPTH
     for (i <- 1 to UndoManager.maxUndoDepth) {
       UndoManager.saveState()
-      EditorState.currentTiling.set(TilingDCEL.createRegularPolygon(RegularPolygon(i + 5)))
+      EditorState.tessellationState.update(_.copy(currentTiling =
+        TilingDCEL.createRegularPolygon(RegularPolygon(i + 5))
+      ))
     }
 
     assertEquals(UndoManager.undoCount.now(), UndoManager.maxUndoDepth)
@@ -114,9 +116,9 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
       UndoManager.undo()
 
     // The current state should be the first one that was kept
-    assertEquals(EditorState.currentTiling.now(), firstKeptTiling)
+    assertEquals(EditorState.tessellationState.now().currentTiling, firstKeptTiling)
     // The discarded state is not restored
-    assertNotEquals(EditorState.currentTiling.now(), discardedTiling)
+    assertNotEquals(EditorState.tessellationState.now().currentTiling, discardedTiling)
   }
 
   private def reset(): Unit =
@@ -172,21 +174,21 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
 
   test("undo/redo should restore tool state and selections") {
     reset()
-    EditorState.currentTiling.set(freshSquare())
-    val faceId = EditorState.currentTiling.now().innerFaces.head.id
+    EditorState.tessellationState.update(_.copy(currentTiling = freshSquare()))
+    val faceId = EditorState.tessellationState.now().currentTiling.innerFaces.head.id
 
     EditorState.toolState.update(_.copy(activeTool = None))
-    EditorState.selectedTilingPolygons.set(Set(faceId))
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set(faceId)))
     UndoManager.saveState()
 
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.ColorPicker)))
-    EditorState.selectedTilingPolygons.set(Set.empty)
+    EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
 
     UndoManager.undo()
     assertEquals(EditorState.toolState.now().activeTool, None)
-    assertEquals(EditorState.selectedTilingPolygons.now(), Set(faceId))
+    assertEquals(EditorState.tessellationState.now().selectedTilingPolygons, Set(faceId))
 
     UndoManager.redo()
     assertEquals(EditorState.toolState.now().activeTool, Some(Tool.ColorPicker))
-    assertEquals(EditorState.selectedTilingPolygons.now(), Set.empty)
+    assertEquals(EditorState.tessellationState.now().selectedTilingPolygons, Set.empty)
   }
