@@ -4,10 +4,11 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex}
-import io.github.scala_tessella.editor.models.{AppState, EditorState, FailedPolygonPlacement, Tool}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, Tool, VertexCoord}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations
-import io.github.scala_tessella.editor.operations.TessellationOperations.{VertexCoord, toCoords}
+import io.github.scala_tessella.editor.operations.TessellationOperations.toCoords
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.lineCoords
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}

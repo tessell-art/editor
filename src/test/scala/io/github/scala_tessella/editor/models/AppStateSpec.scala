@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.models
 
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
-import io.github.scala_tessella.editor.EditorStateFixture
+import io.github.scala_tessella.editor.{AppState, EditorStateFixture}
 import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import munit.FunSuite

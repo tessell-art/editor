@@ -2,7 +2,8 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.file.SvgExporter

@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor
 
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.ErrorOperations.*
 import io.github.scala_tessella.editor.operations.SelectionOperations.*
 import io.github.scala_tessella.editor.operations.TessellationOperations.*

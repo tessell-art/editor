@@ -16,7 +16,8 @@ under `docs/adr/` before implementation.
 ## P1 — Architectural
 
 ### P1#1 — Break the `models` ↔ `operations` circular dependency
-**ADR:** [ADR-001 — Package layering](docs/adr/001-package-layering.md) (Proposed).
+**ADR:** [ADR-001 — Package layering](docs/adr/001-package-layering.md)
+(Accepted — Phase 1 done 2026-04-22, Phase 2 pending).
 
 `models` depends on `operations` (`AppState` imports `TessellationOperations`,
 `ColorOperations`, `SelectionOperations`, `ViewOperations`, `ErrorOperations`)
@@ -129,6 +130,17 @@ attemptPolygonInsertion` plus private data classes. Suggested split:
 
 Also lacks a module-level scaladoc explaining the `attempt…` naming (silent
 failure vs. error-producing contract).
+
+### P2#7a — Resolve `utils → AppState` layering inversion
+Three files in `utils/` reach up to the top-level `AppState`:
+`utils/UndoManager.scala`, `utils/file/SvgImporter.scala`,
+`utils/file/SvgExporter.scala`. After ADR-001 Phase 1 (`AppState` moved out
+of `models`), these became `utils → editor.AppState` — still a layering
+inversion, just a different shape. Resolve as part of ADR-001 Phase 2:
+- `UndoManager` orchestrates state transitions; likely belongs in
+  `operations`.
+- `SvgImporter` / `SvgExporter` are I/O *operations*, not pure utilities;
+  consider `operations.io` or `operations.file`.
 
 ### P2#7 — `ErrorOperations.messageTimeoutId: private var Option[Int]` race
 On rapid consecutive errors, the timeout-id tracking has a small race between

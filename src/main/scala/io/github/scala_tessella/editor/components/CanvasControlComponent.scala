@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.editor.models.{AppState, EditorState, Tool}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.SvgDsl.*

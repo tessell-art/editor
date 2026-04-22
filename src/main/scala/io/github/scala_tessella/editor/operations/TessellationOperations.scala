@@ -6,15 +6,16 @@ import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
+import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{
-  AppState,
   DoublingAnimation,
   EditorConfig,
   EditorState,
   FailedPolygonPlacement,
   FanAnimation,
-  MirrorAnimation
+  MirrorAnimation,
+  VertexCoord
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
@@ -26,8 +27,6 @@ import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 
 import scala.scalajs.js.timers.setTimeout
 object TessellationOperations:
-
-  type VertexCoord = (id: VertexId, point: Point)
 
   sealed private trait PolygonPlacementKind:
     def angles: Vector[AngleDegree]

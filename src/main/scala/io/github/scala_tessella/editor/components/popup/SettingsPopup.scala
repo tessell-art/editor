@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.components.popup
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsDefaults}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 

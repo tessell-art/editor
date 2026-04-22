@@ -11,7 +11,8 @@ import io.github.scala_tessella.editor.models.EditorState.{
   showRotation,
   showUniformity
 }
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}

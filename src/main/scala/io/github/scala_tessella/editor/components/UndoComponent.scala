@@ -1,7 +1,8 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.{AppState, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.utils.UndoManager
 
 object UndoComponent:

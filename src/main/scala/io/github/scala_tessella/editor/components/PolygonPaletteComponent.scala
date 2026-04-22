@@ -4,7 +4,8 @@ import com.raquo.laminar.api.L.*
 import com.raquo.laminar.api.features.unitArrows
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.editor.components.IconsSVG.plusIcon
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.TessellationOperations.*
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}

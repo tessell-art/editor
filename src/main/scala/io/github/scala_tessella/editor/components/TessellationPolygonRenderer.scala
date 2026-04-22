@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorMode, EditorState}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorMode, EditorState}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint

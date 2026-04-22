@@ -2,7 +2,8 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.components.popup.*
-import io.github.scala_tessella.editor.models.{AppState, EditorConfig, EditorState, Theme, ViewTransform}
+import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Theme, ViewTransform}
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
 import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter, TemplateLoader}
