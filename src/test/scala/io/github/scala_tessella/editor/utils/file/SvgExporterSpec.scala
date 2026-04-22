@@ -83,14 +83,14 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
   test("should use assigned polygon colors when exporting polygons") {
     val faceId = squareTiling.innerFaces.head.id
     val color  = ColorRGB(12, 34, 56)
-    EditorState.polygonColors.set(Map(faceId -> color))
+    EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
 
     val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
     assert(result.contains(s"""fill="${color.toRgb}""""))
   }
 
   test("should fall back to default polygon color when none is assigned") {
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
     assert(result.contains(s"""fill="${EditorConfig.defaultPolygonColor.toRgb}""""))
   }
@@ -340,7 +340,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
       face.id -> ColorRGB(10 + idx, 20 + idx, 30 + idx)
     }.toMap
-    EditorState.polygonColors.set(colors)
+    EditorState.colorState.update(_.copy(polygonColors = colors))
 
     val svgContent = SvgExporter.generateSvgContent(
       squareTiling,

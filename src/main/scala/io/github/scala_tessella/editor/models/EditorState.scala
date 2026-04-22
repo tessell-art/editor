@@ -3,8 +3,6 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
-import io.github.scala_tessella.editor.models.EditorConfig
 
 /** EditorState object contains all the state variables for the editor. The state is organized into logical
   * groups for better maintainability.
@@ -53,35 +51,11 @@ object EditorState:
     */
   val tessellationState: Var[TessellationState] = Var(TessellationState.initial)
 
-  object ColorState:
-    /** Default fill color for new tilings (can be customized in settings) */
-    val defaultStartFillColor: Var[ColorRGB] =
-      Var(SettingsStorage.loadDefaultStartFillColor().getOrElse(EditorConfig.defaultPolygonColor))
-
-    /** Perimeter edge color for the editor canvas (can be customized in settings) */
-    val perimeterEdgeColor: Var[ColorRGB] =
-      Var(SettingsStorage.loadPerimeterEdgeColor().getOrElse(EditorConfig.defaultPerimeterEdgeColor))
-
-    /** Current fill color (RGB tuple) */
-    val fillColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
-
-    /** Temporary settings default fill color (used by Settings popup UI) */
-    val tempDefaultFillColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
-
-    /** Temporary settings perimeter edge color (used by Settings popup UI) */
-    val tempPerimeterEdgeColor: Var[ColorRGB] = Var(perimeterEdgeColor.now())
-
-    /** Temporary settings picker color (used by Settings popup UI) */
-    val tempSettingsPickerColor: Var[ColorRGB] = Var(defaultStartFillColor.now())
-
-    /** Map of polygon tags to their colors */
-    val polygonColors: Var[Map[FaceId, ColorRGB]] = Var(Map.empty)
-
-    /** Whether the color picker is visible */
-    val showColorPicker: Var[Boolean] = Var(false)
-
-    /** Temporary color being edited in the color picker */
-    val tempColor: Var[ColorRGB] = Var(fillColor.now())
+  /** Color-state aggregate — persisted preferences, working fill colour, temp settings colours, per-polygon
+    * color map, and picker visibility. See `ColorState` in EditorData.scala. Per ADR-002, reads via
+    * `colorState.signal.map(_.field).distinct`; writes via `colorState.update(_.copy(field = …))`.
+    */
+  val colorState: Var[ColorState] = Var(ColorState.initial)
 
   /** UI-state aggregate — transient UI flags. See `UIState` in EditorData.scala. Per ADR-002, reads via
     * `uiState.signal.map(_.field).distinct`; writes via `uiState.update(_.copy(field = …))`.
@@ -189,7 +163,6 @@ object EditorState:
 
   export FileState.*
   export ThemeState.*
-  export ColorState.*
   export ErrorState.*
   export PreviewState.*
   export AnimationState.*

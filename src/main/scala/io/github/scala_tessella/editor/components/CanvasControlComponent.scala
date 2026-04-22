@@ -46,17 +46,17 @@ object CanvasControlComponent:
               widthHeightCoords(Point(24, 24)),
               svg.rect(
                 rectCoords(LineSegment(Point(2, 2), Point(18, 18))),
-                svg.fill <-- EditorState.fillColor.signal.map { case (r, g, b) =>
+                svg.fill <-- EditorState.colorState.signal.map(_.fillColor).distinct.map { case (r, g, b) =>
                   f"rgb($r,$g,$b)"
                 }
               )
             ),
             onClick.compose(stream =>
-              gate(stream).withCurrentValueOf(EditorState.fillColor.signal)
+              gate(stream).withCurrentValueOf(EditorState.colorState.signal.map(_.fillColor).distinct)
             ) --> { case (_, color) =>
               // Use shared state from EditorState
-              EditorState.tempColor.set(color)
-              EditorState.showColorPicker.set(true)
+              EditorState.colorState.update(_.copy(tempColor = color))
+              EditorState.colorState.update(_.copy(showColorPicker = true))
             },
             className := "fill-color-btn"
           ),

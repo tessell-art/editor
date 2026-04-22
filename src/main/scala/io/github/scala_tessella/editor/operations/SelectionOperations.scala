@@ -149,7 +149,7 @@ object SelectionOperations:
 
   def selectPolygonsByColor(faceId: FaceId): Unit =
     ifNotProcessing:
-      val colors = EditorState.polygonColors.now()
+      val colors = EditorState.colorState.now().polygonColors
       colors.get(faceId).foreach: color =>
 
         val polygonIdsToAdd = colors.collect {
@@ -180,18 +180,18 @@ object SelectionOperations:
     val tools = EditorState.toolState.now()
     tools.activeTool match
       case Some(Tool.ColorPicker)         =>
-        val colors = EditorState.polygonColors.now()
+        val colors = EditorState.colorState.now().polygonColors
         colors.get(faceId).foreach: color =>
 
-          EditorState.fillColor.set(color)
+          EditorState.colorState.update(_.copy(fillColor = color))
           deactivateActiveTool()
       case Some(Tool.ShapeAndColorPicker) =>
         val tiling     = EditorState.tessellationState.now().currentTiling
         val maybeFace  = tiling.findInnerFace(faceId).toOption
-        val maybeColor = EditorState.polygonColors.now().get(faceId)
+        val maybeColor = EditorState.colorState.now().polygonColors.get(faceId)
         (for color <- maybeColor; face <- maybeFace yield (color, face)) match
           case Some((color, face)) =>
-            EditorState.fillColor.set(color)
+            EditorState.colorState.update(_.copy(fillColor = color))
             if face.hasEqualAngles.toOption.contains(true) then
               face.halfEdges.toOption.foreach: edges =>
 

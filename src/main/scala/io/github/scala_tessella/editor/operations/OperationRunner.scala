@@ -29,7 +29,7 @@ object OperationRunner:
           UndoManager.saveState()
           val newFaces = newTiling.innerFaces.map(_.id).toSet
           EditorState.tessellationState.update(_.copy(currentTiling = newTiling))
-          syncColorsForFaces(newFaces, EditorState.fillColor.now())
+          syncColorsForFaces(newFaces, EditorState.colorState.now().fillColor)
         // Clear error and allow caller extras (e.g., clearing selections)
         ErrorOperations.clearError()
         onSuccess

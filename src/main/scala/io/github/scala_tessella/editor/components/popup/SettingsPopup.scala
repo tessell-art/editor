@@ -22,18 +22,20 @@ object SettingsPopup:
 
   private def openColorPicker(target: SettingsColorTarget, currentColor: ColorRGB): Unit =
     settingsColorTarget.set(target)
-    EditorState.tempSettingsPickerColor.set(currentColor)
+    EditorState.colorState.update(_.copy(tempSettingsPickerColor = currentColor))
     EditorState.popupState.update(_.copy(showSettingsColorPicker = true))
 
   private def applyPickerColor(target: SettingsColorTarget, color: ColorRGB): Unit =
     target match
-      case SettingsColorTarget.DefaultFill   => EditorState.tempDefaultFillColor.set(color)
-      case SettingsColorTarget.PerimeterEdge => EditorState.tempPerimeterEdgeColor.set(color)
+      case SettingsColorTarget.DefaultFill   =>
+        EditorState.colorState.update(_.copy(tempDefaultFillColor = color))
+      case SettingsColorTarget.PerimeterEdge =>
+        EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = color))
 
   private def resetToDefaults(): Unit =
     val (fill, perimeter) = SettingsDefaults.tempDefaults
-    EditorState.tempDefaultFillColor.set(fill)
-    EditorState.tempPerimeterEdgeColor.set(perimeter)
+    EditorState.colorState.update(_.copy(tempDefaultFillColor = fill))
+    EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = perimeter))
 
   private def settingsColorPickerPopup: Element =
     div(
@@ -48,14 +50,14 @@ object SettingsPopup:
         h3("Select color"),
         ColorPicker(
           _.simplified := true,
-          _.value <-- EditorState.tempSettingsPickerColor.signal.map:
+          _.value <-- EditorState.colorState.signal.map(_.tempSettingsPickerColor).distinct.map:
             _.toRgba
           ,
           _.onChange.map { event =>
 
             val color = event.target._colorValue._rgb
             ColorRGB(color.r.toInt, color.g.toInt, color.b.toInt)
-          } --> EditorState.tempSettingsPickerColor.writer
+          } --> Observer[ColorRGB](c => EditorState.colorState.update(_.copy(tempSettingsPickerColor = c)))
         )(),
         div(
           className := "popup-actions",
@@ -70,7 +72,9 @@ object SettingsPopup:
             "Apply",
             onClick.stopPropagation.compose(
               _.withCurrentValueOf(
-                settingsColorTarget.signal.combineWith(EditorState.tempSettingsPickerColor.signal)
+                settingsColorTarget.signal.combineWith(
+                  EditorState.colorState.signal.map(_.tempSettingsPickerColor).distinct
+                )
               )
             ) --> { case (_, target: SettingsColorTarget, color: ColorRGB) =>
               applyPickerColor(target, color)
@@ -104,7 +108,7 @@ object SettingsPopup:
               button(
                 className := "settings-swatch-button",
                 onClick.compose(
-                  _.withCurrentValueOf(EditorState.tempDefaultFillColor.signal)
+                  _.withCurrentValueOf(EditorState.colorState.signal.map(_.tempDefaultFillColor).distinct)
                     .map((_, color) => color)
                 ) --> { color =>
 
@@ -112,13 +116,13 @@ object SettingsPopup:
                 },
                 div(
                   className := "settings-swatch",
-                  backgroundColor <-- EditorState.tempDefaultFillColor.signal.map:
+                  backgroundColor <-- EditorState.colorState.signal.map(_.tempDefaultFillColor).distinct.map:
                     _.toHex
                 )
               ),
               span(
                 className := "settings-value",
-                child.text <-- EditorState.tempDefaultFillColor.signal.map(_.toHex)
+                child.text <-- EditorState.colorState.signal.map(_.tempDefaultFillColor).distinct.map(_.toHex)
               )
             )
           ),
@@ -130,7 +134,7 @@ object SettingsPopup:
               button(
                 className := "settings-swatch-button",
                 onClick.compose(
-                  _.withCurrentValueOf(EditorState.tempPerimeterEdgeColor.signal)
+                  _.withCurrentValueOf(EditorState.colorState.signal.map(_.tempPerimeterEdgeColor).distinct)
                     .map((_, color) => color)
                 ) --> { color =>
 
@@ -138,13 +142,14 @@ object SettingsPopup:
                 },
                 div(
                   className := "settings-swatch",
-                  backgroundColor <-- EditorState.tempPerimeterEdgeColor.signal.map:
-                    _.toHex
+                  backgroundColor <--
+                    EditorState.colorState.signal.map(_.tempPerimeterEdgeColor).distinct.map:
+                      _.toHex
                 )
               ),
               span(
                 className := "settings-value",
-                child.text <-- EditorState.tempPerimeterEdgeColor.signal.map:
+                child.text <-- EditorState.colorState.signal.map(_.tempPerimeterEdgeColor).distinct.map:
                   _.toHex
               )
             )
@@ -170,8 +175,8 @@ object SettingsPopup:
             "Apply",
             onClick.compose(
               _.withCurrentValueOf(
-                EditorState.tempDefaultFillColor.signal.combineWith(
-                  EditorState.tempPerimeterEdgeColor.signal
+                EditorState.colorState.signal.map(_.tempDefaultFillColor).distinct.combineWith(
+                  EditorState.colorState.signal.map(_.tempPerimeterEdgeColor).distinct
                 )
               )
             ) --> { case (_, fill: ColorRGB, perimeter: ColorRGB) =>

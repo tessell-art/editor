@@ -11,42 +11,27 @@ trait EditorStateFixture:
   private var saved: Option[AppStateSnapshot] = None
 
   private def resetTransientState(): Unit =
-    // Ensure a clean baseline for each test (transient UI/processing flags)
+    // Each aggregate reset is a single atomic update (one signal emission)
     EditorState.uiState.set(UIState.initial)
-
-    // Reset popups
     EditorState.popupState.set(PopupState.initial)
-    EditorState.showColorPicker.set(false) // ColorState field, not PopupState
+    EditorState.measurementState.set(MeasurementState.initial)
+    EditorState.tessellationState.set(TessellationState.initial)
+    EditorState.colorState.set(ColorState.initial)
+    EditorState.viewState.set(ViewState.initial)
 
-    // Clear errors and failed ops
+    // Non-aggregate transient state (still individual Vars pending migration).
+    EditorState.toolState.update(_.copy(selectedPolygon = None, activeTool = None))
     EditorState.errorMessage.set(None)
     EditorState.failedPlacement.set(None)
     EditorState.failedDeletion.set(None)
-
-    // Clear preview and measurement-related state
     EditorState.previewPlacement.set(None)
     EditorState.fanAnimation.set(None)
     EditorState.doublingAnimation.set(None)
     EditorState.mirrorAnimation.set(None)
-    EditorState.measurementState.set(MeasurementState.initial)
-
-    // Reset selection & tiling to a known base
-    EditorState.tessellationState.set(TessellationState.initial)
-    EditorState.polygonColors.set(Map.empty)
-    EditorState.toolState.update(_.copy(selectedPolygon = None, activeTool = None))
     EditorState.isIrregularSelected.set(false)
     EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
-
-    // Reset view and toggles
-    EditorState.viewState.set(ViewState.initial)
     EditorState.currentFileName.set(None)
     EditorState.userThemePreference.set(None)
-    EditorState.tempColor.set(EditorState.fillColor.now())
-    EditorState.defaultStartFillColor.set(EditorConfig.defaultPolygonColor)
-    EditorState.perimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
-    EditorState.tempDefaultFillColor.set(EditorConfig.defaultPolygonColor)
-    EditorState.tempPerimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
-    EditorState.tempSettingsPickerColor.set(EditorConfig.defaultPolygonColor)
 
   override def beforeEach(context: BeforeEach): Unit =
     // Snapshot the state that represents the "app model"
@@ -65,8 +50,7 @@ trait EditorStateFixture:
           selectedTilingPolygons = s.selectedTilingPolygons
         )
       )
-      EditorState.polygonColors.set(s.polygonColors)
-      EditorState.fillColor.set(s.fillColor)
+      EditorState.colorState.update(_.copy(polygonColors = s.polygonColors, fillColor = s.fillColor))
       EditorState.toolState.set(
         ToolState(
           editorMode = s.editorMode,

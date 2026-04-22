@@ -88,7 +88,7 @@ object SvgImporter:
               .map:
                 case (face, rgb) => face.id -> rgb
               .toMap
-          EditorState.polygonColors.set(colorMap)
+          EditorState.colorState.update(_.copy(polygonColors = colorMap))
           EditorState.currentFileName.set(Some(filename))
           ViewOperations.fitTilingToCanvas()
           UndoManager.clearHistory()

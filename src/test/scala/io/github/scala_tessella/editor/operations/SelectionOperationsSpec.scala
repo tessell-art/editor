@@ -14,13 +14,13 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val color  = ColorRGB(10, 20, 30)
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map(faceId -> color))
+    EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.ColorPicker)))
-    EditorState.fillColor.set(ColorRGB(1, 1, 1))
+    EditorState.colorState.update(_.copy(fillColor = ColorRGB(1, 1, 1)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    assertEquals(EditorState.fillColor.now(), color)
+    assertEquals(EditorState.colorState.now().fillColor, color)
     assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
@@ -30,14 +30,14 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val color  = ColorRGB(5, 6, 7)
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map(faceId -> color))
+    EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.ShapeAndColorPicker)))
     EditorState.toolState.update(_.copy(selectedPolygon = None))
     EditorState.isIrregularSelected.set(true)
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    assertEquals(EditorState.fillColor.now(), color)
+    assertEquals(EditorState.colorState.now().fillColor, color)
     assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
     assertEquals(EditorState.isIrregularSelected.now(), false)
     assertEquals(EditorState.toolState.now().activeTool, None)
@@ -50,7 +50,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val c1 = ColorRGB(100, 100, 100)
     val c2 = ColorRGB(200, 200, 200)
 
-    EditorState.polygonColors.set(Map(f1 -> c1, f2 -> c1, f3 -> c2))
+    EditorState.colorState.update(_.copy(polygonColors = Map(f1 -> c1, f2 -> c1, f3 -> c2)))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.SelectByColor)))
 
     SelectionOperations.handleTilingPolygonClick(f1)
@@ -124,7 +124,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     val faceId = tiling.innerFaces.head.id
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.SelectByColor)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
@@ -137,7 +137,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     val faceId = tiling.innerFaces.head.id
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.ShapeAndColorPicker)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)

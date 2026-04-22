@@ -10,7 +10,7 @@ import io.github.scala_tessella.editor.components.{
 }
 import io.github.scala_tessella.editor.interactions.KeyboardEventHandler
 import io.github.scala_tessella.editor.models.{EditorState, Theme}
-import io.github.scala_tessella.editor.utils.Logger
+import io.github.scala_tessella.editor.utils.{ColorRGB, Logger}
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -68,8 +68,16 @@ object EditorApp:
       // Global keyboard event handlers
       KeyboardEventHandler.keyboardEventHandlers,
       // Render the Color Picker Popup at the top level, controlled by shared state
-      child.maybe <-- EditorState.showColorPicker.signal.map: show =>
+      child.maybe <-- EditorState.colorState.signal.map(_.showColorPicker).distinct.map: show =>
         if show then
-          Some(ColorPickerPopupComponent.element(EditorState.showColorPicker, EditorState.tempColor))
+          Some(
+            ColorPickerPopupComponent.element(
+              tempColorSignal = EditorState.colorState.signal.map(_.tempColor).distinct,
+              tempColorObserver = Observer[ColorRGB](c =>
+                EditorState.colorState.update(_.copy(tempColor = c))
+              ),
+              close = () => EditorState.colorState.update(_.copy(showColorPicker = false))
+            )
+          )
         else None
     )

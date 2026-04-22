@@ -213,7 +213,7 @@ object TessellationEdgeRenderer:
 
     val visibleLine = svg.line(
       lineCoords(LineSegment(point1, point2)),
-      svg.stroke <-- EditorState.perimeterEdgeColor.signal.map:
+      svg.stroke <-- EditorState.colorState.signal.map(_.perimeterEdgeColor).distinct.map:
         _.toRgb
       ,
       svg.strokeWidth   := "4",

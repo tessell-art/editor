@@ -19,7 +19,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
-    EditorState.fillColor.set(ColorRGB(10, 20, 30))
+    EditorState.colorState.update(_.copy(fillColor = ColorRGB(10, 20, 30)))
     UndoManager.clearHistory()
 
     TessellationOperations.selectPolygon(4)
@@ -29,13 +29,13 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     assertEquals(UndoManager.undoCount.now(), 1)
     assert(tiling.innerFaces.nonEmpty)
     assert(tiling.innerFaces.forall(face =>
-      EditorState.polygonColors.now().get(face.id).contains(EditorState.fillColor.now())
+      EditorState.colorState.now().polygonColors.get(face.id).contains(EditorState.colorState.now().fillColor)
     ))
   }
 
   test("initializeWithIrregularIfEmpty should save undo and assign colors") {
     val fill = ColorRGB(7, 8, 9)
-    EditorState.fillColor.set(fill)
+    EditorState.colorState.update(_.copy(fillColor = fill))
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
@@ -49,7 +49,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     assertEquals(UndoManager.undoCount.now(), 1)
     assert(tiling.innerFaces.nonEmpty)
     assert(tiling.innerFaces.forall(face =>
-      EditorState.polygonColors.now().get(face.id).contains(fill)
+      EditorState.colorState.now().polygonColors.get(face.id).contains(fill)
     ))
   }
 
@@ -106,13 +106,13 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     UndoManager.clearHistory()
 
     TessellationOperations.attemptDoubling()
 
     assert(EditorState.tessellationState.now().currentTiling.isEmpty)
-    assertEquals(EditorState.polygonColors.now(), Map.empty)
+    assertEquals(EditorState.colorState.now().polygonColors, Map.empty)
     assertEquals(UndoManager.undoCount.now(), 0)
   }
 
@@ -202,8 +202,8 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     val vertexId      = tiling.boundaryVertices.toOption.get.head.id
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.fillColor.set(fillColor)
-    EditorState.polygonColors.set(faceIds.map(_ -> originalColor).toMap)
+    EditorState.colorState.update(_.copy(fillColor = fillColor))
+    EditorState.colorState.update(_.copy(polygonColors = faceIds.map(_ -> originalColor).toMap))
 
     val done = Promise[Unit]()
 
@@ -211,7 +211,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
     setTimeout(200) {
       val newFaceIds = EditorState.tessellationState.now().currentTiling.innerFaces.map(_.id)
-      val colors     = EditorState.polygonColors.now()
+      val colors     = EditorState.colorState.now().polygonColors
 
       assert(newFaceIds.size > faceIds.size)
       assert(newFaceIds.forall(id => colors.get(id).contains(originalColor)))

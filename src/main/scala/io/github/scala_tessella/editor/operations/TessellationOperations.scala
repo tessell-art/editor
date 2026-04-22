@@ -6,7 +6,6 @@ import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
-import io.github.scala_tessella.editor.models.EditorState.polygonColors
 import io.github.scala_tessella.editor.models.{
   DoublingAnimation,
   EditorConfig,
@@ -129,7 +128,7 @@ object TessellationOperations:
       faceIds = faceIds,
       facePoints = precomputeFacePoints(tiling),
       maxFaceId = faceIds.map(_.value).maxOption.getOrElse(0),
-      colors = polygonColors.now(),
+      colors = EditorState.colorState.now().polygonColors,
       faceCount = faceIds.size,
       pivotOpt = tiling.findVertex(vertexId).toOption.map(_.coords.toPoint),
       boundaryAngleOpt = boundaryAngleOpt
@@ -143,8 +142,8 @@ object TessellationOperations:
       facePoints = precomputeFacePoints(tiling),
       originalCenter = averagePoint(faceIds.flatMap(id => faceCentroid(tiling, id))),
       maxFaceId = faceIds.map(_.value).max,
-      colors = polygonColors.now(),
-      fillFallback = EditorState.fillColor.now()
+      colors = EditorState.colorState.now().polygonColors,
+      fillFallback = EditorState.colorState.now().fillColor
     )
 
   private def newFaceIdsFrom(startingFrom: Int, count: Int): Vector[FaceId] = (0 until count).map(offset =>
@@ -171,7 +170,7 @@ object TessellationOperations:
         try
           val tiling = TilingDCEL.createRegularPolygon(RegularPolygon(sides))
           EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-          ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.fillColor.now())
+          ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.colorState.now().fillColor)
           SelectionOperations.clearAllSelections()
         catch
           case e: Throwable =>
@@ -185,7 +184,7 @@ object TessellationOperations:
 
       EditorState.tessellationState.update(_.copy(currentTiling = TilingDCEL.empty))
       clearSymmetryAndPerimeterSelectionOnSuccess()
-      EditorState.polygonColors.set(Map.empty)
+      EditorState.colorState.update(_.copy(polygonColors = Map.empty))
       EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
 
   /** Select the irregular polygon in the palette (deselect regular if any). */
@@ -205,7 +204,7 @@ object TessellationOperations:
             TilingDCEL.createSimplePolygon(angles).toOption match
               case Some(tiling) =>
                 EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-                ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.fillColor.now())
+                ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.colorState.now().fillColor)
                 SelectionOperations.clearAllSelections()
               case None         =>
                 UndoManager.undo()
@@ -249,13 +248,13 @@ object TessellationOperations:
         if context.faceCount > 0 && newFaceCount > context.faceCount && newFaceCount % context.faceCount == 0
         then
           val copies       = newFaceCount / context.faceCount
-          val fillFallback = EditorState.fillColor.now()
+          val fillFallback = EditorState.colorState.now().fillColor
           (1 until copies).foreach: copyIndex =>
             context.faceIds.indices.foreach: id =>
 
               val rgb   = context.colors.getOrElse(context.faceIds(id), fillFallback)
               val newId = FaceId(context.maxFaceId + (copyIndex - 1) * context.faceCount + id + 1)
-              polygonColors.update(_ + (newId -> rgb))
+              EditorState.colorState.update(s => s.copy(polygonColors = s.polygonColors + (newId -> rgb)))
           (context.pivotOpt, context.boundaryAngleOpt) match
             case (Some(pivot), Some(angle)) if copies > 1 =>
               val animation =
@@ -331,7 +330,9 @@ object TessellationOperations:
           context.faceIds.indices.foreach: id =>
 
             val rgb = context.colors.getOrElse(context.faceIds(id), context.fillFallback)
-            polygonColors.update(_ + (newFaceIds(id) -> rgb))
+            EditorState.colorState.update(s =>
+              s.copy(polygonColors = s.polygonColors + (newFaceIds(id) -> rgb))
+            )
           val updatedTiling = EditorState.tessellationState.now().currentTiling
           val newCenter     = averagePoint(newFaceIds.flatMap(id => faceCentroid(updatedTiling, id)))
           val needsFit      = ViewOperations.isTilingLargerThanCanvas

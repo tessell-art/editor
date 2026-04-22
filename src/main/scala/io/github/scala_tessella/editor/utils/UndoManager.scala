@@ -92,8 +92,8 @@ object UndoManager:
         selectedTilingPolygons = snapshot.selectedTilingPolygons
       )
     )
-    EditorState.polygonColors.set(snapshot.polygonColors)
-    EditorState.fillColor.set(snapshot.fillColor)
+    EditorState.colorState.update(_.copy(polygonColors = snapshot.polygonColors))
+    EditorState.colorState.update(_.copy(fillColor = snapshot.fillColor))
     EditorState.toolState.set(
       ToolState(
         editorMode = snapshot.editorMode,

@@ -14,7 +14,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val color  = ColorRGB(12, 34, 56)
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map(faceId -> color))
+    EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
 
     val svg = SvgExporter.generateSvgContent(
       tiling,
@@ -27,7 +27,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     EditorState.errorMessage.set(None)
 
     SvgImporter.importTilingFromSVG(svg, "strict.svg")
@@ -36,8 +36,8 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     assert(!imported.isEmpty)
     assertEquals(imported.toMetadata, tiling.toMetadata)
     assertEquals(EditorState.currentFileName.now(), Some("strict.svg"))
-    assertEquals(EditorState.polygonColors.now().size, imported.innerFaces.size)
-    assertEquals(EditorState.polygonColors.now().get(imported.innerFaces.head.id), Some(color))
+    assertEquals(EditorState.colorState.now().polygonColors.size, imported.innerFaces.size)
+    assertEquals(EditorState.colorState.now().polygonColors.get(imported.innerFaces.head.id), Some(color))
     assertEquals(EditorState.errorMessage.now(), None)
   }
 
@@ -46,7 +46,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map(faceId -> ColorRGB(100, 120, 140)))
+    EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> ColorRGB(100, 120, 140))))
 
     val svg            = SvgExporter.generateSvgContent(
       tiling,
@@ -60,14 +60,14 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     EditorState.errorMessage.set(None)
     EditorState.currentFileName.set(None)
 
     SvgImporter.importTilingFromSVG(invalidFillSvg, "invalid-fill.svg")
 
     assert(EditorState.tessellationState.now().currentTiling.isEmpty)
-    assertEquals(EditorState.polygonColors.now(), Map.empty)
+    assertEquals(EditorState.colorState.now().polygonColors, Map.empty)
     assertEquals(EditorState.currentFileName.now(), None)
     assert(EditorState.errorMessage.now().exists(_.contains("Strict color import failed")))
     assert(EditorState.errorMessage.now().exists(_.contains("invalid fill")))
@@ -78,7 +78,7 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-    EditorState.polygonColors.set(Map(faceId -> ColorRGB(10, 20, 30)))
+    EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> ColorRGB(10, 20, 30))))
 
     val svg               = SvgExporter.generateSvgContent(
       tiling,
@@ -93,13 +93,13 @@ class SvgImporterSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     EditorState.errorMessage.set(None)
 
     SvgImporter.importTilingFromSVG(missingPolygonSvg, "missing-polygon.svg")
 
     assert(EditorState.tessellationState.now().currentTiling.isEmpty)
-    assertEquals(EditorState.polygonColors.now(), Map.empty)
+    assertEquals(EditorState.colorState.now().polygonColors, Map.empty)
     assert(EditorState.errorMessage.now().exists(_.contains("Strict color import failed")))
     assert(EditorState.errorMessage.now().exists(_.contains("expected 1 polygon fills, found 0")))
   }

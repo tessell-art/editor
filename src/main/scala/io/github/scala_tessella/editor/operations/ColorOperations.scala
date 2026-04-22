@@ -12,19 +12,16 @@ object ColorOperations:
       val selectedIds = EditorState.tessellationState.now().selectedTilingPolygons
       if selectedIds.nonEmpty then
         UndoManager.saveState()
-        EditorState.polygonColors.update { currentColors =>
-
-          selectedIds.foldLeft(currentColors) { (colors, tag) =>
-
-            colors + (tag -> color)
-          }
-        }
+        EditorState.colorState.update: s =>
+          s.copy(polygonColors =
+            selectedIds.foldLeft(s.polygonColors)((colors, tag) => colors + (tag -> color))
+          )
 
   def getPolygonColor(faceId: FaceId): Option[ColorRGB] =
-    EditorState.polygonColors.now().get(faceId)
+    EditorState.colorState.now().polygonColors.get(faceId)
 
   def setPolygonColor(faceId: FaceId, color: ColorRGB): Unit =
-    EditorState.polygonColors.update(_ + (faceId -> color))
+    EditorState.colorState.update(s => s.copy(polygonColors = s.polygonColors + (faceId -> color)))
 
   def ensureColorsForFaces(faceIds: Iterable[FaceId], defaultColor: ColorRGB): Unit =
     updateFaceColors(faceIds, defaultColor, trimMissing = false)
@@ -43,12 +40,13 @@ object ColorOperations:
   ): Unit =
     if faceIds.nonEmpty then
       val faceIdSet = faceIds.toSet
-      EditorState.polygonColors.update: currentColors =>
+      EditorState.colorState.update: s =>
 
         val base =
           if trimMissing then
-            currentColors.filter: (faceId, _) =>
+            s.polygonColors.filter: (faceId, _) =>
               faceIdSet.contains(faceId)
-          else currentColors
-        faceIdSet.foldLeft(base): (colors, faceId) =>
+          else s.polygonColors
+        val next = faceIdSet.foldLeft(base): (colors, faceId) =>
           if colors.contains(faceId) then colors else colors + (faceId -> defaultColor)
+        s.copy(polygonColors = next)

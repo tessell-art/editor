@@ -13,7 +13,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   override def beforeEach(context: BeforeEach): Unit = {
     super.beforeEach(context)
     UndoManager.clearHistory()
-    EditorState.fillColor.set(ColorRGB(76, 175, 80))
+    EditorState.colorState.update(_.copy(fillColor = ColorRGB(76, 175, 80)))
   }
 
   test("initial state has no undo or redo") {

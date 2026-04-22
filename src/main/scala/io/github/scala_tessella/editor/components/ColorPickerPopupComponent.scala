@@ -8,13 +8,22 @@ import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.ColorRGB._
 
 object ColorPickerPopupComponent:
-  def element(isOpen: Var[Boolean], tempColor: Var[ColorRGB]): Element =
+
+  /** ADR-002: post-migration `tempColor` and `showColorPicker` are nested in `ColorState`, not standalone
+    * `Var`s. Callers supply a `Signal`/`Observer` pair for the working colour and a close action — all three
+    * wired up at the call site from the aggregate.
+    */
+  def element(
+      tempColorSignal: Signal[ColorRGB],
+      tempColorObserver: Observer[ColorRGB],
+      close: () => Unit
+  ): Element =
     div(
       className := "color-picker-popup",
       // Background overlay
       onClick --> { _ =>
 
-        isOpen.set(false)
+        close()
       }, // Click outside closes
       div(
         className := "popup-content",
@@ -22,12 +31,12 @@ object ColorPickerPopupComponent:
         h3("Select Color"),
         ColorPicker(
           _.simplified := true,
-          _.value <-- tempColor.signal.map(_.toRgba),
+          _.value <-- tempColorSignal.map(_.toRgba),
           _.onChange.map { event =>
 
             val color = event.target._colorValue._rgb
             ColorRGB(color.r.toInt, color.g.toInt, color.b.toInt)
-          } --> tempColor.writer
+          } --> tempColorObserver
         )(),
         div(
           className := "popup-actions",
@@ -35,22 +44,19 @@ object ColorPickerPopupComponent:
             "Cancel",
             onClick --> { _ =>
 
-              isOpen.set(false)
+              close()
             }
           ),
           button(
             "OK",
-            onClick.compose(
-              _.withCurrentValueOf(tempColor.signal)
-                .map((_, color) => color)
-            ) --> { newColor =>
+            onClick.compose(_.withCurrentValueOf(tempColorSignal)) --> { (_, newColor) =>
 
-              EditorState.fillColor.set(newColor)
+              EditorState.colorState.update(_.copy(fillColor = newColor))
 
               // Apply the new color to all currently selected polygons
               applyColorToSelectedPolygons(newColor)
 
-              isOpen.set(false)
+              close()
             }
           )
         )

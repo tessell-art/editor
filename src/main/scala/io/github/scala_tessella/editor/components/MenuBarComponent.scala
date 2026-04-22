@@ -243,12 +243,12 @@ object MenuBarComponent:
         href        := "#",
         "Fill Color...",
         onClick.preventDefault.compose(
-          _.withCurrentValueOf(EditorState.fillColor.signal)
+          _.withCurrentValueOf(EditorState.colorState.signal.map(_.fillColor).distinct)
             .map((_, color) => color)
         ) --> { color =>
 
-          EditorState.tempColor.set(color)
-          EditorState.showColorPicker.set(true)
+          EditorState.colorState.update(_.copy(tempColor = color))
+          EditorState.colorState.update(_.copy(showColorPicker = true))
           EditorState.uiState.update(_.copy(isMenuOpen = false))
         }
       )

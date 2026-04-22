@@ -49,7 +49,7 @@ object TessellationPolygonRenderer:
         _.contains(faceId)
 
     val rgbSignal =
-      EditorState.polygonColors.signal.map:
+      EditorState.colorState.signal.map(_.polygonColors).distinct.map:
         _.getOrElse(faceId, EditorConfig.defaultPolygonColor).toRgb
 
     val opacity =

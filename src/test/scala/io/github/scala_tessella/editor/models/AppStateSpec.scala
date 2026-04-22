@@ -46,17 +46,26 @@ class AppStateSpec extends FunSuite with EditorStateFixture:
   }
 
   test("refreshSettingsTempValues syncs temp settings and hides picker") {
-    EditorState.defaultStartFillColor.set(ColorRGB(10, 20, 30))
-    EditorState.perimeterEdgeColor.set(ColorRGB(40, 50, 60))
-    EditorState.tempDefaultFillColor.set(ColorRGB(1, 2, 3))
-    EditorState.tempPerimeterEdgeColor.set(ColorRGB(4, 5, 6))
-    EditorState.tempSettingsPickerColor.set(ColorRGB(7, 8, 9))
+    EditorState.colorState.update(_.copy(defaultStartFillColor = ColorRGB(10, 20, 30)))
+    EditorState.colorState.update(_.copy(perimeterEdgeColor = ColorRGB(40, 50, 60)))
+    EditorState.colorState.update(_.copy(tempDefaultFillColor = ColorRGB(1, 2, 3)))
+    EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = ColorRGB(4, 5, 6)))
+    EditorState.colorState.update(_.copy(tempSettingsPickerColor = ColorRGB(7, 8, 9)))
     EditorState.popupState.update(_.copy(showSettingsColorPicker = true))
 
     AppState.refreshSettingsTempValues()
 
-    assertEquals(EditorState.tempDefaultFillColor.now(), EditorState.defaultStartFillColor.now())
-    assertEquals(EditorState.tempPerimeterEdgeColor.now(), EditorState.perimeterEdgeColor.now())
-    assertEquals(EditorState.tempSettingsPickerColor.now(), EditorState.defaultStartFillColor.now())
+    assertEquals(
+      EditorState.colorState.now().tempDefaultFillColor,
+      EditorState.colorState.now().defaultStartFillColor
+    )
+    assertEquals(
+      EditorState.colorState.now().tempPerimeterEdgeColor,
+      EditorState.colorState.now().perimeterEdgeColor
+    )
+    assertEquals(
+      EditorState.colorState.now().tempSettingsPickerColor,
+      EditorState.colorState.now().defaultStartFillColor
+    )
     assertEquals(EditorState.popupState.now().showSettingsColorPicker, false)
   }

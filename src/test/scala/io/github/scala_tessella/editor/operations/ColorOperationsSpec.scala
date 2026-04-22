@@ -11,7 +11,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
   override def beforeEach(context: BeforeEach): Unit = {
     super.beforeEach(context)
     // Suite-specific test defaults
-    EditorState.fillColor.set(ColorRGB(255, 0, 0))
+    EditorState.colorState.update(_.copy(fillColor = ColorRGB(255, 0, 0)))
   }
 
   val F1: FaceId = FaceId(1)
@@ -24,20 +24,20 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     val selectedIds = Set(F1, F2)
     EditorState.tessellationState.update(_.copy(selectedTilingPolygons = selectedIds))
     val color       = ColorRGB(100, 150, 200)
-    EditorState.fillColor.set(color)
+    EditorState.colorState.update(_.copy(fillColor = color))
 
     // When
     ColorOperations.applyColorToSelectedPolygons(color)
 
     // Then
-    val colors = EditorState.polygonColors.now()
+    val colors = EditorState.colorState.now().polygonColors
     assertEquals(colors.get(F1), Some(color))
     assertEquals(colors.get(F2), Some(color))
   }
 
   test("applyColorToSelectedPolygons should not change colors of unselected polygons") {
     // Given
-    EditorState.polygonColors.set(Map(F3 -> ColorRGB(0, 0, 255)))
+    EditorState.colorState.update(_.copy(polygonColors = Map(F3 -> ColorRGB(0, 0, 255))))
     val selectedIds = Set(F1)
     EditorState.tessellationState.update(_.copy(selectedTilingPolygons = selectedIds))
     val color       = ColorRGB(100, 150, 200)
@@ -46,7 +46,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     ColorOperations.applyColorToSelectedPolygons(color)
 
     // Then
-    val colors = EditorState.polygonColors.now()
+    val colors = EditorState.colorState.now().polygonColors
     assertEquals(colors.get(F1), Some(color))
     assertEquals(colors.get(F3), Some(ColorRGB(0, 0, 255))) // Should be unchanged
   }
@@ -54,7 +54,7 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
   test("applyColorToSelectedPolygons should do nothing if no polygons are selected") {
     // Given
     val initialColors = Map(F3 -> ColorRGB(0, 0, 255))
-    EditorState.polygonColors.set(initialColors)
+    EditorState.colorState.update(_.copy(polygonColors = initialColors))
     EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
     val color         = ColorRGB(100, 150, 200)
 
@@ -62,27 +62,27 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     ColorOperations.applyColorToSelectedPolygons(color)
 
     // Then
-    assertEquals(EditorState.polygonColors.now(), initialColors)
+    assertEquals(EditorState.colorState.now().polygonColors, initialColors)
   }
 
   test("getPolygonColor should return None when color is missing") {
-    EditorState.polygonColors.set(Map.empty)
+    EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     assertEquals(ColorOperations.getPolygonColor(F1), None)
   }
 
   test("setPolygonColor should update the color map") {
     val color = ColorRGB(10, 20, 30)
     ColorOperations.setPolygonColor(F1, color)
-    assertEquals(EditorState.polygonColors.now().get(F1), Some(color))
+    assertEquals(EditorState.colorState.now().polygonColors.get(F1), Some(color))
   }
 
   test("ensureColorsForFaces should assign defaults only when missing") {
     val existing = ColorRGB(1, 2, 3)
-    EditorState.polygonColors.set(Map(F1 -> existing))
+    EditorState.colorState.update(_.copy(polygonColors = Map(F1 -> existing)))
 
     ColorOperations.ensureColorsForFaces(List(F1, F2), EditorConfig.defaultPolygonColor)
 
-    val colors = EditorState.polygonColors.now()
+    val colors = EditorState.colorState.now().polygonColors
     assertEquals(colors.get(F1), Some(existing))
     assertEquals(colors.get(F2), Some(EditorConfig.defaultPolygonColor))
   }
@@ -93,11 +93,11 @@ class ColorOperationsSpec extends FunSuite with EditorStateFixture:
     val stale     = ColorRGB(7, 8, 9)
     val default   = ColorRGB(11, 12, 13)
 
-    EditorState.polygonColors.set(Map(F1 -> existing1, F2 -> existing2, F3 -> stale))
+    EditorState.colorState.update(_.copy(polygonColors = Map(F1 -> existing1, F2 -> existing2, F3 -> stale)))
 
     ColorOperations.syncColorsForFaces(List(F1, F2, F4), default)
 
-    val colors = EditorState.polygonColors.now()
+    val colors = EditorState.colorState.now().polygonColors
     assertEquals(colors.get(F1), Some(existing1))
     assertEquals(colors.get(F2), Some(existing2))
     assertEquals(colors.get(F4), Some(default))
