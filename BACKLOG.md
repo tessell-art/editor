@@ -140,17 +140,34 @@ three aggregate case classes (`TessellationState`, `ToolState`,
 classes replaces `isStateEquivalent`. Adding a field to an aggregate
 case class now automatically propagates into undo/redo.
 
-### P2#6 — Split `TessellationOperations.scala` (20 KB, ~470 lines, 30+ methods)
-Largest file in the project. Contains
-`attemptFaceDeletion / attemptVertexDeletion / attemptEdgeDeletion /
-attemptFanning / attemptDoubling / attemptMirroring / attemptPolygonAddition /
-attemptPolygonInsertion` plus private data classes. Suggested split:
-- `DeletionOps` — face / vertex / edge deletion.
-- `PlacementOps` — addition / insertion.
-- `SymmetryOps` — fanning / doubling / mirroring (+ their `*Context` classes).
+### P2#6 — Split `TessellationOperations.scala` ✅
+Resolved 2026-04-22. Split from 511 lines into 4 files, all below 300
+lines, each with module-level scaladoc:
 
-Also lacks a module-level scaladoc explaining the `attempt…` naming (silent
-failure vs. error-producing contract).
+| File | Lines | Contents |
+|---|---|---|
+| `TessellationOperations.scala` | 91 | Lifecycle: `selectPolygon`, `clearTiling`, `selectIrregularInPalette`, `initializeWithIrregularIfEmpty`; shared `toCoords` extension; `clearStaleAfterMutation()` helper |
+| `DeletionOperations.scala` | 38 | `attemptFaceDeletion`, `attemptVertexDeletion`, `attemptEdgeDeletion` |
+| `PlacementOperations.scala` | 172 | `PolygonPlacementKind` + helpers, `attemptPolygonAddition`, `attemptPolygonInsertion`, `findFaceContainingEdge` |
+| `TransformOperations.scala` | 273 | `FanContext`, `DoublingContext`, per-op private helpers; `attemptFanning`, `attemptDoubling`, `attemptMirroring` |
+
+**Naming note:** renamed the new file for fan/double/mirror to
+`TransformOperations` (not `SymmetryOps`) to avoid colliding with the
+existing `SymmetryOperations` (which handles overlay *visibility*).
+Both are documented in their module scaladoc so the distinction is
+discoverable.
+
+**Private helper rename:** `clearSymmetryAndPerimeterSelectionOnSuccess`
+(awkward, used across 4 ops methods) → public
+`TessellationOperations.clearStaleAfterMutation()` — shorter name,
+captures intent ("after a mutation, clear stale overlays + selection").
+Callers in sibling ops files use this shared helper.
+
+Also closes **P3#9** (module-level scaladoc on `TessellationOperations`)
+as a side effect — all four files now carry the `attempt…` naming
+convention documented at the module level.
+
+Callers updated: `AppState`, `SelectionOperations`, `TessellationEdgeRenderer`, `TessellationOperationsSpec`.
 
 ### P2#7a — Resolve `utils → AppState` layering inversion ✅
 Resolved under ADR-001 Phase 2 on 2026-04-22. `utils/UndoManager`,
@@ -171,8 +188,11 @@ observer pattern manage the cancellation) — also improves testability.
 `build.sbt:43`. SNAPSHOT deps hurt reproducibility of CI builds and of old tags
 checked out later. Pin to a release or milestone.
 
-### P3#9 — Add module-level scaladoc to `TessellationOperations`
-The largest object has none. Landing with P2#6 is natural.
+### P3#9 — Add module-level scaladoc to `TessellationOperations` ✅
+Resolved 2026-04-22 as a side effect of P2#6. The split yielded 4
+focused ops files, each with module-level scaladoc explaining scope
+and the `attempt…` naming convention (`Unit`-returning; errors
+surfaced via `ErrorOperations` rather than thrown).
 
 ### P3#10 — README "Architecture" section
 One paragraph pointing at `EditorState` / `AppState` / `operations` /

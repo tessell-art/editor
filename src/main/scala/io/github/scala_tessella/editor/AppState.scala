@@ -107,11 +107,11 @@ object AppState:
     */
   def doubleTiling(): Unit =
     clearMeasurements()
-    TessellationOperations.attemptDoubling()
+    TransformOperations.attemptDoubling()
 
   def mirrorTiling(): Unit =
     clearMeasurements()
-    TessellationOperations.attemptMirroring()
+    TransformOperations.attemptMirroring()
 
   /** Clears the current tiling and all measurements.
     */

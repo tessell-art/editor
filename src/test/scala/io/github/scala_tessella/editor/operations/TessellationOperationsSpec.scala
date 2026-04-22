@@ -62,7 +62,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
     EditorState.errorState.update(_.copy(errorMessage = None))
 
-    TessellationOperations.attemptPolygonAddition("edge-1", 0)
+    PlacementOperations.attemptPolygonAddition("edge-1", 0)
 
     assert(EditorState.errorState.now().errorMessage.exists(_.contains("No tiling available to grow")))
   }
@@ -75,7 +75,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.errorState.update(_.copy(errorMessage = None))
     val done   = Promise[Unit]()
 
-    TessellationOperations.attemptPolygonInsertion(VertexId(9999), VertexId(10000))
+    PlacementOperations.attemptPolygonInsertion(VertexId(9999), VertexId(10000))
 
     setTimeout(200) {
       assert(EditorState.errorState.now().errorMessage.exists(_.contains("Cannot insert regular polygon")))
@@ -94,7 +94,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.errorState.update(_.copy(errorMessage = None))
     val done   = Promise[Unit]()
 
-    TessellationOperations.attemptPolygonInsertion(VertexId(9999), VertexId(10000))
+    PlacementOperations.attemptPolygonInsertion(VertexId(9999), VertexId(10000))
 
     setTimeout(200) {
       assert(EditorState.errorState.now().errorMessage.exists(_.contains("Cannot insert irregular polygon")))
@@ -111,7 +111,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     UndoManager.clearHistory()
 
-    TessellationOperations.attemptDoubling()
+    TransformOperations.attemptDoubling()
 
     assert(EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.colorState.now().polygonColors, Map.empty)
@@ -125,7 +125,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.animationState.update(_.copy(mirrorAnimation = None))
     UndoManager.clearHistory()
 
-    TessellationOperations.attemptMirroring()
+    TransformOperations.attemptMirroring()
 
     assert(EditorState.tessellationState.now().currentTiling.isEmpty)
     assertEquals(EditorState.animationState.now().mirrorAnimation, None)
@@ -156,7 +156,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
     val done = Promise[Unit]()
 
-    TessellationOperations.attemptMirroring()
+    TransformOperations.attemptMirroring()
 
     setTimeout(200) {
       val mirrored        = EditorState.tessellationState.now().currentTiling
@@ -185,7 +185,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.animationState.update(_.copy(mirrorAnimation = None))
     val done = Promise[Unit]()
 
-    TessellationOperations.attemptMirroring()
+    TransformOperations.attemptMirroring()
 
     setTimeout(200) {
       val mirrorAnimation = EditorState.animationState.now().mirrorAnimation
@@ -211,7 +211,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
     val done = Promise[Unit]()
 
-    TessellationOperations.attemptFanning(vertexId)
+    TransformOperations.attemptFanning(vertexId)
 
     setTimeout(200) {
       val newFaceIds = EditorState.tessellationState.now().currentTiling.innerFaces.map(_.id)

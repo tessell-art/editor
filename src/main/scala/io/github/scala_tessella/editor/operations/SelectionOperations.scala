@@ -82,7 +82,7 @@ object SelectionOperations:
       point.anchor match
         case Anchor.Vertex(vertexId) =>
           Logger.debug(s"Fan vertex clicked: $vertexId")
-          TessellationOperations.attemptFanning(vertexId)
+          TransformOperations.attemptFanning(vertexId)
         case _                       => ()
 
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
@@ -90,18 +90,18 @@ object SelectionOperations:
       EditorState.measurementState.update(_.copy(clickablePoints = Nil))
       point.anchor match
         case Anchor.Vertex(vertexId)                     =>
-          TessellationOperations.attemptVertexDeletion(vertexId)
+          DeletionOperations.attemptVertexDeletion(vertexId)
         case Anchor.Center(faceId)                       =>
-          TessellationOperations.attemptFaceDeletion(faceId)
+          DeletionOperations.attemptFaceDeletion(faceId)
         case Anchor.MidPoint(startVertexId, endVertexId) =>
-          TessellationOperations.attemptEdgeDeletion(startVertexId, endVertexId)
+          DeletionOperations.attemptEdgeDeletion(startVertexId, endVertexId)
 
   def handlePointClickForInsertion(point: ClickablePoint): Unit =
     ifNotProcessing:
       EditorState.measurementState.update(_.copy(clickablePoints = Nil))
       point.anchor match
         case Anchor.MidPoint(startVertexId, endVertexId) =>
-          TessellationOperations.attemptPolygonInsertion(startVertexId, endVertexId)
+          PlacementOperations.attemptPolygonInsertion(startVertexId, endVertexId)
         case _                                           => ()
 
   def clearAllSelections(): Unit =
@@ -224,7 +224,7 @@ object SelectionOperations:
           case EditorMode.Select =>
             toggleTilingPolygonSelection(faceId)
           case EditorMode.Delete =>
-            TessellationOperations.attemptFaceDeletion(faceId)
+            DeletionOperations.attemptFaceDeletion(faceId)
 
   private def setupFaceClickablePoints(
       faceId: FaceId,
@@ -284,6 +284,6 @@ object SelectionOperations:
       context match
         case PerimeterClickContext(_, None, false)                  => togglePerimeterEdgeSelection(edgeId)
         case PerimeterClickContext(tiling, _, _) if !tiling.isEmpty =>
-          TessellationOperations.attemptPolygonAddition(edgeId, edgeIndex)
+          PlacementOperations.attemptPolygonAddition(edgeId, edgeIndex)
         case _                                                      =>
           ErrorOperations.showError("No tiling available to grow")

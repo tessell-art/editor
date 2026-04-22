@@ -7,7 +7,7 @@ import io.github.scala_tessella.dcel.structure.{FaceId, Vertex}
 import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, Tool, VertexCoord}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import io.github.scala_tessella.editor.operations.TessellationOperations
+import io.github.scala_tessella.editor.operations.PlacementOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.toCoords
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.lineCoords
@@ -135,7 +135,7 @@ object TessellationEdgeRenderer:
         gate(stream).withCurrentValueOf(EditorState.toolState.signal.map(_.activeTool).distinct)
       ) --> {
         case (_, Some(Tool.Inserter)) =>
-          TessellationOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
+          PlacementOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
           EditorState.previewState.update(_.copy(previewPlacement = None))
         case _                        => ()
       }
