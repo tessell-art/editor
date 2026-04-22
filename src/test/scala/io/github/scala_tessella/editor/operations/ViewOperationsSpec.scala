@@ -28,7 +28,7 @@ class ViewOperationsSpec extends FunSuite:
     assertEquals(ViewOperations.clampViewScale(mid), mid, delta)
   }
 
-  test("anf") {
+  test("AngleDegree(90).toBigRadian ≈ π/2") {
     val x = AngleDegree(90).toBigRadian
     assertEquals(x.toBigDecimal.toDouble, 1.5707963267948966, delta)
   }
