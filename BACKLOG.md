@@ -119,13 +119,17 @@ Options to evaluate in ADR-002:
 
 - `e2e/playwright.config.ts` — auto-starts `vite dev` from the parent
   directory, reuses an existing dev server outside CI, Chromium-only.
-- `e2e/tests/smoke.spec.ts` — 4 scenarios: app boots and renders the
+- `e2e/tests/smoke.spec.ts` — five scenarios: app boots and renders the
   palette + canvas; clicking the hexagon palette button creates a
   tiling; `Ctrl+Z` undoes it; Help → About... opens the popup and the
-  close button dismisses it.
+  close button dismisses it; **SVG export → Clear Tiling → re-import
+  round-trip preserves shape** (added 2026-04-22 — exercises
+  `window.prompt` interception via `page.on('dialog')`, download
+  capture via `page.waitForEvent('download')`, and file-input
+  feeding via `page.waitForEvent('filechooser')` + `setFiles`).
 - `e2e/README.md` — first-time setup, run instructions, what's
-  deliberately not yet covered (SVG export-import round-trip, touch
-  gestures, visual regression), and a CI-integration recipe.
+  deliberately not yet covered (touch gestures, visual regression),
+  and a CI-integration recipe.
 - `.gitignore` updated for Playwright artifacts (`test-results/`,
   `playwright-report/`, `.playwright-cache/`).
 
@@ -144,19 +148,23 @@ Open follow-ups (not urgent — opportunistic):
    handled four distinct component shapes (static popup, state-driven
    popup, conditional `child.maybe`, signal-driven `disabled`)
    without needing changes.
-2. Tier 2 expansion: SVG export-import round-trip via
-   `page.waitForEvent('download')`, `TouchEventHandler` via
-   Playwright's touch-emulation device, visual snapshots for the
-   canvas at known scenes.
+2. Tier 2 expansion: ~~SVG export-import round-trip~~ ✅ landed
+   2026-04-22; remaining — `TouchEventHandler` via Playwright's
+   touch-emulation device, visual snapshots for the canvas at known
+   scenes.
 3. Wire Tier 2 into CI.
 4. **Language for e2e tests** — see
    [ADR-004](docs/adr/004-e2e-test-language.md) (Accepted 2026-04-22).
    Path 2 landed: TS tests + `@JSExportTopLevel` Scala test hooks for
    domain-native assertions. First implementation:
    - `src/main/scala/io/github/scala_tessella/editor/TestHooks.scala` —
-     three observation hooks (`tilingPolygonCount`, `isTilingEmpty`,
-     `currentFillColor`) registered at `globalThis.__tessellaTestHooks__`.
-     Each member has explicit `@JSExport` so the surface is grep-able.
+     four observation hooks (`tilingPolygonCount`, `isTilingEmpty`,
+     `currentFillColor`, plus `firstFaceVertexCount` added 2026-04-22
+     for the SVG round-trip shape check) installed on
+     `window.__tessellaTestHooks__` from `Editor()` startup via
+     `js.Dynamic` (manual install rather than `@JSExportTopLevel`
+     because the build is `ModuleKind.ESModule`; the latter would
+     produce a named ES module export, not a window global).
    - `e2e/tests/fixtures/hooks.ts` — `Window` augmentation + typed
      `hooks.*` (one-shot reads) and `expectHook.*` (Playwright
      `expect.poll` wrapper) helpers.

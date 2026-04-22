@@ -21,6 +21,7 @@ declare global {
       tilingPolygonCount(): number;
       isTilingEmpty(): boolean;
       currentFillColor(): string;
+      firstFaceVertexCount(): number;
     };
   }
 }
@@ -33,6 +34,8 @@ export const hooks = {
     page.evaluate(() => window.__tessellaTestHooks__.isTilingEmpty()),
   currentFillColor: (page: Page): Promise<string> =>
     page.evaluate(() => window.__tessellaTestHooks__.currentFillColor()),
+  firstFaceVertexCount: (page: Page): Promise<number> =>
+    page.evaluate(() => window.__tessellaTestHooks__.firstFaceVertexCount()),
 };
 
 /**
@@ -49,4 +52,6 @@ export const expectHook = {
     expect.poll(() => hooks.isTilingEmpty(page)).toBe(expected),
   currentFillColor: (page: Page, expected: string) =>
     expect.poll(() => hooks.currentFillColor(page)).toBe(expected),
+  firstFaceVertexCount: (page: Page, expected: number) =>
+    expect.poll(() => hooks.firstFaceVertexCount(page)).toBe(expected),
 };

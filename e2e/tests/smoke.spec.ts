@@ -71,4 +71,50 @@ test.describe('Tessella Editor smoke', () => {
     await page.locator('.popup-close-btn').click();
     await expect(page.locator('.popup-overlay')).toHaveCount(0);
   });
+
+  test('SVG export → Clear Tiling → re-import round-trip preserves shape', async ({ page }) => {
+    // 1. Create a hexagon and capture the shape signature via hooks.
+    await page.locator('button[title^="6-sided polygon"]').click();
+    await expectHook.tilingPolygonCount(page, 1);
+    await expectHook.firstFaceVertexCount(page, 6); // discriminates hexagon from any other 1-face shape
+
+    // 2. Save SVG as... — uses window.prompt for filename, then downloads via a hidden anchor.
+    // Set up the dialog handler before clicking so the prompt's accept fires synchronously.
+    page.once('dialog', dialog => dialog.accept('round-trip.svg'));
+
+    const fileItem = page.locator(
+      '.menu-item',
+      { has: page.locator('button.menu-button', { hasText: 'File' }) }
+    );
+    await fileItem.hover();
+
+    const downloadPromise = page.waitForEvent('download');
+    await fileItem.locator('.dropdown-content a', { hasText: 'Save SVG as...' }).click();
+    const download = await downloadPromise;
+    const downloadPath = await download.path();
+    expect(downloadPath).toBeTruthy();
+
+    // 3. Clear the tiling via Edit → Clear Tiling. Use the menu (deterministic) over keyboard
+    // shortcuts so we exercise the full UI path.
+    const editItem = page.locator(
+      '.menu-item',
+      { has: page.locator('button.menu-button', { hasText: 'Edit' }) }
+    );
+    await editItem.hover();
+    await editItem.locator('.dropdown-content a', { hasText: 'Clear Tiling' }).click();
+    await expectHook.isTilingEmpty(page, true);
+    await expectHook.firstFaceVertexCount(page, 0);
+
+    // 4. Load SVG... — clicks a hidden file input that opens the native file chooser.
+    // Playwright's `filechooser` event captures it; we feed back the file we just downloaded.
+    await fileItem.hover();
+    const fileChooserPromise = page.waitForEvent('filechooser');
+    await fileItem.locator('.dropdown-content a', { hasText: 'Load SVG...' }).click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(downloadPath);
+
+    // 5. Same shape signature comes back: 1 face, 6 vertices.
+    await expectHook.tilingPolygonCount(page, 1);
+    await expectHook.firstFaceVertexCount(page, 6);
+  });
 });

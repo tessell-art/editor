@@ -48,6 +48,17 @@ object TestHooks:
   def currentFillColor: String =
     EditorState.colorState.now().fillColor.toRgb
 
+  /** Vertex count of the first inner face of the current tiling, or `0` when empty. Useful for shape-level
+    * round-trip checks (`tilingPolygonCount` alone can't distinguish a square from a hexagon — both report 1
+    * face).
+    */
+  def firstFaceVertexCount: Int =
+    val tiling = EditorState.tessellationState.now().currentTiling
+    tiling.innerFaces.headOption match
+      case Some(face) =>
+        tiling.findInnerFaceVertices(face.id).toOption.map(_.size).getOrElse(0)
+      case None       => 0
+
   /** Install the hook object at `window.__tessellaTestHooks__`. Idempotent — overwrites any previous
     * registration, which doesn't matter in practice (only one app instance per page).
     *
@@ -61,14 +72,16 @@ object TestHooks:
     */
   def install(): Unit =
     try
-      val tilingPolygonCountFn: js.Function0[Int]  = () => tilingPolygonCount
-      val isTilingEmptyFn: js.Function0[Boolean]   = () => isTilingEmpty
-      val currentFillColorFn: js.Function0[String] = () => currentFillColor
+      val tilingPolygonCountFn: js.Function0[Int]   = () => tilingPolygonCount
+      val isTilingEmptyFn: js.Function0[Boolean]    = () => isTilingEmpty
+      val currentFillColorFn: js.Function0[String]  = () => currentFillColor
+      val firstFaceVertexCountFn: js.Function0[Int] = () => firstFaceVertexCount
 
       val obj = js.Dynamic.literal()
       obj.updateDynamic("tilingPolygonCount")(tilingPolygonCountFn)
       obj.updateDynamic("isTilingEmpty")(isTilingEmptyFn)
       obj.updateDynamic("currentFillColor")(currentFillColorFn)
+      obj.updateDynamic("firstFaceVertexCount")(firstFaceVertexCountFn)
 
       dom.window.asInstanceOf[js.Dynamic].updateDynamic("__tessellaTestHooks__")(obj)
       Logger.debug("TestHooks installed at window.__tessellaTestHooks__")

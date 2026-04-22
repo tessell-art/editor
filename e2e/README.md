@@ -34,12 +34,17 @@ another terminal, Playwright will reuse it (controlled by
 
 ## What's covered (current smoke suite)
 
-See `tests/smoke.spec.ts` — four scenarios:
+See `tests/smoke.spec.ts` — five scenarios:
 
 1. App boots and renders the polygon palette.
 2. Clicking the hexagon palette button creates a tiling.
 3. Ctrl+Z undoes a tiling creation.
 4. Opening and closing the About popup via the menu.
+5. SVG export → Clear Tiling → re-import round-trip preserves the tiling
+   shape (`tilingPolygonCount` and `firstFaceVertexCount` both match
+   pre/post). Exercises `window.prompt` interception, download capture
+   via `page.waitForEvent('download')`, and file-input feeding via
+   `page.waitForEvent('filechooser')` + `setFiles`.
 
 ## Domain-state assertions: Scala-exposed test hooks (ADR-004)
 
@@ -72,7 +77,6 @@ and (if useful) a polling helper under `expectHook`.
 These remain on the ADR-003 roadmap and will be added when the editor surface
 they exercise is stable enough that snapshot churn won't dominate review:
 
-- SVG export → re-import round-trip (needs `page.waitForEvent('download')` plus a file-picker hand-off).
 - Touch / pointer gestures (`TouchEventHandler`).
 - Visual regression (`expect(page).toHaveScreenshot()`) for the canvas.
 - Theme toggle (the toggle wiring is already covered by `ThemeSpec` in the unit tier).
