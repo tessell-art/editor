@@ -11,7 +11,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
 
   test("withLoadingState should set and clear processing state"):
     var executed = false
-    assert(!EditorState.isProcessing.now())
+    assert(!EditorState.uiState.now().isProcessing)
 
     val future = AsyncUtils.withLoadingState { () =>
 
@@ -21,7 +21,7 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
     }
 
     // Initially processing should be true
-    assert(EditorState.isProcessing.now())
+    assert(EditorState.uiState.now().isProcessing)
 
     // Wait for the future to complete
     future.map: result =>
@@ -29,24 +29,24 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
       assert(executed)
       assertEquals(result, "result")
       // Processing state should be cleared after completion
-      assert(!EditorState.isProcessing.now())
+      assert(!EditorState.uiState.now().isProcessing)
 
   test("withLoadingState should clear processing state even on exception"):
-    assert(!EditorState.isProcessing.now())
+    assert(!EditorState.uiState.now().isProcessing)
 
     val future = AsyncUtils.withLoadingState(() =>
       throw new RuntimeException("Test exception")
     )
 
     // Initially processing should be true
-    assert(EditorState.isProcessing.now())
+    assert(EditorState.uiState.now().isProcessing)
 
     // Wait for the future to complete
     future.failed.map: exception =>
 
       assertEquals(exception.getMessage, "Test exception")
       // Processing state should be cleared even after exception
-      assert(!EditorState.isProcessing.now())
+      assert(!EditorState.uiState.now().isProcessing)
 
   test("withLoadingState should return the result of the operation"):
     val future = AsyncUtils.withLoadingState(() => 42)
@@ -54,41 +54,41 @@ class AsyncUtilsSpec extends FunSuite with EditorStateFixture:
       assertEquals(result, 42)
 
   test("withLoadingState should set and clear loading message"):
-    assertEquals(EditorState.loadingMessage.now(), None)
+    assertEquals(EditorState.uiState.now().loadingMessage, None)
 
     val future = AsyncUtils.withLoadingState(() => "ok", Some("Working..."))
 
-    assertEquals(EditorState.loadingMessage.now(), Some("Working..."))
+    assertEquals(EditorState.uiState.now().loadingMessage, Some("Working..."))
 
     future.map: result =>
 
       assertEquals(result, "ok")
-      assertEquals(EditorState.loadingMessage.now(), None)
+      assertEquals(EditorState.uiState.now().loadingMessage, None)
 
   test("setLoadingMessage should override message while processing"):
     val future = AsyncUtils.withLoadingState(() => "ok", Some("Starting..."))
 
-    assertEquals(EditorState.loadingMessage.now(), Some("Starting..."))
+    assertEquals(EditorState.uiState.now().loadingMessage, Some("Starting..."))
 
     AsyncUtils.setLoadingMessage("Halfway there...")
-    assertEquals(EditorState.loadingMessage.now(), Some("Halfway there..."))
+    assertEquals(EditorState.uiState.now().loadingMessage, Some("Halfway there..."))
 
     future.map: result =>
 
       assertEquals(result, "ok")
-      assertEquals(EditorState.loadingMessage.now(), None)
+      assertEquals(EditorState.uiState.now().loadingMessage, None)
 
   test("multiple withLoadingState calls should handle processing state correctly"):
-    assert(!EditorState.isProcessing.now())
+    assert(!EditorState.uiState.now().isProcessing)
 
     val future1 = AsyncUtils.withLoadingState(() => "first")
-    assert(EditorState.isProcessing.now())
+    assert(EditorState.uiState.now().isProcessing)
 
     val future2 = AsyncUtils.withLoadingState(() => "second")
-    assert(EditorState.isProcessing.now())
+    assert(EditorState.uiState.now().isProcessing)
 
     // Both futures should complete successfully
     Future.sequence(List(future1, future2)).map: results =>
 
       assertEquals(results.toSet, Set("first", "second"))
-      assert(!EditorState.isProcessing.now())
+      assert(!EditorState.uiState.now().isProcessing)

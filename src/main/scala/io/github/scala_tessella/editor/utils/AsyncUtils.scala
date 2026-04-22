@@ -16,15 +16,15 @@ object AsyncUtils:
     p.future
 
   def withLoadingState[T](operation: () => T, message: Option[String] = None): Future[T] =
-    EditorState.isProcessing.set(true)
-    EditorState.loadingMessage.set(message)
+    EditorState.uiState.update(_.copy(isProcessing = true))
+    EditorState.uiState.update(_.copy(loadingMessage = message))
 
     delay(50).map: _ =>
       try
         operation()
       finally
-        EditorState.isProcessing.set(false)
-        EditorState.loadingMessage.set(None)
+        EditorState.uiState.update(_.copy(isProcessing = false))
+        EditorState.uiState.update(_.copy(loadingMessage = None))
 
   def setLoadingMessage(message: String): Unit =
-    EditorState.loadingMessage.set(Some(message))
+    EditorState.uiState.update(_.copy(loadingMessage = Some(message)))

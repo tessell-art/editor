@@ -27,7 +27,7 @@ object KeyboardEventHandler:
       val owner    = ctx.owner
       // Gate the stream using the processing signal without calling .now() per keydown
       val keyDowns = windowEvents(_.onKeyDown)
-        .withCurrentValueOf(EditorState.isProcessing.signal)
+        .withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
         .collect:
           case (event, false) => event
 

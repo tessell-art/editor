@@ -32,14 +32,14 @@ object MouseEventHandler:
   def handleMouseDown(event: MouseEvent): Unit =
     event.preventDefault()
     // Snapshot once
-    EditorState.isDragging.set(true)
+    EditorState.uiState.update(_.copy(isDragging = true))
     val point: Point = Point(event.clientX, event.clientY)
-    EditorState.dragStart.set(Some(point))
+    EditorState.uiState.update(_.copy(dragStart = Some(point)))
 
   def handleMouseMove(event: MouseEvent): Unit =
     // Snapshot once per event
-    val dragging     = EditorState.isDragging.now()
-    val dragStartOpt = EditorState.dragStart.now()
+    val dragging     = EditorState.uiState.now().isDragging
+    val dragStartOpt = EditorState.uiState.now().dragStart
 
     if dragging then
       dragStartOpt.foreach { start =>
@@ -52,17 +52,17 @@ object MouseEventHandler:
           s.copy(viewTransform = vt.copy(pan = vt.pan + delta))
         // Update the new "last" drag start once
         val point: Point = Point(event.clientX, event.clientY)
-        EditorState.dragStart.set(Some(point))
+        EditorState.uiState.update(_.copy(dragStart = Some(point)))
       }
 
   def handleMouseUp(event: MouseEvent): Unit =
     // Clear once
-    EditorState.isDragging.set(false)
-    EditorState.dragStart.set(None)
+    EditorState.uiState.update(_.copy(isDragging = false))
+    EditorState.uiState.update(_.copy(dragStart = None))
 
   private def getCanvasRelativePosition(event: WheelEvent): Option[Point] =
     // Snapshot once
-    EditorState.canvasElementRef.now().map { canvasElement =>
+    EditorState.uiState.now().canvasElementRef.map { canvasElement =>
 
       val rect = canvasElement.getBoundingClientRect()
       Point(

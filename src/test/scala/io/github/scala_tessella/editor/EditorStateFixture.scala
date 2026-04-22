@@ -12,9 +12,7 @@ trait EditorStateFixture:
 
   private def resetTransientState(): Unit =
     // Ensure a clean baseline for each test (transient UI/processing flags)
-    EditorState.isProcessing.set(false)
-    EditorState.isDragging.set(false)
-    EditorState.dragStart.set(None)
+    EditorState.uiState.set(UIState.initial)
 
     // Reset popups
     EditorState.popupState.set(PopupState.initial)
@@ -42,16 +40,13 @@ trait EditorStateFixture:
     // Reset view and toggles
     EditorState.viewState.set(ViewState.initial)
     EditorState.currentFileName.set(None)
-    EditorState.canvasElementRef.set(None)
     EditorState.userThemePreference.set(None)
-    EditorState.isMenuOpen.set(false)
     EditorState.tempColor.set(EditorState.fillColor.now())
     EditorState.defaultStartFillColor.set(EditorConfig.defaultPolygonColor)
     EditorState.perimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
     EditorState.tempDefaultFillColor.set(EditorConfig.defaultPolygonColor)
     EditorState.tempPerimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
     EditorState.tempSettingsPickerColor.set(EditorConfig.defaultPolygonColor)
-    EditorState.loadingMessage.set(None)
 
   override def beforeEach(context: BeforeEach): Unit =
     // Snapshot the state that represents the "app model"

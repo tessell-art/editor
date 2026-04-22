@@ -124,7 +124,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   private def reset(): Unit =
     UndoManager.clearHistory()
     // Ensure processing flag is false
-    EditorState.isProcessing.set(false)
+    EditorState.uiState.update(_.copy(isProcessing = false))
 
   test("maxUndoDepth exposes internal limit") {
     assert(UndoManager.maxUndoDepth > 0)

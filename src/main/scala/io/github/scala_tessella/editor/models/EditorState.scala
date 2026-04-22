@@ -3,11 +3,8 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
 import io.github.scala_tessella.editor.models.EditorConfig
-
-import org.scalajs.dom
 
 /** EditorState object contains all the state variables for the editor. The state is organized into logical
   * groups for better maintainability.
@@ -86,24 +83,10 @@ object EditorState:
     /** Temporary color being edited in the color picker */
     val tempColor: Var[ColorRGB] = Var(fillColor.now())
 
-  object UIState:
-    /** Whether the editor is currently processing an operation */
-    val isProcessing: Var[Boolean] = Var(false)
-
-    /** Optional loading message to show while processing */
-    val loadingMessage: Var[Option[String]] = Var(None)
-
-    /** Whether the user is currently dragging */
-    val isDragging: Var[Boolean] = Var(false)
-
-    /** Starting point of a drag operation */
-    val dragStart: Var[Option[Point]] = Var(None)
-
-    /** Reference to the canvas DOM element */
-    val canvasElementRef: Var[Option[dom.Element]] = Var(None)
-
-    /** Whether the mobile menu is open */
-    val isMenuOpen: Var[Boolean] = Var(false)
+  /** UI-state aggregate — transient UI flags. See `UIState` in EditorData.scala. Per ADR-002, reads via
+    * `uiState.signal.map(_.field).distinct`; writes via `uiState.update(_.copy(field = …))`.
+    */
+  val uiState: Var[UIState] = Var(UIState.initial)
 
   /** Popup-state aggregate — 6 modal-popup visibility flags. See `PopupState` in EditorData.scala. Per
     * ADR-002, reads via `popupState.signal.map(_.field).distinct`; writes via
@@ -182,7 +165,7 @@ object EditorState:
 
     /** True when no operation is currently running. */
     val isIdleSignal: Signal[Boolean] =
-      UIState.isProcessing.signal.map(!_)
+      uiState.signal.map(!_.isProcessing).distinct
 
     /** True when tiling-dependent mutating actions should be enabled. */
     val canMutateTilingSignal: Signal[Boolean] =
@@ -207,7 +190,6 @@ object EditorState:
   export FileState.*
   export ThemeState.*
   export ColorState.*
-  export UIState.*
   export ErrorState.*
   export PreviewState.*
   export AnimationState.*

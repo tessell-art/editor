@@ -25,7 +25,7 @@ object UndoManager:
 
   // Save the current state to the undo stack
   def saveState(): Unit =
-    if !EditorState.isProcessing.now() then
+    if !EditorState.uiState.now().isProcessing then
       val snapshot = AppStateSnapshot.fromCurrentState
 
       // Don't save if the state hasn't actually changed
@@ -51,7 +51,7 @@ object UndoManager:
 
   // Undo the last operation
   def undo(): Unit =
-    if !EditorState.isProcessing.now() && undoStack.nonEmpty then
+    if !EditorState.uiState.now().isProcessing && undoStack.nonEmpty then
       // Before undoing, save the current state to the redo stack
       MeasurementOperations.clearAll()
       val currentState = AppStateSnapshot.fromCurrentState
@@ -63,7 +63,7 @@ object UndoManager:
 
   // Redo the last undone operation
   def redo(): Unit =
-    if !EditorState.isProcessing.now() && redoStack.nonEmpty then
+    if !EditorState.uiState.now().isProcessing && redoStack.nonEmpty then
       // Before redoing, save the current state to the undo stack
       val currentState = AppStateSnapshot.fromCurrentState
       undoStack.push(currentState)

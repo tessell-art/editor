@@ -47,7 +47,7 @@ object EditorCanvasComponent:
       //      h2("Canvas"),
       CanvasControlComponent.element,
       // Loading indicator
-      child.maybe <-- EditorState.isProcessing.signal.map: processing =>
+      child.maybe <-- EditorState.uiState.signal.map(_.isProcessing).distinct.map: processing =>
         if processing then Some(loadingIndicator()) else None,
       div(
         className := "file-and-measurement-container",
@@ -72,14 +72,14 @@ object EditorCanvasComponent:
 
           // Store reference to the canvas element
           onMountCallback: ctx =>
-            EditorState.canvasElementRef.set(Some(ctx.thisNode.ref)),
+            EditorState.uiState.update(_.copy(canvasElementRef = Some(ctx.thisNode.ref))),
           onUnmountCallback: _ =>
-            EditorState.canvasElementRef.set(None),
+            EditorState.uiState.update(_.copy(canvasElementRef = None)),
 
           // Dynamic cursor and interactivity derived as a Signal
           {
             val canvasInteractivityStyle: Signal[String] =
-              EditorState.isProcessing.signal.map: isProcessing =>
+              EditorState.uiState.signal.map(_.isProcessing).distinct.map: isProcessing =>
                 if isProcessing then
                   "cursor: wait; pointer-events: none;"
                 else
@@ -98,44 +98,44 @@ object EditorCanvasComponent:
 
           // Disable mouse events when processing, without using .now()
           onMouseDown.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> MouseEventHandler.handleMouseDown,
           onMouseMove.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> MouseEventHandler.handleMouseMove,
           onMouseUp.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> MouseEventHandler.handleMouseUp,
           onWheel.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> MouseEventHandler.handleWheel,
 
           // Touch events for mobile support (also gated)
           onTouchStart.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> TouchEventHandler.handleTouchStart,
           onTouchMove.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> TouchEventHandler.handleTouchMove,
           onTouchEnd.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> TouchEventHandler.handleTouchEnd,
           onTouchCancel.compose(
-            _.withCurrentValueOf(EditorState.isProcessing.signal)
+            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
               .collect:
                 case (e, false) => e
           ) --> TouchEventHandler.handleTouchCancel
@@ -157,7 +157,7 @@ object EditorCanvasComponent:
         className := "loading-content",
         div(className := "spinner"),
         p(
-          child.text <-- EditorState.loadingMessage.signal.map:
+          child.text <-- EditorState.uiState.signal.map(_.loadingMessage).distinct.map:
             _.getOrElse("Processing tessellation...")
         )
       )

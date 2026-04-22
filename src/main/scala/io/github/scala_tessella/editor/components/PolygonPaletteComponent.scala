@@ -19,10 +19,11 @@ object PolygonPaletteComponent:
       Math.max(min, Math.min(i, max))
 
   private def polygonButtonClass(baseClasses: String, isSelectedSignal: Signal[Boolean]): Signal[String] =
-    isSelectedSignal.combineWith(EditorState.isProcessing.signal).map { (selected, processing) =>
+    isSelectedSignal.combineWith(EditorState.uiState.signal.map(_.isProcessing).distinct).map {
+      (selected, processing) =>
 
-      val fullBaseClasses = if selected then s"$baseClasses selected" else baseClasses
-      if processing then s"$fullBaseClasses disabled" else fullBaseClasses
+        val fullBaseClasses = if selected then s"$baseClasses selected" else baseClasses
+        if processing then s"$fullBaseClasses disabled" else fullBaseClasses
     }
 
   def element: Element =
@@ -137,7 +138,7 @@ object PolygonPaletteComponent:
           updateSides(validateSides(value))
         },
         onClick.stopPropagation --> {},
-        disabled <-- EditorState.isProcessing.signal
+        disabled <-- EditorState.uiState.signal.map(_.isProcessing).distinct
       )
     )
 
@@ -147,7 +148,7 @@ object PolygonPaletteComponent:
       className <-- polygonButtonClass("polygon-btn", isSelected),
       tpe   := "button",
       title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
-      disabled <-- EditorState.isProcessing.signal,
+      disabled <-- EditorState.uiState.signal.map(_.isProcessing).distinct,
       inContext { thisBtn =>
 
         gate(thisBtn.events(onClick)) --> { _ =>
@@ -174,7 +175,7 @@ object PolygonPaletteComponent:
       tpe   := "button",
       title := "Irregular polygon",
       disabled <--
-        EditorState.isProcessing.signal
+        EditorState.uiState.signal.map(_.isProcessing).distinct
           .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
           .map { (processing, noneRecent) =>
 

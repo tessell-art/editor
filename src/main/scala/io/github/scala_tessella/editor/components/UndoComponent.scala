@@ -13,12 +13,12 @@ object UndoComponent:
         className := "undo-button",
         disabled <-- UndoManager.canUndo.signal.map(
           !_
-        ).combineWith(EditorState.isProcessing.signal).map(_ || _),
+        ).combineWith(EditorState.uiState.signal.map(_.isProcessing).distinct).map(_ || _),
         title <-- UndoManager.canUndo.signal.map(isUndoable =>
           if isUndoable then UndoManager.getUndoPreview.getOrElse("Undo") else "No actions to undo"
         ),
         onClick.compose(
-          _.withCurrentValueOf(EditorState.isProcessing.signal).map(_._2)
+          _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct).map(_._2)
         ) --> AppState.undoObserver,
         span(className := "icon", "↶")
 //        span(className := "button-text", " "),
@@ -33,12 +33,12 @@ object UndoComponent:
         className := "redo-button",
         disabled <-- UndoManager.canRedo.signal.map(
           !_
-        ).combineWith(EditorState.isProcessing.signal).map(_ || _),
+        ).combineWith(EditorState.uiState.signal.map(_.isProcessing).distinct).map(_ || _),
         title <-- UndoManager.canRedo.signal.map(isRedoable =>
           if (isRedoable) UndoManager.getRedoPreview.getOrElse("Redo") else "No actions to redo"
         ),
         onClick.compose(
-          _.withCurrentValueOf(EditorState.isProcessing.signal).map(_._2)
+          _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct).map(_._2)
         ) --> AppState.redoObserver,
         span(className := "icon", "↷") // Redo arrow icon
 //        span(className := "button-text", " "),

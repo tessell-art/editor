@@ -27,13 +27,13 @@ object MenuBarComponent:
           // Hamburger button for small screens
           button(
             className  := "menu-toggle",
-            onClick --> (_ => EditorState.isMenuOpen.update(!_)),
+            onClick --> (_ => EditorState.uiState.update(s => s.copy(isMenuOpen = !s.isMenuOpen))),
             aria.label := "Toggle navigation menu",
             "☰"
           ),
           // The menu itself
           div(
-            className <-- EditorState.isMenuOpen.signal.map(open =>
+            className <-- EditorState.uiState.signal.map(_.isMenuOpen).distinct.map(open =>
               if (open) "menu-items-container open" else "menu-items-container"
             ),
             fileMenu(),
@@ -85,7 +85,7 @@ object MenuBarComponent:
       ) --> { _ =>
 
         action()
-        EditorState.isMenuOpen.set(false)
+        EditorState.uiState.update(_.copy(isMenuOpen = false))
       }, // close menu on action
       className("disabled") <-- enabled.map(!_),
       span(title),
@@ -249,7 +249,7 @@ object MenuBarComponent:
 
           EditorState.tempColor.set(color)
           EditorState.showColorPicker.set(true)
-          EditorState.isMenuOpen.set(false)
+          EditorState.uiState.update(_.copy(isMenuOpen = false))
         }
       )
 //      div(className := "menu-separator"),

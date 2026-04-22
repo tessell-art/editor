@@ -67,7 +67,7 @@ object TouchEventHandler:
       initialRotation.set(Some(Radian.fromDegrees(currentTransform.rotationDegrees)))
 
       // Set an anchor point for zooming
-      EditorState.canvasElementRef.now().foreach: canvasElement =>
+      EditorState.uiState.now().canvasElementRef.foreach: canvasElement =>
 
         val pointer    = getPointer(canvasElement, segment)
         val worldPoint = screenToWorld(pointer, currentTransform)
@@ -128,7 +128,7 @@ object TouchEventHandler:
 
           val gestureCenter = segment.midPoint
 
-          EditorState.canvasElementRef.now().foreach: canvasElement =>
+          EditorState.uiState.now().canvasElementRef.foreach: canvasElement =>
 
             val pointer = getPointer(canvasElement, segment)
             val newPan  = pointer - transformedPoint

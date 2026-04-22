@@ -100,7 +100,7 @@ object ViewOperations:
       val coords = tiling.boundaryVertices.toOption.get.map(_.coords.toPoint).map(_.scale(canvasScale))
       if coords.nonEmpty then
 
-        EditorState.canvasElementRef.now().foreach { canvasElement =>
+        EditorState.uiState.now().canvasElementRef.foreach { canvasElement =>
 
           val canvasRect       = canvasElement.getBoundingClientRect()
           val currentTransform = EditorState.viewState.now().viewTransform
