@@ -27,31 +27,38 @@ object SelectionOperations:
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
-      val startOpt = EditorState.measurementStartPoint.now()
-      val endOpt   = EditorState.measurementEndPoint.now()
+      val ms       = EditorState.measurementState.now()
+      val startOpt = ms.measurementStartPoint
+      val endOpt   = ms.measurementEndPoint
 
       (startOpt, endOpt) match
         case (None, _)                          =>
           // No start point, so set this as the start point.
-          EditorState.measurementStartPoint.set(Some(point))
-          EditorState.measurementResult.set(None)
+          EditorState.measurementState.update(
+            _.copy(measurementStartPoint = Some(point), measurementResult = None)
+          )
         case (Some(start), _) if start == point =>
           // Clicked on the start point, clear both start and end points.
-          EditorState.measurementStartPoint.set(None)
-          EditorState.measurementEndPoint.set(None)
-          EditorState.measurementPreviousEndPoint.set(None)
-          EditorState.measurementResult.set(None)
+          EditorState.measurementState.update(
+            _.copy(
+              measurementStartPoint = None,
+              measurementEndPoint = None,
+              measurementPreviousEndPoint = None,
+              measurementResult = None
+            )
+          )
         case (_, Some(end)) if end == point     =>
           // Clicked on the end point, clear only the end point.
-          EditorState.measurementEndPoint.set(None)
-          EditorState.measurementPreviousEndPoint.set(None)
-          EditorState.measurementResult.set(None)
+          EditorState.measurementState.update(
+            _.copy(
+              measurementEndPoint = None,
+              measurementPreviousEndPoint = None,
+              measurementResult = None
+            )
+          )
         case (Some(start), previousEndOpt)      =>
           // Start point is set, so set this as the end point.
-          EditorState.measurementPreviousEndPoint.set(previousEndOpt.map(_.point))
-          EditorState.measurementEndPoint.set(Some(point))
           val distance   = point.point.distanceTo(start.point)
-          EditorState.measurementResult.set(Some(distance))
           val maybeAngle =
             previousEndOpt.map: clickable =>
 
@@ -60,11 +67,18 @@ object SelectionOperations:
               val diff   = (angle2 - angle1).normalize.toDouble
               // Use the smaller conjugate angle in [0, PI].
               Math.min(diff, Radian.TAU.toDouble - diff)
-          EditorState.measurementAngle.set(maybeAngle.map(Radian(_)))
+          EditorState.measurementState.update(
+            _.copy(
+              measurementPreviousEndPoint = previousEndOpt.map(_.point),
+              measurementEndPoint = Some(point),
+              measurementResult = Some(distance),
+              measurementAngle = maybeAngle.map(Radian(_))
+            )
+          )
 
   def handlePointClickForFan(point: ClickablePoint): Unit =
     ifNotProcessing:
-      EditorState.clickablePoints.set(Nil)
+      EditorState.measurementState.update(_.copy(clickablePoints = Nil))
       point.anchor match
         case Anchor.Vertex(vertexId) =>
           Logger.debug(s"Fan vertex clicked: $vertexId")
@@ -73,7 +87,7 @@ object SelectionOperations:
 
   def handlePointClickForDeletion(point: ClickablePoint): Unit =
     ifNotProcessing:
-      EditorState.clickablePoints.set(Nil)
+      EditorState.measurementState.update(_.copy(clickablePoints = Nil))
       point.anchor match
         case Anchor.Vertex(vertexId)                     =>
           TessellationOperations.attemptVertexDeletion(vertexId)
@@ -84,7 +98,7 @@ object SelectionOperations:
 
   def handlePointClickForInsertion(point: ClickablePoint): Unit =
     ifNotProcessing:
-      EditorState.clickablePoints.set(Nil)
+      EditorState.measurementState.update(_.copy(clickablePoints = Nil))
       point.anchor match
         case Anchor.MidPoint(startVertexId, endVertexId) =>
           TessellationOperations.attemptPolygonInsertion(startVertexId, endVertexId)
@@ -218,10 +232,10 @@ object SelectionOperations:
     withNonEmptyTiling: tiling =>
       tiling.findInnerFace(faceId).toOption match
         case Some(face) =>
-          EditorState.highlightedPolygonId.set(Some(faceId))
+          EditorState.measurementState.update(_.copy(highlightedPolygonId = Some(faceId)))
 
           if edgesOnly then
-            EditorState.clickablePoints.set(Nil)
+            EditorState.measurementState.update(_.copy(clickablePoints = Nil))
           else
             tiling.findInnerFaceVertices(face.id).toOption.foreach: faceVertices =>
 
@@ -250,9 +264,11 @@ object SelectionOperations:
                       boundaryVertexIds.contains(vertexId)
                     .map: (vertexId, point) =>
                       ClickablePoint(point, Anchor.Vertex(vertexId))
-                EditorState.clickablePoints.set(vertexBoundaryPoints)
+                EditorState.measurementState.update(_.copy(clickablePoints = vertexBoundaryPoints))
               else
-                EditorState.clickablePoints.set(centerPoint :: vertexPoints ++ midPoints)
+                EditorState.measurementState.update(_.copy(clickablePoints =
+                  centerPoint :: vertexPoints ++ midPoints
+                ))
 
         case None => ()
 

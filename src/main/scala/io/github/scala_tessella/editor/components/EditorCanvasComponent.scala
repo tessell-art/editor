@@ -13,15 +13,15 @@ object EditorCanvasComponent:
 
   def element: Element =
     val fileNameDisplaySignal =
-      EditorState.currentFileName.signal.combineWith(EditorState.measurementResult.signal).map:
+      EditorState.currentFileName.signal.combineWith(EditorState.measurementState.signal.map(_.measurementResult).distinct).map:
         (maybeName, maybeDistance) =>
           maybeDistance match
             case Some(_) => ""
             case None    => maybeName.getOrElse("untitled")
 
     val measurementDisplaySignal =
-      EditorState.measurementResult.signal
-        .combineWith(EditorState.measurementAngle.signal, EditorState.isAngleShownInRad.signal)
+      EditorState.measurementState.signal.map(_.measurementResult).distinct
+        .combineWith(EditorState.measurementState.signal.map(_.measurementAngle).distinct, EditorState.measurementState.signal.map(_.isAngleShownInRad).distinct)
         .map:
           case (None, _, _)                         => None
           case (Some(distance), None, _)            => Some(span(distanceString(distance)))
@@ -33,7 +33,7 @@ object EditorCanvasComponent:
               span(
                 onClick --> { _ =>
 
-                  EditorState.isAngleShownInRad.update(!_)
+                  EditorState.measurementState.update(s => s.copy(isAngleShownInRad = !s.isAngleShownInRad))
                 },
                 title     := "Click to toggle radians/degrees",
                 className := "angle-toggle",

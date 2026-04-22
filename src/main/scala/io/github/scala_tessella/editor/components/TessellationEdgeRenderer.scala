@@ -174,9 +174,11 @@ object TessellationEdgeRenderer:
       svg.strokeWidth   := "12",
       svg.strokeLineCap := "round",
       svg.className     := "perimeter-edge-transparent",
-      svg.pointerEvents <-- EditorState.highlightedPolygonId.signal.map(_.fold("visiblePainted")(_ =>
-        "none"
-      )),
+      svg.pointerEvents <--
+        EditorState.measurementState.signal.map(_.highlightedPolygonId).distinct.map(_.fold("visiblePainted")(
+          _ =>
+            "none"
+        )),
       // Enhanced visual feedback and click handling
       onMouseEnter.compose(stream =>
         gate(stream).withCurrentValueOf(previewStateSignal)

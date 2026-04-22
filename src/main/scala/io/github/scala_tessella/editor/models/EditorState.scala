@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.models
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
+import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
 import io.github.scala_tessella.editor.models.EditorConfig
 
@@ -148,30 +148,11 @@ object EditorState:
     /** Mirror animation overlay, if any */
     val mirrorAnimation: Var[Option[MirrorAnimation]] = Var(None)
 
-  object MeasurementState:
-    /** Starting point for measurement */
-    val measurementStartPoint: Var[Option[ClickablePoint]] = Var(None)
-
-    /** Ending point for measurement */
-    val measurementEndPoint: Var[Option[ClickablePoint]] = Var(None)
-
-    /** Previous ending point for measurement (for angle calculation) */
-    val measurementPreviousEndPoint: Var[Option[Point]] = Var(None)
-
-    /** ID of the highlighted polygon during measurement/insertion */
-    val highlightedPolygonId: Var[Option[FaceId]] = Var(None)
-
-    /** List of clickable points for the measurement/eraser tools */
-    val clickablePoints: Var[List[ClickablePoint]] = Var(List.empty)
-
-    /** Measurement result (distance) */
-    val measurementResult: Var[Option[Double]] = Var(None)
-
-    /** Measurement result (angle) */
-    val measurementAngle: Var[Option[Radian]] = Var(None)
-
-    /** Whether the angle measurement result is shown in radians or degrees */
-    val isAngleShownInRad: Var[Boolean] = Var(true)
+  /** Measurement-state aggregate — ruler/eraser/inserter tool state. See `MeasurementState` in
+    * EditorData.scala. Per ADR-002, reads go through `measurementState.signal.map(_.field).distinct`; writes
+    * through `measurementState.update(_.copy(field = …))`.
+    */
+  val measurementState: Var[MeasurementState] = Var(MeasurementState.initial)
 
   object IrregularState:
     val initialShape: Vector[AngleDegree] = Vector(60, 120, 60, 120).map(AngleDegree(_))
@@ -234,7 +215,7 @@ object EditorState:
 
     /** Selected face for insertion, derived from highlighted polygon id */
     val selectedFaceForInsertion: Signal[Option[FaceId]] =
-      MeasurementState.highlightedPolygonId.signal
+      measurementState.signal.map(_.highlightedPolygonId).distinct
 
   export FileState.*
   export ThemeState.*
@@ -244,6 +225,5 @@ object EditorState:
   export ErrorState.*
   export PreviewState.*
   export AnimationState.*
-  export MeasurementState.*
   export IrregularState.*
   export DerivedState.*

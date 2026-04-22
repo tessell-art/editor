@@ -89,8 +89,8 @@ object TessellationRenderer:
       None
 
     val clickablePointsDisplay = children <--
-      EditorState.clickablePoints.signal
-        .combineWith(EditorState.measurementStartPoint.signal)
+      EditorState.measurementState.signal.map(_.clickablePoints).distinct
+        .combineWith(EditorState.measurementState.signal.map(_.measurementStartPoint).distinct)
         .map: (points, startPointOpt) =>
           points
             .filterNot: p =>
@@ -99,15 +99,18 @@ object TessellationRenderer:
               TessellationMeasurementRenderer.renderClickablePoint(p, tilingPointToCanvasView)
 
     val measurementSignals =
-      EditorState.measurementStartPoint.signal
-        .combineWith(EditorState.measurementPreviousEndPoint.signal, EditorState.measurementEndPoint.signal)
+      EditorState.measurementState.signal.map(_.measurementStartPoint).distinct
+        .combineWith(
+          EditorState.measurementState.signal.map(_.measurementPreviousEndPoint).distinct,
+          EditorState.measurementState.signal.map(_.measurementEndPoint).distinct
+        )
 
     val measurementStartPointDisplay =
-      child.maybe <-- EditorState.measurementStartPoint.signal.map:
+      child.maybe <-- EditorState.measurementState.signal.map(_.measurementStartPoint).distinct.map:
         _.map: p =>
           TessellationMeasurementRenderer.renderMeasurementStartPoint(p, tilingPointToCanvasView)
     val measurementEndPointDisplay   =
-      child.maybe <-- EditorState.measurementEndPoint.signal.map:
+      child.maybe <-- EditorState.measurementState.signal.map(_.measurementEndPoint).distinct.map:
         _.map: p =>
           TessellationMeasurementRenderer.renderMeasurementEndPoint(p, tilingPointToCanvasView)
     val measurementLineDisplay       = child.maybe <-- measurementSignals.map:

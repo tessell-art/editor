@@ -68,8 +68,8 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    assertEquals(EditorState.highlightedPolygonId.now(), Some(faceId))
-    assert(EditorState.clickablePoints.now().nonEmpty)
+    assertEquals(EditorState.measurementState.now().highlightedPolygonId, Some(faceId))
+    assert(EditorState.measurementState.now().clickablePoints.nonEmpty)
   }
 
   test("Fan tool should only expose vertex clickable points") {
@@ -82,8 +82,8 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    val points = EditorState.clickablePoints.now()
-    assertEquals(EditorState.highlightedPolygonId.now(), Some(faceId))
+    val points = EditorState.measurementState.now().clickablePoints
+    assertEquals(EditorState.measurementState.now().highlightedPolygonId, Some(faceId))
     assertEquals(points.size, vertexCount)
     assert(points.forall(p =>
       p.anchor match {
@@ -102,8 +102,8 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    assertEquals(EditorState.highlightedPolygonId.now(), Some(faceId))
-    assertEquals(EditorState.clickablePoints.now(), Nil)
+    assertEquals(EditorState.measurementState.now().highlightedPolygonId, Some(faceId))
+    assertEquals(EditorState.measurementState.now().clickablePoints, Nil)
   }
 
   test("Select mode should toggle polygon selection") {

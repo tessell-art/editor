@@ -24,25 +24,25 @@ class AppStateSpec extends FunSuite with EditorStateFixture:
   test("clearMeasurements should reset all measurement-related state") {
     // Given: some measurement state is set
     val point = ClickablePoint(Point(1, 1), Anchor.Vertex(VertexId(1)))
-    EditorState.clickablePoints.set(List(point))
-    EditorState.measurementStartPoint.set(Some(point))
-    EditorState.measurementEndPoint.set(Some(point))
-    EditorState.measurementResult.set(Some(123.45))
-    EditorState.measurementAngle.set(Some(Radian(0.5)))
-    EditorState.highlightedPolygonId.set(Some(FaceId(1)))
-    EditorState.measurementPreviousEndPoint.set(Some(Point(0, 0)))
+    EditorState.measurementState.update(_.copy(clickablePoints = List(point)))
+    EditorState.measurementState.update(_.copy(measurementStartPoint = Some(point)))
+    EditorState.measurementState.update(_.copy(measurementEndPoint = Some(point)))
+    EditorState.measurementState.update(_.copy(measurementResult = Some(123.45)))
+    EditorState.measurementState.update(_.copy(measurementAngle = Some(Radian(0.5))))
+    EditorState.measurementState.update(_.copy(highlightedPolygonId = Some(FaceId(1))))
+    EditorState.measurementState.update(_.copy(measurementPreviousEndPoint = Some(Point(0, 0))))
 
     // When
     AppState.clearMeasurements()
 
     // Then
-    assertEquals(EditorState.clickablePoints.now(), Nil)
-    assertEquals(EditorState.measurementStartPoint.now(), None)
-    assertEquals(EditorState.measurementEndPoint.now(), None)
-    assertEquals(EditorState.measurementPreviousEndPoint.now(), None)
-    assertEquals(EditorState.highlightedPolygonId.now(), None)
-    assertEquals(EditorState.measurementResult.now(), None)
-    assertEquals(EditorState.measurementAngle.now(), None)
+    assertEquals(EditorState.measurementState.now().clickablePoints, Nil)
+    assertEquals(EditorState.measurementState.now().measurementStartPoint, None)
+    assertEquals(EditorState.measurementState.now().measurementEndPoint, None)
+    assertEquals(EditorState.measurementState.now().measurementPreviousEndPoint, None)
+    assertEquals(EditorState.measurementState.now().highlightedPolygonId, None)
+    assertEquals(EditorState.measurementState.now().measurementResult, None)
+    assertEquals(EditorState.measurementState.now().measurementAngle, None)
   }
 
   test("refreshSettingsTempValues syncs temp settings and hides picker") {

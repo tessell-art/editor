@@ -34,14 +34,7 @@ trait EditorStateFixture:
     EditorState.fanAnimation.set(None)
     EditorState.doublingAnimation.set(None)
     EditorState.mirrorAnimation.set(None)
-    EditorState.clickablePoints.set(Nil)
-    EditorState.measurementStartPoint.set(None)
-    EditorState.measurementEndPoint.set(None)
-    EditorState.measurementPreviousEndPoint.set(None)
-    EditorState.highlightedPolygonId.set(None)
-    EditorState.measurementResult.set(None)
-    EditorState.measurementAngle.set(None)
-    EditorState.isAngleShownInRad.set(true)
+    EditorState.measurementState.set(MeasurementState.initial)
 
     // Reset selection & tiling to a known base
     EditorState.tessellationState.set(TessellationState.initial)
