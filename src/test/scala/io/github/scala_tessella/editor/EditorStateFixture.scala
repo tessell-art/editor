@@ -33,30 +33,13 @@ trait EditorStateFixture:
     resetTransientState()
 
   override def afterEach(context: AfterEach): Unit =
-    // Restore the structural snapshot
+    // Restore the structural snapshot atomically — one `.set`/`.update` per aggregate.
     saved.foreach { s =>
 
-      EditorState.tessellationState.set(
-        TessellationState(
-          currentTiling = s.tiling,
-          selectedPerimeterEdges = s.selectedPerimeterEdges,
-          selectedTilingPolygons = s.selectedTilingPolygons
-        )
-      )
+      EditorState.tessellationState.set(s.tessellation)
+      EditorState.toolState.set(s.tools)
+      EditorState.irregularState.set(s.irregular)
       EditorState.colorState.update(_.copy(polygonColors = s.polygonColors, fillColor = s.fillColor))
-      EditorState.toolState.set(
-        ToolState(
-          editorMode = s.editorMode,
-          activeTool = s.activeTool,
-          selectedPolygon = s.selectedPolygon
-        )
-      )
-      EditorState.irregularState.set(
-        IrregularState(
-          recentIrregularPolygon = s.recentIrregularPolygon,
-          isIrregularSelected = s.isIrregularSelected
-        )
-      )
     }
 
     // And reset the ephemeral / transient state again (to avoid leaks even if no snapshot)

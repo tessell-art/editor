@@ -121,22 +121,13 @@ control-flow-through-exceptions is inconsistent with the `Either` style
 `TilingSVG.fromMetadata` already returns. Refactor to a single
 `Either[String, Tiling]` pipeline; wrap only the raw DOM APIs in `Try`.
 
-### P2#5 — `UndoManager` / `AppStateSnapshot` drift risk
-Three hand-maintained lists must stay in sync or undo silently loses state:
-- `AppStateSnapshot` case class — 10 fields (`AppStateSnapshot.scala:9`).
-- `AppStateSnapshot.fromCurrentState` — 10 `.now()` calls.
-- `UndoManager.isStateEquivalent` — 9 field comparisons (`timestamp` excluded).
-- `UndoManager.restoreState` — 10 `.set` calls.
-
-Any new `Var` added to `EditorState` is silently dropped by undo. Fixes:
-- Make `AppStateSnapshot` the *only* source of truth with structural equality;
-  drop `timestamp` or override `equals`.
-- Better: once ADR-002 lands option B, a snapshot = the whole `EditorState`
-  case class value; all three hand-written lists disappear.
-
-Separately, the `MAX_UNDO_DEPTH` trimming in `UndoManager.scala:40-47`
-manually ping-pongs between two stacks. Replace with `ArrayDeque.removeLast()`
-or `undoStack.takeRight(MAX_UNDO_DEPTH)`.
+### P2#5 — `UndoManager` / `AppStateSnapshot` drift risk ✅
+Resolved 2026-04-22 (under P3#15). `AppStateSnapshot` now has 5 fields —
+three aggregate case classes (`TessellationState`, `ToolState`,
+`IrregularState`) plus two cherry-picked `ColorState` fields
+(`polygonColors`, `fillColor`). Structural `==` on the nested case
+classes replaces `isStateEquivalent`. Adding a field to an aggregate
+case class now automatically propagates into undo/redo.
 
 ### P2#6 — Split `TessellationOperations.scala` (20 KB, ~470 lines, 30+ methods)
 Largest file in the project. Contains
@@ -183,8 +174,9 @@ Only 2 `private var`s exist in main sources
 with `// scalafix:ok` on those two (or eliminate them per P2#7) to prevent
 regression.
 
-### P3#12 — Replace `for (_ <- 0 until MAX_UNDO_DEPTH)` in UndoManager
-Cosmetic; likely resolved as a side effect of P2#5.
+### P3#12 — Replace `for (_ <- 0 until MAX_UNDO_DEPTH)` in UndoManager ✅
+Resolved 2026-04-22 (under P3#15). The two-stack ping-pong replaced
+with `while undoStack.size > MAX_UNDO_DEPTH do undoStack.remove(undoStack.size - 1)`.
 
 ### P3#13 — Promote remaining `() => AppState.foo()` callbacks to `Observer[Unit]`
 ADR-001 Phase 2 deferred the mass observer-wiring pass. The existing
@@ -193,19 +185,30 @@ ADR-001 Phase 2 deferred the mass observer-wiring pass. The existing
 etc. as callbacks. Cosmetic but aligns the code with Laminar idiom —
 do opportunistically when touching these files for other reasons.
 
-### P3#15 — Consolidate `AppStateSnapshot` fields into aggregate case classes
-Currently `AppStateSnapshot` flattens the state into 10 top-level fields
-(`editorMode`, `activeTool`, `selectedPolygon`, …). Once ADR-002's Option B
-rollout is complete, each aggregate should move into `AppStateSnapshot` as a
-case-class-typed field (e.g. `toolState: ToolState`). Benefits:
-- Adding a new `Var` to an aggregate automatically appears in the snapshot —
-  no hand-maintained list.
-- `UndoManager.isStateEquivalent` and `UndoManager.restoreState` both
-  collapse to the shape `snapshot.aggregate`.
-- Resolves BACKLOG P2#5 (snapshot drift risk) structurally, not by
-  convention.
+### P3#15 — Consolidate `AppStateSnapshot` fields into aggregate case classes ✅
+Resolved 2026-04-22. What landed:
 
-Do opportunistically as each aggregate migrates.
+- `AppStateSnapshot` went from **10 flat fields + timestamp** to **5
+  fields**: `tessellation: TessellationState`, `tools: ToolState`,
+  `irregular: IrregularState`, `polygonColors: Map[FaceId, ColorRGB]`,
+  `fillColor: ColorRGB`. (The last two cherry-picked because the rest
+  of `ColorState` is UI preference / picker state, not app model.)
+- `timestamp` deleted entirely (was never read anywhere).
+- `UndoManager.isStateEquivalent` (9-line hand comparison) deleted;
+  structural `==` on the case class does the same job.
+- `UndoManager.restoreState` went from ~10 lines across 4 aggregates
+  (plus a now-removed `ColorState.*` export reliance) to 4 lines: one
+  `.set` per full aggregate + one `.update` for the two cherry-picked
+  `ColorState` fields. Undo now emits 4 signal events per restore
+  instead of 10.
+- `AppStateSnapshot.fromCurrentState` went from 10 `.now()` calls to 4
+  (one per aggregate). Adding a field inside any of the three
+  aggregate case classes now automatically propagates into the snapshot
+  and restore.
+- `EditorStateFixture.afterEach` rewritten to 4 atomic aggregate
+  restores (mirrors `UndoManager.restoreState`).
+- Side effect: P2#5 (drift risk) and P3#12 (MAX_UNDO_DEPTH loop)
+  closed too.
 
 ### P3#14 — Relocate `UndoManager` out of `utils/`
 `utils/UndoManager.scala` orchestrates state transitions and reads/writes

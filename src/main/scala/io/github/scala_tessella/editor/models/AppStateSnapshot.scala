@@ -1,38 +1,34 @@
 package io.github.scala_tessella.editor.models
 
-import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.utils.ColorRGB
 
-// Represents a snapshot of the application state that can be undone
+/** Snapshot of the subset of editor state that undo/redo operates on.
+  *
+  * This deliberately covers only the "app model" — domain + tool + palette state — and leaves transient UI
+  * state (view transform, popups, processing flags, errors, animations, measurements) alone. Fields are
+  * grouped by aggregate; two `ColorState` fields are cherry-picked because the rest of `ColorState` (picker
+  * visibility, persisted user preferences, temp settings) is UI state, not app model.
+  *
+  * Structural equality is the intended comparison: two snapshots are equivalent iff their fields are all
+  * equal. `UndoManager.saveState` skips consecutive identical snapshots using plain `==`.
+  */
 case class AppStateSnapshot(
-    tiling: TilingDCEL,
-    selectedPolygon: Option[Int],
-    selectedPerimeterEdges: Set[String],
-    selectedTilingPolygons: Set[FaceId],
+    tessellation: TessellationState,
+    tools: ToolState,
+    irregular: IrregularState,
     polygonColors: Map[FaceId, ColorRGB],
-    fillColor: ColorRGB,
-    editorMode: EditorMode,
-    activeTool: Option[Tool],
-    timestamp: Long = System.currentTimeMillis(),
-    recentIrregularPolygon: Option[Vector[AngleDegree]],
-    isIrregularSelected: Boolean
+    fillColor: ColorRGB
 )
 
 object AppStateSnapshot:
-  // Create a snapshot from the current AppState
+  /** Capture the current app model. Reads each aggregate `Var` once. */
   def fromCurrentState: AppStateSnapshot =
-    val tools = EditorState.toolState.now()
+    val colors = EditorState.colorState.now()
     AppStateSnapshot(
-      tiling = EditorState.tessellationState.now().currentTiling,
-      selectedPolygon = tools.selectedPolygon,
-      selectedPerimeterEdges = EditorState.tessellationState.now().selectedPerimeterEdges,
-      selectedTilingPolygons = EditorState.tessellationState.now().selectedTilingPolygons,
-      polygonColors = EditorState.colorState.now().polygonColors,
-      fillColor = EditorState.colorState.now().fillColor,
-      editorMode = tools.editorMode,
-      activeTool = tools.activeTool,
-      recentIrregularPolygon = EditorState.irregularState.now().recentIrregularPolygon,
-      isIrregularSelected = EditorState.irregularState.now().isIrregularSelected
+      tessellation = EditorState.tessellationState.now(),
+      tools = EditorState.toolState.now(),
+      irregular = EditorState.irregularState.now(),
+      polygonColors = colors.polygonColors,
+      fillColor = colors.fillColor
     )
