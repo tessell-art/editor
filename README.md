@@ -84,6 +84,11 @@ npm run build
 
 The output will be in the `dist` folder.
 
+### Tests and e2e
+
+See [RUNBOOK.md](RUNBOOK.md) for how to run unit tests, the Laminar-in-JSDOM
+component tests, and the Playwright smoke suite under `e2e/`.
+
 ## Contributing
 
 For more information and to contribute, please visit the [scala-tessella GitHub organization](https://github.com/scala-tessella).

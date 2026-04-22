@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Playwright (e2e/ — ADR-003 Tier 2)
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+e2e/.playwright-cache/
+e2e/playwright/.cache/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

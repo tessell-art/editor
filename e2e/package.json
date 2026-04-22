@@ -1,0 +1,17 @@
+{
+  "name": "tessella-editor-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Playwright smoke suite for Tessella Editor (ADR-003 Tier 2). Sibling to the main project — own dependencies, own scripts, runs against `vite dev` in the parent dir.",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}

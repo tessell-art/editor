@@ -87,34 +87,56 @@ Options to evaluate in ADR-002:
 **ADR:** [ADR-003 — Test strategy](docs/adr/003-test-strategy.md)
 (Accepted — Tier 1 scaffolding landed 2026-04-22; Tier 2 deferred).
 
-**First-phase landing** — crystallised the mount/unmount helper and first
-component spec:
+**Tier 1 landed 2026-04-22** — mount/unmount helper plus first two specs:
+
 - `LaminarTestSupport` trait
   (`src/test/.../components/LaminarTestSupport.scala`, ~60 lines):
-  `mount(HtmlElement)`, `querySelector` / `querySelectorAll` scoped to
+  `mount(Element)`, `querySelector` / `querySelectorAll` scoped to
   the container, `clickOn(selector)`. Auto-cleans the container and
-  unmounts the `RootNode` in `afterEach`. Mix *last* after
-  `EditorStateFixture` so unmount runs before state restore.
-- `AboutPopupSpec` (4 mount-tests) as the first ADR-003 Tier-1 spec:
-  static content renders, close button closes, overlay closes, clicking
-  content does **not** close (asserts `PopupCommons`' `stopPropagation`
-  wiring). Total surface: ~35 lines.
+  unmounts the `RootNode` in `afterEach`. Extends `FunSuite` (not
+  `self: FunSuite =>`) so `super.afterEach` can chain into the next
+  trait. Mix *last* after `EditorStateFixture` so unmount runs before
+  state restore.
+- `AboutPopupSpec` (4 tests) — first mount spec. Static content +
+  `PopupCommons` close wiring (close button, overlay, content
+  stopPropagation).
+- `IrregularPolygonPopupSpec` (8 tests) — second mount spec, picked to
+  smoke-test the helper against `child.maybe <--` state-driven content,
+  state-mutating button observers with `e.stopPropagation()` inside the
+  observer body, and reactive DOM updates mid-test.
 
-The trait pattern validates the ADR's key assumption — mount-based tests
-work under the existing `JSDOMNodeJSEnv` with no new build-sbt wiring,
-no external dev dependency, and no per-spec ceremony beyond
-`with LaminarTestSupport`.
+**Tier 2 first cut landed 2026-04-22** — Playwright smoke suite under
+`e2e/` (sibling project, own `package.json`/`node_modules`):
 
-Next for this item (not urgent — do opportunistically):
+- `e2e/playwright.config.ts` — auto-starts `vite dev` from the parent
+  directory, reuses an existing dev server outside CI, Chromium-only.
+- `e2e/tests/smoke.spec.ts` — 4 scenarios: app boots and renders the
+  palette + canvas; clicking the hexagon palette button creates a
+  tiling; `Ctrl+Z` undoes it; Help → About... opens the popup and the
+  close button dismisses it.
+- `e2e/README.md` — first-time setup, run instructions, what's
+  deliberately not yet covered (SVG export-import round-trip, touch
+  gestures, visual regression), and a CI-integration recipe.
+- `.gitignore` updated for Playwright artifacts (`test-results/`,
+  `playwright-report/`, `.playwright-cache/`).
+
+**CI integration is pending** — the GitHub Actions workflow at
+`.github/workflows/build.yml` only runs `sbt test` and `npm run build`.
+Wiring Playwright in adds a ~150 MB browser download per run; recipe
+in `e2e/README.md` covers the `npx playwright install --with-deps
+chromium` step. Could live in a separate workflow gated on `main`
+pushes if PR build time becomes a concern.
+
+Open follow-ups (not urgent — opportunistic):
 1. Mount specs for the remaining popups (`GuidePopup`,
-   `ShortcutsPopup`, `SettingsPopup`, `IrregularPolygonPopup`) — reuse
-   the `popup-overlay` / `popup-close-btn` / `popup-content` assertion
-   shape from `AboutPopupSpec`.
-2. Mount specs for `UndoComponent`, `ErrorMessageComponent`,
-   `ColorPickerPopupComponent` — each small, state-driven.
-3. Tier 2 (Playwright smoke) — only after the Tier-1 sweep reaches a
-   natural ceiling. Canvas rendering + real pointer/touch + visual
-   regression is what's left.
+   `ShortcutsPopup`, `SettingsPopup`) plus `UndoComponent`,
+   `ErrorMessageComponent`, `ColorPickerPopupComponent`. Helper is
+   stable; each spec follows the established shape.
+2. Tier 2 expansion: SVG export-import round-trip via
+   `page.waitForEvent('download')`, `TouchEventHandler` via
+   Playwright's touch-emulation device, visual snapshots for the
+   canvas at known scenes.
+3. Wire Tier 2 into CI.
 
 Static analysis on 2026-04-22 reports 217 tests across 27 suites, but the
 distribution is uneven:
@@ -531,11 +553,12 @@ ADRs 001 and 002 plus the original P2 wave are done. Open items:
    (`LaminarTestSupport` + first mount spec) landed same day.
 5. **P3#20** (extract pure-function helpers from components) — first batch
    done 2026-04-22; continue opportunistically when touching each file.
-6. **Implementation of ADR-003 Tier 1** — mount specs for remaining popups
-   and small components. Helped along by P3#20. No ADR dependency, no new
-   tooling; just reuses `LaminarTestSupport`.
-7. **Implementation of ADR-003 Tier 2** — small Playwright smoke suite.
-   Last, deliberately.
+6. **Implementation of ADR-003 Tier 1** — first batch (helper + 2 popup
+   specs) landed 2026-04-22; continue opportunistically with the remaining
+   popups and small components, reusing `LaminarTestSupport`.
+7. **Implementation of ADR-003 Tier 2** — first cut (4-test smoke suite +
+   scaffold) landed 2026-04-22; remaining work is SVG round-trip, touch
+   emulation, visual snapshots, and CI integration.
 8. Remaining P3 items (P3#8 dcel pin, P3#10 README architecture section,
    P3#11 scalafix `var` rule).
 
