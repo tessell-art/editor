@@ -20,6 +20,10 @@ lazy val editor = project.in(file("."))
     version := "0.3.5",
     name := "Tessella Editor",
 
+    // TODO: remove once dcel publishes 0.1.0-SNAPSHOT to a public repo.
+    // Vendored Ivy-style artifacts live under lib-repo/.
+    resolvers += Resolver.file("local-lib", file("lib-repo"))(Resolver.ivyStylePatterns),
+
     // Tell Scala.js that this is an application with a main method
     scalaJSUseMainModuleInitializer := true,
 

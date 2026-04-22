@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+  <info organisation="io.github.scala-tessella" module="dcel_sjs1_3" revision="0.1.0-SNAPSHOT" status="integration" publication="20260421194718">
+    <description>dcel</description>
+  </info>
+  <configurations>
+    <conf name="plugin" visibility="public" description=""/>
+    <conf name="pom" visibility="public" description=""/>
+    <conf extends="runtime" name="test" visibility="public" description=""/>
+    <conf name="provided" visibility="public" description=""/>
+    <conf extends="compile,optional,provided" name="compile-internal" visibility="public" description=""/>
+    <conf name="scalafix" visibility="public" description=""/>
+    <conf name="docs" visibility="public" description=""/>
+    <conf name="optional" visibility="public" description=""/>
+    <conf name="compile" visibility="public" description=""/>
+    <conf extends="test,optional,provided" name="test-internal" visibility="public" description=""/>
+    <conf name="scala-repl-tool" visibility="public" description=""/>
+    <conf name="scala-tool" visibility="public" description=""/>
+    <conf name="scala-doc-tool" visibility="public" description=""/>
+    <conf name="sources" visibility="public" description=""/>
+    <conf extends="compile" name="runtime" visibility="public" description=""/>
+    <conf extends="runtime,optional" name="runtime-internal" visibility="public" description=""/>
+  </configurations>
+  <publications>
+    <artifact name="dcel_sjs1_3" type="jar" ext="jar" conf="compile"/>
+    <artifact e:classifier="sources" name="dcel_sjs1_3" type="src" ext="jar" conf="sources"/>
+    <artifact e:classifier="javadoc" name="dcel_sjs1_3" type="doc" ext="jar" conf="docs"/>
+    <artifact name="dcel_sjs1_3" type="pom" ext="pom" conf="pom"/>
+  </publications>
+  <dependencies>
+    <dependency org="org.scala-lang" name="scala3-compiler_3" rev="3.8.3" conf="scala-tool->default(compile)"> </dependency>
+    <dependency org="org.scala-lang" name="scaladoc_3" rev="3.8.3" conf="scala-doc-tool->default(compile)"> </dependency>
+    <dependency org="org.scala-lang" name="scala3-repl_3" rev="3.8.3" conf="scala-repl-tool->default(compile)"> </dependency>
+    <dependency org="org.scala-lang" name="scala3-library_sjs1_3" rev="3.8.3" conf="compile->default(runtime)"> </dependency>
+    <dependency org="org.scala-js" name="scalajs-library_2.13" rev="1.20.2" conf="compile->default(runtime)"> </dependency>
+    <dependency org="org.scala-js" name="scalajs-test-bridge_2.13" rev="1.20.2" conf="test->default(runtime)"> </dependency>
+    <dependency org="io.github.scala-tessella" name="ring-seq_sjs1_3" rev="0.8.0" conf="compile->default(runtime)"> </dependency>
+    <dependency org="io.github.iltotore" name="iron_sjs1_3" rev="3.2.3" conf="compile->default(runtime)"> </dependency>
+    <dependency org="org.typelevel" name="spire_sjs1_3" rev="0.18.0" conf="compile->default(runtime)"> </dependency>
+    <dependency org="org.scalatest" name="scalatest_sjs1_3" rev="3.2.19" conf="test->default(runtime)"> </dependency>
+    <dependency org="org.scalacheck" name="scalacheck_sjs1_3" rev="1.18.1" conf="test->default(runtime)"> </dependency>
+    <dependency org="org.scalatestplus" name="scalacheck-1-18_sjs1_3" rev="3.2.19.0" conf="test->default(runtime)"> </dependency>
+  </dependencies>
+</ivy-module>
