@@ -17,7 +17,6 @@ object ErrorOperations:
     * scheduled back-to-back never cancel each other's unrelated timers.
     */
   final private class SingleTimeout:
-    // scalafix:ok — encapsulated mutable state for setTimeout handle
     private var currentId: Option[Int] = None
 
     def schedule(delayMs: Int)(onFire: => Unit): Unit =

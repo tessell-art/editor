@@ -13,15 +13,19 @@ object EditorCanvasComponent:
 
   def element: Element =
     val fileNameDisplaySignal =
-      EditorState.fileState.signal.map(_.currentFileName).distinct.combineWith(EditorState.measurementState.signal.map(_.measurementResult).distinct).map:
-        (maybeName, maybeDistance) =>
-          maybeDistance match
-            case Some(_) => ""
-            case None    => maybeName.getOrElse("untitled")
+      EditorState.fileState.signal.map(_.currentFileName).distinct.combineWith(
+        EditorState.measurementState.signal.map(_.measurementResult).distinct
+      ).map: (maybeName, maybeDistance) =>
+        maybeDistance match
+          case Some(_) => ""
+          case None    => maybeName.getOrElse("untitled")
 
     val measurementDisplaySignal =
       EditorState.measurementState.signal.map(_.measurementResult).distinct
-        .combineWith(EditorState.measurementState.signal.map(_.measurementAngle).distinct, EditorState.measurementState.signal.map(_.isAngleShownInRad).distinct)
+        .combineWith(
+          EditorState.measurementState.signal.map(_.measurementAngle).distinct,
+          EditorState.measurementState.signal.map(_.isAngleShownInRad).distinct
+        )
         .map:
           case (None, _, _)                         => None
           case (Some(distance), None, _)            => Some(span(distanceString(distance)))
@@ -198,14 +202,15 @@ object EditorCanvasComponent:
               case None            =>
                 fanOpt match
                   case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
-                  case None            => TessellationRenderer.renderTiling(tiling),
-
+                  case None            => TessellationRenderer.renderTiling(tiling)
+      ,
       // Show message when no tessellation is available
       child.maybe <-- animationAndTilingSignal.map: (mirrorOpt, doubleOpt, fanOpt, tiling) =>
         if mirrorOpt.isDefined || doubleOpt.isDefined || fanOpt.isDefined then None
         else if tiling.isEmpty then
           Some(noTessellationMessage())
-        else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.contains(true) then
+        else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.contains(true)
+        then
           Some(onePolygonMessage())
         else None
     )
