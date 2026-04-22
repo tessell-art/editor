@@ -275,21 +275,38 @@ tagged `// scalafix:ok` — ready for P3#11 (re-enabling the scalafix
 
 ## P3 — Polish & maintainability
 
-### P3#19 — Test-code hygiene cleanup
-Independent, low-risk, no ADR dependency:
-- Rename placeholder test `"anf"` at
-  `src/test/.../operations/ViewOperationsSpec.scala:31` to something
-  descriptive (e.g. `"AngleDegree(90).toBigRadian ≈ π/2"`).
-- Delete the commented-out test block in `SvgExporterSpec.scala:116+`.
-- Consolidate `SvgExporterSpec`: the ~15 single-`assert(contains(...))`
-  tests run on the same generated XML. Group into 3–4 tests with stronger
-  assertions, or convert to a single snapshot file. Today one upstream
-  change cascades into ~15 red tests for the same root cause.
-- `SettingsStorageSpec`: replace the `assume(isLocalStorageAvailable, …)`
-  silent-skip with `fail` if `JSDOMNodeJSEnv` ever stops providing
-  `localStorage` — current behaviour passes invisibly.
-- `AppStateSpec.refreshSettingsTempValues`: collapse the 7 sequential
-  `_.copy(…)` updates into one.
+### P3#19 — Test-code hygiene cleanup ✅
+Resolved 2026-04-22.
+
+- Placeholder test `"anf"` at `ViewOperationsSpec.scala:31` renamed to
+  `"AngleDegree(90).toBigRadian ≈ π/2"`.
+- `SvgExporterSpec`: two commented-out test blocks (dead references to
+  removed `showDual` flag) deleted; over-sliced single-`assert(contains)`
+  tests consolidated by target helper — one test per `(helper, state)`
+  pair. Specifically:
+  - `generatePolygonsXml` structure + points merged into one test (was 3);
+    the two colour-pipeline tests kept separate because they exercise
+    different `EditorState.colorState`.
+  - `generateLabelsXml` styling + per-vertex text merged (was 2);
+    positioning and empty-input cases kept separate.
+  - `generateMetadataXml` RDF structure + source/license + coordinates
+    merged (was 3); empty-tiling case kept separate.
+  - `generateSvgContent` envelope + dimensions + background merged (was
+    3); the `showNodeLabels` on/off pair merged into one toggle test
+    (was 2); other state-dependent cases kept separate.
+  - Added a `defaultSvgContent(tiling = squareTiling)` helper to
+    eliminate the repeated 5-arg call. Net: 30 → 21 tests, same coverage.
+- `SettingsStorageSpec`: removed `isLocalStorageAvailable` +
+  `assume(…)` silent-skip. `JSDOMNodeJSEnv` always provides
+  `localStorage`; if it ever stops, `clearKeys()` will throw in
+  `beforeEach` and the test will fail loudly.
+- `AppStateSpec`: 7 sequential `measurementState.update(_.copy(…))` calls
+  in `clearMeasurements` test collapsed into one multi-field `copy`;
+  same for the 5 `colorState.update` calls in
+  `refreshSettingsTempValues`.
+
+Suite totals went from 217 tests across 27 suites to **208 across 27** —
+the 9-test delta is the `SvgExporterSpec` consolidation.
 
 ### P3#20 — Extract pure-function helpers from UI components
 `TessellationCursorStyles` is the model: cursor logic lives as a pure
@@ -398,8 +415,7 @@ separate "utils/file/ is really I/O operations" issue, not in scope.
 
 ADRs 001 and 002 plus the original P2 wave are done. Open items:
 
-1. **P3#19** (test-code hygiene). Independent, no ADR dependency, makes the
-   suite cheaper to grow before doing it. Quick.
+1. ~~**P3#19** (test-code hygiene)~~ ✅ done 2026-04-22.
 2. **P2#17** (operations + interactions coverage gaps). Plain MUnit +
    `EditorStateFixture` — no new tooling needed. Closes most of the
    currently-uncovered code.

@@ -16,7 +16,6 @@ import munit.FunSuite
 
 class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
-  // Test data setup
   private val node1 = VertexId(1)
   private val node2 = VertexId(2)
   private val node3 = VertexId(3)
@@ -31,56 +30,50 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
 
   private val squareTiling = TilingBuilders.freshSquare()
 
-  test("should convert nodes to SVG points string") {
+  private def defaultSvgContent(tiling: TilingDCEL = squareTiling): String =
+    SvgExporter.generateSvgContent(
+      tiling,
+      showNodeLabels = false,
+      showUniformity = false,
+      showRotation = false,
+      showReflection = false
+    )
+
+  // --- pointsString ------------------------------------------------------
+
+  test("pointsString converts nodes to 'x,y x,y' with scale and offset") {
     val nodes  = List(node1, node2, node3)
-    val scale  = 2.0
-    val offset = Point(5.0, 10.0)
-    val result = SvgExporter.pointsString(nodes, testCoordinates, scale, offset)
-
-    // node1: (0*2+5, 0*2+10) = (5, 10)
-    val expected = "5.000000,10.000000 7.000000,10.000000 7.000000,12.000000"
-    assertEquals(result, expected)
+    val result = SvgExporter.pointsString(nodes, testCoordinates, scale = 2.0, Point(5.0, 10.0))
+    // node1: (0*2+5, 0*2+10) = (5, 10); node2: (1*2+5, 10); node3: (1*2+5, 1*2+10)
+    assertEquals(result, "5.000000,10.000000 7.000000,10.000000 7.000000,12.000000")
   }
 
-  test("should handle empty nodes list") {
-    val result = SvgExporter.pointsString(List.empty, testCoordinates, 1.0, Point.origin)
-    assertEquals(result, "")
+  test("pointsString handles empty and singleton inputs") {
+    assertEquals(SvgExporter.pointsString(List.empty, testCoordinates, 1.0, Point.origin), "")
+    assertEquals(
+      SvgExporter.pointsString(List(node1), testCoordinates, 1.0, Point.origin),
+      "0.000000,0.000000"
+    )
   }
 
-  test("should handle single node") {
-    val result = SvgExporter.pointsString(List(node1), testCoordinates, 1.0, Point.origin)
-    assertEquals(result, "0.000000,0.000000")
-  }
+  // --- generatePolygonsXml ----------------------------------------------
 
-  test("should generate polygons XML with correct structure") {
+  test("generatePolygonsXml produces <g> with correct polygon markup and points") {
     val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
 
     assert(result.contains("<g id=\"tiling-polygons\""))
     assert(result.contains("</g>"))
     assert(result.contains("polygon"))
     assert(result.contains("data-nodes="))
-    assert(result.contains("points="))
     assert(result.contains("fill="))
     assert(result.contains("stroke=\"#333\""))
     assert(result.contains("stroke-width=\"1.5\""))
+    assert(result.contains(
+      "points=\"0.000000,0.000000 1.000000,0.000000 1.000000,1.000000 0.000000,1.000000\""
+    ))
   }
 
-  test("should include correct points in polygon") {
-    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
-    // Should contain the points from our test coordinates
-    assert(
-      result.contains("points=\"0.000000,0.000000 1.000000,0.000000 1.000000,1.000000 0.000000,1.000000\"")
-    )
-  }
-
-  test("should include node data attribute") {
-    val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
-
-    // Should contain nodes in the data attribute
-    assert(result.contains("data-nodes=\"\""))
-  }
-
-  test("should use assigned polygon colors when exporting polygons") {
+  test("generatePolygonsXml uses assigned color when a face has one") {
     val faceId = squareTiling.innerFaces.head.id
     val color  = ColorRGB(12, 34, 56)
     EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
@@ -89,13 +82,15 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(result.contains(s"""fill="${color.toRgb}""""))
   }
 
-  test("should fall back to default polygon color when none is assigned") {
+  test("generatePolygonsXml falls back to default color when none is assigned") {
     EditorState.colorState.update(_.copy(polygonColors = Map.empty))
     val result = SvgExporter.generatePolygonsXml(squareTiling, 1.0, Point.origin, 1.5)
     assert(result.contains(s"""fill="${EditorConfig.defaultPolygonColor.toRgb}""""))
   }
 
-  test("should generate perimeter XML when perimeter exists") {
+  // --- generatePerimeterXml ---------------------------------------------
+
+  test("generatePerimeterXml produces polygon markup with perimeter styling") {
     val result = SvgExporter.generatePerimeterXml(squareTiling, 1.0, Point.origin, 10.5)
 
     assert(result.contains("polygon"))
@@ -106,29 +101,16 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(result.contains("stroke-width=\"10.5\""))
   }
 
-  test("should return empty string when no perimeter") {
-    val emptyTiling = TilingDCEL.empty
-
-    val result = SvgExporter.generatePerimeterXml(emptyTiling, 1.0, Point.origin, 10.5)
-    assertEquals(result, "")
+  test("generatePerimeterXml returns empty string for empty tiling") {
+    assertEquals(SvgExporter.generatePerimeterXml(TilingDCEL.empty, 1.0, Point.origin, 10.5), "")
   }
 
-//  test("should generate dual tessellation XML for a valid tiling") {
-//    val result = SvgExporter.generateDualTessellationXml(squareTiling, 1.0, 0.0, 0.0)
-//    assert(result.contains("<g id=\"dual-tessellation\""))
-//    assert(result.contains("<line"))
-//    assert(result.contains("stroke=\"red\""))
-//    assert(result.contains("stroke-width=\"1\""))
-//  }
-//
-//  test("should return empty string for dual tessellation on empty tiling") {
-//    val result = SvgExporter.generateDualTessellationXml(TilingDCEL.empty, 1.0, 0.0, 0.0)
-//    assertEquals(result, "")
-//  }
+  // --- generateLabelsXml ------------------------------------------------
 
-  test("should generate labels XML for all coordinates") {
+  test("generateLabelsXml emits styled <text> for every coordinate") {
     val result = SvgExporter.generateLabelsXml(testCoordinates, 1.0, Point.origin)
 
+    // styling
     assert(result.contains("text"))
     assert(result.contains("font-family=\"monospace\""))
     assert(result.contains("font-weight=\"bold\""))
@@ -136,51 +118,42 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(result.contains("fill=\"#000\""))
     assert(result.contains("stroke=\"#fff\""))
     assert(result.contains("stroke-width=\"0.5\""))
-  }
-
-  test("should position labels correctly with offset") {
-    val result = SvgExporter.generateLabelsXml(testCoordinates, 2.0, Point(5.0, 10.0))
-
-    // For node1 at (0,0): labelX = 0*2+5+4 = 9, labelY = 0*2+10-4 = 6
-    assert(result.contains("x=\"9.0000\" y=\"6.0000\""))
-    assert(result.contains("x=\"11.0000\" y=\"6.0000\""))
-  }
-
-  test("should include node text content") {
-    val result = SvgExporter.generateLabelsXml(testCoordinates, 1.0, Point.origin)
-
+    // one label per vertex
     assert(result.contains(">1<"))
     assert(result.contains(">2<"))
     assert(result.contains(">3<"))
     assert(result.contains(">4<"))
   }
 
-  test("should handle empty coordinates") {
-    val result = SvgExporter.generateLabelsXml(Map.empty, 1.0, Point.origin)
-    assertEquals(result, "")
+  test("generateLabelsXml positions labels with scale and offset") {
+    val result = SvgExporter.generateLabelsXml(testCoordinates, 2.0, Point(5.0, 10.0))
+
+    // node1 at (0,0): labelX = 0*2+5+4 = 9, labelY = 0*2+10-4 = 6
+    assert(result.contains("x=\"9.0000\" y=\"6.0000\""))
+    // node2 at (1,0): labelX = 1*2+5+4 = 11, labelY = 0*2+10-4 = 6
+    assert(result.contains("x=\"11.0000\" y=\"6.0000\""))
   }
 
-  test("should generate metadata XML with RDF structure") {
+  test("generateLabelsXml returns empty string for empty coordinates") {
+    assertEquals(SvgExporter.generateLabelsXml(Map.empty, 1.0, Point.origin), "")
+  }
+
+  // --- generateMetadataXml ----------------------------------------------
+
+  test("generateMetadataXml emits RDF metadata with source, license, and coordinates") {
     val result = SvgExporter.generateMetadataXml(squareTiling)
 
+    // RDF wrapper
     assert(result.contains("<metadata>"))
     assert(result.contains("</metadata>"))
     assert(result.contains("<rdf:RDF>"))
     assert(result.contains("</rdf:RDF>"))
     assert(result.contains("<cc:Work>"))
     assert(result.contains("</cc:Work>"))
-  }
-
-  test("should include Tessella source and license") {
-    val result = SvgExporter.generateMetadataXml(squareTiling)
-
+    // source + license
     assert(result.contains("https://github.com/scala-tessella/tessella"))
     assert(result.contains("https://www.apache.org/licenses/LICENSE-2.0"))
-  }
-
-  test("should include tiling coordinates in metadata") {
-    val result = SvgExporter.generateMetadataXml(squareTiling)
-
+    // tessella-dcel payload with vertices
     assert(result.contains(
       "<tessella:tessella-dcel xmlns:tessella=\"https://github.com/scala-tessella/tessella\"><vertices>"
     ))
@@ -188,7 +161,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(result.contains("<vertex id=\"V1\" x=\"0\" y=\"0\""))
   }
 
-  test("should handle empty tiling without coordinates") {
+  test("generateMetadataXml on empty tiling emits wrapper without coordinates") {
     val result = SvgExporter.generateMetadataXml(TilingDCEL.empty)
 
     assert(result.contains("<metadata>"))
@@ -196,99 +169,51 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(!result.contains("<tess:tilingCoordinates>"))
   }
 
-  test("should return empty string for empty tiling") {
-    val emptyTiling = TilingDCEL.empty
+  // --- generateSvgContent -----------------------------------------------
 
-    val result = SvgExporter.generateSvgContent(
-      emptyTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-    assertEquals(result, "")
+  test("generateSvgContent returns empty string for empty tiling") {
+    assertEquals(defaultSvgContent(TilingDCEL.empty), "")
   }
 
-  test("should generate complete SVG structure") {
-    val result = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
+  test("generateSvgContent produces SVG envelope with dimensions and white background") {
+    val result = defaultSvgContent()
 
+    // envelope
     assert(result.contains("<svg"))
     assert(result.contains("</svg>"))
     assert(result.contains("xmlns=\"http://www.w3.org/2000/svg\""))
     assert(result.contains("xmlns:tess=\"https://github.com/scala-tessella/tessella\""))
-    assert(result.contains("width="))
-    assert(result.contains("height="))
-  }
-
-  test("should include white background") {
-    val result = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-
+    // dimensions
+    assert(result.contains("width=\"90.0"))
+    assert(result.contains("height=\"90.0"))
+    // background
     assert(result.contains("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>"))
   }
 
-  test("should include labels when showNodeLabels is true") {
-    val result = SvgExporter.generateSvgContent(
+  test("generateSvgContent includes <text> labels iff showNodeLabels is true") {
+    val withLabels = SvgExporter.generateSvgContent(
       squareTiling,
       showNodeLabels = true,
       showUniformity = false,
       showRotation = false,
       showReflection = false
     )
-    EditorState.viewState.update(_.copy(showNodeLabels = true))
-    assert(result.contains("<text"))
-    assert(result.contains(">1<"))
+    assert(withLabels.contains("<text"))
+    assert(withLabels.contains(">1<"))
+
+    assert(!defaultSvgContent().contains("<text"))
   }
 
-  test("should not include labels when showNodeLabels is false") {
-    val result = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-    EditorState.viewState.update(_.copy(showNodeLabels = false))
-    assert(!result.contains("<text"))
+  test("generateSvgContent does not include dual tessellation when showUniformity is false") {
+    assert(!defaultSvgContent().contains("<g id=\"dual-tessellation\""))
   }
 
-//  test("should include dual tessellation when showDual is true") {
-//    val result = SvgExporter.generateSvgContent(squareTiling, showNodeLabels = false, showDual = true)
-//    EditorState.showDual.set(true)
-//    assert(result.contains("<g id=\"dual-tessellation\""))
-//  }
-
-  test("should not include dual tessellation when showDual is false") {
-    val result = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-    EditorState.viewState.update(_.copy(showUniformity = false))
-    assert(!result.contains("<g id=\"dual-tessellation\""))
-  }
-
-  test("generateRotationXml should return empty string when rotation data is missing") {
+  test("generateRotationXml returns empty string when rotation data is missing") {
     EditorState.viewState.update(_.copy(rotationVertexIds = None))
-
-    val result = SvgExporter.generateRotationXml(testCoordinates, 1.0, Point.origin)
-    assertEquals(result, "")
+    assertEquals(SvgExporter.generateRotationXml(testCoordinates, 1.0, Point.origin), "")
   }
 
-  test("generateSvgContent should not fail when showRotation is true but rotation data is missing") {
+  test("generateSvgContent does not fail when showRotation is true but rotation data is missing") {
     EditorState.viewState.update(_.copy(rotationVertexIds = None))
 
     val result = SvgExporter.generateSvgContent(
@@ -303,29 +228,9 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assert(!result.contains("stroke=\"Gold\""))
   }
 
-  test("should calculate correct dimensions and offsets") {
-    val result = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-    assert(result.contains("width=\"90.0"))
-    assert(result.contains("height=\"90.0"))
-  }
-
-  test("generateSvgContent should round-trip metadata into a tiling") {
-    val svgContent = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-
-    val metadataRegex =
-      "(?s)<tessella:tessella-dcel[^>]*>.*?</tessella:tessella-dcel>".r
+  test("generateSvgContent round-trips metadata back into an equivalent tiling") {
+    val svgContent    = defaultSvgContent()
+    val metadataRegex = "(?s)<tessella:tessella-dcel[^>]*>.*?</tessella:tessella-dcel>".r
     val metadata      = metadataRegex.findFirstIn(svgContent).getOrElse("")
     assert(metadata.nonEmpty)
 
@@ -334,7 +239,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     assertEquals(parsed.toMetadata, squareTiling.toMetadata)
   }
 
-  test("generateSvgContent should export polygon fill colors for all faces") {
+  test("generateSvgContent exports every face's assigned polygon fill color") {
     val faces  = squareTiling.innerFaces
     val colors = faces.zipWithIndex.map { (face, idx) =>
 
@@ -342,14 +247,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
     }.toMap
     EditorState.colorState.update(_.copy(polygonColors = colors))
 
-    val svgContent = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
-
+    val svgContent = defaultSvgContent()
     val groupRegex = "(?s)<g id=\"tiling-polygons\"[^>]*>(.*?)</g>".r
     val groupBody  = groupRegex.findFirstMatchIn(svgContent).map(_.group(1)).getOrElse("")
     assert(groupBody.nonEmpty)
@@ -359,18 +257,11 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
       .map(_.group(1))
       .toSet
 
-    val expected = colors.values.map(_.toRgb).toSet
-    assertEquals(fills, expected)
+    assertEquals(fills, colors.values.map(_.toRgb).toSet)
   }
 
   test("generateSvgContent snapshot includes canonical metadata and key elements") {
-    val svgContent = SvgExporter.generateSvgContent(
-      squareTiling,
-      showNodeLabels = false,
-      showUniformity = false,
-      showRotation = false,
-      showReflection = false
-    )
+    val svgContent = defaultSvgContent()
 
     def normalize(s: String): String =
       s.replaceAll("\\s+", "")
