@@ -83,6 +83,40 @@ Options to evaluate in ADR-002:
   (`-->`, `child <--`) clean up automatically. Any `signal.foreach { … }` living
   outside an element needs an explicit `Owner`.
 
+### P1#16 — Test strategy: Laminar-in-JSDOM + Playwright (no Selenium)
+**ADR:** [ADR-003 — Test strategy](docs/adr/003-test-strategy.md) (Proposed).
+
+Static analysis on 2026-04-22 reports 217 tests across 27 suites, but the
+distribution is uneven:
+
+- **Strong**: `utils/geo` (incl. two property specs), `models`, most
+  `operations` (`OperationRunner`, `UndoManager`, `ColorOperations`,
+  `ErrorOperations`, `SelectionOperations`, `ViewOperations`),
+  `SvgExporter` (30 tests), `SvgImporter` (3 round-trip + failure paths).
+- **Zero direct coverage**: ~19 UI components (`EditorCanvasComponent`,
+  `MenuBarComponent`, every `Tessellation*Renderer`, `PolygonPaletteComponent`,
+  `CanvasControlComponent`, `UndoComponent`, `ErrorMessageComponent`,
+  `ColorPickerPopupComponent`, all 5 popups), 5 ops
+  (`DeletionOperations`, `SymmetryOperations`, `MeasurementOperations`,
+  `SettingsOperations`, `OperationGuard`), `TouchEventHandler`,
+  `FileDownloader`, `TemplateLoader`, several utils (`PolygonNameGenerator`,
+  `SvgDsl`, `Logger`, `PolygonSvg`).
+- **Partial**: `KeyboardEventHandler` (only pure helpers — `handleKeyDown`
+  wiring untested), `MouseEventHandler` (2 of 8 methods).
+
+Adding the missing UI coverage is a strategy choice with build-pipeline and
+CI impact. Three options surveyed in ADR-003: Selenium (rejected — heavy,
+flaky, wrong shape for a Scala.js client app), JSDOM-only (rejected —
+can't validate real canvas/SVG rendering or pointer/touch gestures),
+**Laminar-in-JSDOM + Playwright smoke** (chosen).
+
+The existing `JSDOMNodeJSEnv` (already in `build.sbt:68`) plus the
+`EditorStateFixture` snapshot/restore pattern are the right base. Mount
+Laminar components into the JSDOM document via `com.raquo.laminar.api.L.render`
+and assert on the rendered DOM. Reserve Playwright for a ~10–15-test smoke
+suite (canvas rendering, real input events, visual regression) pointed at
+`vite dev`.
+
 ### P1#3 — Reactive-first discipline: eliminate accidental `.now()` reads ✅
 **Convention doc:** [`docs/laminar-conventions.md`](docs/laminar-conventions.md)
 (written 2026-04-22).
@@ -175,6 +209,45 @@ Resolved under ADR-001 Phase 2 on 2026-04-22. `utils/UndoManager`,
 `*Operations` directly instead of going through `AppState`. Enforced by
 the `checkLayering` sbt task.
 
+### P2#17 — Close `operations` and `interactions` coverage gaps
+Depends on ADR-003 only for the *style* of UI tests; the items below are
+plain MUnit + `EditorStateFixture` and can start immediately.
+
+Untested `operations` (each is small, all read/write `EditorState`):
+- `DeletionOperations` — `attemptFaceDeletion`, `attemptVertexDeletion`,
+  `attemptEdgeDeletion`. Cover empty-tiling no-op, valid deletion, and
+  failure → `ErrorOperations` path (mirrors the `attemptPolygonAddition`
+  test in `TessellationOperationsSpec`).
+- `SymmetryOperations` — six toggle/overlay methods; assert the relevant
+  `ViewState` / overlay flag flips and that `displaySizeInfo` renders the
+  expected message on a known tiling.
+- `MeasurementOperations` — distance + angle between two `ClickablePoint`s,
+  `clearAll` reset. Property test for `distance(a, b) == distance(b, a)`.
+- `SettingsOperations` — `applySettings` / `resetFillColorToDefault` round-trip
+  with `SettingsStorage` (already exercised under JSDOM in
+  `SettingsStorageSpec`).
+- `OperationGuard` — exercise each guard predicate against representative
+  states.
+
+Partial coverage to deepen:
+- `KeyboardEventHandler.handleKeyDown` — dispatch a synthetic
+  `KeyboardEvent` against the JSDOM document and assert the bound
+  operation ran (undo, zoom, rotation). The pure helpers are already
+  covered.
+- `MouseEventHandler` — `handleWheel`, `handleMouseDown`/`Move`/`Up`,
+  `getCanvasRelativePosition`. Same JSDOM event-dispatch pattern.
+- `PlacementOperations` — currently only the empty-tiling early-return
+  branches. Add success-path tests for both `attemptPolygonAddition` and
+  `attemptPolygonInsertion` on a non-empty tiling.
+
+### P2#18 — Property-based specs for `Radian` and `PolygonPlacementGeometry`
+Two property specs exist (`GeometryPropertySpec`, `ViewOperationsPropertySpec`);
+both pay off well. Add:
+- `RadianPropertySpec` — normalisation idempotence, addition commutative
+  mod 2π, `toBigDecimal` round-trip within ε.
+- `PolygonPlacementPropertySpec` — placed regular polygon vertices lie on
+  the expected circle, edge length invariants.
+
 ### P2#7 — `ErrorOperations.messageTimeoutId: private var Option[Int]` race ✅
 Resolved 2026-04-22. The actual race was not just the tracked 10s
 message-timeout but the **untracked 3s overlay-timeout**: rapid
@@ -201,6 +274,31 @@ tagged `// scalafix:ok` — ready for P3#11 (re-enabling the scalafix
 ---
 
 ## P3 — Polish & maintainability
+
+### P3#19 — Test-code hygiene cleanup
+Independent, low-risk, no ADR dependency:
+- Rename placeholder test `"anf"` at
+  `src/test/.../operations/ViewOperationsSpec.scala:31` to something
+  descriptive (e.g. `"AngleDegree(90).toBigRadian ≈ π/2"`).
+- Delete the commented-out test block in `SvgExporterSpec.scala:116+`.
+- Consolidate `SvgExporterSpec`: the ~15 single-`assert(contains(...))`
+  tests run on the same generated XML. Group into 3–4 tests with stronger
+  assertions, or convert to a single snapshot file. Today one upstream
+  change cascades into ~15 red tests for the same root cause.
+- `SettingsStorageSpec`: replace the `assume(isLocalStorageAvailable, …)`
+  silent-skip with `fail` if `JSDOMNodeJSEnv` ever stops providing
+  `localStorage` — current behaviour passes invisibly.
+- `AppStateSpec.refreshSettingsTempValues`: collapse the 7 sequential
+  `_.copy(…)` updates into one.
+
+### P3#20 — Extract pure-function helpers from UI components
+`TessellationCursorStyles` is the model: cursor logic lives as a pure
+function, tested directly by `TessellationCursorStylesSpec` (4 tests, no
+DOM, no Laminar). Replicate the pattern across renderers and popups so
+~80% of component logic is testable without mounting. Each extraction is
+a small refactor; do them opportunistically when touching a component for
+other reasons. Lowers the surface area that ADR-003's Laminar-in-JSDOM
+work has to cover.
 
 ### P3#8 — Pin `dcel 0.1.0-SNAPSHOT`
 `build.sbt:43`. SNAPSHOT deps hurt reproducibility of CI builds and of old tags
@@ -298,17 +396,25 @@ separate "utils/file/ is really I/O operations" issue, not in scope.
 
 ## Recommended order of attack
 
-1. **ADR-001** (P1#1 — package layering). Small, unblocks the rest.
-2. **ADR-002** (P1#2 — state container). Largest blast radius; must precede #3.
-3. **P1#3** (`.now()` convention) — document, then apply opportunistically as
-   the two ADRs roll out.
-4. **P2#5** — falls out almost for free if ADR-002 picks option B.
-5. **P2#4** — independent, can be done in parallel.
-6. **P2#6** — independent, any time.
-7. Everything in P3.
+ADRs 001 and 002 plus the original P2 wave are done. Open items:
 
-Together, items 1–4 should eliminate roughly half of the `.now()` call sites
-without a dedicated sweep.
+1. **P3#19** (test-code hygiene). Independent, no ADR dependency, makes the
+   suite cheaper to grow before doing it. Quick.
+2. **P2#17** (operations + interactions coverage gaps). Plain MUnit +
+   `EditorStateFixture` — no new tooling needed. Closes most of the
+   currently-uncovered code.
+3. **P2#18** (property specs for `Radian`, `PolygonPlacementGeometry`).
+   Independent, small.
+4. **ADR-003** (P1#16 — test strategy). Decide and accept *before* writing
+   the first Laminar-in-JSDOM mount test or wiring up Playwright.
+5. **P3#20** (extract pure-function helpers from components). Apply
+   opportunistically when touching a component for other reasons.
+6. **Implementation of ADR-003 tier 1** — Laminar-in-JSDOM mount tests for
+   popups and components, helped along by P3#20.
+7. **Implementation of ADR-003 tier 2** — small Playwright smoke suite.
+   Last, deliberately.
+8. Remaining P3 items (P3#8 dcel pin, P3#10 README architecture section,
+   P3#11 scalafix `var` rule).
 
 ---
 
@@ -317,8 +423,9 @@ without a dedicated sweep.
 ADRs live under `docs/adr/`:
 
 - [`000-template.md`](docs/adr/000-template.md) — template for new ADRs.
-- [`001-package-layering.md`](docs/adr/001-package-layering.md) — Proposed.
-- [`002-state-container.md`](docs/adr/002-state-container.md) — Proposed.
+- [`001-package-layering.md`](docs/adr/001-package-layering.md) — Accepted.
+- [`002-state-container.md`](docs/adr/002-state-container.md) — Accepted.
+- [`003-test-strategy.md`](docs/adr/003-test-strategy.md) — Proposed.
 
 Each ADR follows the standard template: **Status** (Proposed / Accepted /
 Superseded), **Context**, **Decision**, **Consequences**, **Alternatives
