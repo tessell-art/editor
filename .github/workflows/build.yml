@@ -35,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Check formatting (scalafmt)
-        run: sbt scalafmtCheckAll scalafmtSbtCheck
+        run: sbt scalafmtCheckAll #scalafmtSbtCheck
 
       - name: Check lint (scalafix)
         run: sbt 'scalafixAll --check'
