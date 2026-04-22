@@ -18,12 +18,36 @@ object PolygonPaletteComponent:
     private def clamp(min: Int, max: Int): Int =
       Math.max(min, Math.min(i, max))
 
+  // --- Pure helpers (testable without Laminar) ---
+
+  /** Parse a user-supplied sides count, falling back to 3 on bad input and clamping to [3, 100]. */
+  private[components] def validateSides(input: String): Int =
+    input.toIntOption.getOrElse(3).clamp(3, 100)
+
+  /** Tooltip for any polygon palette button: "$sides-sided polygon (name)". */
+  private[components] def polygonTooltip(sides: Int): String =
+    s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})"
+
+  /** Label for the irregular-polygon slot. "Irregular" when no shape is recorded yet, "Irr-N" otherwise. */
+  private[components] def irregularPolygonLabel(angles: Option[Vector[AngleDegree]]): String =
+    angles match
+      case None    => "Irregular"
+      case Some(a) => s"Irr-${a.size}"
+
+  /** Compose the class string for a palette button from its baseClasses, selection, and processing flags. */
+  private[components] def polygonButtonClasses(
+      baseClasses: String,
+      selected: Boolean,
+      processing: Boolean
+  ): String =
+    val withSelection = if selected then s"$baseClasses selected" else baseClasses
+    if processing then s"$withSelection disabled" else withSelection
+
   private def polygonButtonClass(baseClasses: String, isSelectedSignal: Signal[Boolean]): Signal[String] =
     isSelectedSignal.combineWith(EditorState.uiState.signal.map(_.isProcessing).distinct).map {
       (selected, processing) =>
 
-        val fullBaseClasses = if selected then s"$baseClasses selected" else baseClasses
-        if processing then s"$fullBaseClasses disabled" else fullBaseClasses
+        polygonButtonClasses(baseClasses, selected, processing)
     }
 
   def element: Element =
@@ -90,9 +114,6 @@ object PolygonPaletteComponent:
     val customSides = Var(11)
     val inputValue  = Var("11")
 
-    def validateSides(input: String): Int =
-      input.toIntOption.getOrElse(3).clamp(3, 100)
-
     def updateSides(sides: Int): Unit =
       customSides.set(sides)
       inputValue.set(sides.toString)
@@ -108,7 +129,7 @@ object PolygonPaletteComponent:
     div(
       syncInputToSource,
       className <-- polygonButtonClass("polygon-btn custom-polygon-creator", isSelected),
-      title <-- displaySides.map(s => s"$s-sided polygon (${PolygonNameGenerator.polygonName(s)})"),
+      title <-- displaySides.map(polygonTooltip),
       // Replace imperative guard with gated click stream combined with current validated sides
       inContext { thisDiv =>
 
@@ -149,7 +170,7 @@ object PolygonPaletteComponent:
     button(
       className <-- polygonButtonClass("polygon-btn", isSelected),
       tpe   := "button",
-      title := s"$sides-sided polygon (${PolygonNameGenerator.polygonName(sides)})",
+      title := polygonTooltip(sides),
       disabled <-- EditorState.uiState.signal.map(_.isProcessing).distinct,
       inContext { thisBtn =>
 
@@ -232,10 +253,8 @@ object PolygonPaletteComponent:
       },
       div(
         className := "polygon-label",
-        child.text <-- EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct.map {
-          case None         => "Irregular"
-          case Some(angles) => s"Irr-${angles.size}"
-        }
+        child.text <--
+          EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct.map(irregularPolygonLabel)
       )
     )
 

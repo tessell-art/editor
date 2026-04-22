@@ -365,14 +365,36 @@ Resolved 2026-04-22.
 Suite totals went from 217 tests across 27 suites to **208 across 27** —
 the 9-test delta is the `SvgExporterSpec` consolidation.
 
-### P3#20 — Extract pure-function helpers from UI components
+### P3#20 — Extract pure-function helpers from UI components (ongoing)
 `TessellationCursorStyles` is the model: cursor logic lives as a pure
-function, tested directly by `TessellationCursorStylesSpec` (4 tests, no
-DOM, no Laminar). Replicate the pattern across renderers and popups so
-~80% of component logic is testable without mounting. Each extraction is
-a small refactor; do them opportunistically when touching a component for
-other reasons. Lowers the surface area that ADR-003's Laminar-in-JSDOM
-work has to cover.
+function, tested directly by `TessellationCursorStylesSpec`. Replicate
+the pattern across renderers and popups so ~80% of component logic is
+testable without mounting. Each extraction is a small refactor; do them
+opportunistically when touching a component for other reasons. Lowers
+the surface area that ADR-003's Laminar-in-JSDOM work has to cover.
+
+**First batch landed 2026-04-22** — 3 specs, 20 tests:
+
+| Component | Extracted | Tests |
+|---|---|---|
+| `GridRenderer` | `strokeWidthForScale(scale: Double): String` — clamp(1/scale, 0.1, 2.0) | `GridRendererSpec` (3) |
+| `UndoComponent` | `undoTitle` / `redoTitle (canUndo/canRedo, preview)` — tooltip mapper | `UndoComponentSpec` (6) |
+| `PolygonPaletteComponent` | `validateSides` (3-fallback + clamp [3,100]), `polygonTooltip`, `irregularPolygonLabel`, `polygonButtonClasses` | `PolygonPaletteComponentSpec` (11) |
+
+All helpers are `private[components]` — accessible to tests in the same
+package but not exported publicly. The existing Signal-based
+`polygonButtonClass` now delegates to the pure `polygonButtonClasses`,
+so the Laminar wiring and the testable core share one source of truth.
+
+**Remaining candidates (not urgent, track when touching each file):**
+
+- `MenuBarComponent` — dropdown-entry label/disabled-rule mapping (~25 entries).
+- `CanvasControlComponent` — `labelsButtonText(showLabels: Boolean)`, `labelsButtonTitle(showLabels: Boolean)` — trivial but uniform.
+- `ErrorMessageComponent` — already minimal; probably not worth extracting.
+- Popup labels & class composition: `SettingsPopup`, `IrregularPolygonPopup`, `GuidePopup`, `AboutPopup`, `ShortcutsPopup`.
+- `TessellationEdgeRenderer` / `TessellationPolygonRenderer` / overlay/measurement renderers — SVG attribute strings derived from state; good pure-function candidates but each one is modest in isolation.
+
+Suite totals: **281 tests / 38 suites** (was 261 / 35).
 
 ### P3#8 — Pin `dcel 0.1.0-SNAPSHOT`
 `build.sbt:43`. SNAPSHOT deps hurt reproducibility of CI builds and of old tags

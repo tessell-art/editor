@@ -6,6 +6,11 @@ import io.github.scala_tessella.editor.models.EditorState
 object GridRenderer:
   private val patternId = "grid-pattern"
 
+  // Visual stroke width that stays roughly constant on screen at any zoom level.
+  // Inverse of the view scale, clamped to a sensible visible range.
+  private[components] def strokeWidthForScale(scale: Double): String =
+    (1.0 / scale).max(0.1).min(2.0).toString
+
   // Defines an SVG pattern for the grid
   def patternDef: Element =
     svg.defs(
@@ -18,10 +23,8 @@ object GridRenderer:
           svg.d      := "M 50 0 L 0 0 0 50",
           svg.fill   := "none",
           svg.stroke := "#444",
-          // Adjust stroke width based on zoom to keep it visually constant
-          svg.strokeWidth <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map(t =>
-            (1.0 / t.scale).max(0.1).min(2.0).toString
-          )
+          svg.strokeWidth <--
+            EditorState.viewState.signal.map(_.viewTransform).distinct.map(t => strokeWidthForScale(t.scale))
         )
       )
     )
