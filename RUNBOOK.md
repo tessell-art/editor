@@ -116,6 +116,49 @@ npm run build
 Output in `dist/`. Vite drives the Scala.js fullLink task under the hood;
 no separate sbt invocation needed.
 
+## Deploy to Cloudflare Pages
+
+Production deploys are automated on version-tag pushes — see
+[`.github/workflows/cloudflare-pages.yml`](.github/workflows/cloudflare-pages.yml).
+A pushed tag matching `v*.*.*` builds and deploys `dist/` to the Pages
+production branch.
+
+### One-time setup
+
+1. In Cloudflare Pages, create a Pages project (for example `tessella-editor`).
+   Set the project's **Production branch** to `main`.
+2. Generate a Cloudflare API token with the **Account → Cloudflare Pages → Edit**
+   permission (User Profile → API Tokens → Create Token).
+3. In GitHub repository settings (Settings → Secrets and variables → Actions), add:
+   - secret `CLOUDFLARE_API_TOKEN` — the token from step 2
+   - secret `CLOUDFLARE_ACCOUNT_ID` — from the Cloudflare dashboard sidebar
+   - variable `CLOUDFLARE_PAGES_PROJECT_NAME` — the Pages project name from step 1
+
+### Cutting a release
+
+```bash
+# bump `version` in build.sbt, commit
+git tag v0.3.5
+git push origin v0.3.5
+```
+
+The workflow runs `npm ci && npm run build` and deploys `dist/` to the
+production branch. To redeploy without a new tag, use the **Run workflow**
+button on the Actions tab (`workflow_dispatch`).
+
+### Manual deploy (local fallback)
+
+```bash
+export CLOUDFLARE_API_TOKEN=...
+export CLOUDFLARE_ACCOUNT_ID=...
+npm run build
+npx wrangler pages deploy dist --project-name=<project-name> --branch=main
+```
+
+Omit `--branch=main` to create a preview deploy under the current git branch
+name. First-time `wrangler` use prompts for browser auth if the env vars are
+not set.
+
 ## Other common tasks
 
 | Task                          | Command                                                              |
