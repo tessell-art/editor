@@ -175,10 +175,28 @@ Resolved under ADR-001 Phase 2 on 2026-04-22. `utils/UndoManager`,
 `*Operations` directly instead of going through `AppState`. Enforced by
 the `checkLayering` sbt task.
 
-### P2#7 — `ErrorOperations.messageTimeoutId: private var Option[Int]` race
-On rapid consecutive errors, the timeout-id tracking has a small race between
-`clearTimeout` and `setTimeout`. Replace with `Var[Option[Int]]` (or let the
-observer pattern manage the cancellation) — also improves testability.
+### P2#7 — `ErrorOperations.messageTimeoutId: private var Option[Int]` race ✅
+Resolved 2026-04-22. The actual race was not just the tracked 10s
+message-timeout but the **untracked 3s overlay-timeout**: rapid
+consecutive errors had their overlay cleared prematurely by the
+previous error's dangling timer.
+
+**Fix:** introduced a `private final class SingleTimeout` helper
+encapsulating the cancel+schedule pattern in one place. Two instances
+(`messageTimeout` / `overlayTimeout`) replace the single
+`private var messageTimeoutId` and now correctly cancel **both**
+pending timers on each `showError` call.
+
+Side cleanups while in the file:
+- Three sequential `errorState.update(_.copy(x = …))` calls (set
+  message + placement + deletion) consolidated into one atomic update.
+- Same for the clear-overlays timeout callback and for `clearError`.
+- `clearError` now cancels both timeouts (was only cancelling the
+  message timeout before).
+
+The remaining `private var` is encapsulated inside `SingleTimeout`,
+tagged `// scalafix:ok` — ready for P3#11 (re-enabling the scalafix
+`var` rule).
 
 ---
 
@@ -241,12 +259,18 @@ Resolved 2026-04-22. What landed:
 - Side effect: P2#5 (drift risk) and P3#12 (MAX_UNDO_DEPTH loop)
   closed too.
 
-### P3#14 — Relocate `UndoManager` out of `utils/`
-`utils/UndoManager.scala` orchestrates state transitions and reads/writes
-many `EditorState` fields — conceptually an *operation*, not a utility.
-Relocating it to `operations/` would make the layering purely top-down
-(utils would contain only stateless helpers). Mechanical move; no
-functional change.
+### P3#14 — Relocate `UndoManager` out of `utils/` ✅
+Resolved 2026-04-22. `UndoManager` moved from
+`utils/UndoManager.scala` to `operations/UndoManager.scala` (package
+changed to `io.github.scala_tessella.editor.operations`). The
+corresponding `UndoManagerSpec.scala` moved from `test/.../utils/` to
+`test/.../operations/` to keep test and production together.
+
+All 10 importers updated (mix of bare imports and `{…, UndoManager}`
+compound imports). `utils/` no longer contains any operation-style
+orchestrator. One pre-existing `utils → operations` edge remains
+(`utils/file/SvgImporter` importing `UndoManager`) — that's the
+separate "utils/file/ is really I/O operations" issue, not in scope.
 
 ---
 

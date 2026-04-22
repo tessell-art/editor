@@ -1,9 +1,8 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.operations
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
-import io.github.scala_tessella.editor.operations.MeasurementOperations
 
 import scala.collection.mutable
 

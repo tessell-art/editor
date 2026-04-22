@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Theme,
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
 import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter, TemplateLoader}
-import io.github.scala_tessella.editor.utils.UndoManager
+import io.github.scala_tessella.editor.operations.UndoManager
 
 object MenuBarComponent:
 

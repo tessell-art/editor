@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.file.SvgExporter
-import io.github.scala_tessella.editor.utils.UndoManager
+import io.github.scala_tessella.editor.operations.UndoManager
 import org.scalajs.dom
 import org.scalajs.dom.KeyboardEvent
 

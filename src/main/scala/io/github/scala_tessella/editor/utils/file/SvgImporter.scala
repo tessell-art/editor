@@ -8,7 +8,8 @@ import io.github.scala_tessella.editor.operations.{
   ErrorOperations, MeasurementOperations, SymmetryOperations, ViewOperations
 }
 import io.github.scala_tessella.editor.utils.ColorRGB.parseColor
-import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, UndoManager}
+import io.github.scala_tessella.editor.operations.UndoManager
+import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB}
 import org.scalajs.dom
 import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
 

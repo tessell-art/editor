@@ -6,7 +6,8 @@ import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.models.*
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
-import io.github.scala_tessella.editor.utils.{ColorRGB, UndoManager}
+import io.github.scala_tessella.editor.operations.UndoManager
+import io.github.scala_tessella.editor.utils.ColorRGB
 
 /** AppState object provides a higher-level interface to the editor state. It exports all members of
   * EditorState and provides methods to manipulate the state.

@@ -2,7 +2,8 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.{TilingDCEL, TilingError}
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{AsyncUtils, UndoManager}
+import io.github.scala_tessella.editor.operations.UndoManager
+import io.github.scala_tessella.editor.utils.AsyncUtils
 import io.github.scala_tessella.editor.operations.ColorOperations.syncColorsForFaces
 
 import scala.concurrent.ExecutionContext.Implicits.global

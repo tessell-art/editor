@@ -8,7 +8,8 @@ import io.github.scala_tessella.editor.models.{
 }
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.{tilingPointToCanvasView, toPoint}
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
-import io.github.scala_tessella.editor.utils.{ColorRGB, TilingBuilders, UndoManager}
+import io.github.scala_tessella.editor.operations.UndoManager
+import io.github.scala_tessella.editor.utils.{ColorRGB, TilingBuilders}
 import io.github.scala_tessella.dcel.structure.VertexId
 import munit.FunSuite
 

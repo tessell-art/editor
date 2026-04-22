@@ -7,7 +7,7 @@ import io.github.scala_tessella.editor.models.{EditorState, VertexCoord}
 import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
-import io.github.scala_tessella.editor.utils.UndoManager
+import io.github.scala_tessella.editor.operations.UndoManager
 
 /** Tiling-lifecycle operations: create/clear the tiling and manage palette selection.
   *

@@ -8,16 +8,43 @@ import scala.util.Try
 
 object ErrorOperations:
 
-  // Severity levels to drive UX (toast color/behavior) and potential analytics
+  /** Severity levels to drive UX (toast color/behaviour) and potential analytics. */
   enum Severity:
     case Info, Warning, Error
 
-  private var messageTimeoutId: Option[Int] = None
+  /** Race-free single-shot timer. `schedule` cancels the previous pending fire first, so it is safe to call
+    * repeatedly — the most recent scheduling wins. Each instance tracks exactly one timeout, so errors
+    * scheduled back-to-back never cancel each other's unrelated timers.
+    */
+  final private class SingleTimeout:
+    // scalafix:ok — encapsulated mutable state for setTimeout handle
+    private var currentId: Option[Int] = None
 
-  // Public, centralized entry point for error messages
-  // - context: short “where/why” for logs (e.g., "SVG Import")
-  // - hint: actionable remediation guidance shown to users
-  // - asToast: render a non-blocking toast (default true for minor issues)
+    def schedule(delayMs: Int)(onFire: => Unit): Unit =
+      cancel()
+      val id = dom.window.setTimeout(
+        () => {
+          currentId = None
+          onFire
+        },
+        delayMs
+      )
+      currentId = Some(id)
+
+    def cancel(): Unit =
+      currentId.foreach(dom.window.clearTimeout)
+      currentId = None
+
+  // The error-message text stays for longer than the on-canvas overlay, so they're tracked
+  // separately. Rapid consecutive errors now correctly cancel *both* previous timers.
+  private val messageTimeout = new SingleTimeout
+  private val overlayTimeout = new SingleTimeout
+
+  /** Public, centralized entry point for error messages.
+    *   - `context`: short "where/why" label for the user-facing message (e.g. "SVG Import").
+    *   - `hint`: actionable remediation guidance shown below the message.
+    *   - `asToast`: render a non-blocking toast (default true for minor issues).
+    */
   def showError(
       message: String,
       placement: Option[FailedPolygonPlacement] = None,
@@ -27,56 +54,41 @@ object ErrorOperations:
       asToast: Boolean = true,
       severity: Severity = Severity.Error
   ): Unit =
-    // Cancel any existing timeout for the error message
-    messageTimeoutId.foreach(id => dom.window.clearTimeout(id))
-
-    val friendly =
-      context match
-        case Some(ctx) => s"$ctx: $message"
-        case None      => message
-
+    val friendly    = context.fold(message)(ctx => s"$ctx: $message")
     val fullMessage =
       hint match
         case Some(h) if h.nonEmpty => s"$friendly\n\nHint: $h"
         case _                     => friendly
 
-    // Keep existing state updates for on-canvas feedback overlays
+    // On-canvas feedback overlays (one atomic state update).
     if severity != Severity.Info then
-      EditorState.errorState.update(_.copy(errorMessage = Some(fullMessage)))
-      EditorState.errorState.update(_.copy(failedPlacement = placement))
-      EditorState.errorState.update(_.copy(failedDeletion = deletion))
-
-    // Auto-clear overlays and message after timeouts
-    Try {
-      if (js.typeOf(js.Dynamic.global.window) != "undefined") {
-        // Timeout for the error message (10 seconds)
-        val newTimeoutId = dom.window.setTimeout(
-          () => {
-            EditorState.errorState.update(_.copy(errorMessage = None))
-            messageTimeoutId = None
-          },
-          10000
+      EditorState.errorState.update(
+        _.copy(
+          errorMessage = Some(fullMessage),
+          failedPlacement = placement,
+          failedDeletion = deletion
         )
-        messageTimeoutId = Some(newTimeoutId)
+      )
 
-        // Timeout for the visual feedback (3 seconds)
-        dom.window.setTimeout(
-          () => {
-            EditorState.errorState.update(_.copy(failedPlacement = None))
-            EditorState.errorState.update(_.copy(failedDeletion = None))
-          },
-          3000
-        ): Unit
-
-        // Non-blocking toast for user feedback
+    // Auto-clear overlays and message after their respective timeouts.
+    Try {
+      if js.typeOf(js.Dynamic.global.window) != "undefined" then
+        // 10s: clear the error message.
+        messageTimeout.schedule(10000) {
+          EditorState.errorState.update(_.copy(errorMessage = None))
+        }
+        // 3s: clear the on-canvas placement/deletion overlays.
+        overlayTimeout.schedule(3000) {
+          EditorState.errorState.update(
+            _.copy(failedPlacement = None, failedDeletion = None)
+          )
+        }
         if asToast then
           showToast(fullMessage, severity, durationMs = if severity == Severity.Error then 6000 else 4000)
-      }
     }.recover {
-      case _ => // Ignore errors in test environment
+      case _ => // Ignore errors in test environment (no `window`)
     }: Unit
 
-  // Convenience helpers
   def info(
       message: String,
       context: Option[String] = None,
@@ -102,11 +114,11 @@ object ErrorOperations:
     showError(message, context = context, hint = hint, asToast = asToast, severity = Severity.Error)
 
   def clearError(): Unit =
-    messageTimeoutId.foreach(id => dom.window.clearTimeout(id))
-    messageTimeoutId = None
-    EditorState.errorState.update(_.copy(errorMessage = None))
-    EditorState.errorState.update(_.copy(failedPlacement = None))
-    EditorState.errorState.update(_.copy(failedDeletion = None))
+    messageTimeout.cancel()
+    overlayTimeout.cancel()
+    EditorState.errorState.update(
+      _.copy(errorMessage = None, failedPlacement = None, failedDeletion = None)
+    )
 
   // --- Minimal toast/snackbar implementation (non-blocking UI) ---
 

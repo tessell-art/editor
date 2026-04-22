@@ -1,10 +1,11 @@
-package io.github.scala_tessella.editor.utils
+package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.EditorStateFixture
 import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
 import io.github.scala_tessella.editor.models.Tool
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.TilingBuilders.*
 import munit.FunSuite
 
