@@ -58,7 +58,7 @@ object TessellationPolygonRenderer:
 
     // Check if this polygon should be hidden due to failed deletion
     val shouldHideForDeletion =
-      EditorState.failedDeletion.signal.map:
+      EditorState.errorState.signal.map(_.failedDeletion).distinct.map:
         case Some(failedDel) => failedDel.faceId == faceId
         case None            => false
 

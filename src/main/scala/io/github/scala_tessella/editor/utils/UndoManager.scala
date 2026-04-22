@@ -101,8 +101,8 @@ object UndoManager:
         selectedPolygon = snapshot.selectedPolygon
       )
     )
-    EditorState.recentIrregularPolygon.set(snapshot.recentIrregularPolygon)
-    EditorState.isIrregularSelected.set(snapshot.isIrregularSelected)
+    EditorState.irregularState.update(_.copy(recentIrregularPolygon = snapshot.recentIrregularPolygon))
+    EditorState.irregularState.update(_.copy(isIrregularSelected = snapshot.isIrregularSelected))
     clearError()
 
   private def updateUndoRedoSignals(): Unit =

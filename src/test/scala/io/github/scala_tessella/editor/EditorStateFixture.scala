@@ -11,27 +11,20 @@ trait EditorStateFixture:
   private var saved: Option[AppStateSnapshot] = None
 
   private def resetTransientState(): Unit =
-    // Each aggregate reset is a single atomic update (one signal emission)
+    // Each aggregate reset is a single atomic update (one signal emission).
     EditorState.uiState.set(UIState.initial)
     EditorState.popupState.set(PopupState.initial)
     EditorState.measurementState.set(MeasurementState.initial)
     EditorState.tessellationState.set(TessellationState.initial)
     EditorState.colorState.set(ColorState.initial)
     EditorState.viewState.set(ViewState.initial)
-
-    // Non-aggregate transient state (still individual Vars pending migration).
+    EditorState.errorState.set(ErrorState.initial)
+    EditorState.previewState.set(PreviewState.initial)
+    EditorState.animationState.set(AnimationState.initial)
+    EditorState.irregularState.set(IrregularState.initial)
+    EditorState.fileState.set(FileState.initial)
+    EditorState.themeState.update(_.copy(userThemePreference = None))
     EditorState.toolState.update(_.copy(selectedPolygon = None, activeTool = None))
-    EditorState.errorMessage.set(None)
-    EditorState.failedPlacement.set(None)
-    EditorState.failedDeletion.set(None)
-    EditorState.previewPlacement.set(None)
-    EditorState.fanAnimation.set(None)
-    EditorState.doublingAnimation.set(None)
-    EditorState.mirrorAnimation.set(None)
-    EditorState.isIrregularSelected.set(false)
-    EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
-    EditorState.currentFileName.set(None)
-    EditorState.userThemePreference.set(None)
 
   override def beforeEach(context: BeforeEach): Unit =
     // Snapshot the state that represents the "app model"
@@ -58,8 +51,12 @@ trait EditorStateFixture:
           selectedPolygon = s.selectedPolygon
         )
       )
-      EditorState.recentIrregularPolygon.set(s.recentIrregularPolygon)
-      EditorState.isIrregularSelected.set(s.isIrregularSelected)
+      EditorState.irregularState.set(
+        IrregularState(
+          recentIrregularPolygon = s.recentIrregularPolygon,
+          isIrregularSelected = s.isIrregularSelected
+        )
+      )
     }
 
     // And reset the ephemeral / transient state again (to avoid leaks even if no snapshot)

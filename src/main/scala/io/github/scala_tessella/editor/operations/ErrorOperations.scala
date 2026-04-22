@@ -42,9 +42,9 @@ object ErrorOperations:
 
     // Keep existing state updates for on-canvas feedback overlays
     if severity != Severity.Info then
-      EditorState.errorMessage.set(Some(fullMessage))
-      EditorState.failedPlacement.set(placement)
-      EditorState.failedDeletion.set(deletion)
+      EditorState.errorState.update(_.copy(errorMessage = Some(fullMessage)))
+      EditorState.errorState.update(_.copy(failedPlacement = placement))
+      EditorState.errorState.update(_.copy(failedDeletion = deletion))
 
     // Auto-clear overlays and message after timeouts
     Try {
@@ -52,7 +52,7 @@ object ErrorOperations:
         // Timeout for the error message (10 seconds)
         val newTimeoutId = dom.window.setTimeout(
           () => {
-            EditorState.errorMessage.set(None)
+            EditorState.errorState.update(_.copy(errorMessage = None))
             messageTimeoutId = None
           },
           10000
@@ -62,8 +62,8 @@ object ErrorOperations:
         // Timeout for the visual feedback (3 seconds)
         dom.window.setTimeout(
           () => {
-            EditorState.failedPlacement.set(None)
-            EditorState.failedDeletion.set(None)
+            EditorState.errorState.update(_.copy(failedPlacement = None))
+            EditorState.errorState.update(_.copy(failedDeletion = None))
           },
           3000
         ): Unit
@@ -104,9 +104,9 @@ object ErrorOperations:
   def clearError(): Unit =
     messageTimeoutId.foreach(id => dom.window.clearTimeout(id))
     messageTimeoutId = None
-    EditorState.errorMessage.set(None)
-    EditorState.failedPlacement.set(None)
-    EditorState.failedDeletion.set(None)
+    EditorState.errorState.update(_.copy(errorMessage = None))
+    EditorState.errorState.update(_.copy(failedPlacement = None))
+    EditorState.errorState.update(_.copy(failedDeletion = None))
 
   // --- Minimal toast/snackbar implementation (non-blocking UI) ---
 

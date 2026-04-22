@@ -39,11 +39,20 @@ Proposed target layering (to be ratified in ADR-001):
   wire them with `-->`, instead of calling `AppState.foo()` imperatively from
   event handlers.
 
-### P1#2 — Redesign the `EditorState` god-object
+### P1#2 — Redesign the `EditorState` god-object ✅
 **ADR:** [ADR-002 — State container design](docs/adr/002-state-container.md)
-(Accepted — Option B. 7 of 14 aggregates migrated 2026-04-22:
-`ToolState`, `TessellationState`, `ViewState`, `MeasurementState`,
-`PopupState`, `UIState`, `ColorState`. Remaining 7 pending, one PR each.)
+(**Accepted + fully implemented 2026-04-22**.) All 13 stateful
+aggregates migrated: `ToolState`, `TessellationState`, `ViewState`,
+`MeasurementState`, `PopupState`, `UIState`, `ColorState`, `FileState`,
+`PreviewState`, `ThemeState`, `ErrorState`, `AnimationState`,
+`IrregularState`. `DerivedState` keeps pure derivations as designed.
+
+`EditorState.scala`: from ~280 lines (14 nested `object`s + flat
+exports) to **98 lines** (13 one-line `Var` declarations + derived
+signals + `DerivedState`).
+
+Follow-up: P3#15 (`AppStateSnapshot` / `UndoManager` consolidation)
+now unblocked.
 
 `EditorState.scala` currently exposes **66 `Var[…]`** across 14 nested `object`s
 (`FileState`, `ToolState`, …, `DerivedState`), all re-exported flat via

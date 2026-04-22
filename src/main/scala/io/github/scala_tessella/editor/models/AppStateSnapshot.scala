@@ -33,6 +33,6 @@ object AppStateSnapshot:
       fillColor = EditorState.colorState.now().fillColor,
       editorMode = tools.editorMode,
       activeTool = tools.activeTool,
-      recentIrregularPolygon = EditorState.recentIrregularPolygon.now(),
-      isIrregularSelected = EditorState.isIrregularSelected.now()
+      recentIrregularPolygon = EditorState.irregularState.now().recentIrregularPolygon,
+      isIrregularSelected = EditorState.irregularState.now().isIrregularSelected
     )

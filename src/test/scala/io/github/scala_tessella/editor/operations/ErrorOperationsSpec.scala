@@ -13,23 +13,23 @@ class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
 
     ErrorOperations.showError(message)
 
-    assertEquals(EditorState.errorMessage.now(), Some(message))
+    assertEquals(EditorState.errorState.now().errorMessage, Some(message))
   }
 
   test("showError should replace existing error message") {
-    EditorState.errorMessage.set(Some("Old error"))
+    EditorState.errorState.update(_.copy(errorMessage = Some("Old error")))
 
     ErrorOperations.showError("New error")
 
-    assertEquals(EditorState.errorMessage.now(), Some("New error"))
+    assertEquals(EditorState.errorState.now().errorMessage, Some("New error"))
   }
 
   test("clearError should remove error message") {
-    EditorState.errorMessage.set(Some("Test error"))
+    EditorState.errorState.update(_.copy(errorMessage = Some("Test error")))
 
     ErrorOperations.clearError()
 
-    assertEquals(EditorState.errorMessage.now(), None)
+    assertEquals(EditorState.errorState.now().errorMessage, None)
   }
 
   test("showError with context should format message correctly") {
@@ -38,7 +38,7 @@ class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
     ErrorOperations.showError(message, context = Some(context), asToast = false)
 
     val expected = s"$context: $message"
-    assertEquals(EditorState.errorMessage.now(), Some(expected))
+    assertEquals(EditorState.errorState.now().errorMessage, Some(expected))
   }
 
   test("showError with hint should include hint in message") {
@@ -46,7 +46,7 @@ class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
     val hint    = "Try using a different file"
     ErrorOperations.showError(message, hint = Some(hint), asToast = false)
 
-    val result = EditorState.errorMessage.now().get
+    val result = EditorState.errorState.now().errorMessage.get
     assert(result.contains(message))
     assert(result.contains("Hint:"))
     assert(result.contains(hint))
@@ -62,27 +62,27 @@ class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
     )
     ErrorOperations.showError("test", placement = Some(placement), asToast = false)
 
-    assertEquals(EditorState.failedPlacement.now(), Some(placement))
+    assertEquals(EditorState.errorState.now().failedPlacement, Some(placement))
   }
 
   test("clearError should clear all error states") {
     ErrorOperations.showError("test message", asToast = false)
-    assert(EditorState.errorMessage.now().isDefined)
+    assert(EditorState.errorState.now().errorMessage.isDefined)
 
     ErrorOperations.clearError()
 
-    assertEquals(EditorState.errorMessage.now(), None)
-    assertEquals(EditorState.failedPlacement.now(), None)
-    assertEquals(EditorState.failedDeletion.now(), None)
+    assertEquals(EditorState.errorState.now().errorMessage, None)
+    assertEquals(EditorState.errorState.now().failedPlacement, None)
+    assertEquals(EditorState.errorState.now().failedDeletion, None)
   }
 
   test("convenience methods should set correct severity") {
 //    ErrorOperations.info("info message", asToast = false)
-//    assert(EditorState.errorMessage.now().get.contains("info message"))
+//    assert(EditorState.errorState.now().errorMessage.get.contains("info message"))
 
     ErrorOperations.warn("warning message", asToast = false)
-    assert(EditorState.errorMessage.now().get.contains("warning message"))
+    assert(EditorState.errorState.now().errorMessage.get.contains("warning message"))
 
     ErrorOperations.error("error message", asToast = false)
-    assert(EditorState.errorMessage.now().get.contains("error message"))
+    assert(EditorState.errorState.now().errorMessage.get.contains("error message"))
   }

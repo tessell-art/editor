@@ -40,7 +40,7 @@ object PolygonPaletteComponent:
         className := "selected-info",
         child.maybe <--
           EditorState.toolState.signal.map(_.selectedPolygon).distinct
-            .combineWith(EditorState.isIrregularSelected.signal)
+            .combineWith(EditorState.irregularState.signal.map(_.isIrregularSelected).distinct)
             .map((maybeSides, isIrregular) =>
               if isIrregular then
                 Option(
@@ -52,7 +52,9 @@ object PolygonPaletteComponent:
                       inContext { btn =>
 
                         gate(btn.events(onClick))
-                          .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+                          .withCurrentValueOf(
+                            EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct
+                          )
                           .collect { case (_, Some(angles)) =>
                             angles
                           } --> { angles =>
@@ -153,7 +155,7 @@ object PolygonPaletteComponent:
 
         gate(thisBtn.events(onClick)) --> { _ =>
 
-          EditorState.isIrregularSelected.set(false)
+          EditorState.irregularState.update(_.copy(isIrregularSelected = false))
           selectPolygon(sides)
         }
       },
@@ -176,7 +178,9 @@ object PolygonPaletteComponent:
       title := "Irregular polygon",
       disabled <--
         EditorState.uiState.signal.map(_.isProcessing).distinct
-          .combineWith(EditorState.recentIrregularPolygon.signal.map(_.isEmpty))
+          .combineWith(
+            EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct.map(_.isEmpty)
+          )
           .map { (processing, noneRecent) =>
 
             processing || noneRecent
@@ -185,7 +189,7 @@ object PolygonPaletteComponent:
       inContext { thisBtn =>
 
         gate(thisBtn.events(onClick))
-          .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+          .withCurrentValueOf(EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct)
           .collect { case (_, Some(_)) =>
             ()
           } --> { _ =>
@@ -203,7 +207,7 @@ object PolygonPaletteComponent:
         inContext { cornerDiv =>
 
           gate(cornerDiv.events(onClick))
-            .withCurrentValueOf(EditorState.recentIrregularPolygon.signal)
+            .withCurrentValueOf(EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct)
             .collect { case (_, Some(_)) =>
               ()
             } --> { _ =>
@@ -214,7 +218,7 @@ object PolygonPaletteComponent:
         plusIcon
       ),
       // preview
-      child <-- EditorState.recentIrregularPolygon.signal.map {
+      child <-- EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct.map {
         case Some(angles) => PolygonSvg.irregularPreview(angles)
         case None         =>
           svg.svg(
@@ -228,7 +232,7 @@ object PolygonPaletteComponent:
       },
       div(
         className := "polygon-label",
-        child.text <-- EditorState.recentIrregularPolygon.signal.map {
+        child.text <-- EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct.map {
           case None         => "Irregular"
           case Some(angles) => s"Irr-${angles.size}"
         }

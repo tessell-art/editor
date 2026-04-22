@@ -22,8 +22,8 @@ object TessellationEdgeRenderer:
 
   private val previewStateSignal: Signal[PreviewState] =
     EditorState.toolState.signal.map(_.selectedPolygon).distinct
-      .combineWith(EditorState.isIrregularSelected.signal)
-      .combineWith(EditorState.recentIrregularPolygon.signal)
+      .combineWith(EditorState.irregularState.signal.map(_.isIrregularSelected).distinct)
+      .combineWith(EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct)
       .combineWith(EditorState.tessellationState.signal.map(_.currentTiling).distinct)
       .map:
         case (maybeSides, isIrregular, maybeAngles, tiling) =>
@@ -124,11 +124,11 @@ object TessellationEdgeRenderer:
               tiling = tiling,
               intoFace = Some(faceId)
             )
-          EditorState.previewPlacement.set(placementOpt)
+          EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
       },
       onMouseLeave.compose(gate) --> { _ =>
 
-        EditorState.previewPlacement.set(None)
+        EditorState.previewState.update(_.copy(previewPlacement = None))
       },
       // Trigger insertion directly when clicking the highlighted interior edge
       onClick.preventDefault.compose(stream =>
@@ -136,7 +136,7 @@ object TessellationEdgeRenderer:
       ) --> {
         case (_, Some(Tool.Inserter)) =>
           TessellationOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
-          EditorState.previewPlacement.set(None)
+          EditorState.previewState.update(_.copy(previewPlacement = None))
         case _                        => ()
       }
     )
@@ -199,11 +199,11 @@ object TessellationEdgeRenderer:
               maybeAngles = maybeAngles,
               tiling = tiling
             )
-          EditorState.previewPlacement.set(placementOpt)
+          EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
       },
       onMouseLeave.compose(gate) --> { _ =>
 
-        EditorState.previewPlacement.set(None)
+        EditorState.previewState.update(_.copy(previewPlacement = None))
       },
       onClick.compose(gate) --> { _ =>
 

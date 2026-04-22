@@ -11,8 +11,9 @@ import io.github.scala_tessella.editor.utils.UndoManager
 
 object MenuBarComponent:
 
-  // The signature is updated to accept the theme preference Var directly
-  def element(effectiveTheme: Signal[Theme], userThemePreference: Var[Option[Theme]]): Element =
+  // ADR-002: post-migration `userThemePreference` is a field of `ThemeState`, not a standalone
+  // `Var`. Callers pass an `Observer[Option[Theme]]` backed by `themeState.update(…)`.
+  def element(effectiveTheme: Signal[Theme], setUserThemePreference: Observer[Option[Theme]]): Element =
     div(
       navTag(
         className := "menu-bar",
@@ -43,7 +44,7 @@ object MenuBarComponent:
           )
         ),
         // Pass both the signal and the Var to the switcher
-        themeSwitcher(effectiveTheme, userThemePreference)
+        themeSwitcher(effectiveTheme, setUserThemePreference)
       ),
       child.maybe <-- EditorState.popupState.signal.map(_.showIrregularPolygonPopup).distinct.map: show =>
         if show then Some(IrregularPolygonPopup.element) else None,
@@ -179,7 +180,7 @@ object MenuBarComponent:
         () =>
 
           AppState.clearTiling()
-          EditorState.currentFileName.set(None)
+          EditorState.fileState.update(_.copy(currentFileName = None))
           UndoManager.clearHistory()
           EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))
           AppState.resetFillColorToDefault()
@@ -338,7 +339,7 @@ object MenuBarComponent:
   // This now handles the theme update logic directly
   private def themeSwitcher(
       effectiveTheme: Signal[Theme],
-      userThemePreference: Var[Option[Theme]]
+      setUserThemePreference: Observer[Option[Theme]]
   ): Element =
     button(
       className := "theme-toggle-button",
@@ -347,9 +348,11 @@ object MenuBarComponent:
         case Theme.Light => "Switch to Dark Mode"
       },
       // Safely get the current theme on click and update the state
-      onClick.compose(_.withCurrentValueOf(effectiveTheme)) --> { case (_, currentTheme) =>
-        userThemePreference.set(Some(currentTheme.toggle))
-      },
+      onClick.compose(
+        _.withCurrentValueOf(effectiveTheme).map { case (_, currentTheme) =>
+          Some(currentTheme.toggle)
+        }
+      ) --> setUserThemePreference,
       child <-- effectiveTheme.map {
         case Theme.Dark  => IconsSVG.sunIcon  // Sun icon for dark mode, to switch to light
         case Theme.Light => IconsSVG.moonIcon // Moon icon for light mode, to switch to dark

@@ -67,7 +67,7 @@ object TessellationRenderer:
 
     // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
     val failedPolygonWireframe = child.maybe <--
-      EditorState.failedPlacement.signal
+      EditorState.errorState.signal.map(_.failedPlacement).distinct
         .combineWith(EditorState.isInserterActive, EditorState.selectedFaceForInsertion)
         .map: (placementOpt, isInserter, faceIdOpt) =>
           placementOpt.map: p =>
@@ -79,14 +79,16 @@ object TessellationRenderer:
             FailedPolygonRenderer.renderFailedPlacement(adjusted)
 
     // Hover preview wireframe for boundary addition
-    val previewPolygonWireframe = child.maybe <-- EditorState.previewPlacement.signal.map: placement =>
-      placement.map:
-        PreviewPolygonRenderer.renderPreview
+    val previewPolygonWireframe = child.maybe <--
+      EditorState.previewState.signal.map(_.previewPlacement).distinct.map: placement =>
+        placement.map:
+          PreviewPolygonRenderer.renderPreview
 
     // Failed polygon wireframe overlay for deletion
-    val failedDeletionWireframe = child.maybe <-- EditorState.failedDeletion.signal.map: deletion =>
+    val failedDeletionWireframe = child.maybe <--
+      EditorState.errorState.signal.map(_.failedDeletion).distinct.map: deletion =>
 //      deletion.map(x => FailedPolygonRenderer.renderFailedDeletion(x, tiling.coordinates))
-      None
+        None
 
     val clickablePointsDisplay = children <--
       EditorState.measurementState.signal.map(_.clickablePoints).distinct

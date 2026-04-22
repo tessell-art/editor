@@ -75,7 +75,7 @@ object KeyboardEventHandler:
             zoomFactorForKey(event.key).isEmpty
         .withCurrentValueOf(
           EditorState.tessellationState.signal.map(_.currentTiling).distinct,
-          EditorState.currentFileName.signal
+          EditorState.fileState.signal.map(_.currentFileName).distinct
         )
         .foreach { (event, tiling, fileNameOpt) =>
 

@@ -14,17 +14,17 @@ final class ThemeSpec extends FunSuite:
 
   override def afterEach(context: AfterEach): Unit =
     // Reset to default after each test to avoid cross-test leakage.
-    EditorState.userThemePreference.set(None)
+    EditorState.themeState.update(_.copy(userThemePreference = None))
 
   test("effectiveTheme falls back to system when no preference is set") {
-    EditorState.userThemePreference.set(None)
-    val systemTheme    = sampleSignal(EditorState.systemTheme.signal)
+    EditorState.themeState.update(_.copy(userThemePreference = None))
+    val systemTheme    = sampleSignal(EditorState.themeState.signal.map(_.systemTheme).distinct)
     val effectiveTheme = sampleSignal(EditorState.effectiveTheme)
     assertEquals(effectiveTheme, systemTheme)
   }
 
   test("effectiveTheme uses user preference when set") {
-    EditorState.userThemePreference.set(Some(Theme.Dark))
+    EditorState.themeState.update(_.copy(userThemePreference = Some(Theme.Dark)))
     assertEquals(sampleSignal(EditorState.effectiveTheme), Theme.Dark)
   }
 

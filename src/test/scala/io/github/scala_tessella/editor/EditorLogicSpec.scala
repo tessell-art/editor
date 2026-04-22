@@ -16,7 +16,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
   }
 
   test("Error message should be empty by default") {
-    assert(EditorState.errorMessage.now().isEmpty)
+    assert(EditorState.errorState.now().errorMessage.isEmpty)
   }
 
   test("Node labels should be hidden by default") {
@@ -107,7 +107,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
     // Node labels visibility and error should remain unchanged
     assert(EditorState.viewState.now().showNodeLabels)
-    assert(EditorState.errorMessage.now().isDefined)
+    assert(EditorState.errorState.now().errorMessage.isDefined)
   }
 
   test("Clear all selections should not affect node label visibility or error messages") {
@@ -122,7 +122,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
     // Node labels visibility and error should remain unchanged
     assert(EditorState.viewState.now().showNodeLabels)
-    assert(EditorState.errorMessage.now().isDefined)
+    assert(EditorState.errorState.now().errorMessage.isDefined)
   }
 
   test("Polygon selection preserves existing tiling complexity") {

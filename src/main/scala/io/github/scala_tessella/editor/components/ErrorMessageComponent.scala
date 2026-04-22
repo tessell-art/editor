@@ -8,7 +8,7 @@ object ErrorMessageComponent:
   def element: Element =
     div(
       className := "error-container",
-      child.maybe <-- EditorState.errorMessage.signal.map(_.map(message =>
+      child.maybe <-- EditorState.errorState.signal.map(_.errorMessage).distinct.map(_.map(message =>
         div(
           className := "error-message",
           span(className := "error-icon", "⚠️"),

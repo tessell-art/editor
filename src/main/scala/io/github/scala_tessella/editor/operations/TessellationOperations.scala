@@ -1,12 +1,12 @@
 package io.github.scala_tessella.editor.operations
 
-import com.raquo.laminar.api.L.Var
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
 import io.github.scala_tessella.editor.models.{
+  AnimationState,
   DoublingAnimation,
   EditorConfig,
   EditorState,
@@ -58,9 +58,9 @@ object TessellationOperations:
   )
 
   private def clearAllAnimations(): Unit =
-    EditorState.fanAnimation.set(None)
-    EditorState.doublingAnimation.set(None)
-    EditorState.mirrorAnimation.set(None)
+    EditorState.animationState.update(_.copy(fanAnimation = None))
+    EditorState.animationState.update(_.copy(doublingAnimation = None))
+    EditorState.animationState.update(_.copy(mirrorAnimation = None))
 
   private def clearSymmetryOverlaysOnSuccess(): Unit =
     SymmetryOperations.clearOverlays()
@@ -69,16 +69,20 @@ object TessellationOperations:
     clearSymmetryOverlaysOnSuccess()
     EditorState.tessellationState.update(_.copy(selectedPerimeterEdges = Set.empty))
 
+  /** Clears the given animation after `durationMs`, only if it is still the current value (another animation
+    * may have replaced it meanwhile). Takes lens-style get/set lambdas over `AnimationState` since the
+    * animation Vars are now nested per ADR-002.
+    */
   private def scheduleAnimationCleanup[A <: AnyRef](
-      state: Var[Option[A]],
+      getAnimation: AnimationState => Option[A],
+      clearAnimation: AnimationState => AnimationState,
       animation: A,
       durationMs: Int
   )(onDone: => Unit = ()): Unit =
     setTimeout(durationMs) {
-      state.update {
-        case Some(current) if current eq animation => None
-        case other                                 => other
-      }
+      val current = getAnimation(EditorState.animationState.now())
+      if current.exists(_ eq animation) then
+        EditorState.animationState.update(clearAnimation)
       onDone
     }: Unit
 
@@ -110,8 +114,8 @@ object TessellationOperations:
   private def currentPolygonPlacementContext(emptyTilingMessage: String): Option[PolygonPlacementContext] =
     val tiling      = EditorState.tessellationState.now().currentTiling
     val maybeSides  = EditorState.toolState.now().selectedPolygon
-    val isIrregular = EditorState.isIrregularSelected.now()
-    val recentShape = EditorState.recentIrregularPolygon.now()
+    val isIrregular = EditorState.irregularState.now().isIrregularSelected
+    val recentShape = EditorState.irregularState.now().recentIrregularPolygon
     if tiling.isEmpty then
       ErrorOperations.showError(emptyTilingMessage)
       None
@@ -162,7 +166,7 @@ object TessellationOperations:
   def selectPolygon(sides: Int): Unit =
     ifNotProcessing:
       // Selecting a regular polygon deselects the irregular
-      EditorState.isIrregularSelected.set(false)
+      EditorState.irregularState.update(_.copy(isIrregularSelected = false))
       EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
 
       if EditorState.tessellationState.now().currentTiling.isEmpty then
@@ -190,15 +194,15 @@ object TessellationOperations:
   /** Select the irregular polygon in the palette (deselect regular if any). */
   def selectIrregularInPalette(): Unit =
     ifNotProcessing:
-      if EditorState.recentIrregularPolygon.now().isDefined then
+      if EditorState.irregularState.now().recentIrregularPolygon.isDefined then
         EditorState.toolState.update(_.copy(selectedPolygon = None))
-        EditorState.isIrregularSelected.set(true)
+        EditorState.irregularState.update(_.copy(isIrregularSelected = true))
 
   /** If the tiling is empty and a recent irregular exists, initialize the tiling with it. */
   def initializeWithIrregularIfEmpty(): Unit =
     ifNotProcessing:
       if EditorState.tessellationState.now().currentTiling.isEmpty then
-        EditorState.recentIrregularPolygon.now() match
+        EditorState.irregularState.now().recentIrregularPolygon match
           case Some(angles) =>
             UndoManager.saveState()
             TilingDCEL.createSimplePolygon(angles).toOption match
@@ -266,11 +270,12 @@ object TessellationOperations:
                   EditorConfig.fanAnimationDurationMs,
                   EditorConfig.fanAnimationStaggerMs
                 )
-              EditorState.fanAnimation.set(Some(animation))
+              EditorState.animationState.update(_.copy(fanAnimation = Some(animation)))
               scheduleAnimationCleanup(
-                EditorState.fanAnimation,
-                animation,
-                EditorConfig.fanAnimationDurationMs
+                getAnimation = _.fanAnimation,
+                clearAnimation = _.copy(fanAnimation = None),
+                animation = animation,
+                durationMs = EditorConfig.fanAnimationDurationMs
               ) {
                 if needsFit then ViewOperations.fitTilingToCanvas()
               }
@@ -342,11 +347,12 @@ object TessellationOperations:
               val delta     = next - orig
               val animation =
                 DoublingAnimation(context.facePoints, delta, EditorConfig.fanAnimationDurationMs)
-              EditorState.doublingAnimation.set(Some(animation))
+              EditorState.animationState.update(_.copy(doublingAnimation = Some(animation)))
               scheduleAnimationCleanup(
-                EditorState.doublingAnimation,
-                animation,
-                EditorConfig.fanAnimationDurationMs
+                getAnimation = _.doublingAnimation,
+                clearAnimation = _.copy(doublingAnimation = None),
+                animation = animation,
+                durationMs = EditorConfig.fanAnimationDurationMs
               ) {
                 if needsFit then ViewOperations.fitTilingToCanvas()
               }
@@ -381,8 +387,13 @@ object TessellationOperations:
                 axisY = axisY,
                 durationMs = EditorConfig.fanAnimationDurationMs
               )
-            EditorState.mirrorAnimation.set(Some(animation))
-            scheduleAnimationCleanup(EditorState.mirrorAnimation, animation, animation.durationMs)()
+            EditorState.animationState.update(_.copy(mirrorAnimation = Some(animation)))
+            scheduleAnimationCleanup(
+              getAnimation = _.mirrorAnimation,
+              clearAnimation = _.copy(mirrorAnimation = None),
+              animation = animation,
+              durationMs = animation.durationMs
+            )()
           clearSymmetryAndPerimeterSelectionOnSuccess()
         ,
         onFailure = err =>

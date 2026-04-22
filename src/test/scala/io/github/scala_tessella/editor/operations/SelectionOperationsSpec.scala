@@ -33,13 +33,13 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.ShapeAndColorPicker)))
     EditorState.toolState.update(_.copy(selectedPolygon = None))
-    EditorState.isIrregularSelected.set(true)
+    EditorState.irregularState.update(_.copy(isIrregularSelected = true))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
     assertEquals(EditorState.colorState.now().fillColor, color)
     assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
-    assertEquals(EditorState.isIrregularSelected.now(), false)
+    assertEquals(EditorState.irregularState.now().isIrregularSelected, false)
     assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
@@ -144,7 +144,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     assertEquals(EditorState.toolState.now().activeTool, Some(Tool.ShapeAndColorPicker))
     assertEquals(EditorState.toolState.now().selectedPolygon, None)
-    assertEquals(EditorState.isIrregularSelected.now(), false)
+    assertEquals(EditorState.irregularState.now().isIrregularSelected, false)
   }
 
   test("handlePerimeterEdgeClick should show error when tiling is empty and a polygon is selected") {
@@ -152,10 +152,10 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
-    EditorState.isIrregularSelected.set(false)
-    EditorState.errorMessage.set(None)
+    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.errorState.update(_.copy(errorMessage = None))
 
     SelectionOperations.handlePerimeterEdgeClick("edge-1", 0)
 
-    assert(EditorState.errorMessage.now().exists(_.contains("No tiling available to grow")))
+    assert(EditorState.errorState.now().errorMessage.exists(_.contains("No tiling available to grow")))
   }

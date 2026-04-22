@@ -48,9 +48,13 @@ object EditorApp:
               .map: _ =>
                 if mediaQuery.matches then Theme.Light else Theme.Dark
           val _          =
-            changes.startWith(initial).addObserver(EditorState.systemTheme.writer)(using owner)
+            changes
+              .startWith(initial)
+              .addObserver(Observer[Theme](t => EditorState.themeState.update(_.copy(systemTheme = t))))(using
+                owner
+              )
         else
-          EditorState.systemTheme.set(Theme.Light)
+          EditorState.themeState.update(_.copy(systemTheme = Theme.Light))
 
         val _ =
           EditorState.effectiveTheme.addObserver(applyThemeToBodyObserver)(using
@@ -59,7 +63,10 @@ object EditorApp:
       ,
       //      h1("Polygon Shape Editor"),
       // Add the Menu Bar at the top, passing the theme signal and the state Var to update
-      MenuBarComponent.element(EditorState.effectiveTheme, EditorState.userThemePreference),
+      MenuBarComponent.element(
+        EditorState.effectiveTheme,
+        Observer[Option[Theme]](pref => EditorState.themeState.update(_.copy(userThemePreference = pref)))
+      ),
       div(
         className := "editor-layout",
         PolygonPaletteComponent.element,

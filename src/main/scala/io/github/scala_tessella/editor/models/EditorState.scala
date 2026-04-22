@@ -4,115 +4,49 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
 
-/** EditorState object contains all the state variables for the editor. The state is organized into logical
-  * groups for better maintainability.
+/** EditorState: the single entry point for every application Var.
+  *
+  * Per ADR-002, each logical state group is a `Var[<SomeState>]` whose case class lives in
+  * `EditorData.scala`. Derived signals (cross-aggregate or single-field distinct views) live inside the
+  * `DerivedState` object below.
+  *
+  * Pattern:
+  *   - read a field: `EditorState.fooState.signal.map(_.bar).distinct`
+  *   - read a field snapshot: `EditorState.fooState.now().bar`
+  *   - write a field: `EditorState.fooState.update(_.copy(bar = …))`
+  *   - atomic reset: `EditorState.fooState.set(FooState.initial)`
   */
 object EditorState:
-  object FileState:
-    /** Current file name, None if no file is open */
-    val currentFileName: Var[Option[String]] = Var(None)
 
-  /** Tool-state aggregate — single source of truth for editor mode, active tool, and palette selection. See
-    * `ToolState` in EditorData.scala. Per ADR-002 (spike), reads go through
-    * `toolState.signal.map(_.field).distinct`; writes through `toolState.update(_.copy(field = …))` (or
-    * replace the whole value for atomic restores).
-    */
-  val toolState: Var[ToolState] = Var(ToolState.initial)
-
-  /** View-state aggregate — canvas view transform, node-label toggle, and symmetry-overlay flags with their
-    * caches. See `ViewState` in EditorData.scala. Per ADR-002, reads go through
-    * `viewState.signal.map(_.field).distinct`; writes through `viewState.update(_.copy(field = …))`.
-    */
-  val viewState: Var[ViewState] = Var(ViewState.initial)
-
-  object ThemeState:
-    /** Theme preference: None means follow the system, Some(Theme.Light/Dark) is user override */
-    val userThemePreference: Var[Option[Theme]] = Var(None)
-
-    /** System theme, updated from EditorApp on mount (default is light). */
-    val systemTheme: Var[Theme] = Var(Theme.Light)
-
-    /** Effective theme: user's preference or system */
-    val effectiveTheme: Signal[Theme] =
-      userThemePreference.signal.combineWith(systemTheme.signal).map:
-        case (Some(user), _) => user
-        case (None, sys)     => sys
-
-    /** Theme-aware overlay preview stroke color */
-    val overlayPreviewStrokeColor: Signal[String] =
-      effectiveTheme.map:
-        case Theme.Light => "#222222" // dark gray for light mode
-        case Theme.Dark  => "#ffffff" // white for dark mode
-
-  /** Tessellation-state aggregate — single source of truth for the current tiling and selection sets. See
-    * `TessellationState` in EditorData.scala. Per ADR-002, reads go through
-    * `tessellationState.signal.map(_.field).distinct`; writes through
-    * `tessellationState.update(_.copy(field = …))` (or replace the whole value for atomic restores).
-    */
+  val toolState: Var[ToolState]                 = Var(ToolState.initial)
+  val viewState: Var[ViewState]                 = Var(ViewState.initial)
   val tessellationState: Var[TessellationState] = Var(TessellationState.initial)
+  val colorState: Var[ColorState]               = Var(ColorState.initial)
+  val uiState: Var[UIState]                     = Var(UIState.initial)
+  val popupState: Var[PopupState]               = Var(PopupState.initial)
+  val measurementState: Var[MeasurementState]   = Var(MeasurementState.initial)
+  val fileState: Var[FileState]                 = Var(FileState.initial)
+  val previewState: Var[PreviewState]           = Var(PreviewState.initial)
+  val themeState: Var[ThemeState]               = Var(ThemeState.initial)
+  val errorState: Var[ErrorState]               = Var(ErrorState.initial)
+  val animationState: Var[AnimationState]       = Var(AnimationState.initial)
+  val irregularState: Var[IrregularState]       = Var(IrregularState.initial)
 
-  /** Color-state aggregate — persisted preferences, working fill colour, temp settings colours, per-polygon
-    * color map, and picker visibility. See `ColorState` in EditorData.scala. Per ADR-002, reads via
-    * `colorState.signal.map(_.field).distinct`; writes via `colorState.update(_.copy(field = …))`.
-    */
-  val colorState: Var[ColorState] = Var(ColorState.initial)
+  /** Effective theme: user's preference or the detected system theme. */
+  val effectiveTheme: Signal[Theme] =
+    themeState.signal.map(s => s.userThemePreference.getOrElse(s.systemTheme)).distinct
 
-  /** UI-state aggregate — transient UI flags. See `UIState` in EditorData.scala. Per ADR-002, reads via
-    * `uiState.signal.map(_.field).distinct`; writes via `uiState.update(_.copy(field = …))`.
-    */
-  val uiState: Var[UIState] = Var(UIState.initial)
+  /** Theme-aware overlay preview stroke color. */
+  val overlayPreviewStrokeColor: Signal[String] =
+    effectiveTheme.map:
+      case Theme.Light => "#222222" // dark gray for light mode
+      case Theme.Dark  => "#ffffff" // white for dark mode
 
-  /** Popup-state aggregate — 6 modal-popup visibility flags. See `PopupState` in EditorData.scala. Per
-    * ADR-002, reads via `popupState.signal.map(_.field).distinct`; writes via
-    * `popupState.update(_.copy(field = …))`.
-    */
-  val popupState: Var[PopupState] = Var(PopupState.initial)
-
-  object ErrorState:
-    /** Current error message, if any */
-    val errorMessage: Var[Option[String]] = Var(None)
-
-    /** Details of a failed polygon placement, if any */
-    val failedPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
-
-    /** Details of a failed polygon deletion, if any */
-    val failedDeletion: Var[Option[FailedPolygonDeletion]] = Var(None)
-
-  object PreviewState:
-    /** Hover preview of a polygon placement along a perimeter edge, if any */
-    val previewPlacement: Var[Option[FailedPolygonPlacement]] = Var(None)
-
-  object AnimationState:
-    /** Fan animation overlay, if any */
-    val fanAnimation: Var[Option[FanAnimation]] = Var(None)
-
-    /** Doubling animation overlay, if any */
-    val doublingAnimation: Var[Option[DoublingAnimation]] = Var(None)
-
-    /** Mirror animation overlay, if any */
-    val mirrorAnimation: Var[Option[MirrorAnimation]] = Var(None)
-
-  /** Measurement-state aggregate — ruler/eraser/inserter tool state. See `MeasurementState` in
-    * EditorData.scala. Per ADR-002, reads go through `measurementState.signal.map(_.field).distinct`; writes
-    * through `measurementState.update(_.copy(field = …))`.
-    */
-  val measurementState: Var[MeasurementState] = Var(MeasurementState.initial)
-
-  object IrregularState:
-    val initialShape: Vector[AngleDegree] = Vector(60, 120, 60, 120).map(AngleDegree(_))
-
-    /** Latest irregular polygon shape chosen (always shown in the slot) */
-    val recentIrregularPolygon: Var[Option[Vector[AngleDegree]]] = Var(Some(initialShape))
-
-    /** Whether the irregular polygon is currently selected in the palette */
-    val isIrregularSelected: Var[Boolean] = Var(false)
-
-    /** Currently selected irregular polygon (derived from the two states above) */
-    val selectedIrregularPolygon: Signal[Option[Vector[AngleDegree]]] =
-      isIrregularSelected.signal
-        .combineWith(recentIrregularPolygon.signal)
-        .map: (isSel, recent) =>
-          if isSel then recent else None
+  /** Currently selected irregular polygon (shape + "is selected?" combined). */
+  val selectedIrregularPolygon: Signal[Option[Vector[AngleDegree]]] =
+    irregularState.signal
+      .map(s => if s.isIrregularSelected then s.recentIrregularPolygon else None)
+      .distinct
 
   object DerivedState:
     /** True when there is no active tiling. */
@@ -121,7 +55,7 @@ object EditorState:
 
     /** True when a file name is set for the current document. */
     val hasFileNameSignal: Signal[Boolean] =
-      FileState.currentFileName.signal.map(_.isDefined)
+      fileState.signal.map(_.currentFileName.isDefined).distinct
 
     /** True when at least one perimeter edge or polygon is selected. */
     val hasSelectionSignal: Signal[Boolean] =
@@ -161,10 +95,4 @@ object EditorState:
     val selectedFaceForInsertion: Signal[Option[FaceId]] =
       measurementState.signal.map(_.highlightedPolygonId).distinct
 
-  export FileState.*
-  export ThemeState.*
-  export ErrorState.*
-  export PreviewState.*
-  export AnimationState.*
-  export IrregularState.*
   export DerivedState.*

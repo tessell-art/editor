@@ -13,7 +13,7 @@ object EditorCanvasComponent:
 
   def element: Element =
     val fileNameDisplaySignal =
-      EditorState.currentFileName.signal.combineWith(EditorState.measurementState.signal.map(_.measurementResult).distinct).map:
+      EditorState.fileState.signal.map(_.currentFileName).distinct.combineWith(EditorState.measurementState.signal.map(_.measurementResult).distinct).map:
         (maybeName, maybeDistance) =>
           maybeDistance match
             case Some(_) => ""
@@ -173,10 +173,10 @@ object EditorCanvasComponent:
 
   private def contentGroup(): Element =
     val animationAndTilingSignal =
-      EditorState.mirrorAnimation.signal
+      EditorState.animationState.signal.map(_.mirrorAnimation).distinct
         .combineWith(
-          EditorState.doublingAnimation.signal,
-          EditorState.fanAnimation.signal,
+          EditorState.animationState.signal.map(_.doublingAnimation).distinct,
+          EditorState.animationState.signal.map(_.fanAnimation).distinct,
           EditorState.tessellationState.signal.map(_.currentTiling).distinct
         )
 

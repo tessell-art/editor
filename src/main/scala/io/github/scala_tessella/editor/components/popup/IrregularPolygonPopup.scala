@@ -18,10 +18,12 @@ object IrregularPolygonPopup:
     Observer { e =>
 
       e.stopPropagation()
-      EditorState.recentIrregularPolygon.update {
-        case Some(v) if v.nonEmpty => Some(f(v))
-        case other                 => other
-      }
+      EditorState.irregularState.update: s =>
+
+        val next = s.recentIrregularPolygon match
+          case Some(v) if v.nonEmpty => Some(f(v))
+          case other                 => other
+        s.copy(recentIrregularPolygon = next)
     }
 
   private val shiftLeft: Observer[org.scalajs.dom.MouseEvent]  = modify(_.rotateLeft(1))
@@ -34,7 +36,7 @@ object IrregularPolygonPopup:
         h2("Adjust attaching edge"),
         div(
           className := "popup-text-scrollable",
-          child.maybe <-- EditorState.recentIrregularPolygon.signal.map {
+          child.maybe <-- EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct.map {
             case None         => Some(div("No irregular polygon"))
             case Some(angles) =>
               Some(
