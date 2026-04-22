@@ -29,13 +29,13 @@ object TessellationOverlayRenderer:
 
       svg.text(
         textCoords(offset),
-        svg.fontSize <-- EditorState.viewTransform.signal.map: transform =>
+        svg.fontSize <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map: transform =>
 
           val baseFontSize = 12
           val scaledSize   = (baseFontSize / transform.scale).max(8).min(20)
           scaledSize.toString
         ,
-        svg.transform <-- EditorState.viewTransform.signal.map: transform =>
+        svg.transform <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map: transform =>
           s"rotate(${-transform.rotationDegrees} ${offset.x} ${offset.y})",
         svg.fill             := "#ffeb3b",
         svg.fontFamily       := "monospace",
@@ -44,7 +44,7 @@ object TessellationOverlayRenderer:
         svg.dominantBaseline := "middle",
         svg.className        := "node-label",
         svg.stroke           := "#000",
-        svg.strokeWidth <-- EditorState.viewTransform.signal.map: transform =>
+        svg.strokeWidth <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map: transform =>
           (0.5 / transform.scale).max(0.2).min(1.0).toString,
         svg.paintOrder       := "stroke fill",
         vertexId.value

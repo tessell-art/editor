@@ -51,14 +51,7 @@ trait EditorStateFixture:
     EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
 
     // Reset view and toggles
-    EditorState.viewTransform.set(ViewTransform())
-    EditorState.showNodeLabels.set(false)
-    EditorState.showUniformity.set(false)
-    EditorState.showRotation.set(false)
-    EditorState.showReflection.set(false)
-    EditorState.uniformityMap.set(None)
-    EditorState.rotationVertexIds.set(None)
-    EditorState.reflectionVertexIds.set(None)
+    EditorState.viewState.set(ViewState.initial)
     EditorState.currentFileName.set(None)
     EditorState.canvasElementRef.set(None)
     EditorState.userThemePreference.set(None)

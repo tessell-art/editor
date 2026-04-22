@@ -23,14 +23,15 @@ object TessellationRenderer:
             TessellationEdgeRenderer.renderInteriorEdgesForFace(tiling, fid, tilingPointToCanvasView)
           case _                 => List.empty
 
-    val nodeLabels = children <-- EditorState.showNodeLabels.signal.map: showLabels =>
-      if showLabels then
-        TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
-      else List.empty
+    val nodeLabels = children <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map:
+      showLabels =>
+        if showLabels then
+          TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
+        else List.empty
 
     val nodeUniformity = children <--
-      EditorState.showUniformity.signal
-        .combineWith(EditorState.uniformityMap.signal)
+      EditorState.viewState.signal.map(_.showUniformity).distinct
+        .combineWith(EditorState.viewState.signal.map(_.uniformityMap).distinct)
         .map: (showUni, uniOpt) =>
           if showUni && uniOpt.nonEmpty then
             TessellationOverlayRenderer.renderUniformity(
@@ -41,8 +42,8 @@ object TessellationRenderer:
           else List.empty
 
     val nodeRotation = children <--
-      EditorState.showRotation.signal
-        .combineWith(EditorState.rotationVertexIds.signal)
+      EditorState.viewState.signal.map(_.showRotation).distinct
+        .combineWith(EditorState.viewState.signal.map(_.rotationVertexIds).distinct)
         .map: (showRot, rotOpt) =>
           if showRot && rotOpt.nonEmpty then
             TessellationOverlayRenderer.renderRotation(
@@ -53,8 +54,8 @@ object TessellationRenderer:
           else List.empty
 
     val nodeReflection = children <--
-      EditorState.showReflection.signal
-        .combineWith(EditorState.reflectionVertexIds.signal)
+      EditorState.viewState.signal.map(_.showReflection).distinct
+        .combineWith(EditorState.viewState.signal.map(_.reflectionVertexIds).distinct)
         .map: (showRefl, reflOpt) =>
           if showRefl && reflOpt.nonEmpty then
             TessellationOverlayRenderer.renderReflection(

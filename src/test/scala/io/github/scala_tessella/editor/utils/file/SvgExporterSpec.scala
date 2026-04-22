@@ -246,7 +246,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
       showRotation = false,
       showReflection = false
     )
-    EditorState.showNodeLabels.set(true)
+    EditorState.viewState.update(_.copy(showNodeLabels = true))
     assert(result.contains("<text"))
     assert(result.contains(">1<"))
   }
@@ -259,7 +259,7 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
       showRotation = false,
       showReflection = false
     )
-    EditorState.showNodeLabels.set(false)
+    EditorState.viewState.update(_.copy(showNodeLabels = false))
     assert(!result.contains("<text"))
   }
 
@@ -277,19 +277,19 @@ class SvgExporterSpec extends FunSuite with EditorStateFixture:
       showRotation = false,
       showReflection = false
     )
-    EditorState.showUniformity.set(false)
+    EditorState.viewState.update(_.copy(showUniformity = false))
     assert(!result.contains("<g id=\"dual-tessellation\""))
   }
 
   test("generateRotationXml should return empty string when rotation data is missing") {
-    EditorState.rotationVertexIds.set(None)
+    EditorState.viewState.update(_.copy(rotationVertexIds = None))
 
     val result = SvgExporter.generateRotationXml(testCoordinates, 1.0, Point.origin)
     assertEquals(result, "")
   }
 
   test("generateSvgContent should not fail when showRotation is true but rotation data is missing") {
-    EditorState.rotationVertexIds.set(None)
+    EditorState.viewState.update(_.copy(rotationVertexIds = None))
 
     val result = SvgExporter.generateSvgContent(
       squareTiling,

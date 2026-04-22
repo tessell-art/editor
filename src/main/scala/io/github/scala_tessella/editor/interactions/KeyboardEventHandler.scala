@@ -61,10 +61,11 @@ object KeyboardEventHandler:
         .debounce(debounceMs)
         .foreach { factor =>
 
-          EditorState.viewTransform.update: t =>
+          EditorState.viewState.update: s =>
 
-            val next = t.scale * factor
-            t.copy(scale = ViewOperations.clampViewScale(next))
+            val vt   = s.viewTransform
+            val next = vt.scale * factor
+            s.copy(viewTransform = vt.copy(scale = ViewOperations.clampViewScale(next)))
         }(using owner): Unit
 
       keyDowns

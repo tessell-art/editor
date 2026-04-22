@@ -19,7 +19,7 @@ object GridRenderer:
           svg.fill   := "none",
           svg.stroke := "#444",
           // Adjust stroke width based on zoom to keep it visually constant
-          svg.strokeWidth <-- EditorState.viewTransform.signal.map(t =>
+          svg.strokeWidth <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map(t =>
             (1.0 / t.scale).max(0.1).min(2.0).toString
           )
         )

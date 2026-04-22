@@ -181,7 +181,7 @@ object MenuBarComponent:
           AppState.clearTiling()
           EditorState.currentFileName.set(None)
           UndoManager.clearHistory()
-          EditorState.viewTransform.set(ViewTransform())
+          EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))
           AppState.resetFillColorToDefault()
       ),
       templatesMenu(),
@@ -266,20 +266,23 @@ object MenuBarComponent:
     menuItem(
       "View",
       dropdownLinkDynamic(
-        EditorState.showNodeLabels.signal.map(show => if (show) "Hide Node Labels" else "Show Node Labels"),
+        EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(show =>
+          if (show) "Hide Node Labels" else "Show Node Labels"
+        ),
         () => AppState.toggleNodeLabels()
       ),
       dropdownLinkDynamic(
-        EditorState.showUniformity.signal.map(if (_) "Hide Uniformity" else "Show Uniformity"),
+        EditorState.viewState.signal.map(_.showUniformity).distinct.map(if (_) "Hide Uniformity"
+        else "Show Uniformity"),
         () => AppState.toggleShowUniformity()
       ),
       dropdownLinkDynamic(
-        EditorState.showRotation.signal.map(if (_) "Hide Rotational Symmetry"
+        EditorState.viewState.signal.map(_.showRotation).distinct.map(if (_) "Hide Rotational Symmetry"
         else "Show Rotational Symmetry"),
         () => AppState.toggleShowRotation()
       ),
       dropdownLinkDynamic(
-        EditorState.showReflection.signal.map(if (_) "Hide Reflectional Symmetry"
+        EditorState.viewState.signal.map(_.showReflection).distinct.map(if (_) "Hide Reflectional Symmetry"
         else "Show Reflectional Symmetry"),
         () => AppState.toggleShowReflection()
       ),
@@ -290,22 +293,30 @@ object MenuBarComponent:
         enabled = EditorState.canMutateTilingSignal,
         shortcut = Some("F")
       ),
-      dropdownLink("Reset View", () => EditorState.viewTransform.set(ViewTransform())),
+      dropdownLink("Reset View", () => EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))),
       div(className := "menu-separator"),
       dropdownLink(
         "Zoom In",
         () =>
-          EditorState.viewTransform.update(t =>
-            t.copy(scale = ViewOperations.clampViewScale(t.scale * EditorConfig.menuZoomFactor))
-          ),
+          EditorState.viewState.update: s =>
+
+            val vt = s.viewTransform
+            s.copy(viewTransform =
+              vt.copy(scale = ViewOperations.clampViewScale(vt.scale * EditorConfig.menuZoomFactor))
+            )
+        ,
         shortcut = Some("+")
       ),
       dropdownLink(
         "Zoom Out",
         () =>
-          EditorState.viewTransform.update(t =>
-            t.copy(scale = ViewOperations.clampViewScale(t.scale / EditorConfig.menuZoomFactor))
-          ),
+          EditorState.viewState.update: s =>
+
+            val vt = s.viewTransform
+            s.copy(viewTransform =
+              vt.copy(scale = ViewOperations.clampViewScale(vt.scale / EditorConfig.menuZoomFactor))
+            )
+        ,
         shortcut = Some("-")
       ),
       dropdownLink("Rotate Left", () => ViewOperations.rotateView(-30), shortcut = Some("E")),

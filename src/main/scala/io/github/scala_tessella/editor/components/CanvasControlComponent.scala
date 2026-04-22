@@ -96,16 +96,16 @@ object CanvasControlComponent:
             IconsSVG.fanIcon
           ),
           button(
-            child.text <-- EditorState.showNodeLabels.signal.map(show =>
+            child.text <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(show =>
               if show then "Labels: ON" else "Labels: OFF"
             ),
             className := "toggle-btn responsive-control",
-            cls("active") <-- EditorState.showNodeLabels.signal.map(identity),
+            cls("active") <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(identity),
             onClick --> { _ =>
 
               AppState.toggleNodeLabels()
             },
-            title <-- EditorState.showNodeLabels.signal.map { show =>
+            title <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map { show =>
 
               if show then "Click to hide the node labels" else "Click to show the node labels"
             }

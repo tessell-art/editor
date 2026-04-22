@@ -53,7 +53,7 @@ object TessellationPolygonRenderer:
         _.getOrElse(faceId, EditorConfig.defaultPolygonColor).toRgb
 
     val opacity =
-      EditorState.showUniformity.signal.map: showUni =>
+      EditorState.viewState.signal.map(_.showUniformity).distinct.map: showUni =>
         if showUni then "0.0" else "1.0"
 
     // Check if this polygon should be hidden due to failed deletion

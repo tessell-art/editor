@@ -20,20 +20,20 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
   }
 
   test("Node labels should be hidden by default") {
-    assert(!EditorState.showNodeLabels.now())
+    assert(!EditorState.viewState.now().showNodeLabels)
   }
 
   test("Toggle node labels should work") {
     // Initially hidden
-    assert(!EditorState.showNodeLabels.now())
+    assert(!EditorState.viewState.now().showNodeLabels)
 
     // Toggle to show
     AppState.toggleNodeLabels()
-    assert(EditorState.showNodeLabels.now())
+    assert(EditorState.viewState.now().showNodeLabels)
 
     // Toggle to hide
     AppState.toggleNodeLabels()
-    assert(!EditorState.showNodeLabels.now())
+    assert(!EditorState.viewState.now().showNodeLabels)
   }
 
   test("Polygon selection should create tiling when tiling is empty") {
@@ -98,7 +98,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
 
   test("Clear tiling should not affect node label visibility or error messages") {
     // Set node labels to visible and show error
-    EditorState.showNodeLabels.set(true)
+    EditorState.viewState.update(_.copy(showNodeLabels = true))
     showError("Test error")
 
     // Create and clear tiling
@@ -106,13 +106,13 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     clearTiling()
 
     // Node labels visibility and error should remain unchanged
-    assert(EditorState.showNodeLabels.now())
+    assert(EditorState.viewState.now().showNodeLabels)
     assert(EditorState.errorMessage.now().isDefined)
   }
 
   test("Clear all selections should not affect node label visibility or error messages") {
     // Set node labels to visible and show error
-    EditorState.showNodeLabels.set(true)
+    EditorState.viewState.update(_.copy(showNodeLabels = true))
     showError("Test error")
 
     // Create a tiling and set up selections
@@ -121,7 +121,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     clearAllSelections()
 
     // Node labels visibility and error should remain unchanged
-    assert(EditorState.showNodeLabels.now())
+    assert(EditorState.viewState.now().showNodeLabels)
     assert(EditorState.errorMessage.now().isDefined)
   }
 

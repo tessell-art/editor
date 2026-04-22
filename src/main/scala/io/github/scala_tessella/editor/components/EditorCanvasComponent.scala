@@ -142,7 +142,7 @@ object EditorCanvasComponent:
         ),
         // HTML placeholder text is now inside the wrapper
         div(
-          child.text <-- EditorState.viewTransform.signal.map(t =>
+          child.text <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map(t =>
             f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}°"
           ),
           className := "zoom-rotation"
@@ -181,7 +181,7 @@ object EditorCanvasComponent:
         )
 
     svg.g(
-      svg.transform <-- EditorState.viewTransform.signal.map(transform =>
+      svg.transform <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map(transform =>
         s"translate(${transform.pan.x}, ${transform.pan.y}) scale(${transform.scale}) rotate(${transform.rotationDegrees} 400 300)"
       ),
 

@@ -2,11 +2,10 @@ package io.github.scala_tessella.editor.models
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
-import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
+import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
 import io.github.scala_tessella.editor.models.EditorConfig
-import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
 
 import org.scalajs.dom
 
@@ -25,27 +24,11 @@ object EditorState:
     */
   val toolState: Var[ToolState] = Var(ToolState.initial)
 
-  object ViewState:
-    /** View transformation (scale, rotation, pan) */
-    val viewTransform: Var[ViewTransform] = Var(ViewTransform())
-
-    /** Whether node labels should be shown */
-    val showNodeLabels: Var[Boolean] = Var(false)
-
-    /** Whether uniformity should be shown */
-    val showUniformity: Var[Boolean] = Var(false)
-
-    val uniformityMap: Var[Option[Map[VertexId, Int]]] = Var(None)
-
-    /** Whether rotational symmetry should be shown */
-    val showRotation: Var[Boolean] = Var(false)
-
-    val rotationVertexIds: Var[Option[List[BoundaryLocation]]] = Var(None)
-
-    /** Whether reflectional symmetry should be shown */
-    val showReflection: Var[Boolean] = Var(false)
-
-    val reflectionVertexIds: Var[Option[List[(BoundaryLocation, BoundaryLocation)]]] = Var(None)
+  /** View-state aggregate — canvas view transform, node-label toggle, and symmetry-overlay flags with their
+    * caches. See `ViewState` in EditorData.scala. Per ADR-002, reads go through
+    * `viewState.signal.map(_.field).distinct`; writes through `viewState.update(_.copy(field = …))`.
+    */
+  val viewState: Var[ViewState] = Var(ViewState.initial)
 
   object ThemeState:
     /** Theme preference: None means follow the system, Some(Theme.Light/Dark) is user override */
@@ -254,7 +237,6 @@ object EditorState:
       MeasurementState.highlightedPolygonId.signal
 
   export FileState.*
-  export ViewState.*
   export ThemeState.*
   export ColorState.*
   export UIState.*

@@ -5,12 +5,6 @@ import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
-import io.github.scala_tessella.editor.models.EditorState.{
-  showNodeLabels,
-  showReflection,
-  showRotation,
-  showUniformity
-}
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
 import io.github.scala_tessella.editor.operations.ColorOperations
 import io.github.scala_tessella.editor.utils.ColorRGB.*
@@ -34,13 +28,14 @@ object SvgExporter:
           AsyncUtils.withLoadingState { () =>
 
             val finalName  = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
+            val view       = EditorState.viewState.now()
             val svgContent =
               generateSvgContent(
                 tiling,
-                showNodeLabels.now(),
-                showUniformity.now(),
-                showRotation.now(),
-                showReflection.now()
+                view.showNodeLabels,
+                view.showUniformity,
+                view.showRotation,
+                view.showReflection
               )
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.currentFileName.set(Some(finalName))
@@ -54,13 +49,14 @@ object SvgExporter:
 
         val tiling = EditorState.tessellationState.now().currentTiling
         if !tiling.isEmpty then
+          val view       = EditorState.viewState.now()
           val svgContent =
             generateSvgContent(
               tiling,
-              showNodeLabels.now(),
-              showUniformity.now(),
-              showRotation.now(),
-              showReflection.now()
+              view.showNodeLabels,
+              view.showUniformity,
+              view.showRotation,
+              view.showReflection
             )
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
       }
@@ -163,7 +159,7 @@ object SvgExporter:
   ): String =
     if coordinates.isEmpty then ""
     else
-      val uniMap   = EditorState.uniformityMap.now().getOrElse(Map.empty)
+      val uniMap   = EditorState.viewState.now().uniformityMap.getOrElse(Map.empty)
       val nodesXml = coordinates
         .filter { (vertexId, _) =>
 
@@ -189,7 +185,7 @@ object SvgExporter:
   ): String =
     if coordinates.isEmpty then ""
     else
-      val rotList   = EditorState.rotationVertexIds.now().getOrElse(Nil)
+      val rotList   = EditorState.viewState.now().rotationVertexIds.getOrElse(Nil)
       val rotCoords = rotList.map:
         case BoundaryVertex(i)  => i -> coordinates(i)
         case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
@@ -219,7 +215,7 @@ object SvgExporter:
   ): String =
     if coordinates.isEmpty then ""
     else
-      val refList = EditorState.reflectionVertexIds.now().getOrElse(Nil)
+      val refList = EditorState.viewState.now().reflectionVertexIds.getOrElse(Nil)
 
       def locationToPoint(loc: BoundaryLocation): Point =
         (loc match {

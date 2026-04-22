@@ -103,7 +103,7 @@ object ViewOperations:
         EditorState.canvasElementRef.now().foreach { canvasElement =>
 
           val canvasRect       = canvasElement.getBoundingClientRect()
-          val currentTransform = EditorState.viewTransform.now()
+          val currentTransform = EditorState.viewState.now().viewTransform
 
           calculateFitToCanvasTransform(
             coords,
@@ -111,7 +111,7 @@ object ViewOperations:
             canvasRect.height,
             currentTransform,
             padding = 40.0
-          ).foreach(EditorState.viewTransform.set)
+          ).foreach(vt => EditorState.viewState.update(_.copy(viewTransform = vt)))
         }
 
   def isTilingLargerThanCanvas: Boolean =
@@ -120,7 +120,7 @@ object ViewOperations:
     else
       val coords = tiling.boundaryVertices.toOption.get.map(_.coords.toPoint).map(_.scale(canvasScale))
 
-      val transform = EditorState.viewTransform.now()
+      val transform = EditorState.viewState.now().viewTransform
       val rotation  = Radian(AngleDegree(transform.rotationDegrees).toBigRadian.toBigDecimal.toDouble)
       val width     = canvasCenter.x * 2
       val height    = canvasCenter.y * 2
@@ -169,7 +169,7 @@ object ViewOperations:
     viewCenter - afterScale
 
   def rotateView(delta: Int): Unit =
-    val currentTransform = EditorState.viewTransform.now()
+    val currentTransform = EditorState.viewState.now().viewTransform
     val scale            = currentTransform.scale
     val pan              = currentTransform.pan
     val rotationRad      = AngleDegree(currentTransform.rotationDegrees).toBigRadian.toBigDecimal.toDouble
@@ -197,8 +197,6 @@ object ViewOperations:
     )
 
     // Update the view transform
-    EditorState.viewTransform.set(
-      currentTransform.withRotation(newRotationDegrees).copy(
-        pan = newPan
-      )
-    )
+    EditorState.viewState.update(_.copy(viewTransform =
+      currentTransform.withRotation(newRotationDegrees).copy(pan = newPan)
+    ))

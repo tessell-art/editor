@@ -62,7 +62,7 @@ object TouchEventHandler:
       initialTouchDistance.set(Some(segment.length))
       initialAngle.set(Some(segment.horizontalAngle))
 
-      val currentTransform = EditorState.viewTransform.now()
+      val currentTransform = EditorState.viewState.now().viewTransform
       initialScale.set(Some(currentTransform.scale))
       initialRotation.set(Some(Radian.fromDegrees(currentTransform.rotationDegrees)))
 
@@ -98,11 +98,10 @@ object TouchEventHandler:
           lastPanOpt.foreach: lastPoint =>
 
             val panD = touchPoint - lastPoint
-            EditorState.viewTransform.update(t =>
-              t.copy(
-                pan = t.pan + panD
-              )
-            )
+            EditorState.viewState.update: s =>
+
+              val vt = s.viewTransform
+              s.copy(viewTransform = vt.copy(pan = vt.pan + panD))
             lastPanPoint.set(Some(touchPoint))
     else if touches.length == 2 then
       val initDistOpt     = initialTouchDistance.now()
@@ -133,10 +132,11 @@ object TouchEventHandler:
 
             val pointer = getPointer(canvasElement, segment)
             val newPan  = pointer - transformedPoint
-            EditorState.viewTransform.update(_.copy(
-              scale = newScale,
-              pan = newPan
-            ).withRotation(newRotation.toDegrees.toInt))
+            EditorState.viewState.update(_.copy(viewTransform =
+              EditorState.viewState.now().viewTransform
+                .copy(scale = newScale, pan = newPan)
+                .withRotation(newRotation.toDegrees.toInt)
+            ))
         case _                                                                                            => // State wasn't correctly initialized
 
   def handleTouchEnd(event: TouchEvent): Unit =
