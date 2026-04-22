@@ -6,7 +6,6 @@ import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.geometry.RegularPolygon
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex, VertexId}
 import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
-import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.EditorState.{currentTiling, polygonColors}
 import io.github.scala_tessella.editor.models.{
   DoublingAnimation,
@@ -65,7 +64,7 @@ object TessellationOperations:
     EditorState.mirrorAnimation.set(None)
 
   private def clearSymmetryOverlaysOnSuccess(): Unit =
-    AppState.clearSymmetryOverlays()
+    SymmetryOperations.clearOverlays()
 
   private def clearSymmetryAndPerimeterSelectionOnSuccess(): Unit =
     clearSymmetryOverlaysOnSuccess()

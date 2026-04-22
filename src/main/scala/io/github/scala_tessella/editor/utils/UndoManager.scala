@@ -1,9 +1,9 @@
 package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
 import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
+import io.github.scala_tessella.editor.operations.MeasurementOperations
 
 import scala.collection.mutable
 
@@ -53,7 +53,7 @@ object UndoManager:
   def undo(): Unit =
     if !EditorState.isProcessing.now() && undoStack.nonEmpty then
       // Before undoing, save the current state to the redo stack
-      AppState.clearMeasurements()
+      MeasurementOperations.clearAll()
       val currentState = AppStateSnapshot.fromCurrentState
       redoStack.push(currentState)
 

@@ -8,6 +8,11 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 // Optional: format when compiling (can be noisy in PRs; turn off if you prefer manual runs)
 ThisBuild / scalafmtOnCompile := true
 
+// ADR-001 — Package layering enforcement
+// Fails the build if a layer imports from a layer it must not depend on.
+// See docs/adr/001-package-layering.md.
+lazy val checkLayering = taskKey[Unit]("Enforce ADR-001 package layering")
+
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
@@ -63,6 +68,42 @@ lazy val editor = project.in(file("."))
     Test / jsEnv := new JSDOMNodeJSEnv(),
     // JSDOM env expects a script input (no module)
     Test / scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.NoModule)),
+
+    // ADR-001 layering check — runs before every compile.
+    // Allowed edges:
+    //   components/interactions → operations, models, utils, AppState
+    //   AppState                → operations, models, utils
+    //   operations              → models, utils
+    //   models                  → utils
+    //   utils                   → (nothing in this project)
+    checkLayering := {
+      val scalaDir =
+        (Compile / sourceDirectory).value / "scala" / "io" / "github" / "scala_tessella" / "editor"
+      val rules: Seq[(String, Seq[String])] = Seq(
+        "models"     -> Seq("AppState", "operations", "components", "interactions"),
+        "operations" -> Seq("AppState", "components", "interactions"),
+        "utils"      -> Seq("AppState", "components", "interactions")
+      )
+      val violations = rules.flatMap { case (layer, forbidden) =>
+        val layerDir = scalaDir / layer
+        val pattern  =
+          ("""^\s*import\s+io\.github\.scala_tessella\.editor\.(""" +
+            forbidden.mkString("|") + """)($|[\s.{])""").r
+        (layerDir ** "*.scala").get.flatMap { f =>
+          IO.readLines(f).zipWithIndex.collect {
+            case (line, i) if pattern.findFirstIn(line).isDefined =>
+              s"  $layer/${f.getName}:${i + 1}: ${line.trim}"
+          }
+        }
+      }
+      if (violations.nonEmpty)
+        sys.error(
+          "ADR-001 layering violations (see docs/adr/001-package-layering.md):\n" +
+            violations.mkString("\n")
+        )
+      streams.value.log.info(s"ADR-001 layering check passed (${rules.size} layers)")
+    },
+    (Compile / compile) := (Compile / compile).dependsOn(checkLayering).value,
 
     // Generate a Scala object with the app version from SBT `version`
     Compile / sourceGenerators += Def.task {

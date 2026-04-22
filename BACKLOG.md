@@ -17,7 +17,8 @@ under `docs/adr/` before implementation.
 
 ### P1#1 — Break the `models` ↔ `operations` circular dependency
 **ADR:** [ADR-001 — Package layering](docs/adr/001-package-layering.md)
-(Accepted — Phase 1 done 2026-04-22, Phase 2 pending).
+(Accepted — both phases done 2026-04-22; enforced via sbt `checkLayering`
+task hooked into `Compile / compile`).
 
 `models` depends on `operations` (`AppState` imports `TessellationOperations`,
 `ColorOperations`, `SelectionOperations`, `ViewOperations`, `ErrorOperations`)
@@ -131,16 +132,11 @@ attemptPolygonInsertion` plus private data classes. Suggested split:
 Also lacks a module-level scaladoc explaining the `attempt…` naming (silent
 failure vs. error-producing contract).
 
-### P2#7a — Resolve `utils → AppState` layering inversion
-Three files in `utils/` reach up to the top-level `AppState`:
-`utils/UndoManager.scala`, `utils/file/SvgImporter.scala`,
-`utils/file/SvgExporter.scala`. After ADR-001 Phase 1 (`AppState` moved out
-of `models`), these became `utils → editor.AppState` — still a layering
-inversion, just a different shape. Resolve as part of ADR-001 Phase 2:
-- `UndoManager` orchestrates state transitions; likely belongs in
-  `operations`.
-- `SvgImporter` / `SvgExporter` are I/O *operations*, not pure utilities;
-  consider `operations.io` or `operations.file`.
+### P2#7a — Resolve `utils → AppState` layering inversion ✅
+Resolved under ADR-001 Phase 2 on 2026-04-22. `utils/UndoManager`,
+`utils/file/SvgImporter`, and `utils/file/SvgExporter` now call specific
+`*Operations` directly instead of going through `AppState`. Enforced by
+the `checkLayering` sbt task.
 
 ### P2#7 — `ErrorOperations.messageTimeoutId: private var Option[Int]` race
 On rapid consecutive errors, the timeout-id tracking has a small race between
@@ -171,6 +167,20 @@ regression.
 
 ### P3#12 — Replace `for (_ <- 0 until MAX_UNDO_DEPTH)` in UndoManager
 Cosmetic; likely resolved as a side effect of P2#5.
+
+### P3#13 — Promote remaining `() => AppState.foo()` callbacks to `Observer[Unit]`
+ADR-001 Phase 2 deferred the mass observer-wiring pass. The existing
+`--> AppState.undoObserver` / `redoObserver` pattern is the target idiom;
+`MenuBarComponent.scala` still uses `() => AppState.toggleShowUniformity()`
+etc. as callbacks. Cosmetic but aligns the code with Laminar idiom —
+do opportunistically when touching these files for other reasons.
+
+### P3#14 — Relocate `UndoManager` out of `utils/`
+`utils/UndoManager.scala` orchestrates state transitions and reads/writes
+many `EditorState` fields — conceptually an *operation*, not a utility.
+Relocating it to `operations/` would make the layering purely top-down
+(utils would contain only stateless helpers). Mechanical move; no
+functional change.
 
 ---
 

@@ -11,8 +11,8 @@ import io.github.scala_tessella.editor.models.EditorState.{
   showRotation,
   showUniformity
 }
-import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
+import io.github.scala_tessella.editor.operations.ColorOperations
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
@@ -132,7 +132,7 @@ object SvgExporter:
     val polygonsXml =
       tiling.innerFacesVertices.map { (faceId, faceVertices) =>
 
-        val color    = AppState.getPolygonColor(faceId).getOrElse(EditorConfig.defaultPolygonColor).toRgb
+        val color    = ColorOperations.getPolygonColor(faceId).getOrElse(EditorConfig.defaultPolygonColor).toRgb
         val points   = pointsString(faceVertices, scale, offset)
         val nodesStr = "" // nodes.map(_.toString).mkString(",")
 

@@ -3,9 +3,10 @@ package io.github.scala_tessella.editor.utils.file
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.conversion.TilingSVG
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.operations.ErrorOperations
+import io.github.scala_tessella.editor.operations.{
+  ErrorOperations, MeasurementOperations, SymmetryOperations, ViewOperations
+}
 import io.github.scala_tessella.editor.utils.ColorRGB.parseColor
 import io.github.scala_tessella.editor.utils.{AsyncUtils, ColorRGB, UndoManager}
 import org.scalajs.dom
@@ -75,8 +76,8 @@ object SvgImporter:
           // Strict color preservation: require one valid fill for every imported face.
           val polyFills = readPolygonFillsStrict(doc, expectedCount = faces.size)
 
-          AppState.clearMeasurements()
-          AppState.clearSymmetryOverlays()
+          MeasurementOperations.clearAll()
+          SymmetryOperations.clearOverlays()
           // Load the tiling into the editor
           EditorState.currentTiling.set(tiling)
 
@@ -89,7 +90,7 @@ object SvgImporter:
               .toMap
           EditorState.polygonColors.set(colorMap)
           EditorState.currentFileName.set(Some(filename))
-          AppState.fitTilingToCanvas()
+          ViewOperations.fitTilingToCanvas()
           UndoManager.clearHistory()
     }.recover { case e: Throwable =>
       // Friendlier, centralized message with a remediation hint, via non-blocking toast
