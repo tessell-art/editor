@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.utils.file
 
 import com.raquo.laminar.api.L.*
-import io.github.scala_tessella.dcel.conversion.TilingSVG
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.conversion.TilingSVG
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.{
   ErrorOperations, MeasurementOperations, SymmetryOperations, ViewOperations
@@ -15,6 +15,12 @@ import org.scalajs.dom.{FileReader, MIMEType, ProgressEvent}
 import scala.util.Try
 
 object SvgImporter:
+
+  private val metadataNamespace = "https://github.com/scala-tessella/tessella"
+
+  private val importFailureHint =
+    "This SVG likely lacks Tessella DCEL metadata.\n" +
+      "Use File → Save SVG in this editor to produce importable files."
 
   def trigger(): Unit =
     val inputEl = input(
@@ -41,84 +47,94 @@ object SvgImporter:
     }
     inputEl.click()
 
+  /** Top-level import flow. Runs four parse/validate steps short-circuiting on the first `Left`, then either
+    * loads the tiling into the editor or surfaces the error via `ErrorOperations`.
+    */
   def importTilingFromSVG(svgContent: String, filename: String): Unit =
+    AsyncUtils.setLoadingMessage("Parsing SVG metadata...")
+    val result: Either[String, Unit] =
+      for
+        doc       <- parseSvg(svgContent)
+        metaElem  <- findTessellaMetadata(doc)
+        _          = AsyncUtils.setLoadingMessage("Validating tessellation...")
+        tiling    <- parseTiling(metaElem.outerHTML)
+        polyFills <- readPolygonFillsStrict(doc, expectedCount = tiling.innerFaces.size)
+      yield loadTilingIntoEditor(tiling, polyFills, filename)
+
+    result.left.foreach(showImportError)
+
+  /** Wrap the only DOM call that can actually throw (`new DOMParser()` on exotic platforms). */
+  private def parseSvg(svgContent: String): Either[String, dom.Document] =
     Try {
-      AsyncUtils.setLoadingMessage("Parsing SVG metadata...")
       val parser = new dom.DOMParser()
-      val doc    = parser.parseFromString(svgContent, MIMEType.`image/svg+xml`)
+      parser.parseFromString(svgContent, MIMEType.`image/svg+xml`)
+    }.toEither.left.map(e => s"Failed to parse SVG document: ${e.getMessage}")
 
-      // Prefer namespace-aware selection for the tessella DCEL metadata
-      val ns        = "https://github.com/scala-tessella/tessella"
-      val tessElems = Option(doc.getElementsByTagNameNS(ns, "tessella-dcel"))
-        .filter:
-          _.length > 0
-        .map:
-          _.item(0)
+  /** Locate the `<tessella:tessella-dcel>` metadata element. Prefers namespace-aware selection; falls back to
+    * a `querySelector` with an escaped colon in case the prefix binding is missing.
+    */
+  private def findTessellaMetadata(doc: dom.Document): Either[String, dom.Element] =
+    val namespaceMatch =
+      Option(doc.getElementsByTagNameNS(metadataNamespace, "tessella-dcel"))
+        .filter(_.length > 0)
+        .map(_.item(0))
+    namespaceMatch
+      .orElse(Option(doc.querySelector("metadata tessella\\:tessella-dcel")))
+      .collect { case el: dom.Element =>
+        el
+      }
+      .toRight("No Tessella DCEL metadata found in the SVG.")
 
-      // Fallback for cases where namespace lookups might fail (e.g., missing prefix binding)
-      val tessElem =
-        tessElems
-          .orElse:
-            Option(doc.querySelector("metadata tessella\\:tessella-dcel"))
-          .getOrElse(
-            throw new Exception("No Tessella DCEL metadata found in the SVG.")
-          )
+  private def parseTiling(metadataStr: String): Either[String, TilingDCEL] =
+    TilingSVG.fromMetadata(metadataStr).left.map(err =>
+      s"Failed to parse Tessella DCEL metadata: ${err.message}"
+    )
 
-      val metadataStr = tessElem.outerHTML
-
-      AsyncUtils.setLoadingMessage("Validating tessellation...")
-
-      TilingSVG.fromMetadata(metadataStr) match
-        case Left(err)                 =>
-          throw new Exception(s"Failed to parse Tessella DCEL metadata: ${err.message}")
-        case Right(tiling: TilingDCEL) =>
-          val faces     = tiling.innerFaces
-          // Strict color preservation: require one valid fill for every imported face.
-          val polyFills = readPolygonFillsStrict(doc, expectedCount = faces.size)
-
-          MeasurementOperations.clearAll()
-          SymmetryOperations.clearOverlays()
-          // Load the tiling into the editor
-          EditorState.tessellationState.update(_.copy(currentTiling = tiling))
-
-          // Map SVG polygon colors to faces by order (export preserves this order).
-          val colorMap =
-            faces
-              .zip(polyFills)
-              .map:
-                case (face, rgb) => face.id -> rgb
-              .toMap
-          EditorState.colorState.update(_.copy(polygonColors = colorMap))
-          EditorState.fileState.update(_.copy(currentFileName = Some(filename)))
-          ViewOperations.fitTilingToCanvas()
-          UndoManager.clearHistory()
-    }.recover { case e: Throwable =>
-      // Friendlier, centralized message with a remediation hint, via non-blocking toast
-      val hint =
-        "This SVG likely lacks Tessella DCEL metadata.\nUse File → Save SVG in this editor to produce importable files."
-      ErrorOperations.showError(
-        message = s"Failed to import SVG: ${e.getMessage}",
-        context = Some("SVG Import"),
-        hint = Some(hint),
-        asToast = true,
-        severity = ErrorOperations.Severity.Error
-      )
-    }: Unit
-
-  private def readPolygonFillsStrict(doc: dom.Document, expectedCount: Int): List[ColorRGB] =
+  /** Read the `<polygon>` fills strictly: the count must match, every fill must parse. */
+  private def readPolygonFillsStrict(
+      doc: dom.Document,
+      expectedCount: Int
+  ): Either[String, List[ColorRGB]] =
     val svgPolys   = doc.querySelectorAll("#tiling-polygons polygon")
     val foundCount = svgPolys.length
-
     if foundCount != expectedCount then
-      throw new Exception(
-        s"Strict color import failed: expected $expectedCount polygon fills, found $foundCount."
-      )
+      Left(s"Strict color import failed: expected $expectedCount polygon fills, found $foundCount.")
+    else
+      val perPolygon: List[Either[String, ColorRGB]] = (0 until foundCount).toList.map { i =>
 
-    (0 until foundCount).map { i =>
+        val rawFill = Option(svgPolys(i).getAttribute("fill")).map(_.trim).getOrElse("")
+        parseColor(rawFill).toRight(
+          s"Strict color import failed: invalid fill at polygon #${i + 1}: '$rawFill'."
+        )
+      }
+      // Sequence List[Either] → Either[_, List] short-circuiting on the first Left.
+      perPolygon.foldRight[Either[String, List[ColorRGB]]](Right(Nil)) { (e, acc) =>
 
-      val el      = svgPolys(i)
-      val rawFill = Option(el.getAttribute("fill")).map(_.trim).getOrElse("")
-      parseColor(rawFill).getOrElse(
-        throw new Exception(s"Strict color import failed: invalid fill at polygon #${i + 1}: '$rawFill'.")
-      )
-    }.toList
+        for c <- e; rest <- acc yield c :: rest
+      }
+
+  private def loadTilingIntoEditor(
+      tiling: TilingDCEL,
+      polyFills: List[ColorRGB],
+      filename: String
+  ): Unit =
+    MeasurementOperations.clearAll()
+    SymmetryOperations.clearOverlays()
+    EditorState.tessellationState.update(_.copy(currentTiling = tiling))
+    val colorMap =
+      tiling.innerFaces.zip(polyFills).map { case (face, rgb) =>
+        face.id -> rgb
+      }.toMap
+    EditorState.colorState.update(_.copy(polygonColors = colorMap))
+    EditorState.fileState.update(_.copy(currentFileName = Some(filename)))
+    ViewOperations.fitTilingToCanvas()
+    UndoManager.clearHistory()
+
+  private def showImportError(reason: String): Unit =
+    ErrorOperations.showError(
+      message = s"Failed to import SVG: $reason",
+      context = Some("SVG Import"),
+      hint = Some(importFailureHint),
+      asToast = true,
+      severity = ErrorOperations.Severity.Error
+    )

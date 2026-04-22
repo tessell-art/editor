@@ -113,13 +113,24 @@ backlog item — normal maintenance under the conventions doc.
 
 ## P2 — Code quality & correctness
 
-### P2#4 — `SvgImporter` still throws instead of returning `Either`
-`src/main/scala/io/github/scala_tessella/editor/utils/file/SvgImporter.scala:62, :71, :111, :120`
-use `throw new Exception(...)` despite commit `bd13119` ("Switch to safe method
-returning Either"). The outer `Try { … }.recover` catches them, but
-control-flow-through-exceptions is inconsistent with the `Either` style
-`TilingSVG.fromMetadata` already returns. Refactor to a single
-`Either[String, Tiling]` pipeline; wrap only the raw DOM APIs in `Try`.
+### P2#4 — `SvgImporter` still throws instead of returning `Either` ✅
+Resolved 2026-04-22. All four `throw new Exception(…)` sites removed.
+`SvgImporter` is now a 4-step `Either[String, _]` pipeline:
+
+```
+parseSvg          :: String             => Either[String, dom.Document]
+findTessellaMetadata :: dom.Document   => Either[String, dom.Element]
+parseTiling       :: String             => Either[String, TilingDCEL]
+readPolygonFillsStrict :: (Document, Int) => Either[String, List[ColorRGB]]
+```
+
+The top-level `importTilingFromSVG` is a for-comprehension that
+short-circuits on the first `Left`. On success, side effects are applied
+via `loadTilingIntoEditor`; on failure, `showImportError` produces a
+toast. `Try` now only wraps the one DOM call that could genuinely throw
+(`new DOMParser()` + `parseFromString`).
+
+Main-sources `throw new` count: 4 → **0**.
 
 ### P2#5 — `UndoManager` / `AppStateSnapshot` drift risk ✅
 Resolved 2026-04-22 (under P3#15). `AppStateSnapshot` now has 5 fields —
