@@ -14,7 +14,7 @@ class ErrorMessageComponentSpec extends FunSuite with EditorStateFixture with La
 
   test("with no error message, the .error-container is empty (no .error-message child)"):
     EditorState.errorState.update(_.copy(errorMessage = None))
-    mount(ErrorMessageComponent.element)
+    mount(ErrorMessageComponent.element): Unit
 
     // The outer .error-container is always present.
     assert(querySelector(".error-container").isDefined)
@@ -23,7 +23,7 @@ class ErrorMessageComponentSpec extends FunSuite with EditorStateFixture with La
 
   test("with an error message, the .error-message div renders icon + text + close"):
     EditorState.errorState.update(_.copy(errorMessage = Some("Boom")))
-    mount(ErrorMessageComponent.element)
+    mount(ErrorMessageComponent.element): Unit
 
     val msg = querySelector(".error-message")
     assert(msg.isDefined)
@@ -33,7 +33,7 @@ class ErrorMessageComponentSpec extends FunSuite with EditorStateFixture with La
 
   test("clicking the close button clears errorMessage and removes the .error-message div"):
     EditorState.errorState.update(_.copy(errorMessage = Some("Boom")))
-    mount(ErrorMessageComponent.element)
+    mount(ErrorMessageComponent.element): Unit
     assert(querySelector(".error-message").isDefined)
 
     clickOn(".error-close")
@@ -44,7 +44,7 @@ class ErrorMessageComponentSpec extends FunSuite with EditorStateFixture with La
 
   test("the rendered content updates reactively when errorMessage changes mid-test"):
     EditorState.errorState.update(_.copy(errorMessage = None))
-    mount(ErrorMessageComponent.element)
+    mount(ErrorMessageComponent.element): Unit
     assert(querySelector(".error-message").isEmpty)
 
     EditorState.errorState.update(_.copy(errorMessage = Some("First")))

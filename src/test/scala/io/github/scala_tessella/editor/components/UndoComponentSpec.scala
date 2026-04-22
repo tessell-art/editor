@@ -46,7 +46,7 @@ class UndoComponentSpec extends FunSuite with EditorStateFixture with LaminarTes
   test("with no undo history, both buttons are disabled and titled with the no-action message"):
     UndoManager.clearHistory()
     EditorState.uiState.update(_.copy(isProcessing = false))
-    mount(UndoComponent.element)
+    mount(UndoComponent.element): Unit
 
     assert(isDisabled(".undo-button"))
     assert(isDisabled(".redo-button"))
@@ -58,7 +58,7 @@ class UndoComponentSpec extends FunSuite with EditorStateFixture with LaminarTes
     EditorState.tessellationState.update(_.copy(currentTiling = TilingBuilders.freshSquare()))
     UndoManager.saveState()
     EditorState.uiState.update(_.copy(isProcessing = false))
-    mount(UndoComponent.element)
+    mount(UndoComponent.element): Unit
 
     assert(!isDisabled(".undo-button"))
     assert(isDisabled(".redo-button"))
@@ -69,7 +69,7 @@ class UndoComponentSpec extends FunSuite with EditorStateFixture with LaminarTes
     UndoManager.saveState()
     EditorState.tessellationState.update(_.copy(currentTiling = TilingBuilders.freshSquare()))
     EditorState.uiState.update(_.copy(isProcessing = false))
-    mount(UndoComponent.element)
+    mount(UndoComponent.element): Unit
     assert(isDisabled(".redo-button"))
 
     UndoManager.undo()
@@ -83,7 +83,7 @@ class UndoComponentSpec extends FunSuite with EditorStateFixture with LaminarTes
     EditorState.tessellationState.update(_.copy(currentTiling = TilingBuilders.freshSquare()))
     UndoManager.saveState()
     EditorState.uiState.update(_.copy(isProcessing = true))
-    mount(UndoComponent.element)
+    mount(UndoComponent.element): Unit
 
     assert(isDisabled(".undo-button"))
     assert(isDisabled(".redo-button"))
