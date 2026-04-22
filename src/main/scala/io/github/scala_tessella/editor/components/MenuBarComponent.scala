@@ -72,9 +72,10 @@ object MenuBarComponent:
       )
     )
 
+  // `action: => Unit` is by-name: call sites pass `foo()` directly, not `() => foo()`.
   private def dropdownLinkBase(
       title: Mod[HtmlElement],
-      action: () => Unit,
+      action: => Unit,
       enabled: Signal[Boolean],
       shortcut: Option[String]
   ): Element =
@@ -85,7 +86,7 @@ object MenuBarComponent:
           case (_, true) => ()
       ) --> { _ =>
 
-        action()
+        action
         EditorState.uiState.update(_.copy(isMenuOpen = false))
       }, // close menu on action
       className("disabled") <-- enabled.map(!_),
@@ -96,7 +97,7 @@ object MenuBarComponent:
   // A helper for creating a clickable link in a dropdown
   private def dropdownLink(
       title: String,
-      action: () => Unit,
+      action: => Unit,
       enabled: Signal[Boolean] = Val(true),
       shortcut: Option[String] = None
   ): Element =
@@ -105,7 +106,7 @@ object MenuBarComponent:
   // A helper for creating a dropdown link with dynamic text
   private def dropdownLinkDynamic(
       title: Signal[String],
-      action: () => Unit,
+      action: => Unit,
       enabled: Signal[Boolean] = Val(true),
       shortcut: Option[String] = None
   ): Element =
@@ -134,7 +135,7 @@ object MenuBarComponent:
     templates.map(template =>
       dropdownLink(
         s"${template.name} ${template.pattern}",
-        () => TemplateLoader.loadTemplate(directory, template.filename)
+        TemplateLoader.loadTemplate(directory, template.filename)
       )
     )
 
@@ -176,66 +177,65 @@ object MenuBarComponent:
     menuItem(
       "File",
       dropdownLink(
-        "New",
-        () =>
-
+        "New", {
           AppState.clearTiling()
           EditorState.fileState.update(_.copy(currentFileName = None))
           UndoManager.clearHistory()
           EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))
           AppState.resetFillColorToDefault()
+        }
       ),
       templatesMenu(),
       div(className := "menu-separator"),
-      dropdownLink("Load SVG...", () => SvgImporter.trigger()),
+      dropdownLink("Load SVG...", SvgImporter.trigger()),
       dropdownLink(
         "Save SVG",
-        () => SvgExporter.saveTilingToSVG(),
+        SvgExporter.saveTilingToSVG(),
         enabled = EditorState.canSaveCurrentFileWhenIdleSignal,
         shortcut = Some("Ctrl+S")
       ),
       dropdownLink(
         "Save SVG as...",
-        () => SvgExporter.saveAsTilingToSVG(),
+        SvgExporter.saveAsTilingToSVG(),
         enabled = EditorState.canMutateTilingSignal
       ),
       div(className := "menu-separator"),
       dropdownLink(
         "Export to DOT...",
-        () => DotExporter.exportTilingToDOT(),
+        DotExporter.exportTilingToDOT(),
         enabled = EditorState.canMutateTilingSignal
       ),
       div(className := "menu-separator"),
-      dropdownLink("Settings...", () => EditorState.popupState.update(_.copy(showSettingsPopup = true)))
+      dropdownLink("Settings...", EditorState.popupState.update(_.copy(showSettingsPopup = true)))
     )
 
   private def editMenu(): Element =
     menuItem(
       "Edit",
-      dropdownLink("↶ Undo", () => UndoManager.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink("↷ Redo", () => UndoManager.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
+      dropdownLink("↶ Undo", UndoManager.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
+      dropdownLink("↷ Redo", UndoManager.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
       div(className := "menu-separator"),
-      dropdownLink("Clear Tiling", () => AppState.clearTiling()),
+      dropdownLink("Clear Tiling", AppState.clearTiling()),
       dropdownLink(
         "Double (to infinite)",
-        () => AppState.doubleTiling(),
+        AppState.doubleTiling(),
         enabled = EditorState.canMutateTilingSignal,
         shortcut = Some("D")
       ),
-      dropdownLink("Mirror", () => AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
+      dropdownLink("Mirror", AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {
 //          case EditorMode.Select => "Switch to Delete Mode"
 //          case EditorMode.Delete => "Switch to Select Mode"
 //        },
-//        () => AppState.toggleEditorMode()
+//        AppState.toggleEditorMode()
 //      ),
       div(className := "menu-separator"),
-      dropdownLink("Select All", () => AppState.selectAll(), EditorState.canMutateTilingSignal),
+      dropdownLink("Select All", AppState.selectAll(), EditorState.canMutateTilingSignal),
       dropdownLink(
         "Deselect All",
-        () => AppState.deselectAll(),
+        AppState.deselectAll(),
         EditorState.canDeselectAllSignal,
         shortcut = Some("Esc")
       ),
@@ -259,7 +259,7 @@ object MenuBarComponent:
 //          case Strictness.STRICT   => "Switch Validation OFF"
 //          case _                   => "Switch Validation ON"
 //        },
-//        () => AppState.toggleStrictness()
+//        AppState.toggleStrictness()
 //      )
     )
 
@@ -270,70 +270,68 @@ object MenuBarComponent:
         EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(show =>
           if (show) "Hide Node Labels" else "Show Node Labels"
         ),
-        () => AppState.toggleNodeLabels()
+        AppState.toggleNodeLabels()
       ),
       dropdownLinkDynamic(
         EditorState.viewState.signal.map(_.showUniformity).distinct.map(if (_) "Hide Uniformity"
         else "Show Uniformity"),
-        () => AppState.toggleShowUniformity()
+        AppState.toggleShowUniformity()
       ),
       dropdownLinkDynamic(
         EditorState.viewState.signal.map(_.showRotation).distinct.map(if (_) "Hide Rotational Symmetry"
         else "Show Rotational Symmetry"),
-        () => AppState.toggleShowRotation()
+        AppState.toggleShowRotation()
       ),
       dropdownLinkDynamic(
         EditorState.viewState.signal.map(_.showReflection).distinct.map(if (_) "Hide Reflectional Symmetry"
         else "Show Reflectional Symmetry"),
-        () => AppState.toggleShowReflection()
+        AppState.toggleShowReflection()
       ),
       div(className := "menu-separator"),
       dropdownLink(
         "Fit to Canvas",
-        () => AppState.fitTilingToCanvas(),
+        AppState.fitTilingToCanvas(),
         enabled = EditorState.canMutateTilingSignal,
         shortcut = Some("F")
       ),
-      dropdownLink("Reset View", () => EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))),
+      dropdownLink("Reset View", EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))),
       div(className := "menu-separator"),
       dropdownLink(
         "Zoom In",
-        () =>
-          EditorState.viewState.update: s =>
+        EditorState.viewState.update: s =>
 
-            val vt = s.viewTransform
-            s.copy(viewTransform =
-              vt.copy(scale = ViewOperations.clampViewScale(vt.scale * EditorConfig.menuZoomFactor))
-            )
+          val vt = s.viewTransform
+          s.copy(viewTransform =
+            vt.copy(scale = ViewOperations.clampViewScale(vt.scale * EditorConfig.menuZoomFactor))
+          )
         ,
         shortcut = Some("+")
       ),
       dropdownLink(
         "Zoom Out",
-        () =>
-          EditorState.viewState.update: s =>
+        EditorState.viewState.update: s =>
 
-            val vt = s.viewTransform
-            s.copy(viewTransform =
-              vt.copy(scale = ViewOperations.clampViewScale(vt.scale / EditorConfig.menuZoomFactor))
-            )
+          val vt = s.viewTransform
+          s.copy(viewTransform =
+            vt.copy(scale = ViewOperations.clampViewScale(vt.scale / EditorConfig.menuZoomFactor))
+          )
         ,
         shortcut = Some("-")
       ),
-      dropdownLink("Rotate Left", () => ViewOperations.rotateView(-30), shortcut = Some("E")),
-      dropdownLink("Rotate Right", () => ViewOperations.rotateView(30), shortcut = Some("R"))
+      dropdownLink("Rotate Left", ViewOperations.rotateView(-30), shortcut = Some("E")),
+      dropdownLink("Rotate Right", ViewOperations.rotateView(30), shortcut = Some("R"))
     )
 
   private def helpMenu(): Element =
     menuItem(
       "Help",
-      dropdownLink("Guide...", () => EditorState.popupState.update(_.copy(showGuidePopup = true))),
+      dropdownLink("Guide...", EditorState.popupState.update(_.copy(showGuidePopup = true))),
       dropdownLink(
         "Keyboard Shortcuts...",
-        () => EditorState.popupState.update(_.copy(showShortcutsPopup = true))
+        EditorState.popupState.update(_.copy(showShortcutsPopup = true))
       ),
       div(className := "menu-separator"),
-      dropdownLink("About...", () => EditorState.popupState.update(_.copy(showAboutPopup = true)))
+      dropdownLink("About...", EditorState.popupState.update(_.copy(showAboutPopup = true)))
     )
 
   // This now handles the theme update logic directly

@@ -227,12 +227,34 @@ regression.
 Resolved 2026-04-22 (under P3#15). The two-stack ping-pong replaced
 with `while undoStack.size > MAX_UNDO_DEPTH do undoStack.remove(undoStack.size - 1)`.
 
-### P3#13 — Promote remaining `() => AppState.foo()` callbacks to `Observer[Unit]`
-ADR-001 Phase 2 deferred the mass observer-wiring pass. The existing
-`--> AppState.undoObserver` / `redoObserver` pattern is the target idiom;
-`MenuBarComponent.scala` still uses `() => AppState.toggleShowUniformity()`
-etc. as callbacks. Cosmetic but aligns the code with Laminar idiom —
-do opportunistically when touching these files for other reasons.
+### P3#13 — Promote remaining `() => AppState.foo()` callbacks to `Observer[Unit]` ✅
+Resolved 2026-04-22 — with a different approach than originally proposed.
+
+The original suggestion was `Observer[Unit]` wrappers on `AppState` for
+each action. Evaluating: that would require ~15 `val xObserver =
+Observer(_ => x())` definitions, each of which is more ceremony than the
+`() => x()` it replaces. Same semantics either way — purely a syntactic
+question.
+
+**Actual fix:** `MenuBarComponent.dropdownLink*` helpers now take
+`action: => Unit` (by-name) instead of `action: () => Unit`. Call sites
+drop the `() =>` prefix entirely:
+
+```scala
+// Before
+dropdownLink("Clear Tiling", () => AppState.clearTiling())
+
+// After
+dropdownLink("Clear Tiling", AppState.clearTiling())
+```
+
+24 call sites cleaned up in one file. Three multi-line action blocks
+(`New`, `Zoom In`, `Zoom Out`) wrapped in explicit `{ … }` blocks for
+clarity. The `--> observer` idiom is still preferred for direct stream
+bindings (as documented in `docs/laminar-conventions.md` §4) —
+`UndoComponent` continues to use `--> AppState.undoObserver` since the
+observer there is wired with `withCurrentValueOf(isProcessing)` and
+genuinely benefits from the reactive form.
 
 ### P3#15 — Consolidate `AppStateSnapshot` fields into aggregate case classes ✅
 Resolved 2026-04-22. What landed:
