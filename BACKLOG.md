@@ -104,6 +104,15 @@ Options to evaluate in ADR-002:
   smoke-test the helper against `child.maybe <--` state-driven content,
   state-mutating button observers with `e.stopPropagation()` inside the
   observer body, and reactive DOM updates mid-test.
+- `ErrorMessageComponentSpec` (4 tests, landed 2026-04-22) — covers the
+  `child.maybe <-- signal.map(_.map(...))` empty/non-empty branch
+  switch, close-button → `ErrorOperations.clearError()`, and reactive
+  message-text updates mid-test.
+- `UndoComponentSpec` extended (4 mount tests on top of the existing
+  6 pure-helper tests, landed 2026-04-22) — covers the `disabled <--`
+  wiring driven by `UndoManager.canUndo` × `EditorState.uiState
+  .isProcessing`, including the "isProcessing forces both buttons
+  disabled" interaction that the pure helpers can't see.
 
 **Tier 2 first cut landed 2026-04-22** — Playwright smoke suite under
 `e2e/` (sibling project, own `package.json`/`node_modules`):
@@ -129,14 +138,36 @@ pushes if PR build time becomes a concern.
 
 Open follow-ups (not urgent — opportunistic):
 1. Mount specs for the remaining popups (`GuidePopup`,
-   `ShortcutsPopup`, `SettingsPopup`) plus `UndoComponent`,
-   `ErrorMessageComponent`, `ColorPickerPopupComponent`. Helper is
-   stable; each spec follows the established shape.
+   `ShortcutsPopup`, `SettingsPopup`) plus
+   `ColorPickerPopupComponent`. `UndoComponent` and
+   `ErrorMessageComponent` landed 2026-04-22 — the helper has now
+   handled four distinct component shapes (static popup, state-driven
+   popup, conditional `child.maybe`, signal-driven `disabled`)
+   without needing changes.
 2. Tier 2 expansion: SVG export-import round-trip via
    `page.waitForEvent('download')`, `TouchEventHandler` via
    Playwright's touch-emulation device, visual snapshots for the
    canvas at known scenes.
 3. Wire Tier 2 into CI.
+4. **Language for e2e tests** — see
+   [ADR-004](docs/adr/004-e2e-test-language.md) (Accepted 2026-04-22).
+   Path 2 landed: TS tests + `@JSExportTopLevel` Scala test hooks for
+   domain-native assertions. First implementation:
+   - `src/main/scala/io/github/scala_tessella/editor/TestHooks.scala` —
+     three observation hooks (`tilingPolygonCount`, `isTilingEmpty`,
+     `currentFillColor`) registered at `globalThis.__tessellaTestHooks__`.
+     Each member has explicit `@JSExport` so the surface is grep-able.
+   - `e2e/tests/fixtures/hooks.ts` — `Window` augmentation + typed
+     `hooks.*` (one-shot reads) and `expectHook.*` (Playwright
+     `expect.poll` wrapper) helpers.
+   - `e2e/tests/smoke.spec.ts` — the hexagon-creates-tiling test
+     rewritten to use `isTilingEmpty` + `tilingPolygonCount` hooks
+     instead of `polygon.tiling-polygon` selectors. The other three
+     tests stay selector-based for contrast.
+
+   Production-bundle guard explicitly **not** added (ADR-004
+   §Consequences mitigation A — accept). Revisit if bundle size ever
+   becomes a real metric.
 
 Static analysis on 2026-04-22 reports 217 tests across 27 suites, but the
 distribution is uneven:
@@ -572,6 +603,7 @@ ADRs live under `docs/adr/`:
 - [`001-package-layering.md`](docs/adr/001-package-layering.md) — Accepted.
 - [`002-state-container.md`](docs/adr/002-state-container.md) — Accepted.
 - [`003-test-strategy.md`](docs/adr/003-test-strategy.md) — Accepted.
+- [`004-e2e-test-language.md`](docs/adr/004-e2e-test-language.md) — Accepted.
 
 Each ADR follows the standard template: **Status** (Proposed / Accepted /
 Superseded), **Context**, **Decision**, **Consequences**, **Alternatives

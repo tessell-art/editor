@@ -41,6 +41,32 @@ See `tests/smoke.spec.ts` — four scenarios:
 3. Ctrl+Z undoes a tiling creation.
 4. Opening and closing the About popup via the menu.
 
+## Domain-state assertions: Scala-exposed test hooks (ADR-004)
+
+For assertions about editor *state* (rather than DOM presence), prefer the
+Scala-exposed hook API in `tests/fixtures/hooks.ts` over CSS selectors:
+
+```ts
+import { hooks, expectHook } from './fixtures/hooks';
+
+// Domain assertions — survives any CSS class rename.
+expect(await hooks.isTilingEmpty(page)).toBe(true);
+await expectHook.tilingPolygonCount(page, 1);
+
+// vs. selector assertions (use these for genuinely UI-shaped concerns):
+await expect(page.locator('.popup-overlay')).toBeVisible();
+```
+
+The hooks are registered from
+[`TestHooks.scala`](../src/main/scala/io/github/scala_tessella/editor/TestHooks.scala)
+at `globalThis.__tessellaTestHooks__`. Keep observation-only — mutations
+should still go through user-visible paths (clicking buttons, pressing keys)
+so the e2e suite exercises the same interaction surface real users do.
+
+Adding a hook: add a `@JSExport`-annotated method in `TestHooks.scala`,
+add the matching entry under `Window.__tessellaTestHooks__` in `hooks.ts`,
+and (if useful) a polling helper under `expectHook`.
+
 ## What's deliberately *not* yet covered
 
 These remain on the ADR-003 roadmap and will be added when the editor surface

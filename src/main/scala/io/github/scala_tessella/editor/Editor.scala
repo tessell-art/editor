@@ -20,6 +20,9 @@ def Editor(): Unit =
   // Initialize logging based on environment (dev vs prod)
   Logger.initFromEnvironment()
   Logger.info("Editor starting up")
+  // Register the e2e test-hook object on globalThis. See ADR-004 + TestHooks.scala for context.
+  // Lands in production bundles too; payload is tiny.
+  TestHooks.install()
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
     EditorApp.element

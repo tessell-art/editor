@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { hooks, expectHook } from './fixtures/hooks';
 
 /**
  * Tessella Editor smoke suite (ADR-003 Tier 2).
@@ -7,6 +8,10 @@ import { test, expect } from '@playwright/test';
  * outcome. The point is signal on what JSDOM cannot honestly cover — real
  * canvas/SVG rendering, real keyboard events, real CSS-driven hover behaviour
  * for the menu — not parallel coverage of what the unit tier already verifies.
+ *
+ * Domain-state assertions are made via the Scala-exposed hook API (ADR-004,
+ * see `./fixtures/hooks.ts`); pure UI assertions (visibility, presence) keep
+ * using Playwright locators directly.
  */
 test.describe('Tessella Editor smoke', () => {
 
@@ -26,14 +31,17 @@ test.describe('Tessella Editor smoke', () => {
   });
 
   test('clicking the hexagon palette button creates a tiling', async ({ page }) => {
-    // Initially no tiling polygons are rendered.
-    await expect(page.locator('polygon.tiling-polygon')).toHaveCount(0);
+    // Initially no tiling polygons are rendered. Asserted via the domain hook rather than by
+    // counting `polygon.tiling-polygon` selectors — the test survives any CSS class rename.
+    expect(await hooks.isTilingEmpty(page)).toBe(true);
 
     // The 6-sided polygon button has a `title` prefixed with "6-sided polygon".
     await page.locator('button[title^="6-sided polygon"]').click();
 
-    // A single hexagon face appears.
-    await expect(page.locator('polygon.tiling-polygon')).toHaveCount(1);
+    // A single hexagon face appears. Polled because the click handler routes through
+    // OperationRunner.runTilingOp, which has a 50ms loading-state delay before the mutation
+    // applies — exactly the case `expect.poll` is for.
+    await expectHook.tilingPolygonCount(page, 1);
   });
 
   test('Ctrl+Z undoes a tiling creation', async ({ page }) => {
