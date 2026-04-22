@@ -19,10 +19,11 @@ object PopupCommons:
       svg.path(svg.d := "M 6 6 L 18 18")
     )
 
-  // Factory to produce a close handler bound to a Var[Boolean]
-  def closePopup(state: Var[Boolean]): Observer[dom.MouseEvent] = Observer { _ =>
+  // Factory to produce a close handler bound to a by-name close action.
+  // Callers typically pass `EditorState.popupState.update(_.copy(showXxx = false))`.
+  def closePopup(close: => Unit): Observer[dom.MouseEvent] = Observer { _ =>
 
-    state.set(false)
+    close
   }
 
   def popupOverlay(

@@ -17,12 +17,8 @@ trait EditorStateFixture:
     EditorState.dragStart.set(None)
 
     // Reset popups
-    EditorState.showAboutPopup.set(false)
-    EditorState.showGuidePopup.set(false)
-    EditorState.showShortcutsPopup.set(false)
-    EditorState.showIrregularPolygonPopup.set(false)
-    EditorState.showColorPicker.set(false)
-    EditorState.showSettingsPopup.set(false)
+    EditorState.popupState.set(PopupState.initial)
+    EditorState.showColorPicker.set(false) // ColorState field, not PopupState
 
     // Clear errors and failed ops
     EditorState.errorMessage.set(None)
@@ -54,7 +50,6 @@ trait EditorStateFixture:
     EditorState.perimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
     EditorState.tempDefaultFillColor.set(EditorConfig.defaultPolygonColor)
     EditorState.tempPerimeterEdgeColor.set(EditorConfig.defaultPerimeterEdgeColor)
-    EditorState.showSettingsColorPicker.set(false)
     EditorState.tempSettingsPickerColor.set(EditorConfig.defaultPolygonColor)
     EditorState.loadingMessage.set(None)
 

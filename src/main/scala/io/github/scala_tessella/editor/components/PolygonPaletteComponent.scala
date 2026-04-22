@@ -207,7 +207,7 @@ object PolygonPaletteComponent:
               ()
             } --> { _ =>
 
-            EditorState.showIrregularPolygonPopup.set(true)
+            EditorState.popupState.update(_.copy(showIrregularPolygonPopup = true))
           }
         },
         plusIcon

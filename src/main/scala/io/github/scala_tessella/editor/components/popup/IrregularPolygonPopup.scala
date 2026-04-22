@@ -11,7 +11,7 @@ object IrregularPolygonPopup:
   import PopupCommons._
 
   private val closeIrregular: Observer[org.scalajs.dom.MouseEvent] =
-    closePopup(EditorState.showIrregularPolygonPopup)
+    closePopup(EditorState.popupState.update(_.copy(showIrregularPolygonPopup = false)))
 
   // Controls
   private def modify(f: Vector[AngleDegree] => Vector[AngleDegree]): Observer[org.scalajs.dom.MouseEvent] =

@@ -8,7 +8,8 @@ object GuidePopup:
 
   import PopupCommons._
 
-  private val closeGuide: Observer[org.scalajs.dom.MouseEvent] = closePopup(EditorState.showGuidePopup)
+  private val closeGuide: Observer[org.scalajs.dom.MouseEvent] =
+    closePopup(EditorState.popupState.update(_.copy(showGuidePopup = false)))
 
   def element: Element =
     popupOverlay(closeGuide)(

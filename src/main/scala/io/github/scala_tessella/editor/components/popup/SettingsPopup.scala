@@ -18,12 +18,12 @@ object SettingsPopup:
   private val settingsColorTarget: Var[SettingsColorTarget] = Var(SettingsColorTarget.DefaultFill)
 
   private val closeSettings: Observer[org.scalajs.dom.MouseEvent] =
-    closePopup(EditorState.showSettingsPopup)
+    closePopup(EditorState.popupState.update(_.copy(showSettingsPopup = false)))
 
   private def openColorPicker(target: SettingsColorTarget, currentColor: ColorRGB): Unit =
     settingsColorTarget.set(target)
     EditorState.tempSettingsPickerColor.set(currentColor)
-    EditorState.showSettingsColorPicker.set(true)
+    EditorState.popupState.update(_.copy(showSettingsColorPicker = true))
 
   private def applyPickerColor(target: SettingsColorTarget, color: ColorRGB): Unit =
     target match
@@ -40,7 +40,7 @@ object SettingsPopup:
       className := "popup-overlay settings-color-picker-overlay",
       onClick.stopPropagation --> { _ =>
 
-        EditorState.showSettingsColorPicker.set(false)
+        EditorState.popupState.update(_.copy(showSettingsColorPicker = false))
       },
       div(
         className := "popup-content settings-color-picker-content",
@@ -63,7 +63,7 @@ object SettingsPopup:
             "Cancel",
             onClick.stopPropagation --> { _ =>
 
-              EditorState.showSettingsColorPicker.set(false)
+              EditorState.popupState.update(_.copy(showSettingsColorPicker = false))
             }
           ),
           button(
@@ -74,7 +74,7 @@ object SettingsPopup:
               )
             ) --> { case (_, target: SettingsColorTarget, color: ColorRGB) =>
               applyPickerColor(target, color)
-              EditorState.showSettingsColorPicker.set(false)
+              EditorState.popupState.update(_.copy(showSettingsColorPicker = false))
             }
           )
         )
@@ -86,7 +86,7 @@ object SettingsPopup:
       closeSettings,
       overlayClassName = "popup-overlay settings-popup",
       onMountCallback: ctx =>
-        EditorState.showSettingsPopup.signal
+        EditorState.popupState.signal.map(_.showSettingsPopup).distinct
           .changes
           .filter:
             identity
@@ -156,7 +156,7 @@ object SettingsPopup:
             "Cancel",
             onClick --> { _ =>
 
-              EditorState.showSettingsPopup.set(false)
+              EditorState.popupState.update(_.copy(showSettingsPopup = false))
             }
           ),
           button(
@@ -176,11 +176,11 @@ object SettingsPopup:
               )
             ) --> { case (_, fill: ColorRGB, perimeter: ColorRGB) =>
               AppState.applySettings(fill, perimeter)
-              EditorState.showSettingsPopup.set(false)
+              EditorState.popupState.update(_.copy(showSettingsPopup = false))
             }
           )
         )
       ),
-      child.maybe <-- EditorState.showSettingsColorPicker.signal.map: show =>
+      child.maybe <-- EditorState.popupState.signal.map(_.showSettingsColorPicker).distinct.map: show =>
         if show then Some(settingsColorPickerPopup) else None
     )

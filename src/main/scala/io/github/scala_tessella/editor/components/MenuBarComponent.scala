@@ -45,15 +45,15 @@ object MenuBarComponent:
         // Pass both the signal and the Var to the switcher
         themeSwitcher(effectiveTheme, userThemePreference)
       ),
-      child.maybe <-- EditorState.showIrregularPolygonPopup.signal.map: show =>
+      child.maybe <-- EditorState.popupState.signal.map(_.showIrregularPolygonPopup).distinct.map: show =>
         if show then Some(IrregularPolygonPopup.element) else None,
-      child.maybe <-- EditorState.showGuidePopup.signal.map: show =>
+      child.maybe <-- EditorState.popupState.signal.map(_.showGuidePopup).distinct.map: show =>
         if show then Some(GuidePopup.element) else None,
-      child.maybe <-- EditorState.showShortcutsPopup.signal.map: show =>
+      child.maybe <-- EditorState.popupState.signal.map(_.showShortcutsPopup).distinct.map: show =>
         if show then Some(ShortcutsPopup.element) else None,
-      child.maybe <-- EditorState.showAboutPopup.signal.map: show =>
+      child.maybe <-- EditorState.popupState.signal.map(_.showAboutPopup).distinct.map: show =>
         if show then Some(AboutPopup.element) else None,
-      child.maybe <-- EditorState.showSettingsPopup.signal.map: show =>
+      child.maybe <-- EditorState.popupState.signal.map(_.showSettingsPopup).distinct.map: show =>
         if show then Some(SettingsPopup.element) else None
     )
 
@@ -205,7 +205,7 @@ object MenuBarComponent:
         enabled = EditorState.canMutateTilingSignal
       ),
       div(className := "menu-separator"),
-      dropdownLink("Settings...", () => EditorState.showSettingsPopup.set(true))
+      dropdownLink("Settings...", () => EditorState.popupState.update(_.copy(showSettingsPopup = true)))
     )
 
   private def editMenu(): Element =
@@ -326,10 +326,13 @@ object MenuBarComponent:
   private def helpMenu(): Element =
     menuItem(
       "Help",
-      dropdownLink("Guide...", () => EditorState.showGuidePopup.set(true)),
-      dropdownLink("Keyboard Shortcuts...", () => EditorState.showShortcutsPopup.set(true)),
+      dropdownLink("Guide...", () => EditorState.popupState.update(_.copy(showGuidePopup = true))),
+      dropdownLink(
+        "Keyboard Shortcuts...",
+        () => EditorState.popupState.update(_.copy(showShortcutsPopup = true))
+      ),
       div(className := "menu-separator"),
-      dropdownLink("About...", () => EditorState.showAboutPopup.set(true))
+      dropdownLink("About...", () => EditorState.popupState.update(_.copy(showAboutPopup = true)))
     )
 
   // This now handles the theme update logic directly

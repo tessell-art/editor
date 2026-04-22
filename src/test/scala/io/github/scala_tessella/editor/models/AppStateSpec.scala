@@ -51,12 +51,12 @@ class AppStateSpec extends FunSuite with EditorStateFixture:
     EditorState.tempDefaultFillColor.set(ColorRGB(1, 2, 3))
     EditorState.tempPerimeterEdgeColor.set(ColorRGB(4, 5, 6))
     EditorState.tempSettingsPickerColor.set(ColorRGB(7, 8, 9))
-    EditorState.showSettingsColorPicker.set(true)
+    EditorState.popupState.update(_.copy(showSettingsColorPicker = true))
 
     AppState.refreshSettingsTempValues()
 
     assertEquals(EditorState.tempDefaultFillColor.now(), EditorState.defaultStartFillColor.now())
     assertEquals(EditorState.tempPerimeterEdgeColor.now(), EditorState.perimeterEdgeColor.now())
     assertEquals(EditorState.tempSettingsPickerColor.now(), EditorState.defaultStartFillColor.now())
-    assertEquals(EditorState.showSettingsColorPicker.now(), false)
+    assertEquals(EditorState.popupState.now().showSettingsColorPicker, false)
   }

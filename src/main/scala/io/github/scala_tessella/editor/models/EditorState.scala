@@ -105,24 +105,11 @@ object EditorState:
     /** Whether the mobile menu is open */
     val isMenuOpen: Var[Boolean] = Var(false)
 
-  object PopupState:
-    /** Whether the about popup is visible */
-    val showAboutPopup: Var[Boolean] = Var(false)
-
-    /** Whether the guide popup is visible */
-    val showGuidePopup: Var[Boolean] = Var(false)
-
-    /** Whether the shortcuts popup is visible */
-    val showShortcutsPopup: Var[Boolean] = Var(false)
-
-    /** Whether the irregular polygon popup is visible */
-    val showIrregularPolygonPopup: Var[Boolean] = Var(false)
-
-    /** Whether the settings popup is visible */
-    val showSettingsPopup: Var[Boolean] = Var(false)
-
-    /** Whether the settings color picker popup is visible */
-    val showSettingsColorPicker: Var[Boolean] = Var(false)
+  /** Popup-state aggregate — 6 modal-popup visibility flags. See `PopupState` in EditorData.scala. Per
+    * ADR-002, reads via `popupState.signal.map(_.field).distinct`; writes via
+    * `popupState.update(_.copy(field = …))`.
+    */
+  val popupState: Var[PopupState] = Var(PopupState.initial)
 
   object ErrorState:
     /** Current error message, if any */
@@ -221,7 +208,6 @@ object EditorState:
   export ThemeState.*
   export ColorState.*
   export UIState.*
-  export PopupState.*
   export ErrorState.*
   export PreviewState.*
   export AnimationState.*
