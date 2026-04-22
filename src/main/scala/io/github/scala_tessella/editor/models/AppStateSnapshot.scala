@@ -23,15 +23,16 @@ case class AppStateSnapshot(
 object AppStateSnapshot:
   // Create a snapshot from the current AppState
   def fromCurrentState: AppStateSnapshot =
+    val tools = EditorState.toolState.now()
     AppStateSnapshot(
       tiling = EditorState.currentTiling.now(),
-      selectedPolygon = EditorState.selectedPolygon.now(),
+      selectedPolygon = tools.selectedPolygon,
       selectedPerimeterEdges = EditorState.selectedPerimeterEdges.now(),
       selectedTilingPolygons = EditorState.selectedTilingPolygons.now(),
       polygonColors = EditorState.polygonColors.now(),
       fillColor = EditorState.fillColor.now(),
-      editorMode = EditorState.editorMode.now(),
-      activeTool = EditorState.activeTool.now(),
+      editorMode = tools.editorMode,
+      activeTool = tools.activeTool,
       recentIrregularPolygon = EditorState.recentIrregularPolygon.now(),
       isIrregularSelected = EditorState.isIrregularSelected.now()
     )

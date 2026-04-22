@@ -9,16 +9,16 @@ import munit.FunSuite
 class AppStateSpec extends FunSuite with EditorStateFixture:
 
   test("toggleEditorMode should switch from Select to Delete") {
-    assertEquals(EditorState.editorMode.now(), EditorMode.Select)
+    assertEquals(EditorState.toolState.now().editorMode, EditorMode.Select)
     AppState.toggleEditorMode()
-    assertEquals(EditorState.editorMode.now(), EditorMode.Delete)
+    assertEquals(EditorState.toolState.now().editorMode, EditorMode.Delete)
   }
 
   test("toggleEditorMode should switch from Delete to Select") {
-    EditorState.editorMode.set(EditorMode.Delete)
-    assertEquals(EditorState.editorMode.now(), EditorMode.Delete)
+    EditorState.toolState.update(_.copy(editorMode = EditorMode.Delete))
+    assertEquals(EditorState.toolState.now().editorMode, EditorMode.Delete)
     AppState.toggleEditorMode()
-    assertEquals(EditorState.editorMode.now(), EditorMode.Select)
+    assertEquals(EditorState.toolState.now().editorMode, EditorMode.Select)
   }
 
   test("clearMeasurements should reset all measurement-related state") {

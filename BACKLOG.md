@@ -40,7 +40,9 @@ Proposed target layering (to be ratified in ADR-001):
   event handlers.
 
 ### P1#2 — Redesign the `EditorState` god-object
-**ADR:** [ADR-002 — State container design](docs/adr/002-state-container.md) (Proposed).
+**ADR:** [ADR-002 — State container design](docs/adr/002-state-container.md)
+(Spike on `ToolState` completed 2026-04-22; Option B recommended;
+rollout to remaining 13 aggregates pending approval).
 
 `EditorState.scala` currently exposes **66 `Var[…]`** across 14 nested `object`s
 (`FileState`, `ToolState`, …, `DerivedState`), all re-exported flat via
@@ -174,6 +176,20 @@ ADR-001 Phase 2 deferred the mass observer-wiring pass. The existing
 `MenuBarComponent.scala` still uses `() => AppState.toggleShowUniformity()`
 etc. as callbacks. Cosmetic but aligns the code with Laminar idiom —
 do opportunistically when touching these files for other reasons.
+
+### P3#15 — Consolidate `AppStateSnapshot` fields into aggregate case classes
+Currently `AppStateSnapshot` flattens the state into 10 top-level fields
+(`editorMode`, `activeTool`, `selectedPolygon`, …). Once ADR-002's Option B
+rollout is complete, each aggregate should move into `AppStateSnapshot` as a
+case-class-typed field (e.g. `toolState: ToolState`). Benefits:
+- Adding a new `Var` to an aggregate automatically appears in the snapshot —
+  no hand-maintained list.
+- `UndoManager.isStateEquivalent` and `UndoManager.restoreState` both
+  collapse to the shape `snapshot.aggregate`.
+- Resolves BACKLOG P2#5 (snapshot drift risk) structurally, not by
+  convention.
+
+Do opportunistically as each aggregate migrates.
 
 ### P3#14 — Relocate `UndoManager` out of `utils/`
 `utils/UndoManager.scala` orchestrates state transitions and reads/writes

@@ -21,7 +21,7 @@ object TessellationEdgeRenderer:
     (Option[Int], Boolean, Option[Vector[AngleDegree]], TilingDCEL)
 
   private val previewStateSignal: Signal[PreviewState] =
-    EditorState.selectedPolygon.signal
+    EditorState.toolState.signal.map(_.selectedPolygon).distinct
       .combineWith(EditorState.isIrregularSelected.signal)
       .combineWith(EditorState.recentIrregularPolygon.signal)
       .combineWith(EditorState.currentTiling.signal)
@@ -132,7 +132,7 @@ object TessellationEdgeRenderer:
       },
       // Trigger insertion directly when clicking the highlighted interior edge
       onClick.preventDefault.compose(stream =>
-        gate(stream).withCurrentValueOf(EditorState.activeTool.signal)
+        gate(stream).withCurrentValueOf(EditorState.toolState.signal.map(_.activeTool).distinct)
       ) --> {
         case (_, Some(Tool.Inserter)) =>
           TessellationOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)

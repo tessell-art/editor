@@ -15,13 +15,13 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     EditorState.currentTiling.set(tiling)
     EditorState.polygonColors.set(Map(faceId -> color))
-    EditorState.activeTool.set(Some(Tool.ColorPicker))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.ColorPicker)))
     EditorState.fillColor.set(ColorRGB(1, 1, 1))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
     assertEquals(EditorState.fillColor.now(), color)
-    assertEquals(EditorState.activeTool.now(), None)
+    assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
   test("ShapeAndColorPicker should select polygon shape and color") {
@@ -31,16 +31,16 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     EditorState.currentTiling.set(tiling)
     EditorState.polygonColors.set(Map(faceId -> color))
-    EditorState.activeTool.set(Some(Tool.ShapeAndColorPicker))
-    EditorState.selectedPolygon.set(None)
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.ShapeAndColorPicker)))
+    EditorState.toolState.update(_.copy(selectedPolygon = None))
     EditorState.isIrregularSelected.set(true)
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
     assertEquals(EditorState.fillColor.now(), color)
-    assertEquals(EditorState.selectedPolygon.now(), Some(4))
+    assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
     assertEquals(EditorState.isIrregularSelected.now(), false)
-    assertEquals(EditorState.activeTool.now(), None)
+    assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
   test("SelectByColor should select all polygons with same color") {
@@ -51,12 +51,12 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val c2 = ColorRGB(200, 200, 200)
 
     EditorState.polygonColors.set(Map(f1 -> c1, f2 -> c1, f3 -> c2))
-    EditorState.activeTool.set(Some(Tool.SelectByColor))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.SelectByColor)))
 
     SelectionOperations.handleTilingPolygonClick(f1)
 
     assertEquals(EditorState.selectedTilingPolygons.now(), Set(f1, f2))
-    assertEquals(EditorState.activeTool.now(), None)
+    assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
   test("Measurement tool should populate clickable points and highlight face") {
@@ -64,7 +64,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
 
     EditorState.currentTiling.set(tiling)
-    EditorState.activeTool.set(Some(Tool.Measurement))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.Measurement)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
@@ -78,7 +78,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val vertexCount = tiling.findInnerFaceVertices(faceId).toOption.get.size
 
     EditorState.currentTiling.set(tiling)
-    EditorState.activeTool.set(Some(Tool.Fan))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.Fan)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
@@ -98,7 +98,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
 
     EditorState.currentTiling.set(tiling)
-    EditorState.activeTool.set(Some(Tool.Inserter))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.Inserter)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
@@ -111,8 +111,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
 
     EditorState.currentTiling.set(tiling)
-    EditorState.activeTool.set(None)
-    EditorState.editorMode.set(EditorMode.Select)
+    EditorState.toolState.update(_.copy(activeTool = None, editorMode = EditorMode.Select))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
     assertEquals(EditorState.selectedTilingPolygons.now(), Set(faceId))
@@ -126,12 +125,12 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
     EditorState.currentTiling.set(tiling)
     EditorState.polygonColors.set(Map.empty)
-    EditorState.activeTool.set(Some(Tool.SelectByColor))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.SelectByColor)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
     assertEquals(EditorState.selectedTilingPolygons.now(), Set.empty)
-    assertEquals(EditorState.activeTool.now(), None)
+    assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
   test("ShapeAndColorPicker should deactivate even when no color is assigned") {
@@ -139,18 +138,18 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     val faceId = tiling.innerFaces.head.id
     EditorState.currentTiling.set(tiling)
     EditorState.polygonColors.set(Map.empty)
-    EditorState.activeTool.set(Some(Tool.ShapeAndColorPicker))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.ShapeAndColorPicker)))
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    assertEquals(EditorState.activeTool.now(), Some(Tool.ShapeAndColorPicker))
-    assertEquals(EditorState.selectedPolygon.now(), None)
+    assertEquals(EditorState.toolState.now().activeTool, Some(Tool.ShapeAndColorPicker))
+    assertEquals(EditorState.toolState.now().selectedPolygon, None)
     assertEquals(EditorState.isIrregularSelected.now(), false)
   }
 
   test("handlePerimeterEdgeClick should show error when tiling is empty and a polygon is selected") {
     EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
-    EditorState.selectedPolygon.set(Some(4))
+    EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
     EditorState.isIrregularSelected.set(false)
     EditorState.errorMessage.set(None)
 

@@ -85,7 +85,7 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
   test("undo stack size should not exceed MAX_UNDO_DEPTH") {
     for (i <- 1 to UndoManager.maxUndoDepth + 5) {
       UndoManager.saveState()
-      EditorState.selectedPolygon.set(Some(i))
+      EditorState.toolState.update(_.copy(selectedPolygon = Some(i)))
     }
     assertEquals(UndoManager.undoCount.now(), UndoManager.maxUndoDepth)
   }
@@ -175,18 +175,18 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     EditorState.currentTiling.set(freshSquare())
     val faceId = EditorState.currentTiling.now().innerFaces.head.id
 
-    EditorState.activeTool.set(None)
+    EditorState.toolState.update(_.copy(activeTool = None))
     EditorState.selectedTilingPolygons.set(Set(faceId))
     UndoManager.saveState()
 
-    EditorState.activeTool.set(Some(Tool.ColorPicker))
+    EditorState.toolState.update(_.copy(activeTool = Some(Tool.ColorPicker)))
     EditorState.selectedTilingPolygons.set(Set.empty)
 
     UndoManager.undo()
-    assertEquals(EditorState.activeTool.now(), None)
+    assertEquals(EditorState.toolState.now().activeTool, None)
     assertEquals(EditorState.selectedTilingPolygons.now(), Set(faceId))
 
     UndoManager.redo()
-    assertEquals(EditorState.activeTool.now(), Some(Tool.ColorPicker))
+    assertEquals(EditorState.toolState.now().activeTool, Some(Tool.ColorPicker))
     assertEquals(EditorState.selectedTilingPolygons.now(), Set.empty)
   }

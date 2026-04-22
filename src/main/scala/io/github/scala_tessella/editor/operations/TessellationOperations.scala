@@ -110,7 +110,7 @@ object TessellationOperations:
 
   private def currentPolygonPlacementContext(emptyTilingMessage: String): Option[PolygonPlacementContext] =
     val tiling      = currentTiling.now()
-    val maybeSides  = EditorState.selectedPolygon.now()
+    val maybeSides  = EditorState.toolState.now().selectedPolygon
     val isIrregular = EditorState.isIrregularSelected.now()
     val recentShape = EditorState.recentIrregularPolygon.now()
     if tiling.isEmpty then
@@ -164,7 +164,7 @@ object TessellationOperations:
     ifNotProcessing:
       // Selecting a regular polygon deselects the irregular
       EditorState.isIrregularSelected.set(false)
-      EditorState.selectedPolygon.set(Some(sides))
+      EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
 
       if currentTiling.now().isEmpty then
         UndoManager.saveState()
@@ -192,7 +192,7 @@ object TessellationOperations:
   def selectIrregularInPalette(): Unit =
     ifNotProcessing:
       if EditorState.recentIrregularPolygon.now().isDefined then
-        EditorState.selectedPolygon.set(None)
+        EditorState.toolState.update(_.copy(selectedPolygon = None))
         EditorState.isIrregularSelected.set(true)
 
   /** If the tiling is empty and a recent irregular exists, initialize the tiling with it. */

@@ -38,7 +38,7 @@ object PolygonPaletteComponent:
       div(
         className := "selected-info",
         child.maybe <--
-          EditorState.selectedPolygon.signal
+          EditorState.toolState.signal.map(_.selectedPolygon).distinct
             .combineWith(EditorState.isIrregularSelected.signal)
             .map((maybeSides, isIrregular) =>
               if isIrregular then
@@ -96,11 +96,12 @@ object PolygonPaletteComponent:
 
     val syncInputToSource = customSides.signal.changes.map(_.toString) --> inputValue
     val displaySides      = inputValue.signal.map(validateSides)
-    val isSelected        = EditorState.selectedPolygon.signal.combineWith(customSides.signal).map {
-      (maybeSelected, currentCustom) =>
+    val isSelected        =
+      EditorState.toolState.signal.map(_.selectedPolygon).distinct.combineWith(customSides.signal).map {
+        (maybeSelected, currentCustom) =>
 
-        maybeSelected.contains(currentCustom)
-    }
+          maybeSelected.contains(currentCustom)
+      }
     div(
       syncInputToSource,
       className <-- polygonButtonClass("polygon-btn custom-polygon-creator", isSelected),
@@ -141,7 +142,7 @@ object PolygonPaletteComponent:
     )
 
   private def polygonButton(sides: Int): Element =
-    val isSelected   = EditorState.selectedPolygon.signal.map(_.contains(sides))
+    val isSelected   = EditorState.toolState.signal.map(_.selectedPolygon.contains(sides)).distinct
     button(
       className <-- polygonButtonClass("polygon-btn", isSelected),
       tpe   := "button",

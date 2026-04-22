@@ -10,21 +10,23 @@ import io.github.scala_tessella.editor.utils.SvgDsl.*
 object CanvasControlComponent:
 
   private def toggleTool(tool: Tool): Unit =
-    EditorState.activeTool.update {
-      case Some(t) if t == tool =>
-        if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter || t == Tool.Fan then
-          AppState.clearMeasurements()
-        None // Deactivate if it's the current tool
-      case _ =>
-        AppState.clearMeasurements() // Clear measurements when switching
-        Some(tool) // Activate the new tool
-    }
+    EditorState.toolState.update: s =>
+
+      val newActive = s.activeTool match
+        case Some(t) if t == tool =>
+          if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter || t == Tool.Fan then
+            AppState.clearMeasurements()
+          None // Deactivate if it's the current tool
+        case _ =>
+          AppState.clearMeasurements() // Clear measurements when switching
+          Some(tool) // Activate the new tool
+      s.copy(activeTool = newActive)
 
   private def createToolButton(tool: Tool, titleText: String, icon: Element): Element =
     button(
       icon,
       className := "toggle-btn",
-      cls("active") <-- EditorState.activeTool.signal.map(_.contains(tool)),
+      cls("active") <-- EditorState.toolState.signal.map(_.activeTool.contains(tool)).distinct,
       onClick.compose(gate) --> { _ =>
 
         toggleTool(tool)

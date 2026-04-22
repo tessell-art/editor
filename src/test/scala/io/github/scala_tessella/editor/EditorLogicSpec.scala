@@ -46,7 +46,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     // Now tiling should be created
     assert(!AppState.isTilingEmpty)
     assert(!EditorState.currentTiling.now().isEmpty)
-    assertEquals(EditorState.selectedPolygon.now(), Some(3))
+    assertEquals(EditorState.toolState.now().selectedPolygon, Some(3))
   }
 
   test("Polygon selection should not change existing tiling") {
@@ -62,7 +62,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     // Tiling should be the same
     assertEquals(afterTiling, initialTiling)
     // But selection should change
-    assertEquals(EditorState.selectedPolygon.now(), Some(4))
+    assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
   }
 
   test("handlePerimeterEdgeClick should toggle selection when no polygon selected") {
@@ -71,7 +71,7 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     assert(!AppState.isTilingEmpty)
 
     // Clear polygon selection
-    EditorState.selectedPolygon.set(None)
+    EditorState.toolState.update(_.copy(selectedPolygon = None))
 
     // Handle edge click
     val edgeId = "edge-1"
@@ -144,5 +144,5 @@ class EditorLogicSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.selectedTilingPolygons.now(), Set(FaceId(1), FaceId(2)))
     assertEquals(EditorState.selectedPerimeterEdges.now(), Set("edge1"))
     // Only the selected polygon type should change
-    assertEquals(EditorState.selectedPolygon.now(), Some(4))
+    assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
   }

@@ -65,7 +65,7 @@ object TessellationPolygonRenderer:
     // Update stroke and styling based on editor mode
     val strokeColorSignal =
       isSelected
-        .combineWith(EditorState.editorMode.signal)
+        .combineWith(EditorState.toolState.signal.map(_.editorMode).distinct)
         .map: (selected, mode) =>
           if selected then "#ff6b6b"
           else
@@ -75,7 +75,7 @@ object TessellationPolygonRenderer:
 
     val strokeWidthSignal =
       isSelected
-        .combineWith(EditorState.editorMode.signal)
+        .combineWith(EditorState.toolState.signal.map(_.editorMode).distinct)
         .map: (selected, mode) =>
           if selected then "3.5"
           else
@@ -89,15 +89,15 @@ object TessellationPolygonRenderer:
       svg.fillOpacity <-- opacity, // reactive (uniformity)
       svg.stroke <-- strokeColorSignal, // reactive
       svg.strokeWidth <-- strokeWidthSignal, // reactive
-      svg.className <-- EditorState.editorMode.signal.map:
+      svg.className <-- EditorState.toolState.signal.map(_.editorMode).distinct.map:
         case EditorMode.Select => "tiling-polygon"
         case EditorMode.Delete => "tiling-polygon delete-mode"
       ,
       // Cursor style and conditional opacity
       svg.style <--
         shouldHideForDeletion
-          .combineWith(EditorState.editorMode.signal)
-          .combineWith(EditorState.activeTool.signal)
+          .combineWith(EditorState.toolState.signal.map(_.editorMode).distinct)
+          .combineWith(EditorState.toolState.signal.map(_.activeTool).distinct)
           .map:
             case (hidden, mode, tool) =>
               val cursor  = TessellationCursorStyles.polygonCursorCss(mode, tool)

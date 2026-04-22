@@ -51,7 +51,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
 
   test("attemptPolygonAddition should show error when tiling is empty") {
     EditorState.currentTiling.set(io.github.scala_tessella.dcel.TilingDCEL.empty)
-    EditorState.selectedPolygon.set(Some(4))
+    EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
     EditorState.errorMessage.set(None)
 
     TessellationOperations.attemptPolygonAddition("edge-1", 0)
@@ -62,7 +62,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
   test("attemptPolygonInsertion should not crash when edge vertices are missing") {
     val tiling = TilingBuilders.freshSquare()
     EditorState.currentTiling.set(tiling)
-    EditorState.selectedPolygon.set(Some(4))
+    EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
     EditorState.isIrregularSelected.set(false)
     EditorState.errorMessage.set(None)
     val done   = Promise[Unit]()
@@ -80,7 +80,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
   test("attemptPolygonInsertion should not crash for irregular insertion when edge vertices are missing") {
     val tiling = TilingBuilders.freshSquare()
     EditorState.currentTiling.set(tiling)
-    EditorState.selectedPolygon.set(None)
+    EditorState.toolState.update(_.copy(selectedPolygon = None))
     EditorState.isIrregularSelected.set(true)
     EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
     EditorState.errorMessage.set(None)

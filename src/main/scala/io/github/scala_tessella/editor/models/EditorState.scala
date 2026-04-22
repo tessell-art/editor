@@ -19,15 +19,12 @@ object EditorState:
     /** Current file name, None if no file is open */
     val currentFileName: Var[Option[String]] = Var(None)
 
-  object ToolState:
-    /** Current editor mode (Select or Delete) */
-    val editorMode: Var[EditorMode] = Var(EditorMode.Select)
-
-    /** Currently active tool, if any */
-    val activeTool: Var[Option[Tool]] = Var(None)
-
-    /** Selected polygon from the palette (number of sides) */
-    val selectedPolygon: Var[Option[Int]] = Var[Option[Int]](None)
+  /** Tool-state aggregate — single source of truth for editor mode, active tool, and palette selection. See
+    * `ToolState` in EditorData.scala. Per ADR-002 (spike), reads go through
+    * `toolState.signal.map(_.field).distinct`; writes through `toolState.update(_.copy(field = …))` (or
+    * replace the whole value for atomic restores).
+    */
+  val toolState: Var[ToolState] = Var(ToolState.initial)
 
   object ViewState:
     /** View transformation (scale, rotation, pan) */
@@ -255,15 +252,13 @@ object EditorState:
 
     /** Checks if Inserter tool is active */
     val isInserterActive: Signal[Boolean] =
-      ToolState.activeTool.signal.map:
-        _.contains(Tool.Inserter)
+      toolState.signal.map(_.activeTool.contains(Tool.Inserter)).distinct
 
     /** Selected face for insertion, derived from highlighted polygon id */
     val selectedFaceForInsertion: Signal[Option[FaceId]] =
       MeasurementState.highlightedPolygonId.signal
 
   export FileState.*
-  export ToolState.*
   export ViewState.*
   export ThemeState.*
   export TessellationState.*

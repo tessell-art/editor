@@ -46,11 +46,10 @@ trait EditorStateFixture:
 
     // Reset selection & tiling to a known base
     EditorState.currentTiling.set(TilingDCEL.empty)
-    EditorState.selectedPolygon.set(None)
     EditorState.selectedPerimeterEdges.set(Set.empty)
     EditorState.selectedTilingPolygons.set(Set.empty)
     EditorState.polygonColors.set(Map.empty)
-    EditorState.activeTool.set(None)
+    EditorState.toolState.update(_.copy(selectedPolygon = None, activeTool = None))
     EditorState.isIrregularSelected.set(false)
     EditorState.recentIrregularPolygon.set(Some(EditorState.initialShape))
 
@@ -87,13 +86,17 @@ trait EditorStateFixture:
     saved.foreach { s =>
 
       EditorState.currentTiling.set(s.tiling)
-      EditorState.selectedPolygon.set(s.selectedPolygon)
       EditorState.selectedPerimeterEdges.set(s.selectedPerimeterEdges)
       EditorState.selectedTilingPolygons.set(s.selectedTilingPolygons)
       EditorState.polygonColors.set(s.polygonColors)
       EditorState.fillColor.set(s.fillColor)
-      EditorState.editorMode.set(s.editorMode)
-      EditorState.activeTool.set(s.activeTool)
+      EditorState.toolState.set(
+        ToolState(
+          editorMode = s.editorMode,
+          activeTool = s.activeTool,
+          selectedPolygon = s.selectedPolygon
+        )
+      )
       EditorState.recentIrregularPolygon.set(s.recentIrregularPolygon)
       EditorState.isIrregularSelected.set(s.isIrregularSelected)
     }

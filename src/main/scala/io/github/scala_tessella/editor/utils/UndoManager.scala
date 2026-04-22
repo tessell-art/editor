@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.utils
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState}
+import io.github.scala_tessella.editor.models.{AppStateSnapshot, EditorState, ToolState}
 import io.github.scala_tessella.editor.operations.ErrorOperations.clearError
 import io.github.scala_tessella.editor.operations.MeasurementOperations
 
@@ -86,13 +86,17 @@ object UndoManager:
 
   private def restoreState(snapshot: AppStateSnapshot): Unit =
     EditorState.currentTiling.set(snapshot.tiling)
-    EditorState.selectedPolygon.set(snapshot.selectedPolygon)
     EditorState.selectedPerimeterEdges.set(snapshot.selectedPerimeterEdges)
     EditorState.selectedTilingPolygons.set(snapshot.selectedTilingPolygons)
     EditorState.polygonColors.set(snapshot.polygonColors)
     EditorState.fillColor.set(snapshot.fillColor)
-    EditorState.editorMode.set(snapshot.editorMode)
-    EditorState.activeTool.set(snapshot.activeTool)
+    EditorState.toolState.set(
+      ToolState(
+        editorMode = snapshot.editorMode,
+        activeTool = snapshot.activeTool,
+        selectedPolygon = snapshot.selectedPolygon
+      )
+    )
     EditorState.recentIrregularPolygon.set(snapshot.recentIrregularPolygon)
     EditorState.isIrregularSelected.set(snapshot.isIrregularSelected)
     clearError()

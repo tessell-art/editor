@@ -23,7 +23,7 @@ object SelectionOperations:
     if !tiling.isEmpty then op(tiling)
 
   private def deactivateActiveTool(): Unit =
-    EditorState.activeTool.set(None)
+    EditorState.toolState.update(_.copy(activeTool = None))
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
@@ -161,8 +161,8 @@ object SelectionOperations:
       }
 
   def handleTilingPolygonClick(faceId: FaceId): Unit =
-    val activeTool = EditorState.activeTool.now()
-    activeTool match
+    val tools = EditorState.toolState.now()
+    tools.activeTool match
       case Some(Tool.ColorPicker)         =>
         val colors = EditorState.polygonColors.now()
         colors.get(faceId).foreach: color =>
@@ -181,12 +181,12 @@ object SelectionOperations:
 
                 val sides = edges.size
                 EditorState.isIrregularSelected.set(false)
-                EditorState.selectedPolygon.set(Some(sides))
+                EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
             else
               face.angles.toOption.foreach: angles =>
 
                 EditorState.recentIrregularPolygon.set(Some(angles.toVector)) // remember latest irregular
-                EditorState.selectedPolygon.set(None)
+                EditorState.toolState.update(_.copy(selectedPolygon = None))
                 EditorState.isIrregularSelected.set(true) // select irregular
             deactivateActiveTool()
           case None                =>
@@ -202,8 +202,7 @@ object SelectionOperations:
       case Some(Tool.Inserter)            =>
         setupFaceClickablePoints(faceId, edgesOnly = true)
       case _                              =>
-        val editorMode = EditorState.editorMode.now()
-        editorMode match
+        tools.editorMode match
           case EditorMode.Select =>
             toggleTilingPolygonSelection(faceId)
           case EditorMode.Delete =>
@@ -259,7 +258,7 @@ object SelectionOperations:
     ifNotProcessing:
       val context = PerimeterClickContext(
         tiling = EditorState.currentTiling.now(),
-        selectedPolygon = EditorState.selectedPolygon.now(),
+        selectedPolygon = EditorState.toolState.now().selectedPolygon,
         isIrregularSelected = EditorState.isIrregularSelected.now()
       )
       context match

@@ -31,10 +31,10 @@ object TessellationMeasurementRenderer:
       onClick.preventDefault
         .mapTo(p)
         .compose(stream =>
-          gate(stream).withCurrentValueOf(EditorState.activeTool.signal)
+          gate(stream).withCurrentValueOf(EditorState.toolState.signal.map(_.activeTool).distinct)
         ) --> clickablePointClickObserver,
       svg.style         := "cursor: crosshair;",
-      svg.style <-- EditorState.activeTool.signal.map: tool =>
+      svg.style <-- EditorState.toolState.signal.map(_.activeTool).distinct.map: tool =>
         TessellationCursorStyles.clickablePointCursorCss(tool),
       svg.pointerEvents := "visible"
     )
