@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
-  <info organisation="io.github.scala-tessella" module="dcel_sjs1_3" revision="0.1.0-SNAPSHOT" status="integration" publication="20260421194718">
+  <info organisation="io.github.scala-tessella" module="dcel_sjs1_3" revision="0.1.0-SNAPSHOT" status="integration" publication="20260423210602">
     <description>dcel</description>
   </info>
   <configurations>

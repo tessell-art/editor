@@ -10,7 +10,7 @@ import munit.FunSuite
 class AboutPopupSpec extends FunSuite with EditorStateFixture with LaminarTestSupport:
 
   test("renders title, version line, and close button"):
-    mount(AboutPopup.element)
+    mount(AboutPopup.element): Unit
 
     assertEquals(querySelector("h1").map(_.textContent), Some("Tessella"))
     assert(querySelector(".about-version").exists(_.textContent.startsWith("Editor v")))
@@ -18,7 +18,7 @@ class AboutPopupSpec extends FunSuite with EditorStateFixture with LaminarTestSu
 
   test("clicking the close button sets showAboutPopup to false"):
     EditorState.popupState.update(_.copy(showAboutPopup = true))
-    mount(AboutPopup.element)
+    mount(AboutPopup.element): Unit
 
     clickOn(".popup-close-btn")
 
@@ -26,7 +26,7 @@ class AboutPopupSpec extends FunSuite with EditorStateFixture with LaminarTestSu
 
   test("clicking the overlay sets showAboutPopup to false"):
     EditorState.popupState.update(_.copy(showAboutPopup = true))
-    mount(AboutPopup.element)
+    mount(AboutPopup.element): Unit
 
     clickOn(".popup-overlay")
 
@@ -34,7 +34,7 @@ class AboutPopupSpec extends FunSuite with EditorStateFixture with LaminarTestSu
 
   test("clicking inside popup-content does not close (stopPropagation on content)"):
     EditorState.popupState.update(_.copy(showAboutPopup = true))
-    mount(AboutPopup.element)
+    mount(AboutPopup.element): Unit
 
     // Click a non-button descendant of popup-content — the click bubbles to popup-content
     // which stops propagation, so the overlay's close observer never fires.
