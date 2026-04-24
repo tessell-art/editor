@@ -1,9 +1,33 @@
 import { defineConfig } from "vite";
 import scalaJSPlugin from "@scala-js/vite-plugin-scalajs";
 
+// Rewrites UI5 Web Components' hardcoded jsdelivr.net URLs (SAP "72" fonts
+// + OpenUI5 CLDR) to local relative paths served from public/ui5-assets/.
+// Relative to the document URL at runtime so it works under http(s)://
+// and file:// (Android WebView, Tauri desktop). Version segments are
+// matched with `[^/]+` so UI5 upgrades don't silently skip the rewrite.
+function ui5LocalAssets() {
+    return {
+        name: 'ui5-local-assets',
+        transform(code) {
+            if (!code.includes('cdn.jsdelivr.net/npm/@sap-theming') &&
+                !code.includes('cdn.jsdelivr.net/npm/@openui5')) return null;
+            return code
+                .replace(
+                    /https:\/\/cdn\.jsdelivr\.net\/npm\/@sap-theming\/theming-base-content@[^/]+\/content\/Base\/baseLib\/baseTheme\//g,
+                    './ui5-assets/'
+                )
+                .replace(
+                    /https:\/\/cdn\.jsdelivr\.net\/npm\/@openui5\/sap\.ui\.core@[^/]+\/src\/sap\/ui\/core\/cldr\//g,
+                    './ui5-assets/cldr/'
+                );
+        }
+    };
+}
+
 export default defineConfig({
     base: './',
-    plugins: [scalaJSPlugin()],
+    plugins: [scalaJSPlugin(), ui5LocalAssets()],
     optimizeDeps: {
         include: [
             '@ui5/webcomponents/dist/ColorPicker.js',
