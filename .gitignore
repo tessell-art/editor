@@ -29,3 +29,6 @@ e2e/playwright/.cache/
 *.njsproj
 *.sln
 *.sw?
+/project/project/
+/project/target/
+/target/
