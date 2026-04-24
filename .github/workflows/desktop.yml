@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload Linux bundles
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tessella-linux
           path: |
@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload macOS bundles
         if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tessella-macos
           path: |
@@ -102,7 +102,7 @@ jobs:
 
       - name: Upload Windows bundles
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tessella-windows
           path: |
