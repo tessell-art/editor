@@ -289,9 +289,19 @@ intra-app `File → Load SVG...` stays the only entry point. Revisit
 only if Tessella gains a format it uniquely owns. See ADR-008
 migration path §8 for the full rationale.
 
+**Step 10 landed 2026-04-24** — CI matrix over ubuntu/macos/windows
+(`.github/workflows/desktop.yml`). Trigger mirrors
+`cloudflare-pages.yml` (tag push `v*.*.*` or `workflow_dispatch`) so a
+release tag fans out to all three OSes in one go. Per-OS setup matches
+the slice-2 toolchain notes: Linux installs the full WebKitGTK/GTK
+dep list, all three run temurin 21 + sbt + Node 24 + Rust stable,
+`tauri-cli ^2.0 --locked` is pinned, `cargo tauri build` triggers the
+configured `beforeBuildCommand` (npm → vite → Scala.js). Bundles upload
+as three artifacts (`tessella-linux` .deb/.AppImage,
+`tessella-macos` .dmg/.app, `tessella-windows` .msi/.exe) with
+`if-no-files-found: error` so a missing bundle fails the job loudly.
+
 **Slice 3 — remaining ADR-008 migration path** (not landed):
-- Step 10 — CI (`.github/workflows/desktop.yml`) matrix over
-  ubuntu/macos/windows. Tracked separately, not blocking.
 - Step 11 — Flathub / winget / Homebrew Cask submissions. Each is its
   own backlog entry once the binary is stable (unsigned acceptable
   initially per ADR).
