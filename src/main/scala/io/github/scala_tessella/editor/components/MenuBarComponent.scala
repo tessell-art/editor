@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.components.popup.*
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Theme, ViewTransform}
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, MenuShortcuts, Theme, ViewTransform}
+import io.github.scala_tessella.editor.models.MenuShortcuts.MenuAction
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
 import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter, TemplateLoader}
@@ -192,7 +193,7 @@ object MenuBarComponent:
         "Save SVG",
         SvgExporter.saveTilingToSVG(),
         enabled = EditorState.canSaveCurrentFileWhenIdleSignal,
-        shortcut = Some("Ctrl+S")
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.FileSave))
       ),
       dropdownLink(
         "Save SVG as...",
@@ -212,15 +213,25 @@ object MenuBarComponent:
   private def editMenu(): Element =
     menuItem(
       "Edit",
-      dropdownLink("↶ Undo", UndoManager.undo(), AppState.canUndo, shortcut = Some("Ctrl+Z")),
-      dropdownLink("↷ Redo", UndoManager.redo(), AppState.canRedo, shortcut = Some("Shift+Ctrl+Z")),
+      dropdownLink(
+        "↶ Undo",
+        UndoManager.undo(),
+        AppState.canUndo,
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditUndo))
+      ),
+      dropdownLink(
+        "↷ Redo",
+        UndoManager.redo(),
+        AppState.canRedo,
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditRedo))
+      ),
       div(className := "menu-separator"),
       dropdownLink("Clear Tiling", AppState.clearTiling()),
       dropdownLink(
         "Double (to infinite)",
         AppState.doubleTiling(),
         enabled = EditorState.canMutateTilingSignal,
-        shortcut = Some("D")
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditDoubleToInfinite))
       ),
       dropdownLink("Mirror", AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
 //      div(className := "menu-separator"),
@@ -237,7 +248,7 @@ object MenuBarComponent:
         "Deselect All",
         AppState.deselectAll(),
         EditorState.canDeselectAllSignal,
-        shortcut = Some("Esc")
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditDeselectAll))
       ),
       div(className := "menu-separator"),
       a(
@@ -292,7 +303,7 @@ object MenuBarComponent:
         "Fit to Canvas",
         AppState.fitTilingToCanvas(),
         enabled = EditorState.canMutateTilingSignal,
-        shortcut = Some("F")
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewFitToCanvas))
       ),
       dropdownLink("Reset View", EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))),
       div(className := "menu-separator"),
@@ -305,7 +316,7 @@ object MenuBarComponent:
             vt.copy(scale = ViewOperations.clampViewScale(vt.scale * EditorConfig.menuZoomFactor))
           )
         ,
-        shortcut = Some("+")
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewZoomIn))
       ),
       dropdownLink(
         "Zoom Out",
@@ -316,10 +327,18 @@ object MenuBarComponent:
             vt.copy(scale = ViewOperations.clampViewScale(vt.scale / EditorConfig.menuZoomFactor))
           )
         ,
-        shortcut = Some("-")
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewZoomOut))
       ),
-      dropdownLink("Rotate Left", ViewOperations.rotateView(-30), shortcut = Some("E")),
-      dropdownLink("Rotate Right", ViewOperations.rotateView(30), shortcut = Some("R"))
+      dropdownLink(
+        "Rotate Left",
+        ViewOperations.rotateView(-30),
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewRotateLeft))
+      ),
+      dropdownLink(
+        "Rotate Right",
+        ViewOperations.rotateView(30),
+        shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewRotateRight))
+      )
     )
 
   private def helpMenu(): Element =

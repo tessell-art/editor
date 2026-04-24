@@ -208,6 +208,91 @@ and assert on the rendered DOM. Reserve Playwright for a ~10–15-test smoke
 suite (canvas rendering, real input events, visual regression) pointed at
 `vite dev`.
 
+### P1#21 — Desktop packaging: Tauri 2 shell for Linux / Windows / macOS
+**ADR:** [ADR-008 — Desktop packaging via Tauri](docs/adr/008-desktop-packaging-tauri.md)
+(Accepted 2026-04-24).
+
+**Pre-work landed 2026-04-24** (shared with ADR-005 / ADR-007):
+- `base: './'` in `vite.config.js`.
+- `public/site.webmanifest` `start_url` / `scope` → `./`.
+- Runtime CDN audit: UI5 Web Components pulled 24 woff2 + 1 CLDR JSON from
+  jsdelivr. Replaced with a build-time URL rewrite (`ui5LocalAssets`
+  Vite plugin, version-agnostic regex) pointing at `public/ui5-assets/`.
+  Per on-demand vendoring, only the one woff2 actually observed to
+  fetch (`72-Regular.woff2`, from opening the color picker) is vendored;
+  the other 23 rewritten paths will 404 locally when/if exercised,
+  giving a clear signal of what to add. CLDR URL rewritten but the
+  file not vendored; same fallback pattern.
+
+**Slice 1 landed 2026-04-24** — shared shortcut table (migration step 6):
+- `src/main/scala/.../models/MenuShortcuts.scala` — `MenuAction` enum
+  (10 shortcut-bearing actions), `Shortcut` case class with structured
+  `primary`/`shift`/`alt` fields, `label` emitting
+  `[Shift+][Ctrl+][Alt+]key` (Shift-first ordering preserves the
+  pre-extraction `"Shift+Ctrl+Z"` redo label verbatim).
+- `MenuBarComponent.scala` — 10 hard-coded shortcut strings replaced
+  with `MenuShortcuts.labelOf(MenuAction.X)`.
+- `MenuShortcutsSpec` — locks in label format across modifier
+  combinations and asserts every `MenuAction` has a binding, so
+  slice 2 can trust the table when generating Rust accelerators.
+
+Remaining slices:
+
+**Slice 2 — Tauri shell** (migration steps 4, 5, 7, 8, 9). Blocked on
+Linux-side `libwebkit2gtk-4.1-dev` install. Scaffold `desktop/`, port
+the menu to `menu.rs` (reading a parallel `menu_shortcuts.rs` mirrored
+from `MenuShortcuts.scala`), wire `DesktopMenuBridge.scala`, file
+associations (`.svg`, `.dot`), icons.
+
+Extends the "Vite `dist/` is the portable artifact, shells are thin
+wrappers" pattern from ADR-005 (Android) and ADR-007 (iOS) to the three
+mainstream desktop OSes. A Tauri 2 shell under `desktop/src-tauri/`
+produces per-OS installers (AppImage + .deb, .msi + .exe, .dmg + .app)
+that load the same bundle Cloudflare Pages already serves.
+
+**Sequencing**: all three packaging ADRs share the `base: './'` +
+webmanifest pre-work. Landing it once unblocks 005 / 007 / 008 in any
+order.
+
+**Desktop-specific menu work** (the substantive new surface this ADR
+introduces on top of the pattern):
+- Shared shortcut table (`MenuShortcuts.scala` + `menu_shortcuts.rs`)
+  so the DOM menu and the native Tauri menu can't drift. Scala half
+  landed in slice 1 (2026-04-24) with `MenuShortcutsSpec` locking the
+  label format; Rust half + assertion test land with slice 2.
+- `menu.rs` as a static mirror of the four `menuItem(...)` blocks;
+  clicks emit `"menu:<file.id>"` events.
+- `DesktopMenuBridge.scala` (new, in a `platform/desktop/` package)
+  subscribes when `window.__TAURI__ != null` and dispatches to the
+  existing `AppState` / `EditorState` methods — no exposed JS commands,
+  preserves the "no JS bridge" posture from ADR-005.
+- macOS: native menu is mandatory (OS shows it whether we populate it
+  or not). Windows / Linux: native menu is additive; in-DOM menu stays
+  as primary affordance.
+- **Out of scope for v1**: mirroring enabled/disabled signals (e.g.
+  `canSaveCurrentFileWhenIdleSignal`) to native menu item state.
+  Action-side guards no-op silently until a user reports confusion.
+
+**Signing / notarization is follow-up, not blocking**: unsigned builds
+ship first (AppImage self-signed with the project GPG key; Windows
+`.exe` through SmartScreen; macOS `.app` via right-click-Open). Revisit
+per-platform when user feedback warrants it; macOS notarization is
+bundled with the same $99/yr Apple Developer decision ADR-007 defers.
+
+**Distribution channels are separate backlog entries** once the binary
+is stable: Flathub (Linux, analogous to F-Droid in ADR-005), winget
+(Windows), Homebrew Cask (macOS).
+
+Risks called out in ADR-008 §Consequences:
+- WebKitGTK on Linux diverges from WebKit-on-macOS — Web Components
+  coverage is the most likely failure surface. Electron is the kept-in-
+  reserve fallback.
+- Menu drift between the two declaration sites (mitigated by shared
+  shortcut table + assertion test but not eliminated).
+- Two-track testing: Playwright covers web Chromium + WebKit; a
+  `tauri-driver` smoke test per OS would close the desktop-shell gap.
+  Not required for the initial ship.
+
 ### P1#3 — Reactive-first discipline: eliminate accidental `.now()` reads ✅
 **Convention doc:** [`docs/laminar-conventions.md`](docs/laminar-conventions.md)
 (written 2026-04-22).
@@ -612,6 +697,10 @@ ADRs live under `docs/adr/`:
 - [`002-state-container.md`](docs/adr/002-state-container.md) — Accepted.
 - [`003-test-strategy.md`](docs/adr/003-test-strategy.md) — Accepted.
 - [`004-e2e-test-language.md`](docs/adr/004-e2e-test-language.md) — Accepted.
+- [`005-android-packaging-fdroid.md`](docs/adr/005-android-packaging-fdroid.md) — Proposed.
+- [`006-scalajs-wasm-backend.md`](docs/adr/006-scalajs-wasm-backend.md) — Accepted.
+- [`007-ios-packaging-pwa-first.md`](docs/adr/007-ios-packaging-pwa-first.md) — Proposed.
+- [`008-desktop-packaging-tauri.md`](docs/adr/008-desktop-packaging-tauri.md) — Accepted.
 
 Each ADR follows the standard template: **Status** (Proposed / Accepted /
 Superseded), **Context**, **Decision**, **Consequences**, **Alternatives
