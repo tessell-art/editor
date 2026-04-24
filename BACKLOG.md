@@ -280,11 +280,16 @@ Toolchain notes learned during slice 2 (Ubuntu 24.04):
   declared icons must exist. `cargo tauri icon <source.png>` fills
   `icons/` with every referenced size/format in one shot.
 
+**Step 8 decided against 2026-04-24** — OS-level file associations for
+`.svg` / `.dot` rejected. `SvgImporter` only handles Tessella-authored
+SVG (DCEL metadata required); `.dot` has no importer. Associating the
+extensions at the OS level would hijack generic SVG double-clicks and
+surface an error to users who had no reason to expect Tessella. The
+intra-app `File → Load SVG...` stays the only entry point. Revisit
+only if Tessella gains a format it uniquely owns. See ADR-008
+migration path §8 for the full rationale.
+
 **Slice 3 — remaining ADR-008 migration path** (not landed):
-- Step 8 — file associations for `.svg` / `.dot`. `tauri.conf.json`
-  `bundle.fileAssociations` + wire argv/open-url event on the JS side
-  through `SvgImporter.importFromFileHandle` (new entry point) so
-  "Open with → Tessella" from the system file manager works.
 - Step 10 — CI (`.github/workflows/desktop.yml`) matrix over
   ubuntu/macos/windows. Tracked separately, not blocking.
 - Step 11 — Flathub / winget / Homebrew Cask submissions. Each is its
