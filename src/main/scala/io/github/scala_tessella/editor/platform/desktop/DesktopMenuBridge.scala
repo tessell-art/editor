@@ -26,19 +26,22 @@ import scala.scalajs.js
 object DesktopMenuBridge:
 
   def install(): Unit =
-    if !isTauri then return
-    try
-      val tauri                                   = dom.window.asInstanceOf[js.Dynamic].__TAURI__
-      val handler: js.Function1[js.Dynamic, Unit] = (event: js.Dynamic) =>
+    if isTauri then
+      try
+        val tauri                                   = dom.window.asInstanceOf[js.Dynamic].__TAURI__
+        val handler: js.Function1[js.Dynamic, Unit] = (event: js.Dynamic) =>
 
-        val id = event.payload.asInstanceOf[String]
-        dispatch(id)
-      tauri.event.listen("menu", handler): Unit
-      Logger.debug("DesktopMenuBridge installed (Tauri runtime detected)")
-    catch
-      case e: Throwable =>
-        // Never let a bridge failure block the app; the DOM menu still works.
-        Logger.warn(s"DesktopMenuBridge.install failed: ${e.getMessage}")
+          val id = event.payload.asInstanceOf[String]
+          dispatch(id)
+        // `val _ =` silences -Wnonunit-statement; the suggested `: Unit`
+        // ascription fires E175 anyway in this spot (Scala 3 warning runs
+        // before the ascription is resolved).
+        val _ = tauri.event.listen("menu", handler)
+        Logger.debug("DesktopMenuBridge installed (Tauri runtime detected)")
+      catch
+        case e: Throwable =>
+          // Never let a bridge failure block the app; the DOM menu still works.
+          Logger.warn(s"DesktopMenuBridge.install failed: ${e.getMessage}")
 
   private def isTauri: Boolean =
     val tauri = dom.window.asInstanceOf[js.Dynamic].selectDynamic("__TAURI__")
