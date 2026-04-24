@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{EditorState, Theme}
 
 object GridRenderer:
   private val patternId = "grid-pattern"
@@ -29,11 +29,16 @@ object GridRenderer:
       )
     )
 
+  private val opacityForTheme: Signal[String] =
+    EditorState.effectiveTheme.map:
+      case Theme.Light => "0.2"
+      case Theme.Dark  => "0.8"
+
   // Renders a large rectangle filled with the grid pattern
   def element: Element =
     svg.g(
       svg.className := "grid-layer",
-      svg.opacity   := "0.3",
+      svg.opacity <-- opacityForTheme,
       svg.rect(
         // A very large rectangle to ensure it covers the viewport at all zoom/pan levels
         svg.x      := "-20000",
