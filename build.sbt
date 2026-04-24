@@ -13,6 +13,12 @@ ThisBuild / scalafmtOnCompile := true
 // See docs/adr/001-package-layering.md.
 lazy val checkLayering = taskKey[Unit]("Enforce ADR-001 package layering")
 
+// ADR-008 — MenuShortcuts.scala ↔ menu_shortcuts.rs parity.
+// Fails the build if the two declarations drift. Soft-skip when the Rust
+// file is absent (fresh checkout without the desktop shell scaffolded).
+// See docs/adr/008-desktop-packaging-tauri.md §Menu integration.
+lazy val checkMenuShortcutsParity = taskKey[Unit]("Enforce ADR-008 menu shortcuts parity")
+
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
@@ -107,7 +113,64 @@ lazy val editor = project.in(file("."))
         )
       streams.value.log.info(s"ADR-001 layering check passed (${rules.size} layers)")
     },
-    (Compile / compile) := (Compile / compile).dependsOn(checkLayering).value,
+    (Compile / compile) := (Compile / compile).dependsOn(checkLayering, checkMenuShortcutsParity).value,
+
+    checkMenuShortcutsParity := {
+      // Lift task-value lookups out of any conditional — sbt's linter rejects
+      // `streams.value` / `baseDirectory.value` inside `if` branches because
+      // `.value` is evaluated unconditionally regardless.
+      val log       = streams.value.log
+      val base      = baseDirectory.value
+      val scalaFile =
+        (Compile / sourceDirectory).value / "scala" / "io" / "github" / "scala_tessella" / "editor" /
+          "models" / "MenuShortcuts.scala"
+      val rustFile  = base / "desktop" / "src-tauri" / "src" / "menu_shortcuts.rs"
+      if (!rustFile.exists())
+        log.warn(
+          s"ADR-008 parity check skipped: ${base.toPath.relativize(rustFile.toPath)} not found"
+        )
+      else {
+        val scalaSource = IO.read(scalaFile)
+        val rustSource  = IO.read(rustFile)
+        // The bindings map literal `MenuAction.FileSave -> ...` is the discovery surface;
+        // reading the enum directly means tolerating multiline `case A, B, C` which is brittle.
+        val actions     = """MenuAction\.(\w+)""".r
+          .findAllMatchIn(scalaSource)
+          .map(_.group(1))
+          .toSet
+        val rustNames   = """pub const ([A-Z][A-Z0-9_]*):""".r
+          .findAllMatchIn(rustSource)
+          .map(_.group(1))
+          .toSet
+        // PascalCase → SCREAMING_SNAKE_CASE, StringBuilder to stay 2.12-safe
+        // (sbt's build-definition Scala) and avoid regex lookbehind.
+        def screaming(s: String): String = {
+          val sb = new StringBuilder
+          s.foreach { c =>
+            if (c.isUpper && sb.nonEmpty) sb.append('_')
+            sb.append(c.toUpper)
+          }
+          sb.toString
+        }
+        val expected    = actions.map(screaming)
+        val missing     = expected -- rustNames
+        val orphan      = rustNames -- expected
+        if (missing.nonEmpty || orphan.nonEmpty) {
+          val missingLine =
+            if (missing.nonEmpty)
+              Some(s"  missing in menu_shortcuts.rs: ${missing.toSeq.sorted.mkString(", ")}")
+            else None
+          val orphanLine  =
+            if (orphan.nonEmpty)
+              Some(s"  orphan in menu_shortcuts.rs (no matching MenuAction): ${orphan.toSeq.sorted.mkString(", ")}")
+            else None
+          sys.error(
+            "ADR-008 menu parity violations:\n" + Seq(missingLine, orphanLine).flatten.mkString("\n")
+          )
+        } else
+          log.info(s"ADR-008 menu parity check passed (${actions.size} actions)")
+      }
+    },
 
     // Generate a Scala object with the app version from SBT `version`
     Compile / sourceGenerators += Def.task {

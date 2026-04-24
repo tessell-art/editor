@@ -3,7 +3,7 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.components.popup.*
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, MenuShortcuts, Theme, ViewTransform}
+import io.github.scala_tessella.editor.models.{EditorState, MenuShortcuts, Theme}
 import io.github.scala_tessella.editor.models.MenuShortcuts.MenuAction
 import io.github.scala_tessella.editor.operations.ViewOperations
 import io.github.scala_tessella.editor.utils.PolygonNameGenerator.*
@@ -177,15 +177,7 @@ object MenuBarComponent:
   private def fileMenu(): Element =
     menuItem(
       "File",
-      dropdownLink(
-        "New", {
-          AppState.clearTiling()
-          EditorState.fileState.update(_.copy(currentFileName = None))
-          UndoManager.clearHistory()
-          EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))
-          AppState.resetFillColorToDefault()
-        }
-      ),
+      dropdownLink("New", AppState.newTiling()),
       templatesMenu(),
       div(className := "menu-separator"),
       dropdownLink("Load SVG...", SvgImporter.trigger()),
@@ -305,28 +297,16 @@ object MenuBarComponent:
         enabled = EditorState.canMutateTilingSignal,
         shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewFitToCanvas))
       ),
-      dropdownLink("Reset View", EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))),
+      dropdownLink("Reset View", ViewOperations.resetView()),
       div(className := "menu-separator"),
       dropdownLink(
         "Zoom In",
-        EditorState.viewState.update: s =>
-
-          val vt = s.viewTransform
-          s.copy(viewTransform =
-            vt.copy(scale = ViewOperations.clampViewScale(vt.scale * EditorConfig.menuZoomFactor))
-          )
-        ,
+        ViewOperations.zoomIn(),
         shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewZoomIn))
       ),
       dropdownLink(
         "Zoom Out",
-        EditorState.viewState.update: s =>
-
-          val vt = s.viewTransform
-          s.copy(viewTransform =
-            vt.copy(scale = ViewOperations.clampViewScale(vt.scale / EditorConfig.menuZoomFactor))
-          )
-        ,
+        ViewOperations.zoomOut(),
         shortcut = Some(MenuShortcuts.labelOf(MenuAction.ViewZoomOut))
       ),
       dropdownLink(

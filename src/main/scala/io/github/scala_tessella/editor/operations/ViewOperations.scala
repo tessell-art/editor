@@ -114,6 +114,21 @@ object ViewOperations:
           ).foreach(vt => EditorState.viewState.update(_.copy(viewTransform = vt)))
         }
 
+  def zoomIn(): Unit =
+    EditorState.viewState.update: s =>
+
+      val vt = s.viewTransform
+      s.copy(viewTransform = vt.copy(scale = clampViewScale(vt.scale * menuZoomFactor)))
+
+  def zoomOut(): Unit =
+    EditorState.viewState.update: s =>
+
+      val vt = s.viewTransform
+      s.copy(viewTransform = vt.copy(scale = clampViewScale(vt.scale / menuZoomFactor)))
+
+  def resetView(): Unit =
+    EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))
+
   def isTilingLargerThanCanvas: Boolean =
     val tiling = EditorState.tessellationState.now().currentTiling
     if tiling.isEmpty then false

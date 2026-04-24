@@ -236,13 +236,60 @@ suite (canvas rendering, real input events, visual regression) pointed at
   combinations and asserts every `MenuAction` has a binding, so
   slice 2 can trust the table when generating Rust accelerators.
 
-Remaining slices:
+**Slice 2 landed 2026-04-24** — Tauri shell end-to-end (migration
+steps 4, 5, 7, 9):
+- `desktop/src-tauri/` — hand-scaffolded Tauri 2 project (Cargo.toml,
+  build.rs, tauri.conf.json with `withGlobalTauri: true`,
+  `capabilities/default.json`, `src/{main,lib,menu,menu_shortcuts}.rs`).
+  `cargo tauri dev` spawns Vite, waits for localhost:5173, opens a
+  native window with a populated File/Edit/View/Help menu bar.
+- `menu.rs` — 4 submenus mirrored from `MenuBarComponent`, plus
+  macOS app menu (shadowing rather than `let mut` to avoid unused-mut
+  warnings on non-macOS builds), predefined Cut/Copy/Paste in Edit.
+  Menu clicks emit a `"menu"` event with the item id as payload.
+- `menu_shortcuts.rs` — Rust mirror of `MenuShortcuts.scala`,
+  `Shortcut::accelerator()` renders Tauri's `CmdOrCtrl+…` format that
+  remaps to ⌘ on macOS automatically.
+- `platform/desktop/DesktopMenuBridge.scala` — listens to `"menu"`
+  events when `window.__TAURI__` is defined, dispatches each id to
+  the same `AppState` / `EditorState` entry point the DOM menu uses.
+  No-op on web. Wired from `Editor @main` startup alongside
+  `TestHooks.install()`.
+- Compound-action extraction: `AppState.newTiling()`,
+  `ViewOperations.{zoomIn,zoomOut,resetView}()` so the DOM menu and
+  the desktop bridge call one action path each, not copies.
+- `build.sbt` `checkMenuShortcutsParity` — runs on every compile
+  (like `checkLayering`); reads both `MenuShortcuts.scala` and
+  `menu_shortcuts.rs`, fails the build on either missing or orphan
+  names. JVM-side so it sidesteps Scala.js regex/ES-version
+  constraints.
+- `.gitignore` — `/desktop/src-tauri/target/` and `/gen/schemas/`.
 
-**Slice 2 — Tauri shell** (migration steps 4, 5, 7, 8, 9). Blocked on
-Linux-side `libwebkit2gtk-4.1-dev` install. Scaffold `desktop/`, port
-the menu to `menu.rs` (reading a parallel `menu_shortcuts.rs` mirrored
-from `MenuShortcuts.scala`), wire `DesktopMenuBridge.scala`, file
-associations (`.svg`, `.dot`), icons.
+Toolchain notes learned during slice 2 (Ubuntu 24.04):
+- Rust **1.85+** needed for `tauri-cli 2.10.x` — one transitive dep
+  requires edition 2024. `rustup update stable` lands it.
+- `libwebkit2gtk-4.1-dev` alone does not pull all headers on Noble.
+  Full list needed: `libwebkit2gtk-4.1-dev libgtk-3-dev build-essential
+  curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev
+  librsvg2-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev`.
+- `beforeDevCommand` CWD is the **parent of `src-tauri/`**, not
+  `src-tauri/` itself — our layout puts that at `desktop/`, so
+  `npm --prefix .. run dev` (not `../..`). `frontendDist` is still
+  relative to `tauri.conf.json` so `../../dist` there remains correct.
+- `tauri::generate_context!` validates icon paths **at compile time**;
+  declared icons must exist. `cargo tauri icon <source.png>` fills
+  `icons/` with every referenced size/format in one shot.
+
+**Slice 3 — remaining ADR-008 migration path** (not landed):
+- Step 8 — file associations for `.svg` / `.dot`. `tauri.conf.json`
+  `bundle.fileAssociations` + wire argv/open-url event on the JS side
+  through `SvgImporter.importFromFileHandle` (new entry point) so
+  "Open with → Tessella" from the system file manager works.
+- Step 10 — CI (`.github/workflows/desktop.yml`) matrix over
+  ubuntu/macos/windows. Tracked separately, not blocking.
+- Step 11 — Flathub / winget / Homebrew Cask submissions. Each is its
+  own backlog entry once the binary is stable (unsigned acceptable
+  initially per ADR).
 
 Extends the "Vite `dist/` is the portable artifact, shells are thin
 wrappers" pattern from ADR-005 (Android) and ADR-007 (iOS) to the three

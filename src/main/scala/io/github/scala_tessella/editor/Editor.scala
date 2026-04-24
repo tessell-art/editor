@@ -10,6 +10,7 @@ import io.github.scala_tessella.editor.components.{
 }
 import io.github.scala_tessella.editor.interactions.KeyboardEventHandler
 import io.github.scala_tessella.editor.models.{EditorState, Theme}
+import io.github.scala_tessella.editor.platform.desktop.DesktopMenuBridge
 import io.github.scala_tessella.editor.utils.{ColorRGB, Logger}
 import org.scalajs.dom
 
@@ -23,6 +24,9 @@ def Editor(): Unit =
   // Register the e2e test-hook object on globalThis. See ADR-004 + TestHooks.scala for context.
   // Lands in production bundles too; payload is tiny.
   TestHooks.install()
+  // Subscribe to Tauri native-menu events. No-op when running in a web browser
+  // (window.__TAURI__ undefined). See ADR-008 + DesktopMenuBridge.scala.
+  DesktopMenuBridge.install()
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
     EditorApp.element

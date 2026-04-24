@@ -258,3 +258,13 @@ object AppState:
   /** Clears symmetry overlays and their cached data. */
   def clearSymmetryOverlays(): Unit =
     SymmetryOperations.clearOverlays()
+
+  /** Starts a new, empty tiling. Clears the current tiling and measurements, forgets the current file name,
+    * wipes undo history, resets the view transform, and restores the default fill color.
+    */
+  def newTiling(): Unit =
+    clearTiling()
+    EditorState.fileState.update(_.copy(currentFileName = None))
+    UndoManager.clearHistory()
+    ViewOperations.resetView()
+    resetFillColorToDefault()
