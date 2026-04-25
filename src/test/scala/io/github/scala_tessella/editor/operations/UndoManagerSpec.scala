@@ -178,18 +178,18 @@ class UndoManagerSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling = freshSquare()))
     val faceId = EditorState.tessellationState.now().currentTiling.innerFaces.head.id
 
-    EditorState.toolState.update(_.copy(activeTool = None))
+    EditorState.toolState.update(_.copy(activeTool = Tool.AddPolygon))
     EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set(faceId)))
     UndoManager.saveState()
 
-    EditorState.toolState.update(_.copy(activeTool = Some(Tool.ColorPicker)))
+    EditorState.toolState.update(_.copy(activeTool = Tool.ColorPicker))
     EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
 
     UndoManager.undo()
-    assertEquals(EditorState.toolState.now().activeTool, None)
+    assertEquals(EditorState.toolState.now().activeTool, Tool.AddPolygon)
     assertEquals(EditorState.tessellationState.now().selectedTilingPolygons, Set(faceId))
 
     UndoManager.redo()
-    assertEquals(EditorState.toolState.now().activeTool, Some(Tool.ColorPicker))
+    assertEquals(EditorState.toolState.now().activeTool, Tool.ColorPicker)
     assertEquals(EditorState.tessellationState.now().selectedTilingPolygons, Set.empty)
   }

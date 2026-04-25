@@ -2,36 +2,58 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{EditorState, Tool}
+import io.github.scala_tessella.editor.models.{AddSubmode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.editor.utils.SvgDsl.*
 
 object CanvasControlComponent:
 
+  // Toggling a non-default tool: clicking it again returns to the default mode
+  // (AddPolygon + Outside). Tools that own clickable-points clear measurements on
+  // both activation and deactivation.
   private def toggleTool(tool: Tool): Unit =
     EditorState.toolState.update: s =>
+      if s.activeTool == tool then
+        if tool == Tool.Measurement || tool == Tool.Eraser || tool == Tool.Fan then
+          AppState.clearMeasurements()
+        s.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Outside)
+      else
+        AppState.clearMeasurements()
+        s.copy(activeTool = tool)
 
-      val newActive = s.activeTool match
-        case Some(t) if t == tool =>
-          if t == Tool.Measurement || t == Tool.Eraser || t == Tool.Inserter || t == Tool.Fan then
-            AppState.clearMeasurements()
-          None // Deactivate if it's the current tool
-        case _ =>
-          AppState.clearMeasurements() // Clear measurements when switching
-          Some(tool) // Activate the new tool
-      s.copy(activeTool = newActive)
+  // Toggle between AddPolygon's Outside (default) and Inside sub-modes. Replaces
+  // the former Tool.Inserter button.
+  private def toggleAddInside(): Unit =
+    EditorState.toolState.update: s =>
+      if s.isAddInside then
+        s.copy(addSubmode = AddSubmode.Outside)
+      else
+        AppState.clearMeasurements()
+        s.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Inside)
 
   private def createToolButton(tool: Tool, titleText: String, icon: Element): Element =
     button(
       icon,
       className := "toggle-btn",
-      cls("active") <-- EditorState.toolState.signal.map(_.activeTool.contains(tool)).distinct,
+      cls("active") <-- EditorState.toolState.signal.map(_.activeTool == tool).distinct,
       onClick.compose(gate) --> { _ =>
 
         toggleTool(tool)
       },
       title     := titleText
+    )
+
+  private def createAddInsideButton(): Element =
+    button(
+      IconsSVG.inserterIcon,
+      className := "toggle-btn",
+      cls("active") <-- EditorState.isAddInsideActive,
+      onClick.compose(gate) --> { _ =>
+
+        toggleAddInside()
+      },
+      title     := "Activate insertion mode to add interior polygons"
     )
 
   def element: Element =
@@ -80,11 +102,7 @@ object CanvasControlComponent:
             "Activate deletion mode to delete polygons",
             IconsSVG.eraserIcon
           ),
-          createToolButton(
-            Tool.Inserter,
-            "Activate insertion mode to add interior polygons",
-            IconsSVG.inserterIcon
-          ),
+          createAddInsideButton(),
           createToolButton(
             Tool.Measurement,
             "Activate measure mode to calculate the distance between two points",

@@ -14,9 +14,9 @@ object TessellationRenderer:
 
     val perimeterEdges = TessellationEdgeRenderer.renderPerimeterEdges(tiling, tilingPointToCanvasView)
 
-    // Interior edges overlay only when Inserter tool is active AND a polygon is highlighted
+    // Interior edges overlay only when AddPolygon's Inside sub-mode is active AND a polygon is highlighted
     val interiorEdgesOverlay = children <--
-      EditorState.isInserterActive
+      EditorState.isAddInsideActive
         .combineWith(EditorState.selectedFaceForInsertion)
         .map:
           case (true, Some(fid)) =>
@@ -65,15 +65,15 @@ object TessellationRenderer:
             )
           else List.empty
 
-    // Failed polygon wireframe overlay for placement (adjust inward orientation in Inserter mode)
+    // Failed polygon wireframe overlay for placement (adjust inward orientation in AddPolygon Inside mode)
     val failedPolygonWireframe = child.maybe <--
       EditorState.errorState.signal.map(_.failedPlacement).distinct
-        .combineWith(EditorState.isInserterActive, EditorState.selectedFaceForInsertion)
-        .map: (placementOpt, isInserter, faceIdOpt) =>
+        .combineWith(EditorState.isAddInsideActive, EditorState.selectedFaceForInsertion)
+        .map: (placementOpt, isAddInside, faceIdOpt) =>
           placementOpt.map: p =>
 
             val adjusted =
-              (isInserter, faceIdOpt) match
+              (isAddInside, faceIdOpt) match
                 case (true, Some(fid)) if p.intoFace.isEmpty => p.copy(intoFace = Some(fid))
                 case _                                       => p
             FailedPolygonRenderer.renderFailedPlacement(adjusted)

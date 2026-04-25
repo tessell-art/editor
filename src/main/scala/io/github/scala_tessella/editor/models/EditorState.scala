@@ -85,9 +85,9 @@ object EditorState:
     val canDeselectAllSignal: Signal[Boolean] =
       hasSelectionSignal.combineWith(isIdleSignal).map(_ && _)
 
-    /** Checks if Inserter tool is active */
-    val isInserterActive: Signal[Boolean] =
-      toolState.signal.map(_.activeTool.contains(Tool.Inserter)).distinct
+    /** True when AddPolygon is in its Inside sub-mode (formerly `Tool.Inserter`). */
+    val isAddInsideActive: Signal[Boolean] =
+      toolState.signal.map(_.isAddInside).distinct
 
     /** Selected face for insertion, derived from highlighted polygon id */
     val selectedFaceForInsertion: Signal[Option[FaceId]] =

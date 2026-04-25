@@ -2,19 +2,19 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{ClickablePoint, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{AddSubmode, ClickablePoint, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.utils.SvgDsl.{circleCoordsRadius, lineCoords}
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object TessellationMeasurementRenderer:
 
-  private val clickablePointClickObserver: Observer[(ClickablePoint, Option[Tool])] =
+  private val clickablePointClickObserver: Observer[(ClickablePoint, Tool, AddSubmode)] =
     Observer:
-      case (point, Some(Tool.Measurement)) => AppState.handlePointClickForMeasurement(point)
-      case (point, Some(Tool.Fan))         => AppState.handlePointClickForFan(point)
-      case (point, Some(Tool.Inserter))    => AppState.handlePointClickForInsertion(point)
-      case (point, _)                      => AppState.handlePointClickForDeletion(point)
+      case (point, Tool.Measurement, _)                => AppState.handlePointClickForMeasurement(point)
+      case (point, Tool.Fan, _)                        => AppState.handlePointClickForFan(point)
+      case (point, Tool.AddPolygon, AddSubmode.Inside) => AppState.handlePointClickForInsertion(point)
+      case (point, _, _)                               => AppState.handlePointClickForDeletion(point)
 
   def renderClickablePoint(
       p: ClickablePoint,
@@ -31,11 +31,15 @@ object TessellationMeasurementRenderer:
       onClick.preventDefault
         .mapTo(p)
         .compose(stream =>
-          gate(stream).withCurrentValueOf(EditorState.toolState.signal.map(_.activeTool).distinct)
+          gate(stream)
+            .withCurrentValueOf(EditorState.toolState.signal.map(_.activeTool).distinct)
+            .withCurrentValueOf(EditorState.toolState.signal.map(_.addSubmode).distinct)
         ) --> clickablePointClickObserver,
       svg.style         := "cursor: crosshair;",
-      svg.style <-- EditorState.toolState.signal.map(_.activeTool).distinct.map: tool =>
-        TessellationCursorStyles.clickablePointCursorCss(tool),
+      svg.style <--
+        EditorState.toolState.signal.map(_.activeTool).distinct
+          .combineWith(EditorState.toolState.signal.map(_.addSubmode).distinct)
+          .map((tool, sub) => TessellationCursorStyles.clickablePointCursorCss(tool, sub)),
       svg.pointerEvents := "visible"
     )
 

@@ -57,26 +57,34 @@ case class ClickablePoint(point: Point, anchor: Anchor)
 enum EditorMode:
   case Select, Delete
 
-// Tool enumeration
+// Tool enumeration. AddPolygon is the default mode (always one mode is active);
+// Inserter has been folded into AddPolygon + AddSubmode.Inside.
 enum Tool:
-  case ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Inserter, Measurement, Fan
+  case AddPolygon, ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement, Fan
 
-/** Tool-state aggregate: the currently active editor mode, tool (if any), and the number of sides of the
-  * polygon selected in the palette. Held as a single `Var[ToolState]` so that cross-field invariants are
-  * visible and undo/redo restores the whole aggregate atomically.
-  *
-  * ADR-002 spike target: demonstrates the Option B state-container approach.
+// Sub-mode for AddPolygon. Outside places on perimeter edges; Inside places inside a face
+// (formerly the Inserter tool). Meaningful only when activeTool == AddPolygon.
+enum AddSubmode:
+  case Outside, Inside
+
+/** Tool-state aggregate: the currently active editor mode and tool (always one), the AddPolygon sub-mode, and
+  * the number of sides of the polygon selected in the palette. Held as a single `Var[ToolState]` so that
+  * cross-field invariants are visible and undo/redo restores the whole aggregate atomically.
   */
 case class ToolState(
     editorMode: EditorMode,
-    activeTool: Option[Tool],
+    activeTool: Tool,
+    addSubmode: AddSubmode,
     selectedPolygon: Option[Int]
-)
+):
+  /** True when AddPolygon is active in its Inside sub-mode (formerly `Tool.Inserter`). */
+  def isAddInside: Boolean = activeTool == Tool.AddPolygon && addSubmode == AddSubmode.Inside
 
 object ToolState:
   val initial: ToolState = ToolState(
     editorMode = EditorMode.Select,
-    activeTool = None,
+    activeTool = Tool.AddPolygon,
+    addSubmode = AddSubmode.Outside,
     selectedPolygon = None
   )
 

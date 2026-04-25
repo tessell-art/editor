@@ -98,9 +98,10 @@ object TessellationPolygonRenderer:
         shouldHideForDeletion
           .combineWith(EditorState.toolState.signal.map(_.editorMode).distinct)
           .combineWith(EditorState.toolState.signal.map(_.activeTool).distinct)
+          .combineWith(EditorState.toolState.signal.map(_.addSubmode).distinct)
           .map:
-            case (hidden, mode, tool) =>
-              val cursor  = TessellationCursorStyles.polygonCursorCss(mode, tool)
+            case (hidden, mode, tool, sub) =>
+              val cursor  = TessellationCursorStyles.polygonCursorCss(mode, tool, sub)
               val opacity = if hidden then "opacity: 0;" else "opacity: 1;"
               cursor + opacity
       ,

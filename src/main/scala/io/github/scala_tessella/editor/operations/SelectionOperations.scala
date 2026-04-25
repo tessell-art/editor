@@ -3,7 +3,9 @@ package io.github.scala_tessella.editor.operations
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.models.{Anchor, ClickablePoint, EditorMode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.{
+  AddSubmode, Anchor, ClickablePoint, EditorMode, EditorState, Tool
+}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.Logger
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
@@ -23,7 +25,7 @@ object SelectionOperations:
     if !tiling.isEmpty then op(tiling)
 
   private def deactivateActiveTool(): Unit =
-    EditorState.toolState.update(_.copy(activeTool = None))
+    EditorState.toolState.update(_.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Outside))
 
   def handlePointClickForMeasurement(point: ClickablePoint): Unit =
     ifNotProcessing:
@@ -179,13 +181,13 @@ object SelectionOperations:
   def handleTilingPolygonClick(faceId: FaceId): Unit =
     val tools = EditorState.toolState.now()
     tools.activeTool match
-      case Some(Tool.ColorPicker)         =>
+      case Tool.ColorPicker         =>
         val colors = EditorState.colorState.now().polygonColors
         colors.get(faceId).foreach: color =>
 
           EditorState.colorState.update(_.copy(fillColor = color))
           deactivateActiveTool()
-      case Some(Tool.ShapeAndColorPicker) =>
+      case Tool.ShapeAndColorPicker =>
         val tiling     = EditorState.tessellationState.now().currentTiling
         val maybeFace  = tiling.findInnerFace(faceId).toOption
         val maybeColor = EditorState.colorState.now().polygonColors.get(faceId)
@@ -207,22 +209,24 @@ object SelectionOperations:
             deactivateActiveTool()
           case None                =>
             ()
-      case Some(Tool.SelectByColor)       =>
+      case Tool.SelectByColor       =>
         selectPolygonsByColor(faceId)
-      case Some(Tool.Measurement)         =>
+      case Tool.Measurement         =>
         setupFaceClickablePoints(faceId)
-      case Some(Tool.Fan)                 =>
+      case Tool.Fan                 =>
         setupFaceClickablePoints(faceId, boundaryVerticesOnly = true)
-      case Some(Tool.Eraser)              =>
+      case Tool.Eraser              =>
         setupFaceClickablePoints(faceId)
-      case Some(Tool.Inserter)            =>
-        setupFaceClickablePoints(faceId, edgesOnly = true)
-      case _                              =>
-        tools.editorMode match
-          case EditorMode.Select =>
-            toggleTilingPolygonSelection(faceId)
-          case EditorMode.Delete =>
-            DeletionOperations.attemptFaceDeletion(faceId)
+      case Tool.AddPolygon          =>
+        tools.addSubmode match
+          case AddSubmode.Inside  =>
+            setupFaceClickablePoints(faceId, edgesOnly = true)
+          case AddSubmode.Outside =>
+            tools.editorMode match
+              case EditorMode.Select =>
+                toggleTilingPolygonSelection(faceId)
+              case EditorMode.Delete =>
+                DeletionOperations.attemptFaceDeletion(faceId)
 
   private def setupFaceClickablePoints(
       faceId: FaceId,

@@ -24,7 +24,7 @@ trait EditorStateFixture:
     EditorState.irregularState.set(IrregularState.initial)
     EditorState.fileState.set(FileState.initial)
     EditorState.themeState.update(_.copy(userThemePreference = None))
-    EditorState.toolState.update(_.copy(selectedPolygon = None, activeTool = None))
+    EditorState.toolState.set(ToolState.initial)
 
   override def beforeEach(context: BeforeEach): Unit =
     // Snapshot the state that represents the "app model"

@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex}
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, Tool, VertexCoord}
+import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, VertexCoord}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.PlacementOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.toCoords
@@ -119,12 +119,12 @@ object TessellationEdgeRenderer:
       },
       // Trigger insertion directly when clicking the highlighted interior edge
       onClick.preventDefault.compose(stream =>
-        gate(stream).withCurrentValueOf(EditorState.toolState.signal.map(_.activeTool).distinct)
+        gate(stream).withCurrentValueOf(EditorState.isAddInsideActive)
       ) --> {
-        case (_, Some(Tool.Inserter)) =>
+        case (_, true)  =>
           PlacementOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
           EditorState.previewState.update(_.copy(previewPlacement = None))
-        case _                        => ()
+        case (_, false) => ()
       }
     )
 

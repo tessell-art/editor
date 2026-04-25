@@ -1,6 +1,6 @@
 package io.github.scala_tessella.editor.components
 
-import io.github.scala_tessella.editor.models.{EditorMode, Tool}
+import io.github.scala_tessella.editor.models.{AddSubmode, EditorMode, Tool}
 
 object TessellationCursorStyles:
 
@@ -19,23 +19,23 @@ object TessellationCursorStyles:
   private val deleteCursor        =
     "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='21' height='21' viewBox='0 0 32 32'%3E%3Cpath stroke='white' stroke-width='6' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3Cpath stroke='red' stroke-width='3' stroke-linecap='round' d='M4 4 L28 28 M4 28 L28 4'/%3E%3C/svg%3E\") 10 10, auto"
 
-  def polygonCursorCss(mode: EditorMode, tool: Option[Tool]): String =
-    val cursor = tool match
-      case Some(Tool.ColorPicker)         => s"cursor: $colorPickerCursor;"
-      case Some(Tool.ShapeAndColorPicker) => s"cursor: $colorPickerCursor;"
-      case Some(Tool.SelectByColor)       => s"cursor: $selectByColorCursor;"
-      case Some(Tool.Measurement)         => s"cursor: $measurementCursor;"
-      case Some(Tool.Fan)                 => s"cursor: $fanCursor;"
-      case Some(Tool.Eraser)              => s"cursor: $eraserCursor;"
-      case Some(Tool.Inserter)            => s"cursor: $inserterCursor;"
-      case _                              => mode match
-          case EditorMode.Select => "cursor: pointer;"
-          case EditorMode.Delete => s"cursor: $deleteCursor;"
-    cursor
-
-  def clickablePointCursorCss(tool: Option[Tool]): String =
+  def polygonCursorCss(mode: EditorMode, tool: Tool, addSubmode: AddSubmode): String =
     tool match
-      case Some(Tool.Measurement) => "cursor: crosshair;"
-      case Some(Tool.Fan)         => "cursor: pointer;"
-      case Some(Tool.Inserter)    => "cursor: pointer;"
-      case _                      => s"cursor: $deleteCursor;"
+      case Tool.ColorPicker         => s"cursor: $colorPickerCursor;"
+      case Tool.ShapeAndColorPicker => s"cursor: $colorPickerCursor;"
+      case Tool.SelectByColor       => s"cursor: $selectByColorCursor;"
+      case Tool.Measurement         => s"cursor: $measurementCursor;"
+      case Tool.Fan                 => s"cursor: $fanCursor;"
+      case Tool.Eraser              => s"cursor: $eraserCursor;"
+      case Tool.AddPolygon          => addSubmode match
+          case AddSubmode.Inside  => s"cursor: $inserterCursor;"
+          case AddSubmode.Outside => mode match
+              case EditorMode.Select => "cursor: pointer;"
+              case EditorMode.Delete => s"cursor: $deleteCursor;"
+
+  def clickablePointCursorCss(tool: Tool, addSubmode: AddSubmode): String =
+    tool match
+      case Tool.Measurement                                   => "cursor: crosshair;"
+      case Tool.Fan                                           => "cursor: pointer;"
+      case Tool.AddPolygon if addSubmode == AddSubmode.Inside => "cursor: pointer;"
+      case _                                                  => s"cursor: $deleteCursor;"
