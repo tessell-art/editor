@@ -1,0 +1,154 @@
+/* -----------------------------------------------------------
+ * Design tokens — colors, spacing, sizes used across the app.
+ *
+ * Token-only file: contains no component rules. Components in
+ * styles/*.css reference these tokens via var(...).
+ *
+ * Cascade:
+ *   :root        → dark-by-default fallback (no theme class).
+ *   .light-mode  → light theme overrides.
+ *   .dark-mode   → explicit dark theme overrides (currently
+ *                  popup remappings only; tokens otherwise
+ *                  inherited from :root).
+ * --------------------------------------------------------- */
+
+:root {
+  /* Layout */
+  --canvas-height: 600px;
+
+  /* Text */
+  --text-color: #e9ecef;
+  --text-muted: #a9b1bb;
+  --text-muted-strong: #c4cbd3;
+  --text-subtle: #7f8a96;
+  --text-inverse: #f8f9fa;
+  --text-strong: #0b0d10;
+
+  /* Background / panel */
+  --bg-color: #1b1e23;
+  --canvas-bg: #16191e;
+  --panel-bg: #20242a;
+  --panel-bg-strong: #252a31;
+  --panel-border: #303741;
+  --panel-border-strong: #3a434f;
+  --panel-hover: #2b3139;
+  --panel-soft: #252a31;
+
+  /* Buttons */
+  --button-bg: #20242a;
+  --btn-disabled-bg: #3a4048;
+  --btn-disabled-text: #8e98a3;
+
+  /* Accent / interaction */
+  --accent: #2c7da0;
+  --accent-strong: #1d6d8d;
+  --highlight: #2aa6b8;
+  --highlight-strong: #1f8796;
+  --on-highlight: #0b0d10;
+  --focus-ring: #5aa9e6;
+  --hover-green: #29c17e;
+  --link-color: #2c7da0;
+  --link-hover: #1d6d8d;
+
+  /* Menu */
+  --menu-bg: #1f2329;
+  --menu-hover: #2a3038;
+  --menu-dropdown-bg: #f4f6f8;
+  --menu-dropdown-text: #1b1e23;
+  --menu-dropdown-border: #d6dbe1;
+  --menu-dropdown-hover: #e9edf2;
+  --menu-disabled: #9aa4af;
+  --menu-mobile-bg: #1f2329;
+  --menu-mobile-border: #313844;
+  --menu-mobile-hover: #2a3038;
+
+  /* Loading / status */
+  --loading-bg: rgba(10, 12, 15, 0.6);
+  --spinner-track: #2f3640;
+  --spinner-head: #5aa9e6;
+  --status-processing: #f6b26b;
+
+  /* Error */
+  --error-bg: #3b2025;
+  --error-text: #f4c7cf;
+  --error-border: #7a3a44;
+  --error-close-hover: #ffffff;
+
+  /* Popup */
+  --popup-overlay: rgba(10, 12, 15, 0.7);
+  --popup-bg: #f7f9fb;
+  --popup-text: #1b1e23;
+  --popup-heading: #2c7da0;
+  --popup-link: #2c7da0;
+  --popup-muted: #6b7682;
+  --popup-bg-dark: #20242a;
+  --popup-text-dark: #e9edf2;
+  --popup-muted-dark: #a7b0bb;
+  --popup-heading-dark: #9ad4e5;
+  --popup-link-dark: #8ab4ff;
+  --popup-shadow: rgba(5, 8, 12, 0.35);
+  --popup-heading-muted: #9aa4af;
+  --popup-text-muted: #b5bdc7;
+  --popup-close-hover: #d6dde5;
+  --popup-button-border: #d6dbe1;
+  --popup-button-hover: #e6eaef;
+
+  /* Color picker */
+  --color-picker-bg: #20242a;
+  --color-picker-shadow: #12151a80;
+  --color-picker-actions: #9aa4af;
+
+  /* Toggle */
+  --toggle-border: #2aa6b8;
+  --toggle-bg-active: #2aa6b8;
+  --toggle-select: #3c8c6b;
+  --toggle-select-border: #2f7558;
+  --toggle-delete: #d9534f;
+  --toggle-delete-border: #b94440;
+  --toggle-delete-hover: #c9403c;
+
+  /* Preview */
+  --preview-dark: #ffffff;
+  --preview-light: #1f2329;
+
+  /* Inputs (light surface) */
+  --input-bg-light: #ffffff;
+  --input-border-light: #8e98a3;
+  --input-text-light: #1b1e23;
+}
+
+.light-mode {
+  --text-color: #1b1e23;
+  --text-strong: #0b0d10;
+  --text-muted: #6b7682;
+  --bg-color: #f7f9fb;
+  --panel-bg: #ffffff;
+  --panel-bg-strong: #f4f6f8;
+  --panel-border: #d6dbe1;
+  --panel-border-strong: #c2c8d1;
+  --panel-hover: #e9edf2;
+  --panel-soft: #eef2f6;
+  --button-bg: #ffffff;
+  --link-hover: #1d6d8d;
+  --popup-text: #1b1e23;
+  --popup-muted: #6b7682;
+  --popup-heading-muted: #1b1e23;
+  --popup-text-muted: #6b7682;
+  --error-bg: #fdecee;
+  --error-text: #8a2c3a;
+  --error-border: #f3c2c7;
+  --canvas-bg: #ffffff;
+  --color-picker-bg: #ffffff;
+  --color-picker-shadow: #cbd3dd80;
+  --color-picker-actions: #6b7682;
+}
+
+.dark-mode {
+  --popup-bg: var(--popup-bg-dark);
+  --popup-text: var(--popup-text-dark);
+  --popup-muted: var(--popup-muted-dark);
+  --popup-heading: var(--popup-heading-dark);
+  --popup-heading-muted: var(--popup-text-dark);
+  --popup-text-muted: var(--popup-muted-dark);
+  --popup-link: var(--popup-link-dark);
+}
