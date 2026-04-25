@@ -49,7 +49,7 @@ object MouseEventHandler:
         EditorState.viewState.update: s =>
 
           val vt = s.viewTransform
-          s.copy(viewTransform = vt.copy(pan = vt.pan + delta))
+          s.copy(viewTransform = ViewOperations.clampedTransform(vt.copy(pan = vt.pan + delta)))
         // Update the new "last" drag start once
         val point: Point = Point(event.clientX, event.clientY)
         EditorState.uiState.update(_.copy(dragStart = Some(point)))
@@ -83,7 +83,7 @@ object MouseEventHandler:
         if event.deltaY < 0 then EditorConfig.mouseWheelZoomInFactor
         else EditorConfig.mouseWheelZoomOutFactor
       val newTransform = calculateZoomTransform(currentTransform, mousePos, scaleFactor)
-      EditorState.viewState.update(_.copy(viewTransform = newTransform))
+      EditorState.viewState.update(_.copy(viewTransform = ViewOperations.clampedTransform(newTransform)))
     }
 
   // Keep a name-compatible alias to match onWheel wiring used in the canvas

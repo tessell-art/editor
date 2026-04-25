@@ -23,17 +23,23 @@ object TessellationRenderer:
             TessellationEdgeRenderer.renderInteriorEdgesForFace(tiling, fid, tilingPointToCanvasView)
           case _                 => List.empty
 
-    val nodeLabels = children <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map:
-      showLabels =>
-        if showLabels then
-          TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
-        else List.empty
+    // Secondary overlays (labels + uniformity / rotation / reflection) honour the user's toggle AND
+    // the level-of-detail threshold — at low zoom they auto-hide to reduce visual noise.
+
+    val nodeLabels = children <--
+      EditorState.viewState.signal.map(_.showNodeLabels).distinct
+        .combineWith(EditorState.isAboveLodThreshold)
+        .map: (showLabels, aboveLod) =>
+          if showLabels && aboveLod then
+            TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
+          else List.empty
 
     val nodeUniformity = children <--
       EditorState.viewState.signal.map(_.showUniformity).distinct
         .combineWith(EditorState.viewState.signal.map(_.uniformityMap).distinct)
-        .map: (showUni, uniOpt) =>
-          if showUni && uniOpt.nonEmpty then
+        .combineWith(EditorState.isAboveLodThreshold)
+        .map: (showUni, uniOpt, aboveLod) =>
+          if showUni && aboveLod && uniOpt.nonEmpty then
             TessellationOverlayRenderer.renderUniformity(
               tiling.coordinates,
               uniOpt.get,
@@ -44,8 +50,9 @@ object TessellationRenderer:
     val nodeRotation = children <--
       EditorState.viewState.signal.map(_.showRotation).distinct
         .combineWith(EditorState.viewState.signal.map(_.rotationVertexIds).distinct)
-        .map: (showRot, rotOpt) =>
-          if showRot && rotOpt.nonEmpty then
+        .combineWith(EditorState.isAboveLodThreshold)
+        .map: (showRot, rotOpt, aboveLod) =>
+          if showRot && aboveLod && rotOpt.nonEmpty then
             TessellationOverlayRenderer.renderRotation(
               tiling.coordinates,
               rotOpt.get,
@@ -56,8 +63,9 @@ object TessellationRenderer:
     val nodeReflection = children <--
       EditorState.viewState.signal.map(_.showReflection).distinct
         .combineWith(EditorState.viewState.signal.map(_.reflectionVertexIds).distinct)
-        .map: (showRefl, reflOpt) =>
-          if showRefl && reflOpt.nonEmpty then
+        .combineWith(EditorState.isAboveLodThreshold)
+        .map: (showRefl, reflOpt, aboveLod) =>
+          if showRefl && aboveLod && reflOpt.nonEmpty then
             TessellationOverlayRenderer.renderReflection(
               tiling.coordinates,
               reflOpt.get,

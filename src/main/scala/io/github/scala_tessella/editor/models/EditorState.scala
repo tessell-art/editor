@@ -89,6 +89,13 @@ object EditorState:
     val isAddInsideActive: Signal[Boolean] =
       toolState.signal.map(_.isAddInside).distinct
 
+    /** True when the current view scale is at or above the level-of-detail threshold. Renderers gate
+      * secondary overlays (node labels, uniformity dots, symmetry axes) on this signal so they disappear when
+      * the user zooms far out and re-appear when they zoom back in.
+      */
+    val isAboveLodThreshold: Signal[Boolean] =
+      viewState.signal.map(_.viewTransform.scale).distinct.map(_ >= EditorConfig.lodMinScale).distinct
+
     /** Selected face for insertion, derived from highlighted polygon id */
     val selectedFaceForInsertion: Signal[Option[FaceId]] =
       measurementState.signal.map(_.highlightedPolygonId).distinct

@@ -17,7 +17,11 @@ object EditorConfig:
 
   // View zoom limits
   val minViewScale: Double = 0.1
-  val maxViewScale: Double = 5.0
+  val maxViewScale: Double = 20.0
+
+  // Below this view scale, secondary overlays (node labels, uniformity dots, symmetry axes)
+  // auto-hide to reduce visual noise (level-of-detail).
+  val lodMinScale: Double = 0.5
 
   // View zoom factors by input modality
   val mouseWheelZoomInFactor: Double  = 1.1

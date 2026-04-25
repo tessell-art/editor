@@ -6,11 +6,64 @@ import io.github.scala_tessella.editor.models.{EditorState, ViewTransform}
 import io.github.scala_tessella.editor.utils.geo.Geometry.*
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
+import io.github.scala_tessella.editor.utils.geo.Geometry.Bounds
 
 object ViewOperations:
 
   def clampViewScale(scale: Double): Double =
     scale.max(minViewScale).min(maxViewScale)
+
+  /** Clamps a candidate `pan` so the screen-space bounding box of the tiling (already projected by scale +
+    * rotation, but without pan applied) still intersects the canvas viewBox `[0, viewW] × [0, viewH]`. Pure:
+    * no state reads.
+    */
+  private[operations] def clampPanToBounds(
+      pan: Point,
+      viewW: Double,
+      viewH: Double,
+      screenBoundsNoPan: Bounds
+  ): Point =
+    val minPanX = -screenBoundsNoPan.max.x
+    val maxPanX = viewW - screenBoundsNoPan.min.x
+    val minPanY = -screenBoundsNoPan.max.y
+    val maxPanY = viewH - screenBoundsNoPan.min.y
+    Point(
+      pan.x.max(minPanX).min(maxPanX),
+      pan.y.max(minPanY).min(maxPanY)
+    )
+
+  /** Computes the screen-space bounding box of `worldCoords` under `transform`'s scale + rotation, with no
+    * pan applied. Returns `None` if `worldCoords` is empty. Pure: no state reads.
+    */
+  private[operations] def screenBoundsNoPan(
+      worldCoords: Iterable[Point],
+      transform: ViewTransform,
+      viewCenter: Point
+  ): Option[Bounds] =
+    val list = worldCoords.toList
+    if list.isEmpty then None
+    else
+      val rotation     = Radian(AngleDegree(transform.rotationDegrees).toBigRadian.toBigDecimal.toDouble)
+      val screenPoints = list.map(p => forwardTransform(p, viewCenter, transform.scale, rotation))
+      Bounds.fromPoints(screenPoints)
+
+  /** Returns `transform` with its `pan` clamped so the current tiling stays at least partially visible. No-op
+    * if the tiling is empty or has no boundary vertices.
+    */
+  def clampedTransform(transform: ViewTransform): ViewTransform =
+    val tiling = EditorState.tessellationState.now().currentTiling
+    if tiling.isEmpty then transform
+    else
+      val coords =
+        tiling.boundaryVertices.toOption.toList.flatten
+          .map(_.coords.toPoint)
+          .map(_.scale(canvasScale))
+      screenBoundsNoPan(coords, transform, canvasCenter) match
+        case None         => transform
+        case Some(bounds) =>
+          val viewW = canvasCenter.x * 2.0
+          val viewH = canvasCenter.y * 2.0
+          transform.copy(pan = clampPanToBounds(transform.pan, viewW, viewH, bounds))
 
   // Pure function to transform coordinates based on rotation
   private[operations] def transformCoordinates(coords: Iterable[Point], rotationDegrees: Int): List[Point] =
@@ -118,13 +171,17 @@ object ViewOperations:
     EditorState.viewState.update: s =>
 
       val vt = s.viewTransform
-      s.copy(viewTransform = vt.copy(scale = clampViewScale(vt.scale * menuZoomFactor)))
+      s.copy(viewTransform =
+        clampedTransform(vt.copy(scale = clampViewScale(vt.scale * menuZoomFactor)))
+      )
 
   def zoomOut(): Unit =
     EditorState.viewState.update: s =>
 
       val vt = s.viewTransform
-      s.copy(viewTransform = vt.copy(scale = clampViewScale(vt.scale / menuZoomFactor)))
+      s.copy(viewTransform =
+        clampedTransform(vt.copy(scale = clampViewScale(vt.scale / menuZoomFactor)))
+      )
 
   def resetView(): Unit =
     EditorState.viewState.update(_.copy(viewTransform = ViewTransform()))
@@ -213,5 +270,5 @@ object ViewOperations:
 
     // Update the view transform
     EditorState.viewState.update(_.copy(viewTransform =
-      currentTransform.withRotation(newRotationDegrees).copy(pan = newPan)
+      clampedTransform(currentTransform.withRotation(newRotationDegrees).copy(pan = newPan))
     ))
