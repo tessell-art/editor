@@ -95,3 +95,8 @@
   padding: 0.3em 0.9em;
   border-radius: 5px;
 }
+
+.light-mode .canvas-controls,
+.light-mode .tiling-controls {
+  background-color: var(--panel-soft);
+}

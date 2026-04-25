@@ -1,84 +1,9 @@
+/* Base resets and typography. Design tokens live in styles/Tokens.css. */
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  --canvas-height: 600px;
-  --text-color: #e9ecef;
-  --bg-color: #1b1e23;
-  --panel-bg: #20242a;
-  --panel-bg-strong: #252a31;
-  --panel-border: #303741;
-  --panel-border-strong: #3a434f;
-  --panel-hover: #2b3139;
-  --panel-soft: #252a31;
-  --accent: #2c7da0;
-  --accent-strong: #1d6d8d;
-  --highlight: #2aa6b8;
-  --highlight-strong: #1f8796;
-  --focus-ring: #5aa9e6;
-  --text-muted: #a9b1bb;
-  --text-muted-strong: #c4cbd3;
-  --text-subtle: #7f8a96;
-  --text-inverse: #f8f9fa;
-  --text-strong: #0b0d10;
-  --button-bg: #20242a;
-  --btn-disabled-bg: #3a4048;
-  --btn-disabled-text: #8e98a3;
-  --menu-bg: #1f2329;
-  --menu-hover: #2a3038;
-  --menu-dropdown-bg: #f4f6f8;
-  --menu-dropdown-text: #1b1e23;
-  --menu-dropdown-border: #d6dbe1;
-  --menu-dropdown-hover: #e9edf2;
-  --menu-disabled: #9aa4af;
-  --menu-mobile-bg: #1f2329;
-  --menu-mobile-border: #313844;
-  --menu-mobile-hover: #2a3038;
-  --link-color: #2c7da0;
-  --link-hover: #1d6d8d;
-  --loading-bg: rgba(10, 12, 15, 0.6);
-  --spinner-track: #2f3640;
-  --spinner-head: #5aa9e6;
-  --error-bg: #3b2025;
-  --error-text: #f4c7cf;
-  --error-border: #7a3a44;
-  --error-close-hover: #ffffff;
-  --popup-overlay: rgba(10, 12, 15, 0.7);
-  --popup-bg: #f7f9fb;
-  --popup-text: #1b1e23;
-  --popup-heading: #2c7da0;
-  --popup-link: #2c7da0;
-  --popup-muted: #6b7682;
-  --popup-bg-dark: #20242a;
-  --popup-text-dark: #e9edf2;
-  --popup-muted-dark: #a7b0bb;
-  --popup-heading-dark: #9ad4e5;
-  --popup-link-dark: #8ab4ff;
-  --popup-shadow: rgba(5, 8, 12, 0.35);
-  --color-picker-bg: #20242a;
-  --color-picker-shadow: #12151a80;
-  --color-picker-actions: #9aa4af;
-  --toggle-border: #2aa6b8;
-  --toggle-bg-active: #2aa6b8;
-  --toggle-select: #3c8c6b;
-  --toggle-select-border: #2f7558;
-  --toggle-delete: #d9534f;
-  --toggle-delete-border: #b94440;
-  --toggle-delete-hover: #c9403c;
-  --canvas-bg: #16191e;
-  --hover-green: #29c17e;
-  --preview-dark: #ffffff;
-  --preview-light: #1f2329;
-  --popup-heading-muted: #9aa4af;
-  --popup-text-muted: #b5bdc7;
-  --popup-close-hover: #d6dde5;
-  --popup-button-border: #d6dbe1;
-  --popup-button-hover: #e6eaef;
-  --on-highlight: #0b0d10;
-  --input-bg-light: #ffffff;
-  --input-border-light: #8e98a3;
-  --input-text-light: #1b1e23;
-  --status-processing: #f6b26b;
 
   color-scheme: dark;
   color: var(--text-color);
@@ -89,6 +14,18 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+.light-mode {
+  color-scheme: light;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+}
+
+.dark-mode {
+  color-scheme: dark;
+  color: var(--text-color);
+  background-color: var(--bg-color);
 }
 
 a {

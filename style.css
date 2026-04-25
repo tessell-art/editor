@@ -1,3 +1,4 @@
+@import url('./styles/Tokens.css');
 @import url('./styles/GlobalStyles.css');
 @import url('./styles/MenuBarStyles.css');
 @import url('./styles/AboutPopup.css');
@@ -7,8 +8,6 @@
 @import url('./styles/TilingControlsStyles.css');
 @import url('./styles/CanvasNodeLabelStyles.css');
 @import url('./styles/ErrorMessageStyles.css');
-@import url('./styles/LightModeThemeStyles.css');
-@import url('./styles/DarkModeThemeStyles.css');
 @import url('./styles/ResponsiveDesignMediaQueries.css');
 @import url('./styles/ColorPicker.css');
 @import url('./styles/LoadingIndicator.css');

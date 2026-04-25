@@ -98,6 +98,17 @@
 
 }
 
+.light-mode .polygon-btn {
+  background-color: var(--panel-bg-strong);
+  border-color: var(--panel-border);
+  color: var(--text-color);
+}
+
+.light-mode .polygon-btn:hover {
+  background-color: var(--panel-hover);
+  color: var(--text-strong);
+}
+
 .light-mode .polygon-btn.selected {
   border-color: var(--accent);
   background-color: var(--highlight);
@@ -113,6 +124,10 @@
   background-color: var(--input-bg-light);
   border: 1px solid var(--input-border-light);
   color: var(--input-text-light);
+}
+
+.light-mode .selected-info {
+  background-color: var(--panel-soft);
 }
 
 .corner-button {
