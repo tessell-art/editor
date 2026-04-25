@@ -226,6 +226,7 @@ object MenuBarComponent:
         shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditDoubleToInfinite))
       ),
       dropdownLink("Mirror", AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
+      dropdownLink("Fan", AppState.enterFanMode(), enabled = EditorState.canMutateTilingSignal),
 //      div(className := "menu-separator"),
 //      dropdownLinkDynamic(
 //        EditorState.editorMode.signal.map {

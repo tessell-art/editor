@@ -114,6 +114,15 @@ object AppState:
     clearMeasurements()
     TransformOperations.attemptMirroring()
 
+  /** Activates the Fan tool. The user then clicks a polygon and one of its boundary vertices to trigger the
+    * fan animation. Does nothing if processing or if the tiling is empty.
+    */
+  def enterFanMode(): Unit =
+    ifNotProcessing:
+      if !isTilingEmpty then
+        clearMeasurements()
+        toolState.update(_.copy(activeTool = Tool.Fan))
+
   /** Clears the current tiling and all measurements.
     */
   def clearTiling(): Unit =

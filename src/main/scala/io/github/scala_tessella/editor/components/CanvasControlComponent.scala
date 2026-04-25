@@ -15,7 +15,7 @@ object CanvasControlComponent:
   private def toggleTool(tool: Tool): Unit =
     EditorState.toolState.update: s =>
       if s.activeTool == tool then
-        if tool == Tool.Measurement || tool == Tool.Eraser || tool == Tool.Fan then
+        if tool == Tool.Measurement || tool == Tool.Eraser then
           AppState.clearMeasurements()
         s.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Outside)
       else
@@ -107,11 +107,6 @@ object CanvasControlComponent:
             Tool.Measurement,
             "Activate measure mode to calculate the distance between two points",
             IconsSVG.rulerIcon
-          ),
-          createToolButton(
-            Tool.Fan,
-            "Activate fan mode to multiply around boundary vertex",
-            IconsSVG.fanIcon
           ),
           button(
             child.text <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(show =>
