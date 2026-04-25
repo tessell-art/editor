@@ -28,6 +28,9 @@ object EditorConfig:
   // Polygon palette configuration
   val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
 
+  // Maximum number of distinct irregular polygons remembered in the MRU palette row
+  val irregularMRUSize: Int = 5
+
   // Default polygon fill color when no explicit color is assigned
   val defaultPolygonColor: ColorRGB = ColorRGB(76, 175, 80)
 

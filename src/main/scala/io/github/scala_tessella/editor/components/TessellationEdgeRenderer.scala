@@ -18,44 +18,33 @@ import org.scalajs.dom.EndingType.transparent
 object TessellationEdgeRenderer:
 
   private type PreviewState =
-    (Option[Int], Boolean, Option[Vector[AngleDegree]], TilingDCEL)
+    (Option[Int], Option[Vector[AngleDegree]], TilingDCEL)
 
   private val previewStateSignal: Signal[PreviewState] =
     EditorState.toolState.signal.map(_.selectedPolygon).distinct
-      .combineWith(EditorState.irregularState.signal.map(_.isIrregularSelected).distinct)
-      .combineWith(EditorState.irregularState.signal.map(_.recentIrregularPolygon).distinct)
+      .combineWith(EditorState.irregularState.signal.map(_.selectedShape).distinct)
       .combineWith(EditorState.tessellationState.signal.map(_.currentTiling).distinct)
-      .map:
-        case (maybeSides, isIrregular, maybeAngles, tiling) =>
-          (maybeSides, isIrregular, maybeAngles, tiling)
 
   private def buildFailedPlacement(
       edgeIndex: Int,
       edge: (VertexCoord, VertexCoord),
       maybeSides: Option[Int],
-      isIrregular: Boolean,
-      maybeAngles: Option[Vector[AngleDegree]],
+      selectedIrregular: Option[Vector[AngleDegree]],
       tiling: TilingDCEL,
       intoFace: Option[FaceId] = None
   ): Option[FailedPolygonPlacement] =
-    if isIrregular then
-      maybeAngles.map: angles =>
-        FailedPolygonPlacement(
-          edgeIndex,
-          angles,
-          edge,
-          tiling,
-          intoFace = intoFace
-        )
-    else
-      maybeSides.filter(_ >= 3).map: sides =>
-        FailedPolygonPlacement(
-          edgeIndex,
-          RegularPolygon(sides).angles,
-          edge,
-          tiling,
-          intoFace = intoFace
-        )
+    selectedIrregular match
+      case Some(angles) =>
+        Some(FailedPolygonPlacement(edgeIndex, angles, edge, tiling, intoFace = intoFace))
+      case None         =>
+        maybeSides.filter(_ >= 3).map: sides =>
+          FailedPolygonPlacement(
+            edgeIndex,
+            RegularPolygon(sides).angles,
+            edge,
+            tiling,
+            intoFace = intoFace
+          )
 
   def renderPerimeterEdges(
       tiling: TilingDCEL,
@@ -110,8 +99,7 @@ object TessellationEdgeRenderer:
         case (
               _,
               maybeSides: Option[Int],
-              isIrregular: Boolean,
-              maybeAngles: Option[Vector[AngleDegree]],
+              selectedIrregular: Option[Vector[AngleDegree]],
               tiling: TilingDCEL
             ) =>
           val placementOpt =
@@ -119,8 +107,7 @@ object TessellationEdgeRenderer:
               edgeIndex = edgeIndex,
               edge = edge,
               maybeSides = maybeSides,
-              isIrregular = isIrregular,
-              maybeAngles = maybeAngles,
+              selectedIrregular = selectedIrregular,
               tiling = tiling,
               intoFace = Some(faceId)
             )
@@ -186,8 +173,7 @@ object TessellationEdgeRenderer:
         case (
               _,
               maybeSides: Option[Int],
-              isIrregular: Boolean,
-              maybeAngles: Option[Vector[AngleDegree]],
+              selectedIrregular: Option[Vector[AngleDegree]],
               tiling: TilingDCEL
             ) =>
           val placementOpt =
@@ -195,8 +181,7 @@ object TessellationEdgeRenderer:
               edgeIndex = edgeIndex,
               edge = edge,
               maybeSides = maybeSides,
-              isIrregular = isIrregular,
-              maybeAngles = maybeAngles,
+              selectedIrregular = selectedIrregular,
               tiling = tiling
             )
           EditorState.previewState.update(_.copy(previewPlacement = placementOpt))

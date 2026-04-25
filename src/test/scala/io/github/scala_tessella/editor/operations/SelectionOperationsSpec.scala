@@ -33,13 +33,13 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.colorState.update(_.copy(polygonColors = Map(faceId -> color)))
     EditorState.toolState.update(_.copy(activeTool = Some(Tool.ShapeAndColorPicker)))
     EditorState.toolState.update(_.copy(selectedPolygon = None))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = true))
+    EditorState.irregularState.update(_.selectHead)
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
     assertEquals(EditorState.colorState.now().fillColor, color)
     assertEquals(EditorState.toolState.now().selectedPolygon, Some(4))
-    assertEquals(EditorState.irregularState.now().isIrregularSelected, false)
+    assertEquals(EditorState.irregularState.now().isSelected, false)
     assertEquals(EditorState.toolState.now().activeTool, None)
   }
 
@@ -144,7 +144,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     assertEquals(EditorState.toolState.now().activeTool, Some(Tool.ShapeAndColorPicker))
     assertEquals(EditorState.toolState.now().selectedPolygon, None)
-    assertEquals(EditorState.irregularState.now().isIrregularSelected, false)
+    assertEquals(EditorState.irregularState.now().isSelected, false)
   }
 
   test("handlePerimeterEdgeClick should show error when tiling is empty and a polygon is selected") {
@@ -152,7 +152,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.irregularState.update(_.deselected)
     EditorState.errorState.update(_.copy(errorMessage = None))
 
     SelectionOperations.handlePerimeterEdgeClick("edge-1", 0)

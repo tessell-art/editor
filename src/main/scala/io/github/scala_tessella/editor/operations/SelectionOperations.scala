@@ -196,15 +196,13 @@ object SelectionOperations:
               face.halfEdges.toOption.foreach: edges =>
 
                 val sides = edges.size
-                EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+                EditorState.irregularState.update(_.deselected)
                 EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
             else
               face.angles.toOption.foreach: angles =>
 
                 // remember latest irregular + select it
-                EditorState.irregularState.update(
-                  _.copy(recentIrregularPolygon = Some(angles.toVector), isIrregularSelected = true)
-                )
+                EditorState.irregularState.update(_.withShape(angles.toVector, selectIt = true))
                 EditorState.toolState.update(_.copy(selectedPolygon = None))
             deactivateActiveTool()
           case None                =>
@@ -279,7 +277,7 @@ object SelectionOperations:
       val context = PerimeterClickContext(
         tiling = EditorState.tessellationState.now().currentTiling,
         selectedPolygon = EditorState.toolState.now().selectedPolygon,
-        isIrregularSelected = EditorState.irregularState.now().isIrregularSelected
+        isIrregularSelected = EditorState.irregularState.now().isSelected
       )
       context match
         case PerimeterClickContext(_, None, false)                  => togglePerimeterEdgeSelection(edgeId)

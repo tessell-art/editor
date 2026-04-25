@@ -42,7 +42,9 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     EditorState.tessellationState.update(_.copy(currentTiling =
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
-    EditorState.irregularState.update(_.copy(recentIrregularPolygon = Some(IrregularState.initialShape)))
+    EditorState.irregularState.set(
+      IrregularState(recentIrregularPolygons = Vector(IrregularState.initialShape), selectedIndex = None)
+    )
     UndoManager.clearHistory()
 
     TessellationOperations.initializeWithIrregularIfEmpty()
@@ -72,7 +74,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.irregularState.update(_.deselected)
     EditorState.errorState.update(_.copy(errorMessage = None))
     val done   = Promise[Unit]()
 
@@ -90,8 +92,9 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = None))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = true))
-    EditorState.irregularState.update(_.copy(recentIrregularPolygon = Some(IrregularState.initialShape)))
+    EditorState.irregularState.set(
+      IrregularState(recentIrregularPolygons = Vector(IrregularState.initialShape), selectedIndex = Some(0))
+    )
     EditorState.errorState.update(_.copy(errorMessage = None))
     val done   = Promise[Unit]()
 

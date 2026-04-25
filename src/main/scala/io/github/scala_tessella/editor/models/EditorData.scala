@@ -6,6 +6,7 @@ import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
+import io.github.scala_tessella.ring_seq.RingSeq.isRotationOrReflectionOf
 import org.scalajs.dom
 
 type VertexCoord = (id: VertexId, point: Point)
@@ -288,17 +289,57 @@ object AnimationState:
     mirrorAnimation = None
   )
 
-/** Irregular-polygon-palette-state aggregate: the latest irregular shape entered and whether it's currently
-  * selected. The derived `selectedIrregularPolygon` signal lives on `EditorState`.
+/** Irregular-polygon-palette-state aggregate: a bounded MRU of recently used irregular shapes (head =
+  * most-recent), plus the index of the one currently selected, if any. The derived `selectedIrregularPolygon`
+  * signal lives on `EditorState`.
   */
 case class IrregularState(
-    recentIrregularPolygon: Option[Vector[AngleDegree]],
-    isIrregularSelected: Boolean
-)
+    recentIrregularPolygons: Vector[Vector[AngleDegree]],
+    selectedIndex: Option[Int]
+):
+  /** Whether any irregular polygon is currently selected. */
+  def isSelected: Boolean = selectedIndex.isDefined
+
+  /** The currently selected irregular shape, if any. */
+  def selectedShape: Option[Vector[AngleDegree]] =
+    selectedIndex.flatMap(recentIrregularPolygons.lift)
+
+  /** The most-recent (head) irregular shape, if any. */
+  def headOption: Option[Vector[AngleDegree]] = recentIrregularPolygons.headOption
+
+  /** Add a shape at the head of the MRU, deduping by rotation/reflection equivalence and bounding to
+    * `EditorConfig.irregularMRUSize`. If `selectIt` is true, the new head becomes the selection.
+    */
+  def withShape(shape: Vector[AngleDegree], selectIt: Boolean): IrregularState =
+    val existingIdx  = recentIrregularPolygons.indexWhere(_.isRotationOrReflectionOf(shape))
+    val nextList     =
+      if existingIdx >= 0 then
+        // Move existing entry to head, replacing its angle vector with the latest orientation
+        shape +:
+          (recentIrregularPolygons.take(existingIdx)
+            ++ recentIrregularPolygons.drop(existingIdx + 1))
+      else
+        (shape +: recentIrregularPolygons).take(EditorConfig.irregularMRUSize)
+    val nextSelected = if selectIt then Some(0) else selectedIndex
+    copy(recentIrregularPolygons = nextList, selectedIndex = nextSelected)
+
+  /** Replace the entry at index 0 (head) by applying `f`. No-op if the MRU is empty. */
+  def updateHead(f: Vector[AngleDegree] => Vector[AngleDegree]): IrregularState =
+    recentIrregularPolygons.headOption match
+      case Some(v) if v.nonEmpty =>
+        copy(recentIrregularPolygons = recentIrregularPolygons.updated(0, f(v)))
+      case _                     => this
+
+  /** Drop selection. */
+  def deselected: IrregularState = copy(selectedIndex = None)
+
+  /** Select the head, if the MRU is non-empty. */
+  def selectHead: IrregularState =
+    if recentIrregularPolygons.nonEmpty then copy(selectedIndex = Some(0)) else this
 
 object IrregularState:
   val initialShape: Vector[AngleDegree] = Vector(60, 120, 60, 120).map(AngleDegree(_))
   val initial: IrregularState           = IrregularState(
-    recentIrregularPolygon = Some(initialShape),
-    isIrregularSelected = false
+    recentIrregularPolygons = Vector(initialShape),
+    selectedIndex = None
   )

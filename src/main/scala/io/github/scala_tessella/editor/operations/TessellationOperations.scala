@@ -41,7 +41,7 @@ object TessellationOperations:
   def selectPolygon(sides: Int): Unit =
     ifNotProcessing:
       // Selecting a regular polygon deselects the irregular
-      EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+      EditorState.irregularState.update(_.deselected)
       EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
 
       if EditorState.tessellationState.now().currentTiling.isEmpty then
@@ -70,15 +70,15 @@ object TessellationOperations:
   /** Select the irregular polygon in the palette (deselect regular if any). */
   def selectIrregularInPalette(): Unit =
     ifNotProcessing:
-      if EditorState.irregularState.now().recentIrregularPolygon.isDefined then
+      if EditorState.irregularState.now().recentIrregularPolygons.nonEmpty then
         EditorState.toolState.update(_.copy(selectedPolygon = None))
-        EditorState.irregularState.update(_.copy(isIrregularSelected = true))
+        EditorState.irregularState.update(_.selectHead)
 
   /** If the tiling is empty and a recent irregular exists, initialize the tiling with it. */
   def initializeWithIrregularIfEmpty(): Unit =
     ifNotProcessing:
       if EditorState.tessellationState.now().currentTiling.isEmpty then
-        EditorState.irregularState.now().recentIrregularPolygon match
+        EditorState.irregularState.now().headOption match
           case Some(angles) =>
             UndoManager.saveState()
             TilingDCEL.createSimplePolygon(angles).toOption match

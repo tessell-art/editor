@@ -44,9 +44,7 @@ object EditorState:
 
   /** Currently selected irregular polygon (shape + "is selected?" combined). */
   val selectedIrregularPolygon: Signal[Option[Vector[AngleDegree]]] =
-    irregularState.signal
-      .map(s => if s.isIrregularSelected then s.recentIrregularPolygon else None)
-      .distinct
+    irregularState.signal.map(_.selectedShape).distinct
 
   object DerivedState:
     /** True when there is no active tiling. */

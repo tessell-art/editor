@@ -32,34 +32,27 @@ object PlacementOperations:
 
   private def resolvePolygonPlacementKind(
       maybeSides: Option[Int],
-      isIrregularSelected: Boolean,
-      recentIrregular: Option[Vector[AngleDegree]]
+      selectedIrregular: Option[Vector[AngleDegree]]
   ): Option[PolygonPlacementKind] =
-    (maybeSides, isIrregularSelected) match
-      case (None, false)        =>
+    (maybeSides, selectedIrregular) match
+      case (None, None)         =>
         Logger.warn("Both regular polygon and irregular polygon unselected")
         None
-      case (Some(_), true)      =>
+      case (Some(_), Some(_))   =>
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
         None
-      case (Some(sides), false) => Some(RegularPlacement(sides))
-      case (None, true)         =>
-        recentIrregular match
-          case Some(angles) => Some(IrregularPlacement(angles))
-          case None         =>
-            Logger.error("Should not happen: irregular polygon selected but no recent shape available")
-            None
+      case (Some(sides), None)  => Some(RegularPlacement(sides))
+      case (None, Some(angles)) => Some(IrregularPlacement(angles))
 
   private def currentPolygonPlacementContext(emptyTilingMessage: String): Option[PolygonPlacementContext] =
-    val tiling      = EditorState.tessellationState.now().currentTiling
-    val maybeSides  = EditorState.toolState.now().selectedPolygon
-    val isIrregular = EditorState.irregularState.now().isIrregularSelected
-    val recentShape = EditorState.irregularState.now().recentIrregularPolygon
+    val tiling            = EditorState.tessellationState.now().currentTiling
+    val maybeSides        = EditorState.toolState.now().selectedPolygon
+    val selectedIrregular = EditorState.irregularState.now().selectedShape
     if tiling.isEmpty then
       ErrorOperations.showError(emptyTilingMessage)
       None
     else
-      resolvePolygonPlacementKind(maybeSides, isIrregular, recentShape).map: placement =>
+      resolvePolygonPlacementKind(maybeSides, selectedIrregular).map: placement =>
         PolygonPlacementContext(tiling, placement)
 
   /** Find the inner face whose boundary contains the directed edge (v1 -> v2). */

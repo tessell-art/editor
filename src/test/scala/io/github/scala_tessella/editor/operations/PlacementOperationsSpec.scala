@@ -35,7 +35,7 @@ class PlacementOperationsSpec extends FunSuite with EditorStateFixture:
 
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.irregularState.update(_.deselected)
     EditorState.colorState.update(_.copy(fillColor = fill))
     EditorState.errorState.update(_.copy(errorMessage = None))
     UndoManager.clearHistory()
@@ -58,7 +58,7 @@ class PlacementOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(3)))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.irregularState.update(_.deselected)
     EditorState.errorState.update(_.copy(errorMessage = None))
     UndoManager.clearHistory()
 
@@ -75,7 +75,7 @@ class PlacementOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = None))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.irregularState.update(_.deselected)
     EditorState.errorState.update(_.copy(errorMessage = None))
     UndoManager.clearHistory()
 
@@ -93,10 +93,9 @@ class PlacementOperationsSpec extends FunSuite with EditorStateFixture:
     val tiling = TilingBuilders.freshSquare()
     EditorState.tessellationState.update(_.copy(currentTiling = tiling))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
-    EditorState.irregularState.update(_.copy(
-      isIrregularSelected = true,
-      recentIrregularPolygon = Some(IrregularState.initialShape)
-    ))
+    EditorState.irregularState.set(
+      IrregularState(recentIrregularPolygons = Vector(IrregularState.initialShape), selectedIndex = Some(0))
+    )
     EditorState.errorState.update(_.copy(errorMessage = None))
     UndoManager.clearHistory()
 
@@ -116,7 +115,7 @@ class PlacementOperationsSpec extends FunSuite with EditorStateFixture:
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
     EditorState.toolState.update(_.copy(selectedPolygon = Some(4)))
-    EditorState.irregularState.update(_.copy(isIrregularSelected = false))
+    EditorState.irregularState.update(_.deselected)
     EditorState.errorState.update(_.copy(errorMessage = None))
 
     PlacementOperations.attemptPolygonInsertion(
