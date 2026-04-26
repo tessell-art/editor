@@ -131,6 +131,7 @@
   .tiling-info-panel,
   .status-row,
   .mode-badge,
+  .zoom-rotation,
   .empty-state-card {
     border: 1px solid CanvasText;
   }

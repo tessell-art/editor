@@ -89,12 +89,25 @@ object EditorCanvasComponent:
                 case (e, false) => e
           ) --> TouchEventHandler.handleTouchCancel
         ),
-        // HTML placeholder text is now inside the wrapper
+        // Zoom / rotation status chip — mirrors ModeBadgeComponent's structure (label + value spans)
+        // so ZoomRotation.css can render an identical-looking badge in the opposite corner.
         div(
-          child.text <-- EditorState.viewState.signal.map(_.viewTransform).distinct.map(t =>
-            f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}°"
+          className := "zoom-rotation",
+          span(className := "zoom-rotation-label", "Zoom:"),
+          span(
+            className    := "zoom-rotation-value",
+            child.text <--
+              EditorState.viewState.signal.map(_.viewTransform.scale).distinct
+                .map(s => f"${s * 100}%.0f${'%'}")
           ),
-          className := "zoom-rotation"
+          span(className := "zoom-rotation-sep", "·"),
+          span(className := "zoom-rotation-label", "Rotation:"),
+          span(
+            className    := "zoom-rotation-value",
+            child.text <--
+              EditorState.viewState.signal.map(_.viewTransform.rotationDegrees).distinct
+                .map(r => s"$r°")
+          )
         ),
         // Tiling info side panel — slides in from the right edge when toggled. Lives inside the
         // canvas wrapper so it floats over the canvas (overlay, not a separate grid column).
