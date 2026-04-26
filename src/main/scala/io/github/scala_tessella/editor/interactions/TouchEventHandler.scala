@@ -101,7 +101,7 @@ object TouchEventHandler:
             EditorState.viewState.update: s =>
 
               val vt = s.viewTransform
-              s.copy(viewTransform = ViewOperations.clampedTransform(vt.copy(pan = vt.pan + panD)))
+              s.copy(viewTransform = vt.copy(pan = vt.pan + panD))
             lastPanPoint.set(Some(touchPoint))
     else if touches.length == 2 then
       val initDistOpt     = initialTouchDistance.now()
@@ -133,11 +133,9 @@ object TouchEventHandler:
             val pointer = getPointer(canvasElement, segment)
             val newPan  = pointer - transformedPoint
             EditorState.viewState.update(_.copy(viewTransform =
-              ViewOperations.clampedTransform(
-                EditorState.viewState.now().viewTransform
-                  .copy(scale = newScale, pan = newPan)
-                  .withRotation(newRotation.toDegrees.toInt)
-              )
+              EditorState.viewState.now().viewTransform
+                .copy(scale = newScale, pan = newPan)
+                .withRotation(newRotation.toDegrees.toInt)
             ))
         case _                                                                                            => // State wasn't correctly initialized
 

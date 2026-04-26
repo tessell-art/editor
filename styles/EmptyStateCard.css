@@ -1,0 +1,99 @@
+/* Empty-state card — shown centered on the canvas when there is no tessellation.
+   Replaces the previous in-SVG overlay text. */
+
+.empty-state-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.5rem 2rem;
+  min-width: 18rem;
+  max-width: 28rem;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px var(--popup-shadow);
+  text-align: center;
+  z-index: 4;
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-color);
+}
+
+.empty-state-hint {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.empty-state-arrow {
+  display: inline-block;
+  margin-left: 0.2em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.empty-state-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.empty-state-divider::before,
+.empty-state-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--panel-border);
+}
+
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.empty-state-action {
+  padding: 0.5em 1.1em;
+  font-size: 0.95rem;
+  border: 1px solid var(--panel-border-strong);
+  border-radius: 8px;
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.empty-state-action:hover:not(:disabled) {
+  background-color: var(--panel-hover);
+  border-color: var(--accent);
+}
+
+.empty-state-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty-state-action--primary {
+  border-color: var(--accent);
+  color: var(--text-color);
+}
+
+.empty-state-action--primary:hover:not(:disabled) {
+  background-color: var(--highlight);
+  color: var(--on-highlight);
+  border-color: var(--accent-strong);
+}

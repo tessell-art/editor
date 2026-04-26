@@ -2,6 +2,7 @@ package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.components.IconsSVG
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.models.EditorState
 
 object GuidePopup:
@@ -14,7 +15,10 @@ object GuidePopup:
   def element: Element =
     popupOverlay(closeGuide)(
       popupContent(closeGuide)(
-        h2("Guide"),
+        h2(child.text <-- I18n.t("popup.guide.title")),
+        // TODO i18n long-form: section titles + body paragraphs below remain English in v1.
+        // Mixed inline icons / kbd / bold elements per list item make per-fragment keys clumsy;
+        // translate when the i18n pipeline gains rich-text support.
         div(
           className := "popup-text-scrollable",
           h3("Creating a Tiling"),
@@ -58,7 +62,7 @@ object GuidePopup:
           ul(
             li(
               "Use the ",
-              IconsSVG.inserterIcon,
+//              IconsSVG.inserterIcon,
               " ",
               i("Insertion"),
               " tool to add a regular polygon to the interior of an existing one."
@@ -204,7 +208,7 @@ object GuidePopup:
               IconsSVG.rulerIcon,
               " ",
               i("Measurement"),
-              " tool to calculate the unit distance between two key points (vertex, mid-side, center) of the polygons."
+              " tool to calculate unit distances and angles for the key points (vertex, mid-side, center) of the polygons."
             ),
             li(
               "When you click on a polygon the key points will be highlighted, ",

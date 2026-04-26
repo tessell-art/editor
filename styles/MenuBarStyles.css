@@ -1,265 +1,172 @@
-/* Menu Bar styles */
-.menu-bar {
-    background-color: var(--menu-bg);
-    color: white;
-    display: flex;
-    justify-content: space-between; /* Aligns children to left and right */
-    padding: 0 10px;
-    position: relative;
-    z-index: 1000;
-    height: 40px;
-    margin-bottom: 8px;
-    align-items: center;
-}
-
-.menu-left-section {
-    display: flex;
-    align-items: center;
-}
-
-.menu-bar-logo {
-    height: 30px;
-    margin-right: 10px;
-}
-
-.menu-toggle {
-    display: none; /* Hidden on desktop */
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0px 10px;
-    /*margin-top: -2px*/
-}
-
-.menu-items-container {
-    display: flex;
-    align-items: center;
-}
+/* Menu drop-downs (File / Edit / View / Help). Outer-shell chrome
+   (logo, hamburger, theme toggle, language slot) lives in AppShell.css. */
 
 .menu-item {
-    position: relative;
+  position: relative;
 }
 
 .menu-button {
-    background: none;
-    border: none;
-    color: white;
-    padding: 5px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    font-family: inherit;
-    border-radius: 0px;
+  background: none;
+  border: none;
+  color: white;
+  padding: 5px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 0;
 }
 
-.menu-button:hover, .menu-item:hover > .menu-button {
-    background-color: var(--menu-hover);
+.menu-button:hover,
+.menu-item:hover > .menu-button {
+  background-color: var(--menu-hover);
 }
 
 .dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: var(--menu-dropdown-bg);
-    min-width: 220px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
+  display: none;
+  position: absolute;
+  background-color: var(--menu-dropdown-bg);
+  min-width: 220px;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  z-index: 1;
 }
 
 .menu-item:hover .dropdown-content {
-    display: block;
+  display: block;
 }
 
 .dropdown-content a {
-    color: var(--menu-dropdown-text);
-    padding: 12px 16px;
-    text-decoration: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-align: left;
-    font-size: 14px;
+  color: var(--menu-dropdown-text);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  font-size: 14px;
 }
 
 .dropdown-content a:hover {
-    background-color: var(--menu-dropdown-hover);
+  background-color: var(--menu-dropdown-hover);
 }
 
 .dropdown-content a.disabled {
-    color: var(--menu-disabled);
-    pointer-events: none;
-    cursor: default;
+  color: var(--menu-disabled);
+  pointer-events: none;
+  cursor: default;
 }
 
 .shortcut {
-    color: var(--text-subtle);
-    font-size: 14px;
+  color: var(--text-subtle);
+  font-size: 14px;
 }
 
 .menu-separator {
-    border-top: 1px solid var(--menu-dropdown-border);
-    margin: 5px 0;
+  border-top: 1px solid var(--menu-dropdown-border);
+  margin: 5px 0;
 }
 
-/* Theme toggle button */
-.theme-toggle-button {
-    background: var(--menu-bg);
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-size: 22px;
-    padding: 0 10px;
-    display: flex;
-    align-items: center;
-    border-radius: 4px;
-    width: 38px;
-}
-
-.theme-toggle-button:hover {
-    /*background-color: #555;*/
-}
-
-/* --- Sub-menu Styling --- */
+/* --- Sub-menu (e.g. New from Template ▸) --- */
 
 .submenu-item {
-    position: relative;
+  position: relative;
 }
 
-/* The trigger link for the submenu, e.g., "New from Template..." */
 .submenu-item > a {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* The arrow character on the sub-menu trigger */
 .submenu-arrow {
-    margin-left: auto;
-    padding-left: 1rem;
+  margin-left: auto;
+  padding-left: 1rem;
 }
 
-/* The container for the submenu dropdown content */
 .submenu-content {
-    display: none;
-    position: absolute;
-    left: 100%; /* Position to the right of the parent */
-    top: -1px; /* Align vertically with the trigger link */
-    background-color: var(--menu-dropdown-bg); /* Corrected: Use a solid color */
-    min-width: 250px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 1;
-    border: 1px solid var(--menu-dropdown-border); /* Corrected: Use a solid color */
-    /*border-radius: 4px; !* Corrected: Use a specific value *!*/
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: -1px;
+  background-color: var(--menu-dropdown-bg);
+  min-width: 250px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  border: 1px solid var(--menu-dropdown-border);
 }
 
-/* Show the submenu on hover of its parent item */
 .submenu-item:hover > .submenu-content {
+  display: block;
+}
+
+/* --- Phone widths: nested-list rendering of the menu when the drawer is open ---
+   600px matches AppShell.css and the rest of the phone-tier styling. */
+@media (max-width: 600px) {
+  .app-shell-menu.open .submenu-item > a {
+    font-weight: bold;
+  }
+
+  .app-shell-menu.open .submenu-arrow {
+    display: none;
+  }
+
+  .app-shell-menu.open .submenu-content {
     display: block;
-}
+    position: static;
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+    padding-left: 16px;
+    min-width: auto;
+  }
 
-/* --- Mobile / Hamburger Menu Specifics --- */
-@media (max-width: 768px) {
-    /* When the hamburger menu is open... */
-    .menu-items-container.open .submenu-item > a {
-        /* Style the trigger to look like a category header */
-        font-weight: bold;
-    }
+  .submenu-item:hover > .submenu-content {
+    display: none;
+  }
 
-    .menu-items-container.open .submenu-arrow {
-        display: none; /* Hide arrow, it's not a fly-out on mobile */
-    }
+  .app-shell-menu.open .submenu-item:hover > .submenu-content {
+    display: block;
+  }
 
-    .menu-items-container.open .submenu-content {
-        /* On mobile, sub-menus are not fly-outs. They are just nested lists. */
-        display: block; /* Make it visible */
-        position: static; /* Not absolute */
-        box-shadow: none;
-        border: none;
-        background-color: transparent;
-        padding-left: 16px; /* Indent the template links */
-        min-width: auto;
-    }
+  .shortcut {
+    display: none;
+  }
 
-    /* Disable the hover effect for the submenu on touch devices */
-    .submenu-item:hover > .submenu-content {
-        display: none;
-    }
+  .menu-item {
+    width: 100%;
+  }
 
-    .menu-items-container.open .submenu-item:hover > .submenu-content {
-        display: block;
-    }
+  .menu-button {
+    width: 99%;
+    text-align: left;
+  }
 
-    .menu-left-section {
-        flex-grow: 1;
-    }
+  .dropdown-content {
+    position: static;
+    display: none;
+    box-shadow: none;
+    background-color: var(--menu-mobile-border);
+    border-top: 1px solid var(--menu-mobile-border);
+  }
 
-    .menu-toggle {
-        display: block; /* Show hamburger */
-    }
+  .menu-item:focus-within .dropdown-content {
+    display: block;
+  }
 
-    .shortcut {
-        display: none;
-    }
-
-    .menu-items-container {
-        display: none; /* Hide menu items by default */
-        position: absolute;
-        top: 100%;
-        left: 0;
-        background-color: var(--menu-mobile-bg);
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .menu-items-container.open {
-        display: flex; /* Show when toggled */
-    }
-
-    .menu-item {
-        width: 100%;
-    }
-
-    .menu-button {
-        width: 99%;
-        text-align: left;
-    }
-
-    .dropdown-content {
-        position: static;
-        display: none;
-        box-shadow: none;
-        background-color: var(--menu-mobile-border);
-        border-top: 1px solid var(--menu-mobile-border);
-    }
-
-    .menu-item:focus-within .dropdown-content {
-        display: block;
-    }
-
-    .dropdown-content a {
-        color: white;
-    }
-
-    .dropdown-content a:hover {
-        background-color: var(--menu-mobile-hover);
-    }
-}
-
-/* Make menu buttons dark in light mode, as requested */
-/* We use more specific selectors to ensure they override the light theme styles. */
-.light-mode .menu-item > .menu-button,
-.light-mode .menu-toggle,
-.light-mode nav.menu-bar .theme-toggle-button {
-    background-color: var(--menu-bg);
+  .dropdown-content a {
     color: white;
+  }
+
+  .dropdown-content a:hover {
+    background-color: var(--menu-mobile-hover);
+  }
 }
 
-.light-mode .menu-item > .menu-button:hover,
-.light-mode nav.menu-bar .theme-toggle-button:hover {
-    /*background-color: #555;*/
+/* Light-mode keeps the menu buttons dark (matches the dark shell chrome). */
+.light-mode .menu-item > .menu-button {
+  background-color: var(--menu-bg);
+  color: white;
 }
 
 .light-mode .dropdown-content a:hover {
-    color: black;
+  color: black;
 }

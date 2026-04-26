@@ -2,127 +2,169 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.AppState
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.models.{AddSubmode, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
-import io.github.scala_tessella.editor.utils.SvgDsl.*
+import io.github.scala_tessella.editor.operations.{ColorOperations, ToolActions}
 
+/** Canvas tool strip — sits above the canvas on desktop / tablet.
+  *
+  * Order (left to right):
+  *   1. Add Polygon (with inline Outside / Inside cycle)
+  *   2. Eraser
+  *   3. Color Picker
+  *   4. Shape & Color Picker
+  *   5. Select-by-Color
+  *   6. Measurement
+  *   7. Spacer
+  *   8. Labels toggle
+  *   9. Undo / Redo
+  *
+  * Mobile bottom-toolbar is a separate component (Phase 3).
+  */
 object CanvasControlComponent:
 
-  // Toggling a non-default tool: clicking it again returns to the default mode
-  // (AddPolygon + Outside). Tools that own clickable-points clear measurements on
-  // both activation and deactivation.
-  private def toggleTool(tool: Tool): Unit =
-    EditorState.toolState.update: s =>
-      if s.activeTool == tool then
-        if tool == Tool.Measurement || tool == Tool.Eraser then
-          AppState.clearMeasurements()
-        s.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Outside)
-      else
-        AppState.clearMeasurements()
-        s.copy(activeTool = tool)
+  private def addPolygonButton(): Element =
+    val isActive = EditorState.toolState.signal.map(_.activeTool == Tool.AddPolygon).distinct
 
-  // Toggle between AddPolygon's Outside (default) and Inside sub-modes. Replaces
-  // the former Tool.Inserter button.
-  private def toggleAddInside(): Unit =
-    EditorState.toolState.update: s =>
-      if s.isAddInside then
-        s.copy(addSubmode = AddSubmode.Outside)
-      else
-        AppState.clearMeasurements()
-        s.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Inside)
+    val labelText: Signal[String] =
+      isActive
+        .combineWith(
+          EditorState.toolState.signal.map(_.addSubmode).distinct,
+          EditorState.localeState.signal
+        )
+        .map: (active, sub, _) =>
 
-  private def createToolButton(tool: Tool, titleText: String, icon: Element): Element =
+          val subKey = sub match
+            case AddSubmode.Outside => "tool.addPolygon.outside"
+            case AddSubmode.Inside  => "tool.addPolygon.inside"
+          if active then I18n.tNow("tool.addPolygon.activeFmt", I18n.tNow(subKey))
+          else I18n.tNow("tool.addPolygon")
+
+    val tooltipText: Signal[String] =
+      isActive.combineWith(EditorState.localeState.signal).map: (active, _) =>
+        if active then I18n.tNow("tool.addPolygon.tooltip.active")
+        else I18n.tNow("tool.addPolygon.tooltip.inactive")
+
+    button(
+      className := "toggle-btn add-polygon-btn",
+      cls("active") <-- isActive,
+      title <-- tooltipText,
+      disabled <-- EditorState.uiState.signal.map(_.isProcessing).distinct,
+      onClick.compose(gate) --> { _ =>
+
+        ToolActions.cycleOrActivateAddPolygon()
+      },
+      IconsSVG.plusIcon,
+      span(className := "tool-button-label", child.text <-- labelText)
+    )
+
+  private def createToolButton(tool: Tool, labelKey: String, titleKey: String, icon: Element): Element =
     button(
       icon,
+      span(className := "tool-button-label", child.text <-- I18n.t(labelKey)),
       className := "toggle-btn",
       cls("active") <-- EditorState.toolState.signal.map(_.activeTool == tool).distinct,
       onClick.compose(gate) --> { _ =>
 
-        toggleTool(tool)
+        ToolActions.toggleTool(tool)
       },
-      title     := titleText
+      title <-- I18n.t(titleKey)
     )
 
-  private def createAddInsideButton(): Element =
+  /** Compact swatch showing the current fill color. Click opens the color picker; OK applies to the current
+    * selection (or sets the default fill if nothing is selected) — same as Edit → Fill Color…
+    */
+  private def fillButton(): Element =
     button(
-      IconsSVG.inserterIcon,
-      className := "toggle-btn",
-      cls("active") <-- EditorState.isAddInsideActive,
+      className := "fill-swatch",
+      tpe       := "button",
+      title <-- I18n.t("tool.fill.title"),
+      div(
+        className := "fill-swatch-chip",
+        backgroundColor <-- EditorState.colorState.signal.map(_.fillColor).distinct.map {
+          case (r, g, b) => f"rgb($r,$g,$b)"
+        }
+      ),
       onClick.compose(gate) --> { _ =>
 
-        toggleAddInside()
+        ColorOperations.openFillColorPicker()
+      }
+    )
+
+  private def labelsToggleButton(): Element =
+    val showSignal = EditorState.viewState.signal.map(_.showNodeLabels).distinct
+    button(
+      span(
+        className := "tool-button-label",
+        child.text <-- showSignal.combineWith(EditorState.localeState.signal).map { case (show, _) =>
+          I18n.tNow(if show then "tool.labels.on" else "tool.labels.off")
+        }
+      ),
+      className := "toggle-btn responsive-control labels-toggle",
+      cls("active") <-- showSignal,
+      onClick --> { _ =>
+
+        AppState.toggleNodeLabels()
       },
-      title     := "Activate insertion mode to add interior polygons"
+      title <-- showSignal.combineWith(EditorState.localeState.signal).map { case (show, _) =>
+        I18n.tNow(if show then "tool.labels.hide" else "tool.labels.show")
+      }
+    )
+
+  private def infoToggleButton(): Element =
+    val showSignal = EditorState.viewState.signal.map(_.showTilingInfo).distinct
+    button(
+      className := "toggle-btn info-toggle",
+      cls("active") <-- showSignal,
+      onClick --> { _ =>
+
+        AppState.toggleShowTilingInfo()
+      },
+      title <-- showSignal.combineWith(EditorState.localeState.signal).map { case (show, _) =>
+        I18n.tNow(if show then "tool.info.hide" else "tool.info.show")
+      },
+      "ⓘ"
     )
 
   def element: Element =
     div(
+      className := "canvas-controls",
       div(
-        className := "canvas-controls",
+        className := "tool-strip",
+        // Mode buttons
         div(
-          className := "control-group",
-          button(
-            "Fill ",
-            svg.svg(
-              widthHeightCoords(Point(24, 24)),
-              svg.rect(
-                rectCoords(LineSegment(Point(2, 2), Point(18, 18))),
-                svg.fill <-- EditorState.colorState.signal.map(_.fillColor).distinct.map { case (r, g, b) =>
-                  f"rgb($r,$g,$b)"
-                }
-              )
-            ),
-            onClick.compose(stream =>
-              gate(stream).withCurrentValueOf(EditorState.colorState.signal.map(_.fillColor).distinct)
-            ) --> { case (_, color) =>
-              // Use shared state from EditorState
-              EditorState.colorState.update(_.copy(tempColor = color))
-              EditorState.colorState.update(_.copy(showColorPicker = true))
-            },
-            className := "fill-color-btn"
-          ),
+          className   := "tool-strip-modes",
+          addPolygonButton(),
+          createToolButton(Tool.Eraser, "tool.eraser", "tool.eraser.title", IconsSVG.eraserIcon),
           createToolButton(
             Tool.ColorPicker,
-            "Activate color picker to select a color from an existing polygon",
+            "tool.colorPicker",
+            "tool.colorPicker.title",
             IconsSVG.eyeDropperIcon
           ),
           createToolButton(
             Tool.ShapeAndColorPicker,
-            "Activate shape and color picker to select the shape and color from an existing polygon",
+            "tool.shapeColor",
+            "tool.shapeColor.title",
             IconsSVG.eyeDropperPentagonIcon
           ),
           createToolButton(
             Tool.SelectByColor,
-            "Activate selector to select all polygons with the same color",
+            "tool.selectByColor",
+            "tool.selectByColor.title",
             IconsSVG.selectByColorIcon
           ),
-          createToolButton(
-            Tool.Eraser,
-            "Activate deletion mode to delete polygons",
-            IconsSVG.eraserIcon
-          ),
-          createAddInsideButton(),
-          createToolButton(
-            Tool.Measurement,
-            "Activate measure mode to calculate the distance between two points",
-            IconsSVG.rulerIcon
-          ),
-          button(
-            child.text <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(show =>
-              if show then "Labels: ON" else "Labels: OFF"
-            ),
-            className := "toggle-btn responsive-control",
-            cls("active") <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map(identity),
-            onClick --> { _ =>
-
-              AppState.toggleNodeLabels()
-            },
-            title <-- EditorState.viewState.signal.map(_.showNodeLabels).distinct.map { show =>
-
-              if show then "Click to hide the node labels" else "Click to show the node labels"
-            }
-          ),
+          createToolButton(Tool.Measurement, "tool.measurement", "tool.measurement.title", IconsSVG.rulerIcon)
+        ),
+        // Spacer pushes ancillary controls to the right
+        div(className := "tool-strip-spacer"),
+        // Ancillary controls
+        div(
+          className   := "tool-strip-aux",
+          fillButton(),
+          labelsToggleButton(),
+          infoToggleButton(),
           UndoComponent.element
         )
       )

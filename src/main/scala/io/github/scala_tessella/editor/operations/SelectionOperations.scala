@@ -1,10 +1,10 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.geometry.AngleDegree
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.models.{
-  AddSubmode, Anchor, ClickablePoint, EditorMode, EditorState, Tool
+  AddSubmode, Anchor, ClickablePoint, EditorConfig, EditorMode, EditorState, Tool
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.utils.Logger
@@ -154,6 +154,7 @@ object SelectionOperations:
       val colors = EditorState.colorState.now().polygonColors
       colors.get(faceId).foreach: color =>
 
+        UndoManager.pushSelection()
         val polygonIdsToAdd = colors.collect {
           case (tag, c) if c == color => tag
         }.toSet
@@ -162,6 +163,7 @@ object SelectionOperations:
 
   def toggleTilingPolygonSelection(faceId: FaceId): Unit =
     ifNotProcessing:
+      UndoManager.pushSelection()
       EditorState.tessellationState.update: s =>
 
         val next =
@@ -171,6 +173,7 @@ object SelectionOperations:
 
   def togglePerimeterEdgeSelection(edgeId: String): Unit =
     ifNotProcessing:
+      UndoManager.pushSelection()
       EditorState.tessellationState.update: s =>
 
         val next =
@@ -200,6 +203,13 @@ object SelectionOperations:
                 val sides = edges.size
                 EditorState.irregularState.update(_.deselected)
                 EditorState.toolState.update(_.copy(selectedPolygon = Some(sides)))
+                // Non-core regulars also enter the MRU (so they're reachable later without
+                // retyping in the custom-n input). selectIt=false leaves the active selection
+                // on selectedPolygon; the MRU just remembers this shape.
+                if !EditorConfig.polygonSides.contains(sides) then
+                  EditorState.irregularState.update(
+                    _.withShape(RegularPolygon(sides).angles, selectIt = false)
+                  )
             else
               face.angles.toOption.foreach: angles =>
 
@@ -278,14 +288,26 @@ object SelectionOperations:
 
   def handlePerimeterEdgeClick(edgeId: String, edgeIndex: Int): Unit =
     ifNotProcessing:
-      val context = PerimeterClickContext(
-        tiling = EditorState.tessellationState.now().currentTiling,
-        selectedPolygon = EditorState.toolState.now().selectedPolygon,
-        isIrregularSelected = EditorState.irregularState.now().isSelected
-      )
-      context match
-        case PerimeterClickContext(_, None, false)                  => togglePerimeterEdgeSelection(edgeId)
-        case PerimeterClickContext(tiling, _, _) if !tiling.isEmpty =>
-          PlacementOperations.attemptPolygonAddition(edgeId, edgeIndex)
-        case _                                                      =>
-          ErrorOperations.showError("No tiling available to grow")
+      val tools = EditorState.toolState.now()
+      // Perimeter-edge interactions only make sense for AddPolygon + Outside (placing a polygon
+      // on the boundary). Every other tool — Eraser, Measurement, Fan, the two color pickers,
+      // SelectByColor, even AddPolygon + Inside — targets existing faces or measurement points
+      // and must not trigger placement, even though the palette still carries a `selectedPolygon`
+      // from before the tool switch. Without this guard, clicking a perimeter edge in those modes
+      // silently grows the tiling.
+      tools.activeTool match
+        case Tool.AddPolygon if tools.addSubmode == AddSubmode.Outside =>
+          val context = PerimeterClickContext(
+            tiling = EditorState.tessellationState.now().currentTiling,
+            selectedPolygon = tools.selectedPolygon,
+            isIrregularSelected = EditorState.irregularState.now().isSelected
+          )
+          context match
+            case PerimeterClickContext(_, None, false)                  =>
+              togglePerimeterEdgeSelection(edgeId)
+            case PerimeterClickContext(tiling, _, _) if !tiling.isEmpty =>
+              PlacementOperations.attemptPolygonAddition(edgeId, edgeIndex)
+            case _                                                      =>
+              ErrorOperations.showError("No tiling available to grow")
+        case _                                                         =>
+          ()

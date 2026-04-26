@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
-import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
+import io.github.scala_tessella.editor.utils.{ColorRGB, FirstRunStorage, SettingsStorage}
 import io.github.scala_tessella.ring_seq.RingSeq.isRotationOrReflectionOf
 import org.scalajs.dom
 
@@ -117,7 +117,8 @@ case class ViewState(
     showRotation: Boolean,
     rotationVertexIds: Option[List[BoundaryLocation]],
     showReflection: Boolean,
-    reflectionVertexIds: Option[List[(BoundaryLocation, BoundaryLocation)]]
+    reflectionVertexIds: Option[List[(BoundaryLocation, BoundaryLocation)]],
+    showTilingInfo: Boolean
 )
 
 object ViewState:
@@ -129,7 +130,8 @@ object ViewState:
     showRotation = false,
     rotationVertexIds = None,
     showReflection = false,
-    reflectionVertexIds = None
+    reflectionVertexIds = None,
+    showTilingInfo = false
   )
 
 /** Measurement-state aggregate: ruler/eraser/inserter tool state — start/end points, previous end,
@@ -159,16 +161,18 @@ object MeasurementState:
     isAngleShownInRad = true
   )
 
-/** Popup-state aggregate: 6 boolean visibility flags for the app's modal popups (About, Guide, Shortcuts,
-  * IrregularPolygon, Settings, SettingsColorPicker).
-  */
+/** Popup-state aggregate: visibility flags for the app's modal popups. */
 case class PopupState(
     showAboutPopup: Boolean,
     showGuidePopup: Boolean,
     showShortcutsPopup: Boolean,
     showIrregularPolygonPopup: Boolean,
     showSettingsPopup: Boolean,
-    showSettingsColorPicker: Boolean
+    showSettingsColorPicker: Boolean,
+    showTemplateGallery: Boolean,
+    showRecentFilesPanel: Boolean,
+    showPrintPopup: Boolean,
+    showUnsavedConfirm: Boolean
 )
 
 object PopupState:
@@ -178,11 +182,77 @@ object PopupState:
     showShortcutsPopup = false,
     showIrregularPolygonPopup = false,
     showSettingsPopup = false,
-    showSettingsColorPicker = false
+    showSettingsColorPicker = false,
+    showTemplateGallery = false,
+    showRecentFilesPanel = false,
+    showPrintPopup = false,
+    showUnsavedConfirm = false
   )
 
+/** Phone-only palette bottom-sheet detent. Meaningful only at phone widths; desktop ignores the value because
+  * the palette renders as a fixed left column there.
+  */
+enum PaletteSheetDetent:
+  case Peek, Full
+
+/** A reference to a previously-opened file. v1 only stores entries for templates loaded via the gallery
+  * (re-fetchable URLs); user-imported SVGs would need persistent file handles (File System Access API or
+  * Tauri) and aren't tracked yet.
+  *
+  * @param path
+  *   URL/relative path that can be re-fetched (e.g. "templates/regular/regular_3-3-3-3-3-3.svg").
+  * @param filename
+  *   Display name (e.g. the SVG filename).
+  * @param lastOpenedAt
+  *   Unix epoch milliseconds at the time of the most recent open.
+  */
+case class RecentFile(path: String, filename: String, lastOpenedAt: Long)
+
+/** User preference for animation behaviour. `Auto` honours the OS-level `prefers-reduced-motion` media query;
+  * `On`/`Off` override it explicitly.
+  */
+enum ReduceMotionPref:
+  case Auto, On, Off
+
+/** Paper size for Print-to-PDF. Maps to a CSS `@page { size: ... }` value. */
+enum PaperSize:
+  case A4, Letter
+
+/** Orientation for Print-to-PDF. Pairs with [[PaperSize]] in the `@page { size: ... }` rule. */
+enum Orientation:
+  case Portrait, Landscape
+
+/** Non-color settings (boundary-edge width, reduce-motion preference). Color settings live in [[ColorState]]
+  * for historical reasons.
+  *
+  * Each user-editable field has a paired `temp*` companion that the Settings popup writes to as the user
+  * drags / toggles. "Apply" promotes temp → saved and persists; "Cancel" discards temps.
+  */
+case class SettingsState(
+    boundaryEdgeWidth: Double,
+    reduceMotion: ReduceMotionPref,
+    tempBoundaryEdgeWidth: Double,
+    tempReduceMotion: ReduceMotionPref
+)
+
+object SettingsState:
+  /** Loads the persisted preferences from `SettingsStorage`; falls back to `EditorConfig` defaults. */
+  def initial: SettingsState =
+    val width = SettingsStorage.loadBoundaryEdgeWidth().getOrElse(EditorConfig.defaultBoundaryEdgeWidth)
+    val rm    = SettingsStorage.loadReduceMotion().getOrElse(ReduceMotionPref.Auto)
+    SettingsState(
+      boundaryEdgeWidth = width,
+      reduceMotion = rm,
+      tempBoundaryEdgeWidth = width,
+      tempReduceMotion = rm
+    )
+
 /** UI-state aggregate: transient UI flags — processing/loading guards, drag state, the canvas DOM element
-  * ref, and the mobile menu toggle.
+  * ref, the mobile menu toggle, the phone palette-sheet detent, and the first-run welcome overlay flag.
+  *
+  * `isPaletteDragActive` is the drag-from-palette gesture flag (Phase 5.6), distinct from `isDragging` which
+  * is the canvas pan drag. When set, edge hover-previews stand down so the drag's snap-driven preview owns
+  * the dotted wireframe.
   */
 case class UIState(
     isProcessing: Boolean,
@@ -190,22 +260,38 @@ case class UIState(
     isDragging: Boolean,
     dragStart: Option[Point],
     canvasElementRef: Option[dom.Element],
-    isMenuOpen: Boolean
+    isMenuOpen: Boolean,
+    paletteSheetDetent: PaletteSheetDetent,
+    showFirstRunOverlay: Boolean,
+    isPaletteDragActive: Boolean
 )
 
 object UIState:
-  val initial: UIState = UIState(
+  /** `def` (not `val`) so `showFirstRunOverlay` can read [[FirstRunStorage]] at app startup; subsequent
+    * resets via tests / dev rebuild get a fresh read of the persisted flag.
+    */
+  def initial: UIState = UIState(
     isProcessing = false,
     loadingMessage = None,
     isDragging = false,
     dragStart = None,
     canvasElementRef = None,
-    isMenuOpen = false
+    isMenuOpen = false,
+    paletteSheetDetent = PaletteSheetDetent.Peek,
+    showFirstRunOverlay = !FirstRunStorage.hasSeenFirstRun,
+    isPaletteDragActive = false
   )
 
+/** Where the color picker was opened from. Drives the popup title — `FillSelected` shows "Pick color and fill
+  * selected" (the on-canvas Fill swatch button's intent), `Default` keeps the generic "Select Color" used by
+  * Edit → Fill Color and the palette's fill-all-shape actions.
+  */
+enum ColorPickerContext:
+  case Default, FillSelected
+
 /** Color-state aggregate: persisted preferences (default fill, perimeter edge), live working fill color, the
-  * three settings-popup temp colors, the per-polygon color map, the color picker visibility flag, and the
-  * color-picker's working value.
+  * three settings-popup temp colors, the per-polygon color map, the color picker visibility flag, the
+  * color-picker's working value, and the open-context that drives the picker's title.
   */
 case class ColorState(
     defaultStartFillColor: ColorRGB,
@@ -216,7 +302,8 @@ case class ColorState(
     tempSettingsPickerColor: ColorRGB,
     polygonColors: Map[FaceId, ColorRGB],
     showColorPicker: Boolean,
-    tempColor: ColorRGB
+    tempColor: ColorRGB,
+    colorPickerContext: ColorPickerContext
 )
 
 object ColorState:
@@ -235,22 +322,55 @@ object ColorState:
       tempSettingsPickerColor = defaultFill,
       polygonColors = Map.empty,
       showColorPicker = false,
-      tempColor = defaultFill
+      tempColor = defaultFill,
+      colorPickerContext = ColorPickerContext.Default
     )
 
-/** File-state aggregate: currently only the open-file name. Kept as an aggregate to be consistent with the
-  * ADR-002 pattern across all state groups.
+/** File-state aggregate: the open-file name and the last-saved tiling snapshot used for the dirty-tracker.
+  * `lastSavedTiling = None` means "no save / load has happened yet" — in that baseline an empty tiling is
+  * considered clean and any non-empty one is dirty. After Save / Load / template, the field holds the tiling
+  * at that moment so subsequent mutations show as dirty.
   */
-case class FileState(currentFileName: Option[String])
+case class FileState(
+    currentFileName: Option[String],
+    lastSavedTiling: Option[TilingDCEL]
+)
 
 object FileState:
-  val initial: FileState = FileState(currentFileName = None)
+  val initial: FileState = FileState(currentFileName = None, lastSavedTiling = None)
 
-/** Preview-state aggregate: hover preview of a polygon placement along a perimeter edge. */
-case class PreviewState(previewPlacement: Option[FailedPolygonPlacement])
+/** Snap-hint overlay for the drag-from-palette gesture: a halo + chevron drawn on the edge that will become
+  * the commit target on release. The chevron points in the *growth direction* (outward for Outside addition,
+  * into the snapped face for Inside) so the user sees both *which* edge and *which side* is active before
+  * committing. All points and vectors are in canvas-view coords.
+  */
+case class PaletteSnapHint(
+    edgeStart: Point,
+    edgeEnd: Point,
+    growthNormal: Point
+)
+
+/** Preview-state aggregate. Three concurrent previews:
+  *
+  *   - `previewPlacement`: the *would-be* commit. In hover mode (desktop click-to-place) this is also what
+  *     the user sees — a dotted polygon glued to the edge. In drag-from-palette mode it stays latched to the
+  *     snapped edge to be picked up by the release handler, but is NOT rendered (the ghost takes over the
+  *     visible role).
+  *   - `paletteGhost`: a free-floating dotted polygon that tracks the pointer during a drag-from-palette
+  *     gesture. Vertices are stored in canvas-view coordinates (post `tilingPointToCanvasView`, pre
+  *     `contentGroup` transform). Only set while the gesture is in flight.
+  *   - `paletteSnapHint`: halo + directional chevron on the edge currently latched as the commit target.
+  *     Cleared whenever the drag has no commit target (off-canvas / empty tiling).
+  */
+case class PreviewState(
+    previewPlacement: Option[FailedPolygonPlacement],
+    paletteGhost: Option[Vector[Point]],
+    paletteSnapHint: Option[PaletteSnapHint]
+)
 
 object PreviewState:
-  val initial: PreviewState = PreviewState(previewPlacement = None)
+  val initial: PreviewState =
+    PreviewState(previewPlacement = None, paletteGhost = None, paletteSnapHint = None)
 
 /** Theme-state aggregate: user's theme preference (`None` means follow the system) and the detected system
   * theme. Derived signals (`effectiveTheme`, `overlayPreviewStrokeColor`) live on `EditorState` next to the
@@ -331,12 +451,14 @@ case class IrregularState(
     val nextSelected = if selectIt then Some(0) else selectedIndex
     copy(recentIrregularPolygons = nextList, selectedIndex = nextSelected)
 
-  /** Replace the entry at index 0 (head) by applying `f`. No-op if the MRU is empty. */
-  def updateHead(f: Vector[AngleDegree] => Vector[AngleDegree]): IrregularState =
-    recentIrregularPolygons.headOption match
-      case Some(v) if v.nonEmpty =>
-        copy(recentIrregularPolygons = recentIrregularPolygons.updated(0, f(v)))
-      case _                     => this
+  /** Replace the currently-selected entry by applying `f`. No-op if no entry is selected or the selected
+    * index is out of range.
+    */
+  def updateSelected(f: Vector[AngleDegree] => Vector[AngleDegree]): IrregularState =
+    selectedIndex match
+      case Some(i) if i >= 0 && i < recentIrregularPolygons.size =>
+        copy(recentIrregularPolygons = recentIrregularPolygons.updated(i, f(recentIrregularPolygons(i))))
+      case _                                                     => this
 
   /** Drop selection. */
   def deselected: IrregularState = copy(selectedIndex = None)
@@ -345,9 +467,17 @@ case class IrregularState(
   def selectHead: IrregularState =
     if recentIrregularPolygons.nonEmpty then copy(selectedIndex = Some(0)) else this
 
+  /** Select the entry at `index`, if it is within range. Otherwise no-op. */
+  def selectAt(index: Int): IrregularState =
+    if index >= 0 && index < recentIrregularPolygons.size then copy(selectedIndex = Some(index))
+    else this
+
 object IrregularState:
+  /** Reference 60°/120° rhombus, retained as a fixture for tests. The MRU itself starts empty — we no longer
+    * pre-seed any shape on launch (the user populates it as they go).
+    */
   val initialShape: Vector[AngleDegree] = Vector(60, 120, 60, 120).map(AngleDegree(_))
   val initial: IrregularState           = IrregularState(
-    recentIrregularPolygons = Vector(initialShape),
+    recentIrregularPolygons = Vector.empty,
     selectedIndex = None
   )

@@ -1,0 +1,82 @@
+/* Unsaved-changes confirm popup — three-button modal (Cancel / Discard / Save).
+   Reuses the shared .popup-overlay / .popup-content base; only adds the button row layout
+   and per-action color treatments. */
+
+.unsaved-confirm-overlay {
+  z-index: 2100;
+}
+
+.unsaved-confirm {
+  max-width: 460px;
+}
+
+.unsaved-confirm-body {
+  margin: 0.4rem 0 1.2rem 0;
+  color: var(--popup-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.unsaved-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.unsaved-confirm-btn {
+  appearance: none;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: var(--panel-bg-strong);
+  color: var(--text-color);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.unsaved-confirm-btn:hover {
+  border-color: var(--accent);
+}
+
+.unsaved-confirm-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.unsaved-confirm-btn--secondary {
+  background: transparent;
+}
+
+.unsaved-confirm-btn--danger {
+  color: var(--danger, #c0392b);
+  border-color: var(--danger, #c0392b);
+}
+
+.unsaved-confirm-btn--danger:hover {
+  background: rgba(192, 57, 43, 0.08);
+}
+
+.unsaved-confirm-btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast, #fff);
+  font-weight: 600;
+}
+
+.unsaved-confirm-btn--primary:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 600px) {
+  .unsaved-confirm-actions {
+    justify-content: stretch;
+  }
+
+  .unsaved-confirm-btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}

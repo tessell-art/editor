@@ -5,7 +5,9 @@ import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, Vertex}
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{EditorState, FailedPolygonPlacement, VertexCoord}
+import io.github.scala_tessella.editor.models.{
+  AddSubmode, EditorState, FailedPolygonPlacement, Tool, VertexCoord
+}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.PlacementOperations
 import io.github.scala_tessella.editor.operations.TessellationOperations.toCoords
@@ -24,6 +26,19 @@ object TessellationEdgeRenderer:
     EditorState.toolState.signal.map(_.selectedPolygon).distinct
       .combineWith(EditorState.irregularState.signal.map(_.selectedShape).distinct)
       .combineWith(EditorState.tessellationState.signal.map(_.currentTiling).distinct)
+
+  /** Snapshot helper: true only when the active tool is AddPolygon in its Outside sub-mode — the one mode
+    * where hovering a perimeter edge should paint the dotted placement preview.
+    */
+  private def isAddOutsideMode: Boolean =
+    val tools = EditorState.toolState.now()
+    tools.activeTool == Tool.AddPolygon && tools.addSubmode == AddSubmode.Outside
+
+  /** During a drag-from-palette gesture, the gesture itself owns `previewState.previewPlacement` (snapping to
+    * the nearest valid edge). Hover handlers stand down to avoid fighting the snap.
+    */
+  private def isPaletteDragActive: Boolean =
+    EditorState.uiState.now().isPaletteDragActive
 
   private def buildFailedPlacement(
       edgeIndex: Int,
@@ -102,20 +117,22 @@ object TessellationEdgeRenderer:
               selectedIrregular: Option[Vector[AngleDegree]],
               tiling: TilingDCEL
             ) =>
-          val placementOpt =
-            buildFailedPlacement(
-              edgeIndex = edgeIndex,
-              edge = edge,
-              maybeSides = maybeSides,
-              selectedIrregular = selectedIrregular,
-              tiling = tiling,
-              intoFace = Some(faceId)
-            )
-          EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
+          if !isPaletteDragActive then
+            val placementOpt =
+              buildFailedPlacement(
+                edgeIndex = edgeIndex,
+                edge = edge,
+                maybeSides = maybeSides,
+                selectedIrregular = selectedIrregular,
+                tiling = tiling,
+                intoFace = Some(faceId)
+              )
+            EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
       },
       onMouseLeave.compose(gate) --> { _ =>
 
-        EditorState.previewState.update(_.copy(previewPlacement = None))
+        if !isPaletteDragActive then
+          EditorState.previewState.update(_.copy(previewPlacement = None))
       },
       // Trigger insertion directly when clicking the highlighted interior edge
       onClick.preventDefault.compose(stream =>
@@ -131,7 +148,9 @@ object TessellationEdgeRenderer:
     val visibleLine = svg.line(
       lineCoords(LineSegment(point1, point2)),
       svg.stroke        := "#20A4BE",
-      svg.strokeWidth   := "3",
+      // Match the boundary edge width so the highlighted face's edges read with the same
+      // visual weight as the perimeter — they are, after all, the candidate placement edges.
+      svg.strokeWidth   := "4.5",
       svg.strokeLineCap := "round",
       svg.className     := "interior-edge",
       svg.pointerEvents := "none"
@@ -166,7 +185,9 @@ object TessellationEdgeRenderer:
           _ =>
             "none"
         )),
-      // Enhanced visual feedback and click handling
+      // Enhanced visual feedback and click handling. The dotted-polygon preview only makes
+      // sense in AddPolygon + Outside, where the click would actually grow the tiling — gate
+      // the mouse-enter handler accordingly so other tools don't paint a misleading preview.
       onMouseEnter.compose(stream =>
         gate(stream).withCurrentValueOf(previewStateSignal)
       ) --> {
@@ -176,19 +197,21 @@ object TessellationEdgeRenderer:
               selectedIrregular: Option[Vector[AngleDegree]],
               tiling: TilingDCEL
             ) =>
-          val placementOpt =
-            buildFailedPlacement(
-              edgeIndex = edgeIndex,
-              edge = edge,
-              maybeSides = maybeSides,
-              selectedIrregular = selectedIrregular,
-              tiling = tiling
-            )
-          EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
+          if isAddOutsideMode && !isPaletteDragActive then
+            val placementOpt =
+              buildFailedPlacement(
+                edgeIndex = edgeIndex,
+                edge = edge,
+                maybeSides = maybeSides,
+                selectedIrregular = selectedIrregular,
+                tiling = tiling
+              )
+            EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
       },
       onMouseLeave.compose(gate) --> { _ =>
 
-        EditorState.previewState.update(_.copy(previewPlacement = None))
+        if !isPaletteDragActive then
+          EditorState.previewState.update(_.copy(previewPlacement = None))
       },
       onClick.compose(gate) --> { _ =>
 
@@ -201,7 +224,8 @@ object TessellationEdgeRenderer:
       svg.stroke <-- EditorState.colorState.signal.map(_.perimeterEdgeColor).distinct.map:
         _.toRgb
       ,
-      svg.strokeWidth   := "4",
+      svg.strokeWidth <--
+        EditorState.settingsState.signal.map(_.boundaryEdgeWidth).distinct.map(_.toString),
       svg.strokeLineCap := "round",
       svg.className     := "perimeter-edge",
       svg.pointerEvents := "none"

@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.models.EditorState
 
 object ShortcutsPopup:
@@ -13,56 +14,35 @@ object ShortcutsPopup:
   def element: Element =
     popupOverlay(closeShortcuts)(
       popupContent(closeShortcuts)(
-        h2("Keyboard Shortcuts"),
+        h2(child.text <-- I18n.t("popup.shortcuts.title")),
         div(
           className := "popup-text-scrollable",
           table(
             className := "shortcuts-table",
             thead(
               tr(
-                th("Action"),
-                th("Shortcut")
+                th(child.text <-- I18n.t("popup.shortcuts.action")),
+                th(child.text <-- I18n.t("popup.shortcuts.shortcut"))
               )
             ),
             tbody(
-              tr(
-                td("Undo"),
-                td(kbd(primaryModLabel), " + ", kbd("Z"))
-              ),
-              tr(
-                td("Redo"),
-                td(kbd(primaryModLabel), " + ", kbd("Shift"), " + ", kbd("Z"))
-              ),
-              tr(
-                td("Save"),
-                td(kbd(primaryModLabel), " + ", kbd("S"))
-              ),
-              tr(
-                td("Deselect All"),
-                td(kbd("Esc"))
-              ),
-              tr(
-                td("Zoom In"),
-                td(kbd("+"))
-              ),
-              tr(
-                td("Zoom Out"),
-                td(kbd("-"))
-              ),
-              tr(
-                td("Rotate Left"),
-                td(kbd("E"))
-              ),
-              tr(
-                td("Rotate Right"),
-                td(kbd("R"))
-              ),
-              tr(
-                td("Fit to Canvas"),
-                td(kbd("F"))
-              )
+              row("popup.shortcuts.undo", kbd(primaryModLabel), " + ", kbd("Z")),
+              row("popup.shortcuts.redo", kbd(primaryModLabel), " + ", kbd("Shift"), " + ", kbd("Z")),
+              row("popup.shortcuts.save", kbd(primaryModLabel), " + ", kbd("S")),
+              row("popup.shortcuts.deselectAll", kbd("Esc")),
+              row("popup.shortcuts.zoomIn", kbd("+")),
+              row("popup.shortcuts.zoomOut", kbd("-")),
+              row("popup.shortcuts.rotateLeft", kbd("E")),
+              row("popup.shortcuts.rotateRight", kbd("R")),
+              row("popup.shortcuts.fitToCanvas", kbd("F"))
             )
           )
         )
       )
+    )
+
+  private def row(actionKey: String, shortcut: Modifier[HtmlElement]*): Element =
+    tr(
+      td(child.text <-- I18n.t(actionKey)),
+      td(shortcut*)
     )

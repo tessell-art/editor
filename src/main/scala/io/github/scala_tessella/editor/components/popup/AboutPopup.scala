@@ -1,6 +1,7 @@
 package io.github.scala_tessella.editor.components.popup
 
 import com.raquo.laminar.api.L._
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.buildinfo.BuildInfo
 
@@ -19,12 +20,14 @@ object AboutPopup:
           alt       := "Tessella Logo",
           className := "popup-logo"
         ),
-        h1("Tessella"),
+        h1(child.text <-- I18n.t("popup.about.title")),
         p(
           className := "about-version",
-          s"Editor v${BuildInfo.version}"
+          child.text <-- I18n.t("popup.about.versionFmt", BuildInfo.version)
         ),
-        h2("Simple polygon tessellation editor"),
+        h2(child.text <-- I18n.t("popup.about.tagline")),
+        // TODO i18n long-form: the body paragraphs below stay English in v1; mixed inline links + bold
+        // make per-fragment keys clumsy. Translate when the i18n pipeline gains rich-text support.
         div(
           className := "popup-text-scrollable",
           p(

@@ -7,6 +7,11 @@
   height: fit-content;
 }
 
+/* Sheet handle — visible only at phone widths (see media query at the bottom). */
+.palette-sheet-handle {
+  display: none;
+}
+
 .palette-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
@@ -25,8 +30,24 @@
   border: 2px solid var(--panel-border-strong);
   border-radius: 8px;
   color: var(--text-muted-strong);
-  cursor: pointer;
+  cursor: grab;
+  /* Disable native double-tap-to-zoom and the iOS callout: the palette button is a drag source.
+     touch-action also prevents the browser from intercepting touch as a pan/zoom gesture, so the
+     pointermove handler keeps receiving events through the whole drag. */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
   transition: all 0.3s ease;
+}
+
+.polygon-btn:active {
+  cursor: grabbing;
+}
+
+/* When a drag-from-palette gesture is in flight, every interactive surface should signal the
+   active drag — palette buttons, the canvas wrapper, and the document body all switch to grabbing. */
+body:has(.polygon-palette.is-palette-dragging) {
+  cursor: grabbing;
 }
 
 .polygon-btn:hover {
@@ -49,27 +70,133 @@
   border-color: var(--accent-strong);
 }
 
+/* The attaching-edge dot inside an irregular polygon's preview SVG only reveals when the slot is
+   the currently selected one — otherwise it's just visual noise across the MRU strip. */
+.polygon-btn .attaching-dot {
+  display: none;
+}
+
+.polygon-btn.selected .attaching-dot {
+  display: inline;
+}
+
 .polygon-label {
   margin-top: 0.5rem;
   font-size: 0.7rem;
   font-weight: 600;
 }
 
+.palette-section {
+  margin-bottom: 0.85rem;
+}
+
+.palette-section-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  margin: 0 0 0.4rem 0.2rem;
+}
+
+.palette-mru-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.5rem;
+}
+
+.palette-mru-slot--empty {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.palette-mru-slot--empty:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--panel-border-strong);
+  background-color: var(--panel-bg-strong);
+  color: var(--text-muted-strong);
+}
+
+.rhombus-creator {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: auto;
+  padding: 0.4rem 0.6rem;
+}
+
+.rhombus-creator .rhombus-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rhombus-creator .polygon-label {
+  margin-top: 0;
+  text-align: left;
+}
+
+.rhombus-angle-input {
+  width: 48px;
+}
+
+/* Number input + degree-suffix label sit together as one inline group, centered under the
+   "Rhombus" label. The suffix is decorative (the input itself only carries the integer). */
+.rhombus-angle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 5px;
+}
+
+.rhombus-angle-wrap .rhombus-angle-input {
+  margin-top: 0;
+}
+
+.rhombus-angle-suffix {
+  font-size: 11px;
+  color: var(--text-muted-strong);
+  pointer-events: none;
+  user-select: none;
+}
+
 .selected-info {
   margin-top: 0.5rem;
-  padding: 0.3rem;
+  padding: 0.4rem;
   background-color: var(--menu-bg);
   border-radius: 6px;
   min-height: 1.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-.selected-info p {
+.selected-info-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.selected-info-action {
+  width: 100%;
   margin: 0;
-  color: var(--focus-ring);
-  font-weight: 500;
+  padding: 0.4em 0.6em;
+  font-size: 0.85rem;
+  text-align: center;
+  background-color: var(--panel-bg-strong);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.selected-info-action:hover:not(:disabled) {
+  background-color: var(--panel-hover);
+  border-color: var(--accent);
+}
+
+.selected-info-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .polygon-label-input {
@@ -133,4 +260,90 @@
 .corner-button {
   margin-top: -16px;
   margin-left: 42px;
+}
+
+.palette-mru-slot .corner-button {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border-strong);
+  color: var(--text-muted-strong);
+  cursor: pointer;
+}
+
+.palette-mru-slot .corner-button:hover {
+  background-color: var(--accent);
+  color: var(--text-inverse);
+  border-color: var(--accent);
+}
+
+/* --- Phone bottom-sheet variant ---
+   At phone widths (≤ 600px) the palette is a fixed-position bottom sheet sitting just above the
+   bottom toolbar (~110px). Two detents:
+   - Peek: handle only.
+   - Full: ~70vh of palette content, scrollable. */
+
+@media (max-width: 600px) {
+  .polygon-palette {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 110px; /* clearance for the mobile bottom toolbar */
+    margin: 0;
+    border-radius: 14px 14px 0 0;
+    border-bottom: 0;
+    z-index: 800;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
+    height: auto;
+    max-height: 70vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: max-height 0.22s ease;
+  }
+
+  .polygon-palette.palette-sheet--peek {
+    max-height: 44px; /* just the handle */
+  }
+
+  .polygon-palette.palette-sheet--full {
+    max-height: 70vh;
+  }
+
+  .palette-sheet-handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.35rem 0;
+    cursor: pointer;
+    user-select: none;
+    flex: 0 0 auto;
+  }
+
+  .palette-sheet-grip {
+    width: 38px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: var(--text-subtle);
+    opacity: 0.7;
+  }
+
+  .palette-sheet-handle-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-subtle);
+  }
+
+  .polygon-palette-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-bottom: 0.5rem;
+  }
 }

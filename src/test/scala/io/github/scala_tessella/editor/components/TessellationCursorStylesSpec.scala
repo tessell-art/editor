@@ -16,11 +16,6 @@ class TessellationCursorStylesSpec extends FunSuite:
     assert(css.startsWith("cursor: url("))
     assert(css.endsWith(", auto;"))
 
-  test("polygon cursor uses inserter icon when AddPolygon Inside is active"):
-    val css =
-      TessellationCursorStyles.polygonCursorCss(EditorMode.Select, Tool.AddPolygon, AddSubmode.Inside)
-    assert(css.startsWith("cursor: url("))
-
   test("polygon cursor maps shape-and-color picker to same icon as color picker"):
     val colorPicker =
       TessellationCursorStyles.polygonCursorCss(EditorMode.Select, Tool.ColorPicker, AddSubmode.Outside)

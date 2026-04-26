@@ -7,7 +7,8 @@ import io.github.scala_tessella.editor.models.*
 import io.github.scala_tessella.editor.operations.*
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.UndoManager
-import io.github.scala_tessella.editor.utils.ColorRGB
+import io.github.scala_tessella.editor.utils.file.SvgImporter
+import io.github.scala_tessella.editor.utils.{ColorRGB, FirstRunStorage}
 
 /** AppState object provides a higher-level interface to the editor state. It exports all members of
   * EditorState and provides methods to manipulate the state.
@@ -70,6 +71,29 @@ object AppState:
   def toggleShowReflection(): Unit =
     SymmetryOperations.toggleShowReflection()
 
+  /** Toggles the visibility of the Tiling-info panel. Independent of `isProcessing` — the panel just reads
+    * derived state, so it's safe to toggle anytime.
+    */
+  def toggleShowTilingInfo(): Unit =
+    viewState.update(s => s.copy(showTilingInfo = !s.showTilingInfo))
+
+  /** Opens the template gallery popup. */
+  def openTemplateGallery(): Unit =
+    popupState.update(_.copy(showTemplateGallery = true))
+
+  /** Opens the recent-files panel popup. */
+  def openRecentFilesPanel(): Unit =
+    popupState.update(_.copy(showRecentFilesPanel = true))
+
+  /** Opens the Print-to-PDF popup. */
+  def openPrintPopup(): Unit =
+    popupState.update(_.copy(showPrintPopup = true))
+
+  /** Dismisses the first-run welcome overlay and persists the "seen" flag so it doesn't reappear. */
+  def dismissFirstRun(): Unit =
+    uiState.update(_.copy(showFirstRunOverlay = false))
+    FirstRunStorage.markSeenFirstRun()
+
   /** Checks if the current tiling is empty.
     * @return
     *   true if the tiling is empty, false otherwise
@@ -123,11 +147,24 @@ object AppState:
         clearMeasurements()
         toolState.update(_.copy(activeTool = Tool.Fan))
 
-  /** Clears the current tiling and all measurements.
+  /** Activates the Measurement tool. The user then clicks a polygon to expose its clickable points (vertices,
+    * edge midpoints, center). Does nothing if processing or if the tiling is empty.
+    */
+  def enterMeasureMode(): Unit =
+    ifNotProcessing:
+      if !isTilingEmpty then
+        clearMeasurements()
+        toolState.update(_.copy(activeTool = Tool.Measurement))
+
+  /** Clears the current tiling and all measurements. The user explicitly chose to wipe the canvas, so the
+    * resulting empty state is treated as a fresh document — `DirtyTracker.resetBaseline()` drops the
+    * previously-saved tiling reference so subsequent destructive actions (New, Load, Template…) don't
+    * spuriously prompt for unsaved changes.
     */
   def clearTiling(): Unit =
     clearMeasurements()
     TessellationOperations.clearTiling()
+    DirtyTracker.resetBaseline()
 
   /** Handles a click on a tiling polygon. The behavior depends on the current editor mode and active tool.
     * @param faceId
@@ -194,9 +231,9 @@ object AppState:
   def refreshSettingsTempValues(): Unit =
     SettingsOperations.refreshSettingsTempValues()
 
-  /** Applies editor settings and persists them. */
-  def applySettings(defaultFill: ColorRGB, perimeterEdge: ColorRGB): Unit =
-    SettingsOperations.applySettings(defaultFill, perimeterEdge)
+  /** Commits the popup's temp settings (colors, boundary edge width, reduce-motion) and persists. */
+  def applySettings(): Unit =
+    SettingsOperations.applySettings()
 
   /** Resets the current fill color to the default start fill color. */
   def resetFillColorToDefault(): Unit =
@@ -269,11 +306,21 @@ object AppState:
     SymmetryOperations.clearOverlays()
 
   /** Starts a new, empty tiling. Clears the current tiling and measurements, forgets the current file name,
-    * wipes undo history, resets the view transform, and restores the default fill color.
+    * wipes undo history, resets the view transform, and restores the default fill color. Routed through
+    * `DirtyTracker.confirmIfDirty` so a dirty document prompts the user before being thrown away.
     */
   def newTiling(): Unit =
+    DirtyTracker.confirmIfDirty(() => doNewTiling())
+
+  private def doNewTiling(): Unit =
     clearTiling()
     EditorState.fileState.update(_.copy(currentFileName = None))
     UndoManager.clearHistory()
     ViewOperations.resetView()
     resetFillColorToDefault()
+    // Empty canvas, no file → clean baseline.
+    DirtyTracker.resetBaseline()
+
+  /** Opens the file picker for an SVG, guarding the current tiling behind the unsaved-changes prompt. */
+  def loadSvgFile(): Unit =
+    DirtyTracker.confirmIfDirty(() => SvgImporter.trigger())

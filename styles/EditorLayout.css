@@ -7,32 +7,27 @@
   align-items: start;
 }
 
-.file-and-measurement-container {
+/* Canvas column container: tool strip on top, canvas wrapper grows to fill,
+   status row pinned to the bottom. */
+.canvas-container {
+  flex-grow: 1;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10px;
-  height: 2em;
-  line-height: 2em;
+  flex-direction: column;
 }
 
-.file-name {
-  text-align: left;
-  font-family: monospace;
-  font-size: 14px;
-  color: var(--text-muted-strong);
+/* Wrapper for the SVG canvas plus its overlays (mode badge, empty-state card,
+   error toast, zoom-rotation indicator). `position: relative` is the anchor
+   for those absolutely-positioned children. */
+.editor-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  flex-grow: 1;
 }
 
-.light-mode .file-name {
-  color: var(--text-color);
-}
-
-.measurement-result {
-  text-align: right;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  color: var(--text-muted);
-  padding-right: 5px;
+/* The SVG itself fills the wrapper width; height is controlled by the
+   wrapper's flex-grow. */
+.editor-canvas {
+  width: 100%;
 }
 
 /* Media query for medium screens to adjust palette width */

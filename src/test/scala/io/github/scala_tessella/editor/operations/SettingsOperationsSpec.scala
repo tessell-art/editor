@@ -11,6 +11,8 @@ class SettingsOperationsSpec extends FunSuite with EditorStateFixture:
   private def clearPersistedSettings(): Unit =
     dom.window.localStorage.removeItem("tessella.settings.defaultFillColor")
     dom.window.localStorage.removeItem("tessella.settings.perimeterEdgeColor")
+    dom.window.localStorage.removeItem("tessella.settings.boundaryEdgeWidth")
+    dom.window.localStorage.removeItem("tessella.settings.reduceMotion")
 
   override def beforeEach(context: BeforeEach): Unit =
     super.beforeEach(context)
@@ -23,8 +25,12 @@ class SettingsOperationsSpec extends FunSuite with EditorStateFixture:
   test("applySettings writes defaultStartFillColor, fillColor, perimeterEdgeColor and persists both") {
     val fill      = ColorRGB(11, 22, 33)
     val perimeter = ColorRGB(44, 55, 66)
+    EditorState.colorState.update(_.copy(
+      tempDefaultFillColor = fill,
+      tempPerimeterEdgeColor = perimeter
+    ))
 
-    SettingsOperations.applySettings(fill, perimeter)
+    SettingsOperations.applySettings()
 
     val color = EditorState.colorState.now()
     assertEquals(color.defaultStartFillColor, fill)
@@ -71,8 +77,12 @@ class SettingsOperationsSpec extends FunSuite with EditorStateFixture:
   test("applySettings round-trips through SettingsStorage back into a rebuilt ColorState.initial") {
     val fill      = ColorRGB(123, 45, 67)
     val perimeter = ColorRGB(9, 99, 199)
+    EditorState.colorState.update(_.copy(
+      tempDefaultFillColor = fill,
+      tempPerimeterEdgeColor = perimeter
+    ))
 
-    SettingsOperations.applySettings(fill, perimeter)
+    SettingsOperations.applySettings()
 
     // A fresh ColorState.initial reads from SettingsStorage — our persisted values must come back.
     val rebuilt = io.github.scala_tessella.editor.models.ColorState.initial

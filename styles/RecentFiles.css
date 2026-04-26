@@ -1,0 +1,99 @@
+/* Recent files panel — modal popup. Same shell as the template gallery; this file styles the row list. */
+
+.recent-files {
+  width: min(560px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-files h2 {
+  margin: 0;
+  padding: 0.7rem 1rem 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.recent-files-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem;
+  overflow-y: auto;
+}
+
+.recent-files-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem;
+  background-color: var(--panel-bg-strong);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+
+.recent-files-row:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.recent-files-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  background-color: var(--canvas-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.recent-files-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.recent-files-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-files-path {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+}
+
+.recent-files-when {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.recent-files-empty {
+  padding: 1.2rem 0.6rem;
+  text-align: center;
+  color: var(--text-subtle);
+  font-style: italic;
+}
+
+.recent-files-footnote {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--panel-border);
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  background-color: var(--panel-bg-strong);
+}

@@ -1,0 +1,122 @@
+/* Tiling info panel — right-edge overlay on the canvas wrapper.
+   Hidden entirely when closed; only `--open` puts it on screen. The canvas keeps its full width
+   in both states; when open the panel overlays the rightmost ~260px of canvas pixels (the SVG
+   itself is not resized). */
+
+.tiling-info-panel {
+  display: none;
+}
+
+.tiling-info-panel--open {
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 260px;
+  max-width: 80%;
+  background-color: var(--panel-bg);
+  border-left: 1px solid var(--panel-border);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.25);
+  flex-direction: column;
+  z-index: 6; /* above mode badge (5) and empty-state card (4) */
+  overflow-y: auto;
+  font-size: 0.85rem;
+}
+
+.tiling-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--panel-border);
+  background-color: var(--panel-bg-strong);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.tiling-info-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.tiling-info-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.tiling-info-close:hover {
+  background-color: var(--panel-hover);
+  color: var(--text-color);
+}
+
+.tiling-info-counts {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.tiling-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.18rem 0;
+}
+
+.tiling-info-label {
+  color: var(--text-muted);
+}
+
+.tiling-info-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.tiling-info-vertex-types {
+  padding: 0.5rem 0.9rem;
+}
+
+.tiling-info-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  margin-bottom: 0.35rem;
+}
+
+.tiling-info-config {
+  font-family: monospace;
+  color: var(--text-color);
+}
+
+.tiling-info-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.tiling-info-empty {
+  font-style: italic;
+  color: var(--text-subtle);
+  padding: 0.3rem 0;
+}
+
+/* Phone widths: when open, the panel slides up from above the bottom toolbar and spans the full
+   viewport width. Closed state stays `display: none` (inherited from the base rules). */
+@media (max-width: 600px) {
+  .tiling-info-panel--open {
+    bottom: 110px;
+    width: 100%;
+    max-width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--panel-border);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
+  }
+}

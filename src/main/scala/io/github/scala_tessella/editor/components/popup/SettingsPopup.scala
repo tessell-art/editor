@@ -4,8 +4,9 @@ import com.raquo.laminar.api.L._
 import com.raquo.laminar.api.features.unitArrows
 import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsDefaults}
+import io.github.scala_tessella.editor.i18n.{I18n, Locale}
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ReduceMotionPref}
+import io.github.scala_tessella.editor.utils.{ColorRGB, LocaleStorage, SettingsDefaults}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 
 object SettingsPopup:
@@ -36,6 +37,10 @@ object SettingsPopup:
     val (fill, perimeter) = SettingsDefaults.tempDefaults
     EditorState.colorState.update(_.copy(tempDefaultFillColor = fill))
     EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = perimeter))
+    EditorState.settingsState.update(_.copy(
+      tempBoundaryEdgeWidth = EditorConfig.defaultBoundaryEdgeWidth,
+      tempReduceMotion = ReduceMotionPref.Auto
+    ))
 
   private def settingsColorPickerPopup: Element =
     div(
@@ -47,7 +52,7 @@ object SettingsPopup:
       div(
         className := "popup-content settings-color-picker-content",
         onClick.stopPropagation --> {},
-        h3("Select color"),
+        h3(child.text <-- I18n.t("popup.colorPicker.title")),
         ColorPicker(
           _.simplified := true,
           _.value <-- EditorState.colorState.signal.map(_.tempSettingsPickerColor).distinct.map:
@@ -62,14 +67,14 @@ object SettingsPopup:
         div(
           className := "popup-actions",
           button(
-            "Cancel",
+            child.text <-- I18n.t("common.cancel"),
             onClick.stopPropagation --> { _ =>
 
               EditorState.popupState.update(_.copy(showSettingsColorPicker = false))
             }
           ),
           button(
-            "Apply",
+            child.text <-- I18n.t("popup.settings.apply"),
             onClick.stopPropagation.compose(
               _.withCurrentValueOf(
                 settingsColorTarget.signal.combineWith(
@@ -97,12 +102,12 @@ object SettingsPopup:
           .foreach(_ => AppState.refreshSettingsTempValues())(using ctx.owner): Unit
     )(
       popupContent(closeSettings, contentClassName = "popup-content settings-content")(
-        h1("Settings"),
+        h1(child.text <-- I18n.t("popup.settings.title")),
         div(
           className := "settings-grid",
           div(
             className := "settings-row",
-            div(className := "settings-label", "Default start fill color"),
+            div(className := "settings-label", child.text <-- I18n.t("popup.settings.fillColor")),
             div(
               className   := "settings-control",
               button(
@@ -128,7 +133,7 @@ object SettingsPopup:
           ),
           div(
             className := "settings-row",
-            div(className := "settings-label", "Perimeter edge color"),
+            div(className := "settings-label", child.text <-- I18n.t("popup.settings.perimeterEdge")),
             div(
               className   := "settings-control",
               button(
@@ -153,34 +158,32 @@ object SettingsPopup:
                   _.toHex
               )
             )
-          )
+          ),
+          boundaryEdgeWidthRow(),
+          reduceMotionRow(),
+          languageRow()
         ),
         div(
           className := "popup-actions",
           button(
-            "Cancel",
+            child.text <-- I18n.t("common.cancel"),
             onClick --> { _ =>
 
               EditorState.popupState.update(_.copy(showSettingsPopup = false))
             }
           ),
           button(
-            "Reset to defaults",
+            child.text <-- I18n.t("popup.settings.resetDefaults"),
             onClick --> { _ =>
 
               resetToDefaults()
             }
           ),
           button(
-            "Apply",
-            onClick.compose(
-              _.withCurrentValueOf(
-                EditorState.colorState.signal.map(_.tempDefaultFillColor).distinct.combineWith(
-                  EditorState.colorState.signal.map(_.tempPerimeterEdgeColor).distinct
-                )
-              )
-            ) --> { case (_, fill: ColorRGB, perimeter: ColorRGB) =>
-              AppState.applySettings(fill, perimeter)
+            child.text <-- I18n.t("popup.settings.apply"),
+            onClick --> { _ =>
+
+              AppState.applySettings()
               EditorState.popupState.update(_.copy(showSettingsPopup = false))
             }
           )
@@ -188,4 +191,89 @@ object SettingsPopup:
       ),
       child.maybe <-- EditorState.popupState.signal.map(_.showSettingsColorPicker).distinct.map: show =>
         if show then Some(settingsColorPickerPopup) else None
+    )
+
+  private def boundaryEdgeWidthRow(): Element =
+    val widthSignal = EditorState.settingsState.signal.map(_.tempBoundaryEdgeWidth).distinct
+    div(
+      className := "settings-row",
+      div(className := "settings-label", child.text <-- I18n.t("popup.settings.boundaryWidth")),
+      div(
+        className   := "settings-control",
+        input(
+          tpe          := "range",
+          className    := "settings-range",
+          minAttr      := EditorConfig.minBoundaryEdgeWidth.toString,
+          maxAttr      := EditorConfig.maxBoundaryEdgeWidth.toString,
+          stepAttr     := "0.5",
+          controlled(
+            value <-- widthSignal.map(_.toString),
+            onInput.mapToValue --> Observer[String]: v =>
+              v.toDoubleOption.foreach: d =>
+                EditorState.settingsState.update(_.copy(tempBoundaryEdgeWidth = d))
+          )
+        ),
+        span(className := "settings-value", child.text <-- widthSignal.map(d => f"$d%.1f px"))
+      )
+    )
+
+  private def reduceMotionRow(): Element =
+    val prefSignal = EditorState.settingsState.signal.map(_.tempReduceMotion).distinct
+    div(
+      className := "settings-row",
+      div(className := "settings-label", child.text <-- I18n.t("popup.settings.reduceMotion")),
+      div(
+        className   := "settings-control settings-radio-group",
+        radio(
+          "popup.settings.reduceMotion.auto",
+          "settings-reduce-motion",
+          ReduceMotionPref.Auto,
+          prefSignal
+        ),
+        radio("popup.settings.reduceMotion.on", "settings-reduce-motion", ReduceMotionPref.On, prefSignal),
+        radio("popup.settings.reduceMotion.off", "settings-reduce-motion", ReduceMotionPref.Off, prefSignal)
+      )
+    )
+
+  private def radio(
+      labelKey: String,
+      groupName: String,
+      pref: ReduceMotionPref,
+      currentSignal: Signal[ReduceMotionPref]
+  ): Element =
+    label(
+      className := "settings-radio-label",
+      input(
+        tpe      := "radio",
+        nameAttr := groupName,
+        checked <-- currentSignal.map(_ == pref),
+        onChange --> { _ =>
+
+          EditorState.settingsState.update(_.copy(tempReduceMotion = pref))
+        }
+      ),
+      span(child.text <-- I18n.t(labelKey))
+    )
+
+  // The language picker here mirrors the top-bar selector but persists immediately and renders
+  // every available locale. Selecting one updates `EditorState.localeState` (which retranslates
+  // every UI label) and writes through `LocaleStorage`.
+  private def languageRow(): Element =
+    div(
+      className := "settings-row",
+      div(className := "settings-label", child.text <-- I18n.t("popup.settings.language")),
+      div(
+        className   := "settings-control",
+        select(
+          controlled(
+            value <-- EditorState.localeState.signal.map(_.code),
+            onChange.mapToValue --> Observer[String]: code =>
+              Locale.fromCode(code).foreach: chosen =>
+
+                EditorState.localeState.set(chosen)
+                LocaleStorage.save(chosen)
+          ),
+          Locale.all.map(loc => option(value := loc.code, loc.displayName))
+        )
+      )
     )

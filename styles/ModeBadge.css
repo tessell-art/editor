@@ -1,0 +1,52 @@
+/* Mode badge — overlay chip in the canvas top-left that names the active mode.
+   Click resets to the default (Add Polygon + Outside). */
+
+.mode-badge {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.3em 0.7em;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: var(--text-muted-strong);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  z-index: 5;
+}
+
+.mode-badge:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--text-color);
+}
+
+.mode-badge--default {
+  opacity: 0.55;
+}
+
+.mode-badge--default:hover {
+  opacity: 1;
+}
+
+.mode-badge-label {
+  color: var(--text-subtle);
+}
+
+.mode-badge-value {
+  font-weight: 500;
+}
+
+.light-mode .mode-badge {
+  background-color: rgba(255, 255, 255, 0.75);
+  color: var(--text-color);
+}
+
+.light-mode .mode-badge:hover {
+  background-color: rgba(255, 255, 255, 0.95);
+}

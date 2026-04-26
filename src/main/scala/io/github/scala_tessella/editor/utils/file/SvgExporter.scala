@@ -5,8 +5,9 @@ import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
 import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
-import io.github.scala_tessella.editor.operations.ColorOperations
+import io.github.scala_tessella.editor.operations.{ColorOperations, DirtyTracker}
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.uniformColorMap
 import io.github.scala_tessella.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
@@ -21,8 +22,9 @@ object SvgExporter:
   def saveAsTilingToSVG(): Unit =
     val tiling = EditorState.tessellationState.now().currentTiling
     if !tiling.isEmpty then
-      val currentName = EditorState.fileState.now().currentFileName.getOrElse("tessellation.svg")
-      Option(dom.window.prompt("Enter file name for the SVG:", currentName)).foreach { newName =>
+      val currentName = EditorState.fileState.now().currentFileName
+        .getOrElse(I18n.tNow("file.saveAs.defaultName"))
+      Option(dom.window.prompt(I18n.tNow("file.saveAs.prompt"), currentName)).foreach { newName =>
 
         if newName.nonEmpty then
           AsyncUtils.withLoadingState { () =>
@@ -39,6 +41,7 @@ object SvgExporter:
               )
             FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
             EditorState.fileState.update(_.copy(currentFileName = Some(finalName)))
+            DirtyTracker.markSaved()
           }: Unit
       }
 
@@ -59,6 +62,7 @@ object SvgExporter:
               view.showReflection
             )
           FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
+          DirtyTracker.markSaved()
       }
     ): Unit
 

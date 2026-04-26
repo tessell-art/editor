@@ -16,6 +16,14 @@ import { hooks, expectHook } from './fixtures/hooks';
 test.describe('Tessella Editor smoke', () => {
 
   test.beforeEach(async ({ page }) => {
+    // Seed the "first-run seen" flag BEFORE navigation so the welcome overlay
+    // (added in Phase 4.6) never mounts. `addInitScript` runs on every new
+    // document, ahead of the app's bundle, so `FirstRunStorage.hasSeenFirstRun`
+    // returns true on the very first read.
+    await page.addInitScript(() => {
+      localStorage.setItem('tessella.hasSeenFirstRun', 'true');
+    });
+
     await page.goto('/');
     // Wait for the polygon palette to render — proxy for "Scala.js bundle loaded
     // and Laminar finished its first render".
@@ -60,8 +68,9 @@ test.describe('Tessella Editor smoke', () => {
     const helpItem = page.locator('.menu-item', { has: page.locator('button.menu-button', { hasText: 'Help' }) });
     await helpItem.hover();
 
-    // Click "About..." inside Help's dropdown-content.
-    await helpItem.locator('.dropdown-content a', { hasText: 'About...' }).click();
+    // Click "About…" inside Help's dropdown-content. Matches with a leading-anchor regex
+    // so it survives whether the trailing punctuation is "…" (current i18n catalog) or "...".
+    await helpItem.locator('.dropdown-content a', { hasText: /^About/ }).click();
 
     // Popup overlay + content + the title h1.
     await expect(page.locator('.popup-overlay')).toBeVisible();
@@ -89,7 +98,7 @@ test.describe('Tessella Editor smoke', () => {
     await fileItem.hover();
 
     const downloadPromise = page.waitForEvent('download');
-    await fileItem.locator('.dropdown-content a', { hasText: 'Save SVG as...' }).click();
+    await fileItem.locator('.dropdown-content a', { hasText: /^Save SVG as/ }).click();
     const download = await downloadPromise;
     const downloadPath = await download.path();
     expect(downloadPath).toBeTruthy();
@@ -109,7 +118,7 @@ test.describe('Tessella Editor smoke', () => {
     // Playwright's `filechooser` event captures it; we feed back the file we just downloaded.
     await fileItem.hover();
     const fileChooserPromise = page.waitForEvent('filechooser');
-    await fileItem.locator('.dropdown-content a', { hasText: 'Load SVG...' }).click();
+    await fileItem.locator('.dropdown-content a', { hasText: /^Load SVG/ }).click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(downloadPath);
 

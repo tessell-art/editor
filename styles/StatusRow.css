@@ -1,0 +1,38 @@
+/* Status row — code-editor-style bar pinned to the bottom edge of the canvas area.
+   Two slots: file name (left), measurement readout (right). */
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35em 0.8em;
+  height: 2em;
+  line-height: 2em;
+  border-top: 1px solid var(--panel-border);
+  background-color: var(--panel-bg);
+  font-size: 13px;
+}
+
+.status-file-name {
+  text-align: left;
+  font-family: monospace;
+  color: var(--text-muted-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.light-mode .status-file-name {
+  color: var(--text-color);
+}
+
+.status-measurement {
+  text-align: right;
+  font-family: Arial, sans-serif;
+  color: var(--text-muted);
+}
+
+.angle-toggle {
+  cursor: pointer;
+  text-decoration: underline dotted;
+}

@@ -1,12 +1,27 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.structure.FaceId
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.models.{ColorPickerContext, EditorState}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.UndoManager
 import io.github.scala_tessella.editor.utils.ColorRGB
 
 object ColorOperations:
+
+  /** Open the fill-color picker, seeding its working value with the current fill color. The picker's OK
+    * action applies the color to the current selection (or sets the default fill if there is none), matching
+    * the existing Edit → Fill Color… menu behaviour. The context flag drives the popup's title to make the
+    * "fill the selection on OK" intent explicit when entered from the on-canvas Fill swatch.
+    */
+  def openFillColorPicker(): Unit =
+    val current = EditorState.colorState.now().fillColor
+    EditorState.colorState.update(
+      _.copy(
+        tempColor = current,
+        showColorPicker = true,
+        colorPickerContext = ColorPickerContext.FillSelected
+      )
+    )
 
   def applyColorToSelectedPolygons(color: ColorRGB): Unit =
     ifNotProcessing:

@@ -67,18 +67,21 @@ object TessellationOperations:
       EditorState.colorState.update(_.copy(polygonColors = Map.empty))
       EditorState.tessellationState.update(_.copy(selectedTilingPolygons = Set.empty))
 
-  /** Select the irregular polygon in the palette (deselect regular if any). */
-  def selectIrregularInPalette(): Unit =
+  /** Select the irregular polygon at the given MRU index (deselect regular if any). No-op if the index is out
+    * of range.
+    */
+  def selectIrregularInPalette(index: Int): Unit =
     ifNotProcessing:
-      if EditorState.irregularState.now().recentIrregularPolygons.nonEmpty then
+      val mru = EditorState.irregularState.now().recentIrregularPolygons
+      if index >= 0 && index < mru.size then
         EditorState.toolState.update(_.copy(selectedPolygon = None))
-        EditorState.irregularState.update(_.selectHead)
+        EditorState.irregularState.update(_.selectAt(index))
 
-  /** If the tiling is empty and a recent irregular exists, initialize the tiling with it. */
+  /** If the tiling is empty and an irregular polygon is selected, initialize the tiling with it. */
   def initializeWithIrregularIfEmpty(): Unit =
     ifNotProcessing:
       if EditorState.tessellationState.now().currentTiling.isEmpty then
-        EditorState.irregularState.now().headOption match
+        EditorState.irregularState.now().selectedShape match
           case Some(angles) =>
             UndoManager.saveState()
             TilingDCEL.createSimplePolygon(angles).toOption match

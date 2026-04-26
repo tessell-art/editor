@@ -4,7 +4,7 @@ import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.{UndoManager, ViewOperations}
 import io.github.scala_tessella.editor.utils.Logger
-import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter, SvgImporter}
+import io.github.scala_tessella.editor.utils.file.{DotExporter, SvgExporter}
 import org.scalajs.dom
 
 import scala.scalajs.js
@@ -49,7 +49,7 @@ object DesktopMenuBridge:
 
   private def dispatch(id: String): Unit = id match
     case "new"                          => AppState.newTiling()
-    case "load-svg"                     => SvgImporter.trigger()
+    case "load-svg"                     => AppState.loadSvgFile()
     case "save-svg"                     => SvgExporter.saveTilingToSVG()
     case "save-svg-as"                  => SvgExporter.saveAsTilingToSVG()
     case "export-dot"                   => DotExporter.exportTilingToDOT()

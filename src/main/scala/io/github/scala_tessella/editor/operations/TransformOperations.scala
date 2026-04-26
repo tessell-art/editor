@@ -166,15 +166,15 @@ object TransformOperations:
                   pivot,
                   copies,
                   angle,
-                  EditorConfig.fanAnimationDurationMs,
-                  EditorConfig.fanAnimationStaggerMs
+                  MotionPreferences.effectiveAnimationDurationMs,
+                  MotionPreferences.effectiveStaggerMs
                 )
               EditorState.animationState.update(_.copy(fanAnimation = Some(animation)))
               scheduleAnimationCleanup(
                 getAnimation = _.fanAnimation,
                 clearAnimation = _.copy(fanAnimation = None),
                 animation = animation,
-                durationMs = EditorConfig.fanAnimationDurationMs
+                durationMs = MotionPreferences.effectiveAnimationDurationMs
               ) {
                 if needsFit then ViewOperations.fitTilingToCanvas()
               }
@@ -216,13 +216,13 @@ object TransformOperations:
             case (Some(orig), Some(next)) =>
               val delta     = next - orig
               val animation =
-                DoublingAnimation(context.facePoints, delta, EditorConfig.fanAnimationDurationMs)
+                DoublingAnimation(context.facePoints, delta, MotionPreferences.effectiveAnimationDurationMs)
               EditorState.animationState.update(_.copy(doublingAnimation = Some(animation)))
               scheduleAnimationCleanup(
                 getAnimation = _.doublingAnimation,
                 clearAnimation = _.copy(doublingAnimation = None),
                 animation = animation,
-                durationMs = EditorConfig.fanAnimationDurationMs
+                durationMs = MotionPreferences.effectiveAnimationDurationMs
               ) {
                 if needsFit then ViewOperations.fitTilingToCanvas()
               }
@@ -256,7 +256,7 @@ object TransformOperations:
               MirrorAnimation(
                 facePoints = facePoints,
                 axisY = axisY,
-                durationMs = EditorConfig.fanAnimationDurationMs
+                durationMs = MotionPreferences.effectiveAnimationDurationMs
               )
             EditorState.animationState.update(_.copy(mirrorAnimation = Some(animation)))
             scheduleAnimationCleanup(

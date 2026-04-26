@@ -1,0 +1,139 @@
+/* App shell — top bar that wraps logo, menu, language slot, and theme toggle.
+   Class names use the `.app-shell` prefix; menu-internal classes (`.menu-item`,
+   `.dropdown-content`, etc.) live in MenuBarStyles.css. */
+
+.app-shell {
+  background-color: var(--menu-bg);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+  position: relative;
+  z-index: 1000;
+  height: 40px;
+  margin-bottom: 8px;
+}
+
+.app-shell-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-shell-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-shell-logo {
+  height: 30px;
+  margin-right: 10px;
+}
+
+.app-shell-hamburger {
+  display: none; /* phone-only; revealed by media query below */
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.app-shell-menu {
+  display: flex;
+  align-items: center;
+}
+
+.app-shell-language {
+  background: transparent;
+  border: 1px solid var(--menu-mobile-border);
+  color: white;
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0.7;
+}
+
+.app-shell-language:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.app-shell-theme-toggle {
+  background: var(--menu-bg);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 22px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  width: 38px;
+}
+
+/* Backdrop sits below the drawer but above app content; only visible at phone widths
+   (the conditional element is removed at desktop widths via the `display: none` default).
+   Position-fixed so it covers the viewport area below the shell. */
+.app-shell-menu-backdrop {
+  display: none;
+}
+
+/* --- Phone widths: hamburger + slide-down menu drawer ---
+   600px is the project-wide phone breakpoint (also used by MobileBottomToolbar.css and the
+   PolygonPalette bottom-sheet variant). Keeping all three aligned. */
+@media (max-width: 600px) {
+  .app-shell-hamburger {
+    display: block;
+  }
+
+  .app-shell-left {
+    flex-grow: 1;
+  }
+
+  /* Drawer is always rendered as a flex column so its inner items lay out correctly,
+     but its `max-height` is 0 when closed → vertical slide animation. `overflow: hidden`
+     hides the items while collapsed. */
+  .app-shell-menu {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: var(--menu-mobile-bg);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+
+  .app-shell-menu.open {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .app-shell-menu-backdrop {
+    display: block;
+    position: fixed;
+    top: 40px;        /* clear the shell bar */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 990;     /* below the shell (z=1000), above app content */
+  }
+}
+
+/* Light-mode keeps the shell dark for contrast against the canvas. */
+.light-mode .app-shell,
+.light-mode .app-shell-hamburger,
+.light-mode .app-shell-theme-toggle {
+  background-color: var(--menu-bg);
+  color: white;
+}

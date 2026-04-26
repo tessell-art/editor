@@ -42,7 +42,14 @@ object PlacementOperations:
         Logger.error("Should not happen: both regular polygon and irregular polygon selected")
         None
       case (Some(sides), None)  => Some(RegularPlacement(sides))
-      case (None, Some(angles)) => Some(IrregularPlacement(angles))
+      case (None, Some(angles)) =>
+        // Recently-used regulars live in the same MRU as irregulars (so non-core sides like 11
+        // are reachable without retyping). Detect by all-equal angles and route through the
+        // regular placement path so the tiling lib gets the regular optimization.
+        if angles.size >= 3 && angles.forall(_ == angles.head) then
+          Some(RegularPlacement(angles.size))
+        else
+          Some(IrregularPlacement(angles))
 
   private def currentPolygonPlacementContext(emptyTilingMessage: String): Option[PolygonPlacementContext] =
     val tiling            = EditorState.tessellationState.now().currentTiling

@@ -1,0 +1,108 @@
+/* First-run welcome overlay — full-viewport modal shown once. Distinct from the empty-state card:
+   that one lives inside the canvas wrapper and reflects "the canvas is empty"; this one is a
+   first-time orientation surface. */
+
+.first-run-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.first-run-card {
+  width: min(720px, 100%);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.first-run-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.6rem;
+  color: var(--text-color);
+}
+
+.first-run-subtitle {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.first-run-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.first-run-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1.2rem 1rem;
+  background: var(--panel-bg-strong);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  color: var(--text-color);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.15s ease, transform 0.12s ease, background 0.15s ease;
+}
+
+.first-run-cta:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  background: var(--panel-hover);
+}
+
+.first-run-cta:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.first-run-cta-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--accent);
+}
+
+.first-run-cta-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.first-run-cta-headline {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.first-run-cta-body {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+@media (max-width: 600px) {
+  .first-run-card {
+    padding: 1.2rem;
+  }
+
+  .first-run-title {
+    font-size: 1.3rem;
+  }
+
+  .first-run-cards {
+    grid-template-columns: 1fr;
+  }
+}

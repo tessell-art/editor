@@ -1,0 +1,133 @@
+/* Template gallery — shown as a modal popup. Uses the popup-overlay/-content shell from
+   PopupCommons; this file styles the gallery's two-pane body (categories + thumbnail grid). */
+
+.template-gallery {
+  width: min(820px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.template-gallery h2 {
+  margin: 0;
+  padding: 0.7rem 1rem 0.5rem 1rem;
+  font-size: 1.05rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.template-gallery-body {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  flex: 1 1 auto;
+  min-height: 0; /* allow inner scroll */
+}
+
+.template-gallery-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem;
+  border-right: 1px solid var(--panel-border);
+  background-color: var(--panel-bg-strong);
+  overflow-y: auto;
+}
+
+.template-gallery-category {
+  text-align: left;
+  padding: 0.45em 0.7em;
+  font-size: 0.9rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  margin: 0;
+}
+
+.template-gallery-category:hover {
+  background-color: var(--panel-hover);
+  color: var(--text-color);
+}
+
+.template-gallery-category.active {
+  background-color: var(--accent);
+  border-color: var(--accent-strong);
+  color: white;
+}
+
+.template-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.7rem;
+  padding: 0.7rem;
+  overflow-y: auto;
+}
+
+.template-gallery-thumbnail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem;
+  background-color: var(--panel-bg-strong);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.template-gallery-thumbnail:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.template-gallery-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background-color: var(--canvas-bg);
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+}
+
+.template-gallery-caption {
+  margin-top: 0.4rem;
+  text-align: center;
+  width: 100%;
+}
+
+.template-gallery-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-gallery-pattern {
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+  font-family: monospace;
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 600px) {
+  .template-gallery-body {
+    /* Stack: categories above grid on phones. */
+    grid-template-columns: 1fr;
+  }
+
+  .template-gallery-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .template-gallery-category {
+    flex: 0 0 auto;
+  }
+}

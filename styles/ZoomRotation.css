@@ -1,33 +1,13 @@
-/* Add to your main stylesheet */
+/* Zoom / rotation status overlay — small text in the canvas top-right corner.
+   Layout (.canvas-container, .editor-canvas-wrapper, .editor-canvas) lives in
+   EditorLayout.css. */
 
-/* This rule makes the container for the palette and canvas a flexbox */
-/* This makes the canvas container grow to fill remaining horizontal space */
-.canvas-container {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* The wrapper now fills the available space of its parent */
-.editor-canvas-wrapper {
-    position: relative;
-    width: 100%;
-    flex-grow: 1; /* Allows the wrapper to fill vertical space */
-}
-
-/* The SVG element itself will fill its wrapper */
-.editor-canvas {
-    width: 100%;
-    /* sizing is controlled by --canvas-height in GlobalStyles/ResponsiveDesign */
-}
-
-/* The placeholder styling is unchanged but is included for completeness */
 .zoom-rotation {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    color: var(--text-muted);
-    pointer-events: none;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
 }

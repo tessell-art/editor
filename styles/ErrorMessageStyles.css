@@ -1,104 +1,136 @@
-/* Error Message Styling */
-.editor-canvas-wrapper {
-  position: relative;
-}
+/* Error surfaces. Two distinct flavors:
+   - `.error-container` / `.error-message` — inline canvas-anchored banner that explains a
+      validation failure (e.g. invalid placement). Sticks until dismissed.
+   - `#toast-container` / `.editor-toast` — bottom-right snackbar for transient feedback,
+      auto-dismissing. Three severities (info / warning / error) drive the color palette.
+   The `.editor-canvas-wrapper` anchor is declared in EditorLayout.css (`position: relative`).
+*/
+
+/* --- Inline error banner ---------------------------------------------------- */
 
 .error-container {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  top: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
   z-index: 10;
   pointer-events: none;
 }
 
 .error-message {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.6rem;
   background-color: var(--error-bg);
   color: var(--error-text);
-  font-size: 12px;
+  font-size: 0.85rem;
+  line-height: 1.4;
   border: 1px solid var(--error-border);
-  border-radius: 4px;
-  padding: 0.5rem 0.25rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  pointer-events: auto; /* Children can be clicked (like the close button) */
-  word-break: break-word; /* Prevents long messages from overflowing */
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  pointer-events: auto;
+  word-break: break-word;
 }
 
 .error-icon {
-  margin-right: 0.75rem;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  flex: 0 0 auto;
 }
 
 .error-text {
-  flex-grow: 1;
+  flex: 1 1 auto;
 }
 
 .error-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
   color: var(--error-text);
   cursor: pointer;
-  padding: 0 0.5rem;
-  margin-left: 1rem;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+  flex: 0 0 auto;
 }
 
 .error-close:hover {
   color: var(--error-close-hover);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.light-mode .error-close:hover {
+  background: rgba(0, 0, 0, 0.06);
 }
+
+.error-close:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* --- Toast snackbar -------------------------------------------------------- */
 
 #toast-container {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  right: 1rem;
+  bottom: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
   z-index: 9999;
   pointer-events: none;
 }
 
 .editor-toast {
-  background: #263238;
-  color: #E0F7FA;
-  border: 1px solid #4FC3F7;
+  background: var(--info-bg);
+  color: var(--info-text);
+  border: 1px solid var(--info-border);
   border-radius: 8px;
-  padding: 10px 12px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+  padding: 0.7rem 0.9rem;
+  box-shadow: 0 8px 24px var(--popup-shadow);
   max-width: 420px;
-  font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font: 0.9rem/1.4 inherit;
   white-space: pre-wrap;
   cursor: pointer;
   pointer-events: auto;
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity .15s ease, transform .15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .editor-toast[data-severity="warning"] {
-  background: #3E2723;
-  color: #FFE0B2;
-  border-color: #FFB74D;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
 }
 
 .editor-toast[data-severity="error"] {
-  background: #311920;
-  color: #FFCDD2;
-  border-color: #EF5350;
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+.editor-toast:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 600px) {
+  #toast-container {
+    left: 0.6rem;
+    right: 0.6rem;
+    align-items: stretch;
+  }
+
+  .editor-toast {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-toast {
+    transition: opacity 0.01s linear;
+    transform: none;
+  }
 }

@@ -25,14 +25,10 @@
 
 }
 
-@media (max-width: 768px) {
+/* Phone-tier overrides (600px aligns with AppShell drawer, MobileBottomToolbar, palette sheet). */
+@media (max-width: 600px) {
   :root {
     --canvas-height: 400px;
-  }
-
-  .canvas-controls {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .tiling-controls button {

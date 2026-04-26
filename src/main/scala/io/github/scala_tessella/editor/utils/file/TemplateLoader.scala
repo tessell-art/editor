@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.utils.file
 
 import io.github.scala_tessella.editor.utils.AsyncUtils
 import io.github.scala_tessella.editor.utils.file.SvgImporter.importTilingFromSVG
-import io.github.scala_tessella.editor.operations.ErrorOperations
+import io.github.scala_tessella.editor.operations.{ErrorOperations, RecentFilesOperations}
 import org.scalajs.dom
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,9 +23,9 @@ object TemplateLoader:
       }
       .onComplete {
         case Success(svgContent) =>
-          // This function will contain the logic to parse the SVG
-          // and update the application state.
-          AsyncUtils.withLoadingState(() => importTilingFromSVG(svgContent, fileName))
+          val _ = AsyncUtils.withLoadingState(() => importTilingFromSVG(svgContent, fileName))
+          // Track in the recent-files list so it shows up under File → Recent.
+          RecentFilesOperations.record(url, fileName)
         case Failure(exception)  =>
           ErrorOperations.showError(
             message = s"Failed to load template '$fileName': ${exception.getMessage}",

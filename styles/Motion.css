@@ -1,0 +1,104 @@
+/* Motion + cursor pass.
+ *
+ *   - Per-mode cursors on `.editor-canvas` so each tool has a recognisable affordance.
+ *   - Reduce-motion overrides covering the new redesigned chrome's hover transforms / slide-ins.
+ *     Two trigger paths:
+ *       1. The OS-level `prefers-reduced-motion: reduce` media query (any user, no app interaction).
+ *       2. `body.reduce-motion`, set by `Editor.scala` from `MotionPreferences.reducedMotionSignal`,
+ *          which honours the in-app Settings preference (Auto / On / Off).
+ *
+ *   The two paths share rule bodies via grouped selectors so adding a new motion-bearing surface
+ *   means one selector in two lists.
+ */
+
+/* --- Per-mode canvas cursors -------------------------------------------- */
+
+/* Default — no tool class (shouldn't happen at runtime since AddPolygon is the bootstrap state). */
+.editor-canvas {
+  cursor: default;
+}
+
+/* AddPolygon (Outside + Inside) inherits the default cursor — the active mode is already signalled
+   by the mode badge, palette selection, and (during a drag) the ghost + chevron, so a placement-
+   mode cursor adds nothing. Hovering a perimeter / interior edge still flips to `pointer`
+   (CanvasNodeLabelStyles.css), which remains the right hint for the click-to-place path. */
+
+/* Click-on-existing modes — pointer-shaped target. */
+.editor-canvas.tool-eraser           { cursor: pointer; }
+.editor-canvas.tool-color-picker     { cursor: crosshair; }
+.editor-canvas.tool-shape-color-picker { cursor: crosshair; }
+.editor-canvas.tool-select-by-color  { cursor: pointer; }
+.editor-canvas.tool-measurement      { cursor: crosshair; }
+.editor-canvas.tool-fan              { cursor: pointer; }
+
+/* --- Reduce-motion suppressions ----------------------------------------- */
+
+/*
+ * Hover-lift transforms: the redesigned chrome lifts cards/buttons by 1–2 px on hover. Strip the
+ * transform AND the transition so reduced-motion users get an instant visual change with no slide.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .polygon-btn:hover,
+  .template-gallery-thumbnail:hover,
+  .first-run-cta:hover,
+  .settings-swatch-button:hover .settings-swatch,
+  .recent-files-row:hover {
+    transform: none;
+    transition: none;
+  }
+
+  /* Also flatten the long `.polygon-btn { transition: all 0.3s ease; }` rule so colour /
+     border-color hover changes still happen but instantly, not over 0.3 s. */
+  .polygon-btn,
+  .template-gallery-thumbnail,
+  .first-run-cta,
+  .toggle-btn,
+  .settings-swatch,
+  .mode-badge {
+    transition: none;
+  }
+
+  /* Drawer / panel slide-ins. Keep the open/closed state visually correct but skip the slide. */
+  .app-shell-menu,
+  .tiling-info-panel,
+  .palette-sheet--peek,
+  .palette-sheet--full {
+    transition: none;
+  }
+}
+
+/* In-app preference equivalent — same suppressions, triggered by the body class instead of the
+   media query. Higher specificity (`body.reduce-motion .X` adds an element-level selector to the
+   rule), so it wins against the surface's own hover declaration. */
+body.reduce-motion .polygon-btn:hover,
+body.reduce-motion .template-gallery-thumbnail:hover,
+body.reduce-motion .first-run-cta:hover,
+body.reduce-motion .settings-swatch-button:hover .settings-swatch,
+body.reduce-motion .recent-files-row:hover {
+  transform: none;
+  transition: none;
+}
+
+body.reduce-motion .polygon-btn,
+body.reduce-motion .template-gallery-thumbnail,
+body.reduce-motion .first-run-cta,
+body.reduce-motion .toggle-btn,
+body.reduce-motion .settings-swatch,
+body.reduce-motion .mode-badge,
+body.reduce-motion .app-shell-menu,
+body.reduce-motion .tiling-info-panel,
+body.reduce-motion .palette-sheet--peek,
+body.reduce-motion .palette-sheet--full,
+body.reduce-motion .editor-toast {
+  transition: none;
+}
+
+/* Spinner and processing-pulse: keep them, just slow the spinner so it isn't dizzying and stop
+   the pulse outright. Matches the per-file rules already in LoadingIndicator.css for the OS query. */
+body.reduce-motion .spinner {
+  animation-duration: 2.4s;
+}
+
+body.reduce-motion .status.processing {
+  animation: none;
+}

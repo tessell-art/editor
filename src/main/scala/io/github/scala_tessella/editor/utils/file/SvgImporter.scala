@@ -4,8 +4,9 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.conversion.TilingSVG
 import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.operations.{
-  ErrorOperations, MeasurementOperations, SymmetryOperations, ViewOperations
+  DirtyTracker, ErrorOperations, MeasurementOperations, SymmetryOperations, ViewOperations
 }
 import io.github.scala_tessella.editor.utils.ColorRGB.parseColor
 import io.github.scala_tessella.editor.operations.UndoManager
@@ -40,7 +41,10 @@ object SvgImporter:
           val content =
             Option(reader.result).fold(""):
               _.toString
-          AsyncUtils.withLoadingState(() => importTilingFromSVG(content, file.name), Some("Importing SVG..."))
+          AsyncUtils.withLoadingState(
+            () => importTilingFromSVG(content, file.name),
+            Some(I18n.tNow("loading.importingSvg"))
+          )
         }
         reader.readAsText(file)
       // Clean up the temporary input element
@@ -52,12 +56,12 @@ object SvgImporter:
     * loads the tiling into the editor or surfaces the error via `ErrorOperations`.
     */
   def importTilingFromSVG(svgContent: String, filename: String): Unit =
-    AsyncUtils.setLoadingMessage("Parsing SVG metadata...")
+    AsyncUtils.setLoadingMessage(I18n.tNow("loading.parsingSvg"))
     val result: Either[String, Unit] =
       for
         doc       <- parseSvg(svgContent)
         metaElem  <- findTessellaMetadata(doc)
-        _          = AsyncUtils.setLoadingMessage("Validating tessellation...")
+        _          = AsyncUtils.setLoadingMessage(I18n.tNow("loading.validating"))
         tiling    <- parseTiling(metaElem.outerHTML)
         polyFills <- readPolygonFillsStrict(doc, expectedCount = tiling.innerFaces.size)
       yield loadTilingIntoEditor(tiling, polyFills, filename)
@@ -130,6 +134,8 @@ object SvgImporter:
     EditorState.fileState.update(_.copy(currentFileName = Some(filename)))
     ViewOperations.fitTilingToCanvas()
     UndoManager.clearHistory()
+    // Loaded tiling matches the source file → it's the new "saved" baseline.
+    DirtyTracker.markSaved()
 
   private def showImportError(reason: String): Unit =
     ErrorOperations.showError(

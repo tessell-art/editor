@@ -74,6 +74,14 @@
   --error-border: #7a3a44;
   --error-close-hover: #ffffff;
 
+  /* Status / toast severities (info / warning reuse the error palette tone) */
+  --info-bg: #1f3441;
+  --info-text: #d4ecf7;
+  --info-border: #2c7da0;
+  --warning-bg: #3a2c1c;
+  --warning-text: #ffe0b2;
+  --warning-border: #c98c3d;
+
   /* Popup */
   --popup-overlay: rgba(10, 12, 15, 0.7);
   --popup-bg: #f7f9fb;
@@ -137,6 +145,12 @@
   --error-bg: #fdecee;
   --error-text: #8a2c3a;
   --error-border: #f3c2c7;
+  --info-bg: #e7f4fb;
+  --info-text: #1f4d63;
+  --info-border: #9cc8df;
+  --warning-bg: #fdf3e3;
+  --warning-text: #6e4a14;
+  --warning-border: #e5b878;
   --canvas-bg: #ffffff;
   --color-picker-bg: #ffffff;
   --color-picker-shadow: #cbd3dd80;

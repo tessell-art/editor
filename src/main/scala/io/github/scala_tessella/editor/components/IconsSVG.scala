@@ -184,18 +184,18 @@ object IconsSVG:
       )
     )
 
-  private[components] val inserterViewBox: String = "0 0 22 22"
-  private[components] val inserterPathD: String   = "M 2,2 H 22 V 22 H 2 Z M 2,22 L 12,4.68 L 22,22 Z"
-
-  private[components] def inserterIcon: Element =
-    createIcon(inserterViewBox)(
-      svg.path(
-        svg.d           := inserterPathD,
-        svg.fill        := "none",
-        svg.stroke      := "currentColor",
-        svg.strokeWidth := "2"
-      )
-    )
+//  private[components] val inserterViewBox: String = "0 0 22 22"
+//  private[components] val inserterPathD: String   = "M 2,2 H 22 V 22 H 2 Z M 2,22 L 12,4.68 L 22,22 Z"
+//
+//  private[components] def inserterIcon: Element =
+//    createIcon(inserterViewBox)(
+//      svg.path(
+//        svg.d           := inserterPathD,
+//        svg.fill        := "none",
+//        svg.stroke      := "currentColor",
+//        svg.strokeWidth := "2"
+//      )
+//    )
 
   private[components] def plusIcon: Element =
     createIcon("0 -4 24 24")(

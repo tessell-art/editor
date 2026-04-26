@@ -86,11 +86,26 @@ object TessellationRenderer:
                 case _                                       => p
             FailedPolygonRenderer.renderFailedPlacement(adjusted)
 
-    // Hover preview wireframe for boundary addition
+    // Hover preview wireframe for boundary addition (click-to-place path). Suppressed during a
+    // drag-from-palette gesture — the free-floating ghost (next overlay) owns the visible role
+    // there, while `previewPlacement` continues to silently track the snapped commit target.
     val previewPolygonWireframe = child.maybe <--
-      EditorState.previewState.signal.map(_.previewPlacement).distinct.map: placement =>
-        placement.map:
-          PreviewPolygonRenderer.renderPreview
+      EditorState.previewState.signal.map(_.previewPlacement).distinct
+        .combineWith(EditorState.uiState.signal.map(_.isPaletteDragActive).distinct)
+        .map: (placement, paletteDragActive) =>
+          if paletteDragActive then None
+          else placement.map(PreviewPolygonRenderer.renderPreview)
+
+    // Free-floating ghost wireframe for the drag-from-palette gesture: tracks the cursor across the
+    // canvas and re-orients to the nearest snappable edge while in range.
+    val paletteDragGhostWireframe = child.maybe <--
+      EditorState.previewState.signal.map(_.paletteGhost).distinct.map: ghost =>
+        ghost.map(PreviewPolygonRenderer.renderGhost)
+
+    // Snap-target hint: halo on the latched edge + directional chevron showing growth side.
+    val paletteSnapHintOverlay = child.maybe <--
+      EditorState.previewState.signal.map(_.paletteSnapHint).distinct.map: hint =>
+        hint.map(PaletteSnapHintRenderer.render)
 
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <--
@@ -163,6 +178,8 @@ object TessellationRenderer:
       nodeLabels,
       failedPolygonWireframe,
       previewPolygonWireframe,
+      paletteSnapHintOverlay,
+      paletteDragGhostWireframe,
       failedDeletionWireframe,
       clickablePointsDisplay,
       measurementStartPointDisplay,

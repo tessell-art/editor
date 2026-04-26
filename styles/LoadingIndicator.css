@@ -1,28 +1,37 @@
-/* Loading indicator styles */
+/* Loading overlay — full-viewport scrim with a centered card while a long-running
+   operation (SVG import, template fetch, symmetry compute) is in flight. Card surface
+   matches the new popup chrome (panel-bg, panel-border, 12px radius). */
+
 .loading-indicator {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-color: var(--loading-bg);
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 1rem;
 }
 
 .loading-content {
-    background-color: var(--panel-bg-strong);
-    border: 2px solid var(--focus-ring);
-    border-radius: 8px;
-    padding: 20px;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 1.6rem 1.8rem;
     text-align: center;
     color: var(--text-color);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 0.9rem;
+    box-shadow: 0 12px 40px var(--popup-shadow);
+    min-width: min(280px, 100%);
+}
+
+.loading-content p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-color);
 }
 
 .spinner {
@@ -39,7 +48,13 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Disabled button styles */
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation-duration: 2.4s;
+    }
+}
+
+/* Disabled button styles (kept here because the loading state is what flips them). */
 .polygon-btn.disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -53,7 +68,7 @@ button:disabled {
     color: var(--btn-disabled-text);
 }
 
-/* Processing status styles */
+/* Processing-status pill used by the status row when a long op is running. */
 .status.processing {
     color: var(--status-processing);
     animation: pulse 1.5s ease-in-out infinite;
@@ -64,7 +79,13 @@ button:disabled {
     50% { opacity: 0.6; }
 }
 
-/* Cursor styles for different states */
+@media (prefers-reduced-motion: reduce) {
+    .status.processing {
+        animation: none;
+    }
+}
+
+/* Cursor states for canvas-level lockout. */
 .editor-canvas[style*="cursor: wait"] {
     cursor: wait !important;
 }

@@ -41,12 +41,12 @@ class PolygonPaletteComponentSpec extends FunSuite:
   test("irregularPolygonLabel returns 'Irregular' when no shape is recorded"):
     assertEquals(PolygonPaletteComponent.irregularPolygonLabel(None), "Irregular")
 
-  test("irregularPolygonLabel returns 'Irr-N' with N = angle count"):
+  test("irregularPolygonLabel returns 'N≠' with N = angle count"):
     val triangle = Vector(60, 60, 60).map(AngleDegree(_))
-    assertEquals(PolygonPaletteComponent.irregularPolygonLabel(Some(triangle)), "Irr-3")
+    assertEquals(PolygonPaletteComponent.irregularPolygonLabel(Some(triangle)), "3≠")
 
     val pentagon = Vector(108, 108, 108, 108, 108).map(AngleDegree(_))
-    assertEquals(PolygonPaletteComponent.irregularPolygonLabel(Some(pentagon)), "Irr-5")
+    assertEquals(PolygonPaletteComponent.irregularPolygonLabel(Some(pentagon)), "5≠")
 
   // --- polygonButtonClasses ---
 

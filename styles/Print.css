@@ -1,0 +1,56 @@
+/* Print-only styles. Hides app chrome and scales the canvas to fill the page.
+   The `@page { size: ... }` rule is injected dynamically by PrintPdfExporter so the user's
+   paper-size + orientation choice from the print popup applies. */
+
+@media print {
+  /* Hide everything by default — we re-show only what the printout needs. */
+  .app-shell,
+  .app-shell-menu-backdrop,
+  .canvas-controls,
+  .polygon-palette,
+  .palette-sheet-handle,
+  .mobile-bottom-toolbar,
+  .status-row,
+  .tiling-info-panel,
+  .empty-state-card,
+  .mode-badge,
+  .zoom-rotation,
+  .loading-indicator,
+  .error-container,
+  .popup-overlay {
+    display: none !important;
+  }
+
+  /* Reset background and let the canvas occupy the full printable area. */
+  html,
+  body,
+  #app,
+  .editor-layout,
+  .canvas-container,
+  .editor-canvas-wrapper {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .editor-layout {
+    display: block !important;
+  }
+
+  /* The SVG fills the page. `width: 100%` + `height: auto` keeps the viewBox aspect ratio. */
+  .editor-canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    page-break-inside: avoid;
+  }
+
+  /* Strip the cursor so it doesn't appear in some browser print previews. */
+  .editor-canvas {
+    cursor: default !important;
+  }
+}

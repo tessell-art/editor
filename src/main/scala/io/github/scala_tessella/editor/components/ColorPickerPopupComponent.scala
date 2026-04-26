@@ -2,7 +2,8 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L._
 import io.github.nguyenyou.ui5.webcomponents.laminar.ColorPicker
-import io.github.scala_tessella.editor.models.EditorState
+import io.github.scala_tessella.editor.i18n.I18n
+import io.github.scala_tessella.editor.models.{ColorPickerContext, EditorState}
 import io.github.scala_tessella.editor.operations.ColorOperations.applyColorToSelectedPolygons
 import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.ColorRGB._
@@ -28,7 +29,17 @@ object ColorPickerPopupComponent:
       div(
         className := "popup-content",
         onClick.map(_.stopPropagation()) --> Observer.empty,
-        h3("Select Color"),
+        h3(
+          child.text <--
+            EditorState.colorState.signal.map(_.colorPickerContext).distinct
+              .combineWith(EditorState.localeState.signal)
+              .map: (context, _) =>
+
+                val key = context match
+                  case ColorPickerContext.FillSelected => "popup.colorPicker.fillSelectedTitle"
+                  case ColorPickerContext.Default      => "popup.colorPicker.title"
+                I18n.tNow(key)
+        ),
         ColorPicker(
           _.simplified := true,
           _.value <-- tempColorSignal.map(_.toRgba),
@@ -41,14 +52,14 @@ object ColorPickerPopupComponent:
         div(
           className := "popup-actions",
           button(
-            "Cancel",
+            child.text <-- I18n.t("common.cancel"),
             onClick --> { _ =>
 
               close()
             }
           ),
           button(
-            "OK",
+            child.text <-- I18n.t("common.ok"),
             onClick.compose(_.withCurrentValueOf(tempColorSignal)) --> { (_, newColor) =>
 
               EditorState.colorState.update(_.copy(fillColor = newColor))

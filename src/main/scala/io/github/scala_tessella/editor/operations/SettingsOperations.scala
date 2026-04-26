@@ -1,10 +1,11 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.{ColorRGB, SettingsStorage}
+import io.github.scala_tessella.editor.utils.SettingsStorage
 
-/** Operations over user-editable settings (default polygon fill, perimeter edge colour). Handles both the
-  * runtime state and its persistence through [[SettingsStorage]].
+/** Operations over user-editable settings: default polygon fill colour, perimeter edge colour, boundary edge
+  * width, reduce-motion preference. Handles both the runtime state and its persistence through
+  * [[SettingsStorage]].
   */
 object SettingsOperations:
 
@@ -12,26 +13,38 @@ object SettingsOperations:
     * picker.
     */
   def refreshSettingsTempValues(): Unit =
-    EditorState.colorState.update(_.copy(tempDefaultFillColor =
-      EditorState.colorState.now().defaultStartFillColor
-    ))
-    EditorState.colorState.update(_.copy(tempPerimeterEdgeColor =
-      EditorState.colorState.now().perimeterEdgeColor
-    ))
-    EditorState.colorState.update(_.copy(tempSettingsPickerColor =
-      EditorState.colorState.now().defaultStartFillColor
+    val cs = EditorState.colorState.now()
+    EditorState.colorState.update(_.copy(
+      tempDefaultFillColor = cs.defaultStartFillColor,
+      tempPerimeterEdgeColor = cs.perimeterEdgeColor,
+      tempSettingsPickerColor = cs.defaultStartFillColor
     ))
     EditorState.popupState.update(_.copy(showSettingsColorPicker = false))
+    val ss = EditorState.settingsState.now()
+    EditorState.settingsState.update(_.copy(
+      tempBoundaryEdgeWidth = ss.boundaryEdgeWidth,
+      tempReduceMotion = ss.reduceMotion
+    ))
 
-  /** Applies editor settings (default fill color, perimeter edge color) and persists them via
-    * [[SettingsStorage]].
+  /** Commits the popup's temp values into the saved-settings fields and persists them via
+    * [[SettingsStorage]]. Reads temp values from state — popup just calls this then closes.
     */
-  def applySettings(defaultFill: ColorRGB, perimeterEdge: ColorRGB): Unit =
-    EditorState.colorState.update(_.copy(defaultStartFillColor = defaultFill))
-    EditorState.colorState.update(_.copy(fillColor = defaultFill))
-    SettingsStorage.saveDefaultStartFillColor(defaultFill)
-    EditorState.colorState.update(_.copy(perimeterEdgeColor = perimeterEdge))
-    SettingsStorage.savePerimeterEdgeColor(perimeterEdge)
+  def applySettings(): Unit =
+    val cs = EditorState.colorState.now()
+    val ss = EditorState.settingsState.now()
+    EditorState.colorState.update(_.copy(
+      defaultStartFillColor = cs.tempDefaultFillColor,
+      fillColor = cs.tempDefaultFillColor,
+      perimeterEdgeColor = cs.tempPerimeterEdgeColor
+    ))
+    EditorState.settingsState.update(_.copy(
+      boundaryEdgeWidth = ss.tempBoundaryEdgeWidth,
+      reduceMotion = ss.tempReduceMotion
+    ))
+    SettingsStorage.saveDefaultStartFillColor(cs.tempDefaultFillColor)
+    SettingsStorage.savePerimeterEdgeColor(cs.tempPerimeterEdgeColor)
+    SettingsStorage.saveBoundaryEdgeWidth(ss.tempBoundaryEdgeWidth)
+    SettingsStorage.saveReduceMotion(ss.tempReduceMotion)
 
   /** Resets the current fill color to the default start fill color. */
   def resetFillColorToDefault(): Unit =

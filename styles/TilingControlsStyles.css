@@ -22,6 +22,30 @@
   border-radius: 8px;
 }
 
+.tool-strip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.5rem;
+}
+
+.tool-strip-modes,
+.tool-strip-aux {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.tool-strip-spacer {
+  flex: 1 1 auto;
+  min-width: 1rem;
+}
+
+/* Legacy class kept for any callers still using it. */
 .control-group {
   display: flex;
   gap: 10px;
@@ -35,13 +59,18 @@
 }
 
 .toggle-btn {
-  padding: 8px 8px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4em;
+  padding: 6px 10px;
   border: 2px solid var(--toggle-border);
   background: transparent;
   color: var(--toggle-border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .toggle-btn:hover {
@@ -51,6 +80,21 @@
 .toggle-btn.active {
   background: var(--toggle-bg-active);
   color: white;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tool-button-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.add-polygon-btn .tool-button-label {
+  font-variant-numeric: tabular-nums;
 }
 
 .toggle-btn.mode-select {
@@ -86,17 +130,39 @@
   padding: 0.5rem 1.0rem;
 }
 
-.fill-color-btn {
-  margin-left: 8px;
-  border: 2px solid var(--toggle-border);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-  padding: 0.3em 0.9em;
-  border-radius: 5px;
-}
-
 .light-mode .canvas-controls,
 .light-mode .tiling-controls {
   background-color: var(--panel-soft);
+}
+
+/* --- Fill swatch — small clickable chip showing the current fill color.
+   Used in the desktop tool strip's aux section and in the mobile bottom toolbar's aux row. */
+
+.fill-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 2px solid var(--panel-border-strong);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.fill-swatch:hover {
+  border-color: var(--accent);
+}
+
+.fill-swatch-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* On the mobile bottom toolbar the swatch shares the .mobile-bottom-toolbar-btn shell;
+   only the inner chip styling applies. */
+.mobile-bottom-toolbar-btn.fill-swatch {
+  padding: 4px;
 }

@@ -29,8 +29,9 @@ object EditorConfig:
   val keyboardZoomFactor: Double      = 1.1
   val menuZoomFactor: Double          = 1.2
 
-  // Polygon palette configuration
-  val polygonSides: List[Int] = List(3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 24, 42)
+  // Polygon palette configuration. Fixed regulars shown as first-class buttons; everything outside
+  // this list (e.g. 7, 9, 10, 11, 15, 18, 20, 24, 42) is reachable via the custom-n button.
+  val polygonSides: List[Int] = List(3, 4, 5, 6, 8, 12)
 
   // Maximum number of distinct irregular polygons remembered in the MRU palette row
   val irregularMRUSize: Int = 5
@@ -40,6 +41,11 @@ object EditorConfig:
 
   // Default perimeter edge color for the editor canvas
   val defaultPerimeterEdgeColor: ColorRGB = ColorRGB(255, 149, 0)
+
+  // Default stroke width (px) for the perimeter edge in the canvas. User-overridable in Settings.
+  val defaultBoundaryEdgeWidth: Double = 4.0
+  val minBoundaryEdgeWidth: Double     = 1.0
+  val maxBoundaryEdgeWidth: Double     = 12.0
 
   // Fan animation duration (milliseconds)
   val fanAnimationDurationMs: Int = 3000

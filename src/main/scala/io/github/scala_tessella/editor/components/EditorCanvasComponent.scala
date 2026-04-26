@@ -1,78 +1,32 @@
 package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.interactions.{MouseEventHandler, TouchEventHandler}
-import io.github.scala_tessella.editor.models.EditorState
-import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
-import io.github.scala_tessella.editor.utils.SvgDsl.{rectCoords, textCoords}
+import io.github.scala_tessella.editor.models.{AddSubmode, EditorState, Tool}
 
 object EditorCanvasComponent:
 
-  private def distanceString(distance: Double): String =
-    f"Distance: $distance%.6f units"
-
   def element: Element =
-    val fileNameDisplaySignal =
-      EditorState.fileState.signal.map(_.currentFileName).distinct.combineWith(
-        EditorState.measurementState.signal.map(_.measurementResult).distinct
-      ).map: (maybeName, maybeDistance) =>
-        maybeDistance match
-          case Some(_) => ""
-          case None    => maybeName.getOrElse("untitled")
-
-    val measurementDisplaySignal =
-      EditorState.measurementState.signal.map(_.measurementResult).distinct
-        .combineWith(
-          EditorState.measurementState.signal.map(_.measurementAngle).distinct,
-          EditorState.measurementState.signal.map(_.isAngleShownInRad).distinct
-        )
-        .map:
-          case (None, _, _)                         => None
-          case (Some(distance), None, _)            => Some(span(distanceString(distance)))
-          case (Some(distance), Some(angle), isRad) =>
-            val angleText    =
-              if isRad then f"Angle: ${angle.toDouble}%.6f rad" else f"Angle: ${angle.toDegrees}%.2f°"
-            val distancePart = distanceString(distance)
-            Some(span(
-              span(
-                onClick --> { _ =>
-
-                  EditorState.measurementState.update(s => s.copy(isAngleShownInRad = !s.isAngleShownInRad))
-                },
-                title     := "Click to toggle radians/degrees",
-                className := "angle-toggle",
-                angleText
-              ),
-              span(s" · $distancePart")
-            ))
-
     div(
       className := "canvas-container",
-      //      h2("Canvas"),
       CanvasControlComponent.element,
       // Loading indicator
       child.maybe <-- EditorState.uiState.signal.map(_.isProcessing).distinct.map: processing =>
         if processing then Some(loadingIndicator()) else None,
-      div(
-        className := "file-and-measurement-container",
-        div(
-          className := "file-name",
-          child.text <-- fileNameDisplaySignal
-        ),
-        div(
-          className := "measurement-result",
-          child.maybe <-- measurementDisplaySignal
-        )
-      ),
       // A new wrapper for the SVG and its overlays
       div(
         className := "editor-canvas-wrapper",
         ErrorMessageComponent.element,
+        ModeBadgeComponent.element,
+        // Empty-state card shown when no tessellation exists
+        child.maybe <-- EditorState.isTilingEmptySignal.map: isEmpty =>
+          if isEmpty then Some(EmptyStateCardComponent.element) else None,
         svg.svg(
-          svg.className := "editor-canvas",
+          svg.className <-- canvasClassNameSignal,
           // The fixed width and height have been removed to allow CSS to control the size
-          svg.viewBox   := "0 0 800 600",
-          svg.tabIndex  := "0",
+          svg.viewBox  := "0 0 800 600",
+          svg.tabIndex := "0",
 
           // Store reference to the canvas element
           onMountCallback: ctx =>
@@ -80,22 +34,13 @@ object EditorCanvasComponent:
           onUnmountCallback: _ =>
             EditorState.uiState.update(_.copy(canvasElementRef = None)),
 
-          // Dynamic cursor and interactivity derived as a Signal
-          {
-            val canvasInteractivityStyle: Signal[String] =
-              EditorState.uiState.signal.map(_.isProcessing).distinct.map: isProcessing =>
-                if isProcessing then
-                  "cursor: wait; pointer-events: none;"
-                else
-                  "cursor: default;"
-            svg.style <-- canvasInteractivityStyle
-          },
+          // While processing, the canvas freezes — wait cursor, no pointer events. The per-mode
+          // cursor (driven by `canvasClassNameSignal` above) takes over once processing clears.
+          svg.style <-- EditorState.uiState.signal.map(_.isProcessing).distinct.map: isProcessing =>
+            if isProcessing then "cursor: wait; pointer-events: none;" else "",
 
           // Add grid pattern definition here
           GridRenderer.patternDef,
-
-          // Background
-          //          background(),
 
           // Main content group with transforms
           contentGroup(),
@@ -150,9 +95,34 @@ object EditorCanvasComponent:
             f"Zoom: ${t.scale * 100}%.0f${'%'} · Rotation: ${t.rotationDegrees}°"
           ),
           className := "zoom-rotation"
-        )
-      )
+        ),
+        // Tiling info side panel — slides in from the right edge when toggled. Lives inside the
+        // canvas wrapper so it floats over the canvas (overlay, not a separate grid column).
+        TilingInfoPanel.element
+      ),
+      // Status row pinned to the bottom of the canvas area
+      StatusRowComponent.element
     )
+
+  /** Class string applied to the canvas SVG. Always `editor-canvas`; suffixed with a `tool-…` modifier
+    * tracking the active tool so CSS can swap the cursor per mode (`tool-add-outside`, `tool-eraser`,
+    * `tool-color-picker`, …). The processing/wait state is layered on top via inline `style`.
+    */
+  private val canvasClassNameSignal: Signal[String] =
+    EditorState.toolState.signal.map(s => (s.activeTool, s.addSubmode)).distinct.map { case (tool, sub) =>
+      val toolClass = tool match
+        case Tool.AddPolygon          =>
+          sub match
+            case AddSubmode.Outside => "tool-add-outside"
+            case AddSubmode.Inside  => "tool-add-inside"
+        case Tool.Eraser              => "tool-eraser"
+        case Tool.ColorPicker         => "tool-color-picker"
+        case Tool.ShapeAndColorPicker => "tool-shape-color-picker"
+        case Tool.SelectByColor       => "tool-select-by-color"
+        case Tool.Measurement         => "tool-measurement"
+        case Tool.Fan                 => "tool-fan"
+      s"editor-canvas $toolClass"
+    }
 
   private def loadingIndicator(): Element =
     div(
@@ -161,18 +131,13 @@ object EditorCanvasComponent:
         className := "loading-content",
         div(className := "spinner"),
         p(
-          child.text <-- EditorState.uiState.signal.map(_.loadingMessage).distinct.map:
-            _.getOrElse("Processing tessellation...")
+          child.text <--
+            EditorState.uiState.signal.map(_.loadingMessage).distinct
+              .combineWith(EditorState.localeState.signal)
+              .map: (msg, _) =>
+                msg.getOrElse(I18n.tNow("loading.default"))
         )
       )
-    )
-
-  private def background(): Element =
-    svg.rect(
-      rectCoords(LineSegment(Point(0, 0), Point(800, 600))),
-      svg.fill        := "#1a1a1a",
-      svg.stroke      := "#333",
-      svg.strokeWidth := "2"
     )
 
   private def contentGroup(): Element =
@@ -203,36 +168,4 @@ object EditorCanvasComponent:
                 fanOpt match
                   case Some(animation) => TessellationRenderer.renderFanAnimation(animation)
                   case None            => TessellationRenderer.renderTiling(tiling)
-      ,
-      // Show message when no tessellation is available
-      child.maybe <-- animationAndTilingSignal.map: (mirrorOpt, doubleOpt, fanOpt, tiling) =>
-        if mirrorOpt.isDefined || doubleOpt.isDefined || fanOpt.isDefined then None
-        else if tiling.isEmpty then
-          Some(noTessellationMessage())
-        else if tiling.innerFaces.size == 1 && tiling.innerFaces.head.hasEqualAngles.toOption.contains(true)
-        then
-          Some(onePolygonMessage())
-        else None
     )
-
-  private def createSvgText(point: Point, fontSize: Int, fill: String, content: String): Element =
-    svg.text(
-      textCoords(point),
-      svg.fontSize   := fontSize.toString,
-      svg.fill       := fill,
-      svg.textAnchor := "middle",
-      svg.fontFamily := "Arial, sans-serif",
-      content
-    )
-
-  private def canvasMessage(title: String, subTitle: String): Element =
-    svg.g(
-      createSvgText(Point(425, 250), 18, "#888", title),
-      createSvgText(Point(425, 280), 14, "#666", subTitle)
-    )
-
-  private def noTessellationMessage(): Element =
-    canvasMessage("Empty tessellation", "Select a polygon to start a tessellation")
-
-  private def onePolygonMessage(): Element =
-    canvasMessage("Add the next polygon", "Click on any perimeter edge to grow the tessellation")

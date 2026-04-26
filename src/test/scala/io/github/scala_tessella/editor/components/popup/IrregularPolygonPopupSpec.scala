@@ -15,13 +15,14 @@ class IrregularPolygonPopupSpec extends FunSuite with EditorStateFixture with La
   private val initialAngles: Vector[AngleDegree] =
     Vector(60, 120, 60, 120).map(AngleDegree(_))
 
-  private def stateWithHead(angles: Vector[AngleDegree]): IrregularState =
-    IrregularState(recentIrregularPolygons = Vector(angles), selectedIndex = None)
+  /** Single-entry MRU with that entry pre-selected — the popup operates on the *selected* shape. */
+  private def stateWithSelected(angles: Vector[AngleDegree]): IrregularState =
+    IrregularState(recentIrregularPolygons = Vector(angles), selectedIndex = Some(0))
 
   private def emptyState: IrregularState =
     IrregularState(recentIrregularPolygons = Vector.empty, selectedIndex = None)
 
-  test("renders the empty state when no irregular polygon is recorded"):
+  test("renders the empty state when no irregular polygon is selected"):
     EditorState.irregularState.set(emptyState)
     mount(IrregularPolygonPopup.element): Unit
 
@@ -30,8 +31,8 @@ class IrregularPolygonPopupSpec extends FunSuite with EditorStateFixture with La
     assert(container.textContent.contains("No irregular polygon"))
     assert(querySelector(".irregular-head-editor").isEmpty)
 
-  test("renders the editor when a recent irregular polygon is present"):
-    EditorState.irregularState.set(stateWithHead(initialAngles))
+  test("renders the editor when an irregular polygon is selected"):
+    EditorState.irregularState.set(stateWithSelected(initialAngles))
     mount(IrregularPolygonPopup.element): Unit
 
     assert(querySelector(".irregular-head-editor").isDefined)
@@ -41,40 +42,40 @@ class IrregularPolygonPopupSpec extends FunSuite with EditorStateFixture with La
 
   test("clicking the close button sets showIrregularPolygonPopup to false"):
     EditorState.popupState.update(_.copy(showIrregularPolygonPopup = true))
-    EditorState.irregularState.set(stateWithHead(initialAngles))
+    EditorState.irregularState.set(stateWithSelected(initialAngles))
     mount(IrregularPolygonPopup.element): Unit
 
     clickOn(".popup-close-btn")
 
     assertEquals(EditorState.popupState.now().showIrregularPolygonPopup, false)
 
-  test("shift-left button rotates the head shape left and reactively updates the DOM"):
-    EditorState.irregularState.set(stateWithHead(initialAngles))
+  test("shift-left button rotates the selected shape left and reactively updates the DOM"):
+    EditorState.irregularState.set(stateWithSelected(initialAngles))
     mount(IrregularPolygonPopup.element): Unit
 
     clickOn(".btn-left")
 
-    val rotated = EditorState.irregularState.now().headOption.get
+    val rotated = EditorState.irregularState.now().selectedShape.get
     assertEquals(rotated, Vector(120, 60, 120, 60).map(AngleDegree(_)))
     assertNotEquals(rotated, initialAngles)
 
-  test("shift-right button rotates the head shape right"):
-    EditorState.irregularState.set(stateWithHead(initialAngles))
+  test("shift-right button rotates the selected shape right"):
+    EditorState.irregularState.set(stateWithSelected(initialAngles))
     mount(IrregularPolygonPopup.element): Unit
 
     clickOn(".btn-right")
 
-    val rotated = EditorState.irregularState.now().headOption.get
+    val rotated = EditorState.irregularState.now().selectedShape.get
     assertEquals(rotated, Vector(120, 60, 120, 60).map(AngleDegree(_)))
 
-  test("flip button reflects the head shape"):
+  test("flip button reflects the selected shape"):
     val asymmetric = Vector(60, 90, 120, 150).map(AngleDegree(_))
-    EditorState.irregularState.set(stateWithHead(asymmetric))
+    EditorState.irregularState.set(stateWithSelected(asymmetric))
     mount(IrregularPolygonPopup.element): Unit
 
     clickOn(".btn-flip")
 
-    val flipped = EditorState.irregularState.now().headOption.get
+    val flipped = EditorState.irregularState.now().selectedShape.get
     // We don't assert the exact reflection result (RingSeq.reflectAt semantics are an implementation
     // detail) — just that the modify pipeline ran and produced a different vector of the same size.
     assertEquals(flipped.size, asymmetric.size)
@@ -82,7 +83,7 @@ class IrregularPolygonPopupSpec extends FunSuite with EditorStateFixture with La
 
   test("control-button clicks do not close the popup (stopPropagation in the observer)"):
     EditorState.popupState.update(_.copy(showIrregularPolygonPopup = true))
-    EditorState.irregularState.set(stateWithHead(initialAngles))
+    EditorState.irregularState.set(stateWithSelected(initialAngles))
     mount(IrregularPolygonPopup.element): Unit
 
     clickOn(".btn-left")
@@ -96,7 +97,7 @@ class IrregularPolygonPopupSpec extends FunSuite with EditorStateFixture with La
     mount(IrregularPolygonPopup.element): Unit
     assert(querySelector(".irregular-head-editor").isEmpty)
 
-    EditorState.irregularState.set(stateWithHead(initialAngles))
+    EditorState.irregularState.set(stateWithSelected(initialAngles))
 
     // Airstream propagates synchronously, so the DOM should already reflect the new state.
     assert(querySelector(".irregular-head-editor").isDefined)

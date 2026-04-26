@@ -43,7 +43,7 @@ class TessellationOperationsSpec extends FunSuite with EditorStateFixture:
       io.github.scala_tessella.dcel.TilingDCEL.empty
     ))
     EditorState.irregularState.set(
-      IrregularState(recentIrregularPolygons = Vector(IrregularState.initialShape), selectedIndex = None)
+      IrregularState(recentIrregularPolygons = Vector(IrregularState.initialShape), selectedIndex = Some(0))
     )
     UndoManager.clearHistory()
 

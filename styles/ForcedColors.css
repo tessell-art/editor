@@ -1,0 +1,169 @@
+/* Forced-colors / Windows high-contrast pass.
+ *
+ * Under `forced-colors: active`, the OS overrides our `color`, `background-color`,
+ * `border-color`, `box-shadow`, etc. with system colors (CanvasText, ButtonFace,
+ * Highlight, GrayText…). State that the rest of the app communicates via background
+ * color alone (selected toggle, active mode, hovered card) collapses to a single
+ * monochrome look. This file restores readable affordances using:
+ *
+ *   - explicit borders / outlines for state changes,
+ *   - `forced-color-adjust: none` on surfaces whose color *is* the content
+ *     (fill-color swatch, color picker preview),
+ *   - `Highlight` / `HighlightText` for the "active / selected" pair.
+ *
+ * Anything not listed here works fine under forced-colors out of the box (the
+ * default user-agent styles already produce readable text + buttons).
+ */
+
+@media (forced-colors: active) {
+
+  /* --- Generic interactive controls -------------------------------------- */
+
+  button,
+  .polygon-btn,
+  .toggle-btn,
+  .fill-swatch,
+  .first-run-cta,
+  .empty-state-action,
+  .template-gallery-category,
+  .template-gallery-thumbnail,
+  .recent-files-row,
+  .unsaved-confirm-btn,
+  .settings-swatch-button,
+  .mobile-bottom-toolbar-btn {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+    box-shadow: none;
+  }
+
+  button:hover,
+  .polygon-btn:hover,
+  .toggle-btn:hover,
+  .fill-swatch:hover,
+  .first-run-cta:hover,
+  .empty-state-action:hover,
+  .template-gallery-category:hover,
+  .template-gallery-thumbnail:hover,
+  .recent-files-row:hover,
+  .unsaved-confirm-btn:hover,
+  .mobile-bottom-toolbar-btn:hover {
+    /* Remove translateY/scale tricks that vanish in forced-colors and rely on
+       the focus/active outline instead. */
+    transform: none;
+    box-shadow: none;
+    background: ButtonFace;
+    color: ButtonText;
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  /* "Selected" / "active" — the one piece of state the OS would otherwise erase.
+     Use the system Highlight pair so the rule survives any contrast theme. */
+  .polygon-btn.selected,
+  .toggle-btn.active,
+  .template-gallery-category.active,
+  .mobile-bottom-toolbar-btn.active {
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+
+  /* Disabled — system GrayText is the canonical disabled signal. */
+  button:disabled,
+  .polygon-btn.disabled,
+  .toggle-btn:disabled,
+  .selected-info-action:disabled,
+  .app-shell-language:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    background: ButtonFace;
+  }
+
+  /* --- Focus-visible — promote our soft ring to a hard system outline ---- */
+
+  button:focus-visible,
+  .toggle-btn:focus-visible,
+  .polygon-btn:focus-visible,
+  .first-run-cta:focus-visible,
+  .empty-state-action:focus-visible,
+  .unsaved-confirm-btn:focus-visible,
+  .settings-swatch-button:focus-visible,
+  .popup-close-btn:focus-visible,
+  .error-close:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  /* --- Surfaces whose *content is color* --------------------------------- */
+
+  /* Fill-color swatch chip and the settings color preview must stay literal — the
+     swatch IS the content. Tell the UA to leave us alone for these tiny patches. */
+  .fill-swatch-chip,
+  .settings-swatch {
+    forced-color-adjust: none;
+  }
+
+  /* --- Modals / popups --------------------------------------------------- */
+
+  /* Backdrop scrims collapse to Canvas under forced-colors, which can hide that the
+     popup is modal. Forcing a strong border on the card preserves the boundary. */
+  .popup-content,
+  .first-run-card,
+  .loading-content,
+  .editor-toast,
+  .error-message {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  /* The toast severity attribute selectors don't survive forced-colors (color
+     collapses), so distinguish severities via the system `Mark` for warning and
+     keep error/info using CanvasText — the icon glyph and text remain readable. */
+  .editor-toast[data-severity="warning"] {
+    background: Mark;
+    color: MarkText;
+    border-color: MarkText;
+  }
+
+  /* --- Tiling info / status / mode badge --------------------------------- */
+
+  .tiling-info-panel,
+  .status-row,
+  .mode-badge,
+  .empty-state-card {
+    border: 1px solid CanvasText;
+  }
+
+  /* --- Floating containers — give them a visible boundary ---------------- */
+
+  .dropdown-content,
+  .app-shell-menu.open {
+    border: 1px solid CanvasText;
+  }
+
+  /* --- Links ------------------------------------------------------------- */
+
+  .popup-content a,
+  .menu-item a,
+  .dropdown-content a {
+    color: LinkText;
+  }
+
+  /* --- Spinner — system colors only -------------------------------------- */
+
+  .spinner {
+    border-color: ButtonText;
+    border-top-color: Highlight;
+  }
+
+  /* --- Canvas tessellation ---------------------------------------------- */
+
+  /* The tessellation is artwork — polygon fills, perimeter stroke, symmetry
+     overlays and uniformity dots all carry meaning. Tell the UA to leave the
+     canvas SVG and its descendants alone so the user's color choices survive. */
+  .editor-canvas,
+  .editor-canvas * {
+    forced-color-adjust: none;
+  }
+}

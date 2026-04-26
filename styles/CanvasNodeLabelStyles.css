@@ -75,36 +75,40 @@ svg:hover .node-label {
   stroke-width: 2px !important;
 }
 
-.perimeter-edge-transparent {
+/* Perimeter-edge hover cue (green stroke + drop-shadow + pointer cursor) only fires in
+   AddPolygon + Outside — every other tool (Eraser, Measurement, Fan, Color picker, …) treats
+   the perimeter as an inert visual reference. The `.tool-add-outside` class lives on the
+   canvas SVG root, applied by `EditorCanvasComponent.canvasClassNameSignal`. */
+.editor-canvas.tool-add-outside .perimeter-edge-transparent {
   cursor: pointer;
 }
 
-.perimeter-edge-transparent:hover {
+.editor-canvas.tool-add-outside .perimeter-edge-transparent:hover {
   filter: drop-shadow(0 0 8px rgba(255, 61, 0, 0.6));
   stroke: var(--hover-green) !important; /* Bright green for hover */
 }
 
-/* Interior edge styling for inserter tool */
-.interior-edge-transparent {
+/* Interior-edge highlight for the AddPolygon + Inside (inserter) sub-mode. The interior edges
+   only get rendered while the user has clicked a polygon to expose them in Inside mode anyway,
+   but scoping the hover rules keeps the cursor + halo consistent with the perimeter rules. */
+.editor-canvas.tool-add-inside .interior-edge-transparent {
     cursor: pointer;
 }
 
-/* Green pulsating halo on highlighted interior edge (group hover) */
-.interior-edge-group:hover .interior-edge {
+.editor-canvas.tool-add-inside .interior-edge-group:hover .interior-edge {
     stroke: var(--hover-green) !important;
     filter: drop-shadow(0 0 8px rgba(0, 200, 83, 0.65));
     animation: edgePulse 1.2s ease-in-out infinite;
 }
 
-@keyframes edgePulse {
-    0%   { stroke-width: 3px; filter: drop-shadow(0 0 2px rgba(0, 200, 83, 0.4)); }
-    50%  { stroke-width: 5px; filter: drop-shadow(0 0 10px rgba(0, 200, 83, 0.9)); }
-    100% { stroke-width: 3px; filter: drop-shadow(0 0 2px rgba(0, 200, 83, 0.4)); }
+.editor-canvas.tool-add-inside .interior-edge-transparent:hover {
+    stroke: var(--hover-green) !important;
 }
 
-/* Keep existing hover cue on the transparent hit area (optional, still consistent) */
-.interior-edge-transparent:hover {
-    stroke: var(--hover-green) !important;
+@keyframes edgePulse {
+    0%   { stroke-width: 4.5px; filter: drop-shadow(0 0 2px rgba(0, 200, 83, 0.4)); }
+    50%  { stroke-width: 6.5px; filter: drop-shadow(0 0 10px rgba(0, 200, 83, 0.9)); }
+    100% { stroke-width: 4.5px; filter: drop-shadow(0 0 2px rgba(0, 200, 83, 0.4)); }
 }
 
 /* Theme-aware preview wireframe color */
