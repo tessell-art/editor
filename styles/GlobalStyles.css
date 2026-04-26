@@ -39,8 +39,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -65,7 +63,7 @@ h3 {
 #app {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0.5rem;
+  min-height: 100vh;
 }
 
 button {
