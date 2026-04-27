@@ -198,7 +198,7 @@ object IconsSVG:
 //    )
 
   private[components] def plusIcon: Element =
-    createIcon("0 -4 24 24")(
+    createIcon("0 0 24 24")(
       svg.path(
         svg.d             := "M12 5v14M5 12h14",
         svg.stroke        := "currentColor",
