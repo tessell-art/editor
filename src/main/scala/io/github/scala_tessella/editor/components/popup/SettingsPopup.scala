@@ -133,7 +133,7 @@ object SettingsPopup:
           ),
           div(
             className := "settings-row",
-            div(className := "settings-label", child.text <-- I18n.t("popup.settings.perimeterEdge")),
+            div(className := "settings-label", child.text <-- I18n.t("popup.settings.boundaryColor")),
             div(
               className   := "settings-control",
               button(
@@ -160,8 +160,8 @@ object SettingsPopup:
             )
           ),
           boundaryEdgeWidthRow(),
-          reduceMotionRow(),
-          languageRow()
+          reduceMotionRow()
+//          languageRow()
         ),
         div(
           className := "popup-actions",

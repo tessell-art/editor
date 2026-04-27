@@ -37,6 +37,7 @@
 .popup-actions {
     display: flex;
     gap: 0.6em;
+    margin-top: 16px;
 }
 
 .popup-actions button {
