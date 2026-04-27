@@ -9,16 +9,32 @@ import io.github.scala_tessella.editor.operations.{ColorOperations, ToolActions,
 /** Phone-portrait bottom toolbar — replaces the desktop CanvasControlComponent at narrow widths.
   *
   * Two rows:
-  *   1. Six icon-only mode buttons (Add, Eraser, Color, Shape+Color, SelByCol, Measure).
-  *   2. Undo · Redo · Fit.
+  *   1. Five icon-only mode buttons (Add, Eraser, Color, Shape+Color, SelByCol).
+  *   2. Fill · Undo · Redo · Select-toggle · Fit.
   *
   * Visibility is CSS-driven: this component is always rendered, hidden at desktop widths via `@media` rules
   * in the stylesheet. Reuses [[ToolActions]] for mode-switching semantics so desktop and mobile stay in sync.
   *
   * The Add Polygon button cycles `Outside ↔ Inside` on tap when already active; same as the desktop tool
   * strip. A long-press popover for explicit sub-mode selection is a Phase 5 polish item.
+  *
+  * The select-toggle in the aux row mirrors the desktop Edit → Select All / Deselect All entries — too hidden
+  * in the menus on phone widths — and swaps its icon based on whether everything is currently selected, so
+  * the icon previews the result of the next tap.
   */
 object MobileBottomToolbar:
+
+  /** True when the tiling has at least one polygon and every one is selected. Drives the select-toggle
+    * button's action branch and icon swap.
+    */
+  private val isAllSelectedSignal: Signal[Boolean] =
+    EditorState.tessellationState.signal
+      .map { t =>
+
+        val faceCount = t.currentTiling.innerFaces.size
+        faceCount > 0 && t.selectedTilingPolygons.size == faceCount
+      }
+      .distinct
 
   def element: Element =
     div(
@@ -37,6 +53,7 @@ object MobileBottomToolbar:
         fillButton(),
         undoButton(),
         redoButton(),
+        selectToggleButton(),
         fitButton()
       )
     )
@@ -131,5 +148,27 @@ object MobileBottomToolbar:
 
         AppState.fitTilingToCanvas()
       },
-      "Fit"
+      IconsSVG.maximizeIcon
+    )
+
+  /** Single-button toggle for select-all / deselect-all. Icon previews the result of the next tap: filled
+    * grid when nothing/some is selected (tap to select all), empty grid when everything is already selected
+    * (tap to deselect all).
+    */
+  private def selectToggleButton(): Element =
+    button(
+      className := "mobile-bottom-toolbar-btn aux",
+      title <-- isAllSelectedSignal.map(if _ then "Deselect all" else "Select all"),
+      disabled <-- EditorState.canMutateTilingSignal.map(!_),
+      onClick.preventDefault.compose(stream =>
+        gate(stream).withCurrentValueOf(isAllSelectedSignal)
+      ) --> { case (_, allSelected) =>
+        if allSelected then AppState.deselectAll()
+        else AppState.selectAll()
+      },
+      child <-- isAllSelectedSignal.map { allSelected =>
+
+        if allSelected then IconsSVG.selectionGridEmptyIcon
+        else IconsSVG.selectionGridFilledIcon
+      }
     )

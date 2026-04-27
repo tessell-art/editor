@@ -208,6 +208,62 @@ object IconsSVG:
       )
     )
 
+  /** Fit-to-viewport icon: four corner brackets + diagonals from center to each corner. Used by the mobile
+    * toolbar's Fit button as a replacement for the textual "Fit" label.
+    */
+  private[components] def maximizeIcon: Element =
+    createIcon("0 0 24 24")(
+      svg.g(
+        svg.fill           := "none",
+        svg.stroke         := "currentColor",
+        svg.strokeWidth    := "2",
+        svg.strokeLineCap  := "round",
+        svg.strokeLineJoin := "round",
+        svg.path(svg.d := "M4 9V4h5"),
+        svg.path(svg.d := "M20 9V4h-5"),
+        svg.path(svg.d := "M4 15v5h5"),
+        svg.path(svg.d := "M20 15v5h-5"),
+        svg.path(svg.d := "M10 10L4 4"),
+        svg.path(svg.d := "M14 10l6-6"),
+        svg.path(svg.d := "M10 14l-6 6"),
+        svg.path(svg.d := "M14 14l6 6")
+      )
+    )
+
+  /** 2×2 grid of empty cells. Mobile toolbar uses this when *all* polygons are currently selected — the next
+    * tap will deselect, and the empty grid previews that result.
+    */
+  private[components] def selectionGridEmptyIcon: Element =
+    createIcon("0 0 24 24")(
+      svg.g(
+        svg.fill           := "none",
+        svg.stroke         := "currentColor",
+        svg.strokeWidth    := "1.6",
+        svg.strokeLineJoin := "round",
+        svg.rect(svg.x := "3", svg.y  := "3", svg.width  := "8", svg.height := "8"),
+        svg.rect(svg.x := "13", svg.y := "3", svg.width  := "8", svg.height := "8"),
+        svg.rect(svg.x := "3", svg.y  := "13", svg.width := "8", svg.height := "8"),
+        svg.rect(svg.x := "13", svg.y := "13", svg.width := "8", svg.height := "8")
+      )
+    )
+
+  /** 2×2 grid of filled cells. Mobile toolbar uses this when polygons are partly or not selected — the next
+    * tap will select all, and the filled grid previews that result.
+    */
+  private[components] def selectionGridFilledIcon: Element =
+    createIcon("0 0 24 24")(
+      svg.g(
+        svg.fill           := "currentColor",
+        svg.stroke         := "currentColor",
+        svg.strokeWidth    := "1.6",
+        svg.strokeLineJoin := "round",
+        svg.rect(svg.x := "3", svg.y  := "3", svg.width  := "8", svg.height := "8"),
+        svg.rect(svg.x := "13", svg.y := "3", svg.width  := "8", svg.height := "8"),
+        svg.rect(svg.x := "3", svg.y  := "13", svg.width := "8", svg.height := "8"),
+        svg.rect(svg.x := "13", svg.y := "13", svg.width := "8", svg.height := "8")
+      )
+    )
+
   private def eyeDropperPath: Element =
     svg.path(
       svg.d :=

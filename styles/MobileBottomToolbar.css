@@ -1,6 +1,6 @@
 /* Mobile bottom toolbar — phone-only.
-   Two rows: 6 mode buttons (icon-only) + Undo/Redo/Fit. Position-fixed at the
-   viewport bottom; hidden at desktop / tablet widths. */
+   Two rows: 5 mode buttons (icon-only) + Fill/Undo/Redo/Select-toggle/Fit.
+   Position-fixed at the viewport bottom; hidden at desktop / tablet widths. */
 
 .mobile-bottom-toolbar {
   display: none; /* hidden by default; revealed at phone widths below */
