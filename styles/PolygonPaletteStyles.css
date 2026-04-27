@@ -101,6 +101,20 @@ body:has(.polygon-palette.is-palette-dragging) {
   margin: 0 0 0.4rem 0.2rem;
 }
 
+/* Lock queue slots (filled <button> + empty <div>) to identical outer dimensions. Two browser
+   defaults pulled them out of alignment:
+     1. <button> defaults to border-box, <div> to content-box — pinning border-box equalizes the
+        min-height: 70px from .polygon-btn so both render the same outer height.
+     2. The global `button { margin: 0.25rem }` rule (GlobalStyles.css) applied to the filled
+        <button> only, pushing it 4px inward on every side and starting 4px lower than its empty
+        <div> sibling. Zeroing margin here removes the asymmetry.
+   Factory creators are untouched because they don't carry .palette-queue-slot. */
+.palette-queue-slot {
+  box-sizing: border-box;
+  height: 90px;
+  margin: 0;
+}
+
 .palette-queue-slot--empty {
   opacity: 0.4;
   cursor: default;
