@@ -230,20 +230,26 @@ enum Orientation:
   */
 case class SettingsState(
     boundaryEdgeWidth: Double,
+    polygonEdgeWidth: Double,
     reduceMotion: ReduceMotionPref,
     tempBoundaryEdgeWidth: Double,
+    tempPolygonEdgeWidth: Double,
     tempReduceMotion: ReduceMotionPref
 )
 
 object SettingsState:
   /** Loads the persisted preferences from `SettingsStorage`; falls back to `EditorConfig` defaults. */
   def initial: SettingsState =
-    val width = SettingsStorage.loadBoundaryEdgeWidth().getOrElse(EditorConfig.defaultBoundaryEdgeWidth)
-    val rm    = SettingsStorage.loadReduceMotion().getOrElse(ReduceMotionPref.Auto)
+    val width        = SettingsStorage.loadBoundaryEdgeWidth().getOrElse(EditorConfig.defaultBoundaryEdgeWidth)
+    val polygonWidth =
+      SettingsStorage.loadPolygonEdgeWidth().getOrElse(EditorConfig.defaultPolygonEdgeWidth)
+    val rm           = SettingsStorage.loadReduceMotion().getOrElse(ReduceMotionPref.Auto)
     SettingsState(
       boundaryEdgeWidth = width,
+      polygonEdgeWidth = polygonWidth,
       reduceMotion = rm,
       tempBoundaryEdgeWidth = width,
+      tempPolygonEdgeWidth = polygonWidth,
       tempReduceMotion = rm
     )
 
@@ -296,9 +302,11 @@ enum ColorPickerContext:
 case class ColorState(
     defaultStartFillColor: ColorRGB,
     perimeterEdgeColor: ColorRGB,
+    polygonEdgeColor: ColorRGB,
     fillColor: ColorRGB,
     tempDefaultFillColor: ColorRGB,
     tempPerimeterEdgeColor: ColorRGB,
+    tempPolygonEdgeColor: ColorRGB,
     tempSettingsPickerColor: ColorRGB,
     polygonColors: Map[FaceId, ColorRGB],
     showColorPicker: Boolean,
@@ -313,12 +321,16 @@ object ColorState:
   def initial: ColorState =
     val defaultFill = SettingsStorage.loadDefaultStartFillColor().getOrElse(EditorConfig.defaultPolygonColor)
     val perimeter   = SettingsStorage.loadPerimeterEdgeColor().getOrElse(EditorConfig.defaultPerimeterEdgeColor)
+    val polygonEdge =
+      SettingsStorage.loadPolygonEdgeColor().getOrElse(EditorConfig.defaultPolygonEdgeColor)
     ColorState(
       defaultStartFillColor = defaultFill,
       perimeterEdgeColor = perimeter,
+      polygonEdgeColor = polygonEdge,
       fillColor = defaultFill,
       tempDefaultFillColor = defaultFill,
       tempPerimeterEdgeColor = perimeter,
+      tempPolygonEdgeColor = polygonEdge,
       tempSettingsPickerColor = defaultFill,
       polygonColors = Map.empty,
       showColorPicker = false,

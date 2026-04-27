@@ -8,6 +8,8 @@ object SettingsStorage:
   private val defaultFillKey       = "tessella.settings.defaultFillColor"
   private val perimeterEdgeKey     = "tessella.settings.perimeterEdgeColor"
   private val boundaryEdgeWidthKey = "tessella.settings.boundaryEdgeWidth"
+  private val polygonEdgeColorKey  = "tessella.settings.polygonEdgeColor"
+  private val polygonEdgeWidthKey  = "tessella.settings.polygonEdgeWidth"
   private val reduceMotionKey      = "tessella.settings.reduceMotion"
 
   private def read(key: String): Option[String] =
@@ -35,6 +37,18 @@ object SettingsStorage:
 
   def saveBoundaryEdgeWidth(width: Double): Unit =
     write(boundaryEdgeWidthKey, width.toString)
+
+  def loadPolygonEdgeColor(): Option[ColorRGB] =
+    read(polygonEdgeColorKey).flatMap(ColorRGB.parseHex)
+
+  def savePolygonEdgeColor(color: ColorRGB): Unit =
+    write(polygonEdgeColorKey, color.toHex)
+
+  def loadPolygonEdgeWidth(): Option[Double] =
+    read(polygonEdgeWidthKey).flatMap(s => s.toDoubleOption)
+
+  def savePolygonEdgeWidth(width: Double): Unit =
+    write(polygonEdgeWidthKey, width.toString)
 
   def loadReduceMotion(): Option[ReduceMotionPref] =
     read(reduceMotionKey).flatMap:

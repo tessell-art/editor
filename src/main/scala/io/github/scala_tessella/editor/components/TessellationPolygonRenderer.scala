@@ -62,25 +62,29 @@ object TessellationPolygonRenderer:
         case Some(failedDel) => failedDel.faceId == faceId
         case None            => false
 
-    // Update stroke and styling based on editor mode
+    // Update stroke and styling based on editor mode. The Select-mode default colour and width
+    // come from user-overridable Settings; Selected and Delete-mode overrides stay hardcoded as
+    // they signal interaction state, not styling.
     val strokeColorSignal =
       isSelected
         .combineWith(EditorState.toolState.signal.map(_.editorMode).distinct)
-        .map: (selected, mode) =>
+        .combineWith(EditorState.colorState.signal.map(_.polygonEdgeColor).distinct)
+        .map: (selected, mode, edgeColor) =>
           if selected then "#ff6b6b"
           else
             mode match
-              case EditorMode.Select => "#646cff"
+              case EditorMode.Select => edgeColor.toHex
               case EditorMode.Delete => "#ff4444"
 
     val strokeWidthSignal =
       isSelected
         .combineWith(EditorState.toolState.signal.map(_.editorMode).distinct)
-        .map: (selected, mode) =>
+        .combineWith(EditorState.settingsState.signal.map(_.polygonEdgeWidth).distinct)
+        .map: (selected, mode, edgeWidth) =>
           if selected then "3.5"
           else
             mode match
-              case EditorMode.Select => "1.5"
+              case EditorMode.Select => edgeWidth.toString
               case EditorMode.Delete => "2.0"
 
     val basePolygon = svg.polygon(

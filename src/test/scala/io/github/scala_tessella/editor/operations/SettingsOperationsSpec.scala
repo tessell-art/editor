@@ -12,6 +12,8 @@ class SettingsOperationsSpec extends FunSuite with EditorStateFixture:
     dom.window.localStorage.removeItem("tessella.settings.defaultFillColor")
     dom.window.localStorage.removeItem("tessella.settings.perimeterEdgeColor")
     dom.window.localStorage.removeItem("tessella.settings.boundaryEdgeWidth")
+    dom.window.localStorage.removeItem("tessella.settings.polygonEdgeColor")
+    dom.window.localStorage.removeItem("tessella.settings.polygonEdgeWidth")
     dom.window.localStorage.removeItem("tessella.settings.reduceMotion")
 
   override def beforeEach(context: BeforeEach): Unit =

@@ -17,12 +17,14 @@ object SettingsOperations:
     EditorState.colorState.update(_.copy(
       tempDefaultFillColor = cs.defaultStartFillColor,
       tempPerimeterEdgeColor = cs.perimeterEdgeColor,
+      tempPolygonEdgeColor = cs.polygonEdgeColor,
       tempSettingsPickerColor = cs.defaultStartFillColor
     ))
     EditorState.popupState.update(_.copy(showSettingsColorPicker = false))
     val ss = EditorState.settingsState.now()
     EditorState.settingsState.update(_.copy(
       tempBoundaryEdgeWidth = ss.boundaryEdgeWidth,
+      tempPolygonEdgeWidth = ss.polygonEdgeWidth,
       tempReduceMotion = ss.reduceMotion
     ))
 
@@ -35,15 +37,19 @@ object SettingsOperations:
     EditorState.colorState.update(_.copy(
       defaultStartFillColor = cs.tempDefaultFillColor,
       fillColor = cs.tempDefaultFillColor,
-      perimeterEdgeColor = cs.tempPerimeterEdgeColor
+      perimeterEdgeColor = cs.tempPerimeterEdgeColor,
+      polygonEdgeColor = cs.tempPolygonEdgeColor
     ))
     EditorState.settingsState.update(_.copy(
       boundaryEdgeWidth = ss.tempBoundaryEdgeWidth,
+      polygonEdgeWidth = ss.tempPolygonEdgeWidth,
       reduceMotion = ss.tempReduceMotion
     ))
     SettingsStorage.saveDefaultStartFillColor(cs.tempDefaultFillColor)
     SettingsStorage.savePerimeterEdgeColor(cs.tempPerimeterEdgeColor)
+    SettingsStorage.savePolygonEdgeColor(cs.tempPolygonEdgeColor)
     SettingsStorage.saveBoundaryEdgeWidth(ss.tempBoundaryEdgeWidth)
+    SettingsStorage.savePolygonEdgeWidth(ss.tempPolygonEdgeWidth)
     SettingsStorage.saveReduceMotion(ss.tempReduceMotion)
 
   /** Resets the current fill color to the default start fill color. */

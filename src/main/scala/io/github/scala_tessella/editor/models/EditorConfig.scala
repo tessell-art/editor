@@ -48,6 +48,14 @@ object EditorConfig:
   val minBoundaryEdgeWidth: Double     = 1.0
   val maxBoundaryEdgeWidth: Double     = 12.0
 
+  // Default stroke colour and width (px) for the polygon outline in normal Select mode.
+  // User-overridable in Settings. Selected and Delete-mode strokes intentionally keep their
+  // state-specific overrides — those signal interaction, not styling.
+  val defaultPolygonEdgeColor: ColorRGB = ColorRGB(100, 108, 255)
+  val defaultPolygonEdgeWidth: Double   = 1.5
+  val minPolygonEdgeWidth: Double       = 0.0
+  val maxPolygonEdgeWidth: Double       = 2.0
+
   // Fan animation duration (milliseconds)
   val fanAnimationDurationMs: Int = 3000
   val fanAnimationStaggerMs: Int  = 60

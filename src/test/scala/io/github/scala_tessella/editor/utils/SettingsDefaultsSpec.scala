@@ -15,9 +15,10 @@ class SettingsDefaultsSpec extends FunSuite:
       case _: Throwable => false
 
   test("tempDefaults returns editor default colors") {
-    val (fill, perimeter) = SettingsDefaults.tempDefaults
+    val (fill, perimeter, polygonEdge) = SettingsDefaults.tempDefaults
     assertEquals(fill, EditorConfig.defaultPolygonColor)
     assertEquals(perimeter, EditorConfig.defaultPerimeterEdgeColor)
+    assertEquals(polygonEdge, EditorConfig.defaultPolygonEdgeColor)
   }
 
   test("tempDefaults does not persist or overwrite stored values") {

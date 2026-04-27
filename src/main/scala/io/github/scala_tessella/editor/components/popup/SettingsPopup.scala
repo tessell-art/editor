@@ -14,7 +14,7 @@ object SettingsPopup:
   import PopupCommons._
 
   private enum SettingsColorTarget:
-    case DefaultFill, PerimeterEdge
+    case DefaultFill, PerimeterEdge, PolygonEdge
 
   private val settingsColorTarget: Var[SettingsColorTarget] = Var(SettingsColorTarget.DefaultFill)
 
@@ -32,13 +32,17 @@ object SettingsPopup:
         EditorState.colorState.update(_.copy(tempDefaultFillColor = color))
       case SettingsColorTarget.PerimeterEdge =>
         EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = color))
+      case SettingsColorTarget.PolygonEdge   =>
+        EditorState.colorState.update(_.copy(tempPolygonEdgeColor = color))
 
   private def resetToDefaults(): Unit =
-    val (fill, perimeter) = SettingsDefaults.tempDefaults
+    val (fill, perimeter, polygonEdge) = SettingsDefaults.tempDefaults
     EditorState.colorState.update(_.copy(tempDefaultFillColor = fill))
     EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = perimeter))
+    EditorState.colorState.update(_.copy(tempPolygonEdgeColor = polygonEdge))
     EditorState.settingsState.update(_.copy(
       tempBoundaryEdgeWidth = EditorConfig.defaultBoundaryEdgeWidth,
+      tempPolygonEdgeWidth = EditorConfig.defaultPolygonEdgeWidth,
       tempReduceMotion = ReduceMotionPref.Auto
     ))
 
@@ -160,6 +164,35 @@ object SettingsPopup:
             )
           ),
           boundaryEdgeWidthRow(),
+          div(
+            className := "settings-row",
+            div(className := "settings-label", child.text <-- I18n.t("popup.settings.polygonEdgeColor")),
+            div(
+              className   := "settings-control",
+              button(
+                className := "settings-swatch-button",
+                onClick.compose(
+                  _.withCurrentValueOf(EditorState.colorState.signal.map(_.tempPolygonEdgeColor).distinct)
+                    .map((_, color) => color)
+                ) --> { color =>
+
+                  openColorPicker(SettingsColorTarget.PolygonEdge, color)
+                },
+                div(
+                  className := "settings-swatch",
+                  backgroundColor <--
+                    EditorState.colorState.signal.map(_.tempPolygonEdgeColor).distinct.map:
+                      _.toHex
+                )
+              ),
+              span(
+                className := "settings-value",
+                child.text <-- EditorState.colorState.signal.map(_.tempPolygonEdgeColor).distinct.map:
+                  _.toHex
+              )
+            )
+          ),
+          polygonEdgeWidthRow(),
           reduceMotionRow()
 //          languageRow()
         ),
@@ -211,6 +244,30 @@ object SettingsPopup:
             onInput.mapToValue --> Observer[String]: v =>
               v.toDoubleOption.foreach: d =>
                 EditorState.settingsState.update(_.copy(tempBoundaryEdgeWidth = d))
+          )
+        ),
+        span(className := "settings-value", child.text <-- widthSignal.map(d => f"$d%.1f px"))
+      )
+    )
+
+  private def polygonEdgeWidthRow(): Element =
+    val widthSignal = EditorState.settingsState.signal.map(_.tempPolygonEdgeWidth).distinct
+    div(
+      className := "settings-row",
+      div(className := "settings-label", child.text <-- I18n.t("popup.settings.polygonEdgeWidth")),
+      div(
+        className   := "settings-control",
+        input(
+          tpe          := "range",
+          className    := "settings-range",
+          minAttr      := EditorConfig.minPolygonEdgeWidth.toString,
+          maxAttr      := EditorConfig.maxPolygonEdgeWidth.toString,
+          stepAttr     := "0.1",
+          controlled(
+            value <-- widthSignal.map(_.toString),
+            onInput.mapToValue --> Observer[String]: v =>
+              v.toDoubleOption.foreach: d =>
+                EditorState.settingsState.update(_.copy(tempPolygonEdgeWidth = d))
           )
         ),
         span(className := "settings-value", child.text <-- widthSignal.map(d => f"$d%.1f px"))
