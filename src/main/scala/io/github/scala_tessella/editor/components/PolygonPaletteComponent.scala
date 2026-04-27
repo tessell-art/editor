@@ -438,6 +438,7 @@ object PolygonPaletteComponent:
         onClick.preventDefault.map(_ => sides) --> { s =>
 
           AppState.selectPolygonsBySides(s)
+          retractSheet()
         },
         disabled <-- EditorState.isTilingEmptySignal
       ),
@@ -457,6 +458,7 @@ object PolygonPaletteComponent:
           AppState.selectPolygonsBySides(s)
           EditorState.colorState.update(_.copy(tempColor = color))
           EditorState.colorState.update(_.copy(showColorPicker = true))
+          retractSheet()
         },
         disabled <-- EditorState.isTilingEmptySignal
       )
@@ -471,6 +473,7 @@ object PolygonPaletteComponent:
         onClick.preventDefault --> { _ =>
 
           AppState.selectPolygonsByShape(angles)
+          retractSheet()
         },
         disabled <-- EditorState.isTilingEmptySignal
       ),
@@ -488,6 +491,7 @@ object PolygonPaletteComponent:
           AppState.selectPolygonsByShape(angles)
           EditorState.colorState.update(_.copy(tempColor = color))
           EditorState.colorState.update(_.copy(showColorPicker = true))
+          retractSheet()
         },
         disabled <-- EditorState.isTilingEmptySignal
       )
