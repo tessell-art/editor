@@ -4,7 +4,11 @@
   border: 2px solid var(--panel-border);
   border-radius: 12px;
   background-color: var(--panel-bg);
-  padding: 0.5rem;
+  /* Asymmetric horizontal padding (0.25rem = 4px) is intentional: combined with the canvas-container's
+     2px border, it leaves a 6px gap on both sides between the container's outer edge and the inner
+     SVG canvas — symmetric, and tighter than the previous 0.5rem so the canvas gets a few extra px
+     of horizontal room. Top/bottom keeps 0.5rem so the toolstrip and status row stay comfortable. */
+  padding: 0.5rem 0.25rem;
 }
 
 /* Node Labels Styling */
@@ -24,6 +28,10 @@ svg:hover .node-label {
 }
 
 .editor-canvas {
+  /* Pin border-box so width: 100% includes the 2px border. Without this the SVG defaults to
+     content-box, the border lands outside the 100% content area, and the SVG overflows its
+     wrapper by 4px on the right — visible as a smaller right gap inside .canvas-container. */
+  box-sizing: border-box;
   width: 100%;
   height: var(--canvas-height);
   display: block;
