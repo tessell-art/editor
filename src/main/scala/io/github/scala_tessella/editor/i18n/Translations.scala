@@ -92,7 +92,7 @@ object Translations:
     "tool.addPolygon.tooltip.inactive" -> "Activate Add Polygon mode (click again to cycle outside/inside)",
 
     // Polygon palette (CSS `text-transform: uppercase` capitalizes section titles)
-    "palette.section.shapes"           -> "Shapes",
+    "palette.section.shapes"           -> "Recent shapes",
     "palette.section.addShape"         -> "Add shape",
     "palette.handle.title"             -> "Tap to expand or collapse the palette",
     "palette.handle.label"             -> "Shapes",
@@ -324,7 +324,7 @@ object Translations:
       "Activar el modo Añadir polígono (pulsar de nuevo para alternar exterior/interior)",
 
     // Polygon palette (CSS `text-transform: uppercase` capitalizes section titles)
-    "palette.section.shapes"           -> "Formas",
+    "palette.section.shapes"           -> "Formas recientes",
     "palette.section.addShape"         -> "Añadir forma",
     "palette.handle.title"             -> "Pulsar para expandir o contraer la paleta",
     "palette.handle.label"             -> "Formas",
