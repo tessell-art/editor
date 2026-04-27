@@ -14,8 +14,10 @@
 
 .palette-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 0.5rem;
+  /* Up to 12 cells laid out in multiple rows; cells slim down to 56px so 4–5 fit per row at desktop
+     widths and the queue wraps gracefully on narrower screens. */
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 0.4rem;
   margin: 0 auto 1rem auto;
 }
 
@@ -71,7 +73,7 @@ body:has(.polygon-palette.is-palette-dragging) {
 }
 
 /* The attaching-edge dot inside an irregular polygon's preview SVG only reveals when the slot is
-   the currently selected one — otherwise it's just visual noise across the MRU strip. */
+   the currently selected one — otherwise it's just visual noise across the shape queue. */
 .polygon-btn .attaching-dot {
   display: none;
 }
@@ -99,18 +101,12 @@ body:has(.polygon-palette.is-palette-dragging) {
   margin: 0 0 0.4rem 0.2rem;
 }
 
-.palette-mru-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 0.5rem;
-}
-
-.palette-mru-slot--empty {
+.palette-queue-slot--empty {
   opacity: 0.4;
   cursor: default;
 }
 
-.palette-mru-slot--empty:hover {
+.palette-queue-slot--empty:hover {
   transform: none;
   box-shadow: none;
   border-color: var(--panel-border-strong);
@@ -118,6 +114,9 @@ body:has(.polygon-palette.is-palette-dragging) {
   color: var(--text-muted-strong);
 }
 
+/* Add-Shape factories: large 3-column buttons (preview | label | input). Both factories share this
+   layout — the rhombus carries a degree suffix, the regular factory uses a bare sides count. */
+.regular-creator,
 .rhombus-creator {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -125,17 +124,33 @@ body:has(.polygon-palette.is-palette-dragging) {
   gap: 0.6rem;
   min-height: auto;
   padding: 0.4rem 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
+.regular-creator .regular-preview,
 .rhombus-creator .rhombus-preview {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.regular-creator .polygon-label,
 .rhombus-creator .polygon-label {
   margin-top: 0;
   text-align: left;
+}
+
+.regular-sides-input {
+  width: 48px;
+}
+
+.regular-sides-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.regular-sides-wrap .regular-sides-input {
+  margin-top: 0;
 }
 
 .rhombus-angle-input {
@@ -205,26 +220,6 @@ body:has(.polygon-palette.is-palette-dragging) {
   width: 36px;
 }
 
-.custom-polygon-creator {
-  height: 60px;
-  padding-top: 0.35rem;
-  padding-bottom: 0.15rem;
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
-  width: 36px;
-  margin-top: 4px;
-  margin-left: 3px;
-}
-
-@media (max-width: 1200px) {
-
-  .custom-polygon-creator {
-    padding-right: 0.2rem;
-    padding-left: 0.2rem;
-  }
-
-}
-
 .light-mode .polygon-btn {
   background-color: var(--panel-bg-strong);
   border-color: var(--panel-border);
@@ -262,7 +257,7 @@ body:has(.polygon-palette.is-palette-dragging) {
   margin-left: 42px;
 }
 
-.palette-mru-slot .corner-button {
+.palette-queue-slot .corner-button {
   font-size: 14px;
   font-weight: 700;
   line-height: 1;
@@ -274,7 +269,7 @@ body:has(.polygon-palette.is-palette-dragging) {
   cursor: pointer;
 }
 
-.palette-mru-slot .corner-button:hover {
+.palette-queue-slot .corner-button:hover {
   background-color: var(--accent);
   color: var(--text-inverse);
   border-color: var(--accent);

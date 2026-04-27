@@ -1,7 +1,7 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.dcel.geometry.RegularPolygon
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.structure.Vertex
 import io.github.scala_tessella.editor.models.{EditorState, VertexCoord}
 import io.github.scala_tessella.editor.operations.ColorOperations.ensureColorsForFaces
@@ -35,6 +35,16 @@ object TessellationOperations:
     SymmetryOperations.clearOverlays()
     EditorState.tessellationState.update(_.copy(selectedPerimeterEdges = Set.empty))
 
+  /** Move the just-placed shape to the head of the palette queue so the most-recently-used shape is always at
+    * the front. Selection mode is preserved: when an irregular palette entry was the source
+    * (`selectedIndex.isDefined`), the selection follows the moved shape to its new index 0; when a regular
+    * polygon was selected via `selectedPolygon`, the queue still updates but no spurious irregular selection
+    * is introduced.
+    */
+  def recordPlacedShape(angles: Vector[AngleDegree]): Unit =
+    val keepIrregularSelection = EditorState.irregularState.now().selectedIndex.isDefined
+    EditorState.irregularState.update(_.withShape(angles, selectIt = keepIrregularSelection))
+
   /** Select a regular polygon from the palette. If the tiling is empty, seed it with a fresh copy of the
     * polygon; otherwise, just record the selection.
     */
@@ -47,10 +57,12 @@ object TessellationOperations:
       if EditorState.tessellationState.now().currentTiling.isEmpty then
         UndoManager.saveState()
         try
-          val tiling = TilingDCEL.createRegularPolygon(RegularPolygon(sides))
+          val polygon = RegularPolygon(sides)
+          val tiling  = TilingDCEL.createRegularPolygon(polygon)
           EditorState.tessellationState.update(_.copy(currentTiling = tiling))
           ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.colorState.now().fillColor)
           SelectionOperations.clearAllSelections()
+          recordPlacedShape(polygon.angles)
         catch
           case e: Throwable =>
             UndoManager.undo()
@@ -89,6 +101,7 @@ object TessellationOperations:
                 EditorState.tessellationState.update(_.copy(currentTiling = tiling))
                 ensureColorsForFaces(tiling.innerFaces.map(_.id), EditorState.colorState.now().fillColor)
                 SelectionOperations.clearAllSelections()
+                recordPlacedShape(angles)
               case None         =>
                 UndoManager.undo()
                 ErrorOperations.showError("Failed to create tiling from irregular polygon")

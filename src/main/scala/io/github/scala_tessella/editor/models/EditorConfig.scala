@@ -29,12 +29,13 @@ object EditorConfig:
   val keyboardZoomFactor: Double      = 1.1
   val menuZoomFactor: Double          = 1.2
 
-  // Polygon palette configuration. Fixed regulars shown as first-class buttons; everything outside
-  // this list (e.g. 7, 9, 10, 11, 15, 18, 20, 24, 42) is reachable via the custom-n button.
+  // Polygon palette configuration. The shape queue is initially seeded with these regular polygons;
+  // anything outside this list (e.g. 7, 9, 10, 11, 15, 18, 20, 24, 42) is reachable via the
+  // "Regular polygon" factory.
   val polygonSides: List[Int] = List(3, 4, 5, 6, 8, 12)
 
-  // Maximum number of distinct irregular polygons remembered in the MRU palette row
-  val irregularMRUSize: Int = 5
+  // Maximum number of shapes (regular + irregular, mixed) remembered in the palette queue.
+  val paletteShapeQueueSize: Int = 12
 
   // Default polygon fill color when no explicit color is assigned
   val defaultPolygonColor: ColorRGB = ColorRGB(76, 175, 80)

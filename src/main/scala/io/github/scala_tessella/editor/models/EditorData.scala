@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.models
 
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.TilingSymmetry.BoundaryLocation
-import io.github.scala_tessella.dcel.geometry.AngleDegree
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.editor.utils.geo.{Point, Radian}
 import io.github.scala_tessella.editor.utils.{ColorRGB, FirstRunStorage, SettingsStorage}
@@ -417,9 +417,10 @@ object AnimationState:
     mirrorAnimation = None
   )
 
-/** Irregular-polygon-palette-state aggregate: a bounded MRU of recently used irregular shapes (head =
-  * most-recent), plus the index of the one currently selected, if any. The derived `selectedIrregularPolygon`
-  * signal lives on `EditorState`.
+/** Palette shape-queue aggregate: a bounded queue of shapes (regular + irregular, mixed) used for the palette
+  * grid (head = most-recent), plus the index of the irregular one currently selected, if any. The legacy
+  * field name `recentIrregularPolygons` is retained to avoid churn across tests; it now stores the full
+  * palette queue. The derived `selectedIrregularPolygon` signal lives on `EditorState`.
   */
 case class IrregularState(
     recentIrregularPolygons: Vector[Vector[AngleDegree]],
@@ -435,8 +436,8 @@ case class IrregularState(
   /** The most-recent (head) irregular shape, if any. */
   def headOption: Option[Vector[AngleDegree]] = recentIrregularPolygons.headOption
 
-  /** Add a shape at the head of the MRU, deduping by rotation/reflection equivalence and bounding to
-    * `EditorConfig.irregularMRUSize`. If `selectIt` is true, the new head becomes the selection.
+  /** Add a shape at the head of the queue, deduping by rotation/reflection equivalence and bounding to
+    * `EditorConfig.paletteShapeQueueSize`. If `selectIt` is true, the new head becomes the selection.
     */
   def withShape(shape: Vector[AngleDegree], selectIt: Boolean): IrregularState =
     val existingIdx  = recentIrregularPolygons.indexWhere(_.isRotationOrReflectionOf(shape))
@@ -447,7 +448,7 @@ case class IrregularState(
           (recentIrregularPolygons.take(existingIdx)
             ++ recentIrregularPolygons.drop(existingIdx + 1))
       else
-        (shape +: recentIrregularPolygons).take(EditorConfig.irregularMRUSize)
+        (shape +: recentIrregularPolygons).take(EditorConfig.paletteShapeQueueSize)
     val nextSelected = if selectIt then Some(0) else selectedIndex
     copy(recentIrregularPolygons = nextList, selectedIndex = nextSelected)
 
@@ -473,11 +474,18 @@ case class IrregularState(
     else this
 
 object IrregularState:
-  /** Reference 60°/120° rhombus, retained as a fixture for tests. The MRU itself starts empty — we no longer
-    * pre-seed any shape on launch (the user populates it as they go).
-    */
+  /** Reference 60°/120° rhombus, retained as a fixture for tests. */
   val initialShape: Vector[AngleDegree] = Vector(60, 120, 60, 120).map(AngleDegree(_))
-  val initial: IrregularState           = IrregularState(
+
+  /** Empty queue, no selection. Used by the test fixture and as the basis for `initial`. */
+  val empty: IrregularState = IrregularState(
     recentIrregularPolygons = Vector.empty,
     selectedIndex = None
   )
+
+  /** App-startup state: the palette queue is pre-seeded with the regular polygons listed in
+    * `EditorConfig.polygonSides` (currently 3, 4, 5, 6, 8, 12), in that order, with no selection.
+    */
+  val initial: IrregularState =
+    val seed = EditorConfig.polygonSides.toVector.map(sides => RegularPolygon(sides).angles)
+    IrregularState(recentIrregularPolygons = seed, selectedIndex = None)

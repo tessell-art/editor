@@ -43,9 +43,9 @@ object PlacementOperations:
         None
       case (Some(sides), None)  => Some(RegularPlacement(sides))
       case (None, Some(angles)) =>
-        // Recently-used regulars live in the same MRU as irregulars (so non-core sides like 11
-        // are reachable without retyping). Detect by all-equal angles and route through the
-        // regular placement path so the tiling lib gets the regular optimization.
+        // The palette queue holds both regulars and irregulars; a regular created via the factory
+        // ends up here with `selectedIndex` set, not `selectedPolygon`. Detect by all-equal angles
+        // and route through the regular placement path so the tiling lib gets the regular optimization.
         if angles.size >= 3 && angles.forall(_ == angles.head) then
           Some(RegularPlacement(angles.size))
         else
@@ -95,8 +95,10 @@ object PlacementOperations:
           case e: Exception => Left(ValidationError(s"Error growing edge: ${e.getMessage}"))
 
       OperationRunner.runTilingOp(op)(
-        onSuccess =
-          TessellationOperations.clearStaleAfterMutation(),
+        onSuccess = {
+          TessellationOperations.clearStaleAfterMutation()
+          TessellationOperations.recordPlacedShape(context.placement.angles)
+        },
         onFailure = err =>
           if edgeIndex < perimeterEdges.length then
             val selectedEdge = perimeterEdges(edgeIndex)
@@ -135,8 +137,10 @@ object PlacementOperations:
           case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
       OperationRunner.runTilingOp(op)(
-        onSuccess =
-          TessellationOperations.clearStaleAfterMutation(),
+        onSuccess = {
+          TessellationOperations.clearStaleAfterMutation()
+          TessellationOperations.recordPlacedShape(context.placement.angles)
+        },
         onFailure = error => {
           val curr           = EditorState.tessellationState.now().currentTiling
           val maybeFaceId    = findFaceContainingEdge(curr, startVertexId, endVertexId)

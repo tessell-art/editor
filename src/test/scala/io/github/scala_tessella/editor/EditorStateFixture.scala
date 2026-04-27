@@ -21,7 +21,7 @@ trait EditorStateFixture:
     EditorState.errorState.set(ErrorState.initial)
     EditorState.previewState.set(PreviewState.initial)
     EditorState.animationState.set(AnimationState.initial)
-    EditorState.irregularState.set(IrregularState.initial)
+    EditorState.irregularState.set(IrregularState.empty)
     EditorState.fileState.set(FileState.initial)
     EditorState.themeState.update(_.copy(userThemePreference = None))
     EditorState.toolState.set(ToolState.initial)
