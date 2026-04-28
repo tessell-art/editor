@@ -207,10 +207,10 @@ object CanvasControlComponent:
         div(
           className   := "tool-strip-aux",
           fillButton(),
-          labelsToggleButton(),
-          infoToggleButton(),
+//          infoToggleButton(),
           fitButton(),
           selectToggleButton(),
+          labelsToggleButton(),
           UndoComponent.element
         )
       )

@@ -51,10 +51,10 @@ object MobileBottomToolbar:
       div(
         className := "mobile-bottom-toolbar-aux",
         fillButton(),
-        undoButton(),
-        redoButton(),
         selectToggleButton(),
-        fitButton()
+        fitButton(),
+        undoButton(),
+        redoButton()
       )
     )
 

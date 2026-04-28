@@ -206,14 +206,14 @@ object MenuBarComponent:
         ),
         AppState.toggleShowReflection()
       ),
-      dropdownLinkDynamic(
-        toggleLabel(
-          EditorState.viewState.signal.map(_.showTilingInfo).distinct,
-          onKey = "menu.view.hideTilingInfo",
-          offKey = "menu.view.showTilingInfo"
-        ),
-        AppState.toggleShowTilingInfo()
-      ),
+//      dropdownLinkDynamic(
+//        toggleLabel(
+//          EditorState.viewState.signal.map(_.showTilingInfo).distinct,
+//          onKey = "menu.view.hideTilingInfo",
+//          offKey = "menu.view.showTilingInfo"
+//        ),
+//        AppState.toggleShowTilingInfo()
+//      ),
       div(className := "menu-separator"),
       dropdownLink(
         "menu.view.fitToCanvas",
