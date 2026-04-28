@@ -23,9 +23,9 @@ object EmptyStateCardComponent:
       h2(className := "empty-state-title", child.text <-- I18n.t("emptyState.title")),
       p(
         className  := "empty-state-hint",
-        span(child.text <-- I18n.t("emptyState.hint")),
-        " ",
-        span(className := "empty-state-arrow", "→")
+        span(child.text <-- I18n.t("emptyState.hint"))
+//        " ",
+//        span(className := "empty-state-arrow", "→")
       ),
       div(
         className  := "empty-state-divider",

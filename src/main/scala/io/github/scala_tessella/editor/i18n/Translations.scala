@@ -113,7 +113,7 @@ object Translations:
 
     // Empty-state card
     "emptyState.title"        -> "Start a tessellation",
-    "emptyState.hint"         -> "Pick a shape from the palette",
+    "emptyState.hint"         -> "Pick / drag a shape from the Shapes palette",
     "emptyState.divider"      -> "or",
     "emptyState.openTemplate" -> "Open template…",
     "emptyState.loadSvg"      -> "Load SVG…",
@@ -347,7 +347,7 @@ object Translations:
 
     // Empty-state card
     "emptyState.title"        -> "Empezar una teselación",
-    "emptyState.hint"         -> "Elige una forma de la paleta",
+    "emptyState.hint"         -> "Elige / arrastra una forma de la paleta de Formas",
     "emptyState.divider"      -> "o",
     "emptyState.openTemplate" -> "Abrir plantilla…",
     "emptyState.loadSvg"      -> "Cargar SVG…",
