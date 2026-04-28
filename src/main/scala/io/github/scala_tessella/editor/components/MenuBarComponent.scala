@@ -108,11 +108,11 @@ object MenuBarComponent:
         DotExporter.exportTilingToDOT(),
         enabled = EditorState.canMutateTilingSignal
       ),
-      dropdownLink(
-        "menu.file.printPdf",
-        AppState.openPrintPopup(),
-        enabled = EditorState.canMutateTilingSignal
-      ),
+//      dropdownLink(
+//        "menu.file.printPdf",
+//        AppState.openPrintPopup(),
+//        enabled = EditorState.canMutateTilingSignal
+//      ),
       div(className := "menu-separator"),
       dropdownLink("menu.file.settings", EditorState.popupState.update(_.copy(showSettingsPopup = true)))
     )

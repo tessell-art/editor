@@ -127,6 +127,50 @@ object CanvasControlComponent:
       "ⓘ"
     )
 
+  /** True when the tiling has at least one polygon and every one is selected. Drives the select-toggle
+    * button's action branch and icon swap. Mirrors [[MobileBottomToolbar]].
+    */
+  private val isAllSelectedSignal: Signal[Boolean] =
+    EditorState.tessellationState.signal
+      .map { t =>
+
+        val faceCount = t.currentTiling.innerFaces.size
+        faceCount > 0 && t.selectedTilingPolygons.size == faceCount
+      }
+      .distinct
+
+  private def fitButton(): Element =
+    button(
+      className := "toggle-btn",
+      title <-- I18n.t("menu.view.fitToCanvas"),
+      disabled <-- EditorState.canMutateTilingSignal.map(!_),
+      onClick.compose(gate) --> { _ =>
+
+        AppState.fitTilingToCanvas()
+      },
+      IconsSVG.maximizeIcon
+    )
+
+  private def selectToggleButton(): Element =
+    button(
+      className := "toggle-btn",
+      title <-- isAllSelectedSignal.combineWith(EditorState.localeState.signal).map { case (allSelected, _) =>
+        I18n.tNow(if allSelected then "menu.edit.deselectAll" else "menu.edit.selectAll")
+      },
+      disabled <-- EditorState.canMutateTilingSignal.map(!_),
+      onClick.preventDefault.compose(stream =>
+        gate(stream).withCurrentValueOf(isAllSelectedSignal)
+      ) --> { case (_, allSelected) =>
+        if allSelected then AppState.deselectAll()
+        else AppState.selectAll()
+      },
+      child <-- isAllSelectedSignal.map { allSelected =>
+
+        if allSelected then IconsSVG.selectionGridEmptyIcon
+        else IconsSVG.selectionGridFilledIcon
+      }
+    )
+
   def element: Element =
     div(
       className := "canvas-controls",
@@ -165,6 +209,8 @@ object CanvasControlComponent:
           fillButton(),
           labelsToggleButton(),
           infoToggleButton(),
+          fitButton(),
+          selectToggleButton(),
           UndoComponent.element
         )
       )
