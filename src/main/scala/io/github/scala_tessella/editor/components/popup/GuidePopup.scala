@@ -27,7 +27,10 @@ object GuidePopup:
               "To start a new tiling, select a polygon shape from the palette. ",
               "It will be placed on the canvas."
             ),
-            li("To add new polygons, first select the desired shape, then click on any boundary edge.")
+            li(
+              "To add new polygons, first select the desired shape from the palette and then drag it into the canvas. ",
+              "You can also click on any boundary edge."
+            )
           ),
           h3("Validation"),
           ul(
@@ -38,13 +41,19 @@ object GuidePopup:
             ),
             li(
               "And when removing a polygon, the editor will always check that the resulting tiling ",
-              "has one boundary only, made of one graph cycle only."
+              "has one boundary only, without intersections (made of one graph cycle only)."
             )
           ),
           h3("Selecting & Deleting"),
           ul(
-            li("Click on any polygon to select it."),
-            li("Use ", kbd("Esc"), " to deselect everything."),
+            li(
+              "Click on any polygon to select it, while you are in the ",
+              i("Add (outside)"),
+              " mode."
+            ),
+            li("Use the ", IconsSVG.selectionGridFilledIcon, " button to select all."),
+            li("Use the ", IconsSVG.selectionGridEmptyIcon, " button to deselect all."),
+            li("Use ", kbd("Esc"), " from the keyboard to deselect all as well."),
             li(
               "Use the ",
               i("Select"),
@@ -61,23 +70,24 @@ object GuidePopup:
           h3("Adding interior polygons"),
           ul(
             li(
-              "Use the ",
-//              IconsSVG.inserterIcon,
-              " ",
-              i("Insertion"),
-              " tool to add a regular polygon to the interior of an existing one."
+              "Toggle the ",
+              IconsSVG.plusIcon,
+              " to select the ",
+              i("Add (inside)"),
+              " mode and add a regular polygon to the interior of an existing one."
             ),
             li(
-              "When you click on a polygon its edges will be highlighted, ",
+              "You can select and drag from the palette. ",
+              "Or when you click on a polygon its edges will be highlighted, ",
               "click one to add the selected regular polygon."
             )
           ),
           h3("Adding irregular polygons"),
           ul(
-            li("Select the irregular shape from the last button in the palette.")
+            li("Select the irregular shape in the palette, just like a regular one.")
           ),
           ul(
-            li("Click the '+' button on the top right corner of the button to change the attaching edge.")
+            li("Click the '↺' button on the top right corner of the button to shift the attaching edge.")
           ),
           ul(
             li(
@@ -141,8 +151,10 @@ object GuidePopup:
             li("Rotate: use the ", kbd('E'), " (left) and ", kbd('R'), " (right) keys."),
             li(
               "Fit: use the ",
-              b("View → Fit to Canvas"),
-              " menu option to automatically adjust the view to see the entire tiling."
+              IconsSVG.maximizeIcon,
+              " button or the ",
+              kbd('F'),
+              " key to automatically adjust the view to see the entire tiling."
             ),
             li(
               "Reset: use ",
@@ -176,7 +188,9 @@ object GuidePopup:
           h3("Styling"),
           ul(
             li(
-              "To change polygons' color, select one or more polygons, then go to ",
+              "To change polygons' color, select one or more polygons, while you are in the ",
+              i("Add (outside)"),
+              " mode, then click on the colour button or go to ",
               b("Edit → Fill Color..."),
               " to open the color picker."
             ),
