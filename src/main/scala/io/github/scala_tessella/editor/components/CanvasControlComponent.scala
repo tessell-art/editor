@@ -210,7 +210,7 @@ object CanvasControlComponent:
 //          infoToggleButton(),
           fitButton(),
           selectToggleButton(),
-          labelsToggleButton(),
+//          labelsToggleButton(),
           UndoComponent.element
         )
       )
