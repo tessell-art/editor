@@ -43,8 +43,9 @@ test.describe('Tessella Editor smoke', () => {
     // counting `polygon.tiling-polygon` selectors — the test survives any CSS class rename.
     expect(await hooks.isTilingEmpty(page)).toBe(true);
 
-    // The 6-sided polygon button has a `title` prefixed with "6-sided polygon".
-    await page.locator('button[title^="6-sided polygon"]').click();
+    // Locate the hexagon by its queue-slot label (the digit "6") rather than by tooltip wording —
+    // the title is i18n-driven and the slot's .polygon-label is locale-stable.
+    await page.locator('.palette-queue-slot', { has: page.locator('.polygon-label', { hasText: /^6$/ }) }).click();
 
     // A single hexagon face appears. Polled because the click handler routes through
     // OperationRunner.runTilingOp, which has a 50ms loading-state delay before the mutation
@@ -53,7 +54,7 @@ test.describe('Tessella Editor smoke', () => {
   });
 
   test('Ctrl+Z undoes a tiling creation', async ({ page }) => {
-    await page.locator('button[title^="6-sided polygon"]').click();
+    await page.locator('.palette-queue-slot', { has: page.locator('.polygon-label', { hasText: /^6$/ }) }).click();
     await expect(page.locator('polygon.tiling-polygon')).toHaveCount(1);
 
     // Use Control+KeyZ for cross-platform: KeyboardEventHandler.handleKeyDown
@@ -83,7 +84,7 @@ test.describe('Tessella Editor smoke', () => {
 
   test('SVG export → Clear Tiling → re-import round-trip preserves shape', async ({ page }) => {
     // 1. Create a hexagon and capture the shape signature via hooks.
-    await page.locator('button[title^="6-sided polygon"]').click();
+    await page.locator('.palette-queue-slot', { has: page.locator('.polygon-label', { hasText: /^6$/ }) }).click();
     await expectHook.tilingPolygonCount(page, 1);
     await expectHook.firstFaceVertexCount(page, 6); // discriminates hexagon from any other 1-face shape
 
