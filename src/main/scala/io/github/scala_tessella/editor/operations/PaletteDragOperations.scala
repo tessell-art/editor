@@ -52,7 +52,7 @@ object PaletteDragOperations:
   /** Result of a successful snap. `intoFace` is set iff the gesture targets an interior edge (Inside
     * sub-mode); otherwise `None` for boundary placement.
     */
-  private case class SnapHit(
+  private[operations] case class SnapHit(
       edgeIndex: Int,
       edge: (VertexCoord, VertexCoord),
       intoFace: Option[FaceId],
@@ -60,7 +60,7 @@ object PaletteDragOperations:
   )
 
   /** Closest point on segment AB to point P, clamped to [A, B]; returns the squared distance. */
-  private def squaredDistanceToSegment(p: Point, a: Point, b: Point): Double =
+  private[operations] def squaredDistanceToSegment(p: Point, a: Point, b: Point): Double =
     val ab      = b - a
     val ap      = p - a
     val ab2     = ab.dot(ab)
@@ -74,7 +74,7 @@ object PaletteDragOperations:
     * canvasCenter → scale → translate by pan`. Mirrors the SVG `transform` attribute built in
     * `EditorCanvasComponent.contentGroup`.
     */
-  private def tilingPointToScreenSvg(
+  private[operations] def tilingPointToScreenSvg(
       worldPoint: Point,
       transform: ViewTransform
   ): Point =
@@ -88,7 +88,7 @@ object PaletteDragOperations:
   /** Inverse of the canvas content-group transform: SVG-viewBox screen point → canvas-view (the frame the
     * `<g>` paints into). Same algebra as `TouchEventHandler.screenToWorld`.
     */
-  private def screenSvgToCanvasView(
+  private[operations] def screenSvgToCanvasView(
       screen: Point,
       transform: ViewTransform
   ): Point =
@@ -114,7 +114,11 @@ object PaletteDragOperations:
       Point(rx, ry)
 
   /** Pick the absolute nearest perimeter edge to `p`. Returns `None` only when the tiling is empty. */
-  private def snapToPerimeter(p: Point, tiling: TilingDCEL, transform: ViewTransform): Option[SnapHit] =
+  private[operations] def snapToPerimeter(
+      p: Point,
+      tiling: TilingDCEL,
+      transform: ViewTransform
+  ): Option[SnapHit] =
     if tiling.isEmpty then None
     else
       val perimeter = tiling.boundaryVertices.toOption.get.map(_.toCoords).slidingO(2).toList
@@ -135,7 +139,11 @@ object PaletteDragOperations:
   /** Inside sub-mode: pick the absolute nearest interior edge across all inner faces, returning the face the
     * snapped edge belongs to so `attemptPolygonInsertion` knows which side to grow into.
     */
-  private def snapToInterior(p: Point, tiling: TilingDCEL, transform: ViewTransform): Option[SnapHit] =
+  private[operations] def snapToInterior(
+      p: Point,
+      tiling: TilingDCEL,
+      transform: ViewTransform
+  ): Option[SnapHit] =
     if tiling.isEmpty then None
     else
       val candidates =
@@ -165,12 +173,12 @@ object PaletteDragOperations:
   /** True when `p` (in SVG viewBox coords) lies inside the canvas viewBox rectangle. Outside the canvas, the
     * gesture stops trying to snap — releasing there cancels the drag.
     */
-  private def isInsideCanvas(p: Point): Boolean =
+  private[operations] def isInsideCanvas(p: Point): Boolean =
     p.x >= 0 && p.x <= EditorConfig.canvasViewBoxWidth &&
       p.y >= 0 && p.y <= EditorConfig.canvasViewBoxHeight
 
   /** Centroid of a non-empty point set (arithmetic mean). */
-  private def centroidOf(points: Vector[Point]): Point =
+  private[operations] def centroidOf(points: Vector[Point]): Point =
     if points.isEmpty then Point.origin
     else
       val sum = points.foldLeft(Point.origin)(_ + _)
@@ -180,14 +188,14 @@ object PaletteDragOperations:
     * pointing right). Edge length is one tiling-world unit, so we multiply by `canvasScale` to land in
     * canvas-view space.
     */
-  private def defaultGhostVerticesCanvasView(angles: Vector[AngleDegree]): Vector[Point] =
+  private[operations] def defaultGhostVerticesCanvasView(angles: Vector[AngleDegree]): Vector[Point] =
     val local = buildUnitEdgePolygon(
       angles.tail.map(_.supplement.toBigRadian.toBigDecimal.toDouble).map(Radian(_))
     )
     local.map(_ * EditorConfig.canvasScale)
 
   /** Reposition a polygon's vertices so its centroid lands on `target`. */
-  private def centerOn(target: Point, vertices: Vector[Point]): Vector[Point] =
+  private[operations] def centerOn(target: Point, vertices: Vector[Point]): Vector[Point] =
     val offset = target - centroidOf(vertices)
     vertices.map(_ + offset)
 
