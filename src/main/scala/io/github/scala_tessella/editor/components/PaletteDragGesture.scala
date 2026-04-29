@@ -87,7 +87,11 @@ object PaletteDragGesture:
         if !started then
           if delta.dot(delta) > DRAG_THRESHOLD_SQUARED then
             dragStarted.set(true)
-            shape.selectInPalette()
+            // Selection is deliberately NOT set here. Doing so on an unselected button mutates
+            // toolState/irregularState, which causes the palette queue's `children <-- signal` to
+            // rebuild — replacing the captured DOM node and dropping pointer capture mid-gesture.
+            // The selection is applied at commit time in `endDrag` instead, just before
+            // `commitDragRelease` reads the shape from state.
             EditorState.uiState.update(_.copy(isPaletteDragActive = true))
             applySnap(event.clientX, event.clientY, shape.angles)
         else
@@ -100,7 +104,9 @@ object PaletteDragGesture:
   private def endDrag(event: dom.PointerEvent, commit: Boolean): Unit =
     val wasDragging = dragStarted.now()
     if wasDragging then
-      if commit then PaletteDragOperations.commitDragRelease()
+      if commit then
+        dragShapeRef.now().foreach(_.selectInPalette())
+        PaletteDragOperations.commitDragRelease()
       else PaletteDragOperations.cancelDrag()
     resetLocal()
 

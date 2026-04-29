@@ -284,8 +284,8 @@ object PaletteDragOperations:
         )
 
   /** Release-on-snap: route the latched commit placement to the matching placement operation. The dragged
-    * shape's selection (regular sides / irregular index) is set up by the palette's pointerdown handler
-    * before this fires, so `PlacementOperations` reads the right shape from state.
+    * shape's selection (regular sides / irregular index) is applied by `PaletteDragGesture.endDrag`
+    * immediately before this fires, so `PlacementOperations` reads the right shape from state.
     *
     * Always clears the ghost and the drag-active flag.
     */
