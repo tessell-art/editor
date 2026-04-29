@@ -105,7 +105,11 @@ object PaletteDragGesture:
     val wasDragging = dragStarted.now()
     if wasDragging then
       if commit then
-        dragShapeRef.now().foreach(_.selectInPalette())
+        // Only mutate selection when a placement is actually about to commit. Releasing off-canvas
+        // (no `previewPlacement` latched) cancels the gesture without leaking selection state, so
+        // the user is back to their pre-drag world.
+        val willPlace = EditorState.previewState.now().previewPlacement.isDefined
+        if willPlace then dragShapeRef.now().foreach(_.selectInPalette())
         PaletteDragOperations.commitDragRelease()
       else PaletteDragOperations.cancelDrag()
     resetLocal()

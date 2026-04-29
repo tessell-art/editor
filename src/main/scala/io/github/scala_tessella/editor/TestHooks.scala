@@ -59,6 +59,20 @@ object TestHooks:
         tiling.findInnerFaceVertices(face.id).toOption.map(_.size).getOrElse(0)
       case None       => 0
 
+  /** Currently-selected regular polygon side count, or `-1` when no regular polygon is selected. Test-only:
+    * lets e2e tests confirm whether a click/drag actually changed the selection (e.g. did `selectInPalette()`
+    * fire during a drag commit?).
+    */
+  def selectedPolygonSides: Int =
+    EditorState.toolState.now().selectedPolygon.getOrElse(-1)
+
+  /** Last error message shown to the user, or empty string if none. Test-only: lets e2e tests check whether a
+    * placement was rejected (e.g. by `attemptPolygonAddition`'s onFailure path) versus the gesture not firing
+    * at all.
+    */
+  def lastErrorMessage: String =
+    EditorState.errorState.now().errorMessage.getOrElse("")
+
   /** Install the hook object at `window.__tessellaTestHooks__`. Idempotent — overwrites any previous
     * registration, which doesn't matter in practice (only one app instance per page).
     *
@@ -76,12 +90,16 @@ object TestHooks:
       val isTilingEmptyFn: js.Function0[Boolean]    = () => isTilingEmpty
       val currentFillColorFn: js.Function0[String]  = () => currentFillColor
       val firstFaceVertexCountFn: js.Function0[Int] = () => firstFaceVertexCount
+      val selectedPolygonSidesFn: js.Function0[Int] = () => selectedPolygonSides
+      val lastErrorMessageFn: js.Function0[String]  = () => lastErrorMessage
 
       val obj = js.Dynamic.literal()
       obj.updateDynamic("tilingPolygonCount")(tilingPolygonCountFn)
       obj.updateDynamic("isTilingEmpty")(isTilingEmptyFn)
       obj.updateDynamic("currentFillColor")(currentFillColorFn)
       obj.updateDynamic("firstFaceVertexCount")(firstFaceVertexCountFn)
+      obj.updateDynamic("selectedPolygonSides")(selectedPolygonSidesFn)
+      obj.updateDynamic("lastErrorMessage")(lastErrorMessageFn)
 
       dom.window.asInstanceOf[js.Dynamic].updateDynamic("__tessellaTestHooks__")(obj)
       Logger.debug("TestHooks installed at window.__tessellaTestHooks__")

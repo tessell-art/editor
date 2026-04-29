@@ -22,6 +22,8 @@ declare global {
       isTilingEmpty(): boolean;
       currentFillColor(): string;
       firstFaceVertexCount(): number;
+      selectedPolygonSides(): number;
+      lastErrorMessage(): string;
     };
   }
 }
@@ -36,6 +38,10 @@ export const hooks = {
     page.evaluate(() => window.__tessellaTestHooks__.currentFillColor()),
   firstFaceVertexCount: (page: Page): Promise<number> =>
     page.evaluate(() => window.__tessellaTestHooks__.firstFaceVertexCount()),
+  selectedPolygonSides: (page: Page): Promise<number> =>
+    page.evaluate(() => window.__tessellaTestHooks__.selectedPolygonSides()),
+  lastErrorMessage: (page: Page): Promise<string> =>
+    page.evaluate(() => window.__tessellaTestHooks__.lastErrorMessage()),
 };
 
 /**

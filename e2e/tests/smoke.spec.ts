@@ -64,6 +64,120 @@ test.describe('Tessella Editor smoke', () => {
     await expect(page.locator('polygon.tiling-polygon')).toHaveCount(0);
   });
 
+  /**
+   * Drive a palette → canvas drag by dispatching `PointerEvent`s directly to the source button.
+   *
+   * Why not `page.mouse.*`? Playwright's synthesized mouse events depend on `setPointerCapture`
+   * to keep pointermove/pointerup flowing to the source button after the cursor has crossed onto
+   * the canvas. Pointer-capture engagement under CDP-driven mouse synthesis turns out to be
+   * unreliable in this scenario (intermediate moves never reach the gesture's onPointerMove,
+   * so the snap never primes a placement). Dispatching the events straight at the button
+   * sidesteps capture entirely and tests the gesture's own logic on its own terms — which is
+   * what we actually want.
+   *
+   * The selector resolves to the first `.palette-queue-slot` whose `.polygon-label` text matches
+   * `labelText` exactly (e.g. "3" for the triangle, "6" for the hexagon).
+   */
+  async function dragQueueSlot(
+    page: import('@playwright/test').Page,
+    labelText: string,
+    toClient: { x: number; y: number },
+  ): Promise<void> {
+    await page.evaluate(
+      ({ label, to }) => {
+        const slot = Array.from(document.querySelectorAll('.palette-queue-slot'))
+          .find(el => el.querySelector('.polygon-label')?.textContent?.trim() === label) as HTMLElement | undefined;
+        if (!slot) throw new Error(`No queue slot with label "${label}"`);
+        const rect = slot.getBoundingClientRect();
+        const fromX = rect.left + rect.width / 2;
+        const fromY = rect.top + rect.height / 2;
+        const dispatch = (type: string, x: number, y: number, buttons: number) => {
+          slot.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true,
+            pointerId: 1, pointerType: 'mouse', isPrimary: true,
+            clientX: x, clientY: y, button: 0, buttons,
+          }));
+        };
+        dispatch('pointerdown', fromX, fromY, 1);
+        // 10 intermediate pointermoves so the gesture observably crosses its drag threshold
+        // (a single jump can be classed as a tap by gesture handlers that compare to origin).
+        for (let i = 1; i <= 10; i++) {
+          const t = i / 10;
+          dispatch('pointermove', fromX + (to.x - fromX) * t, fromY + (to.y - fromY) * t, 1);
+        }
+        dispatch('pointerup', to.x, to.y, 0);
+      },
+      { label: labelText, to: toClient },
+    );
+  }
+
+  test('drag from a palette slot places a polygon on the canvas', async ({ page }) => {
+    // Why this test exists: the drag-from-palette gesture (PaletteDragGesture, Phase 5.6) relies on
+    // real pointer-event semantics — threshold-based drag detection, `getBoundingClientRect`-
+    // driven snap geometry, and the canvas's SVG viewBox transform. JSDOM lies about all of those
+    // (zero-sized rects, no real layout), so the gesture has no honest unit-test coverage.
+    // This exercises the full path end-to-end and would catch the pointer-capture-during-rebuild
+    // regression class that bit us when selecting an unselected queue slot used to mutate state
+    // mid-drag.
+    //
+    // The setup pre-seeds a hexagon by clicking — the gesture only snaps when there's a perimeter
+    // to snap to. Starting from an empty canvas would fall back to the click path (which auto-
+    // creates the first polygon), defeating the test. With one polygon already present, a
+    // successful drag adds a second one; a broken gesture (no snap, no commit) leaves the count
+    // at 1 because the click path on a non-empty tiling only sets selection.
+
+    await page.locator(
+      '.palette-queue-slot',
+      { has: page.locator('.polygon-label', { hasText: /^6$/ }) }
+    ).click();
+    // Wait for the SVG polygon to render — this is what proves the canvas is in the DOM and
+    // `EditorState.uiState.canvasElementRef` is set. Without it, the gesture's
+    // `clientPointToSvg` returns None, so no snap fires, no `previewPlacement` is latched, and
+    // the drag commit becomes a no-op. The state-only `tilingPolygonCount` hook can flip to 1
+    // before the canvas mounts, so it is not sufficient as a wait condition for drag tests.
+    await expect(page.locator('polygon.tiling-polygon')).toHaveCount(1);
+
+    // Use `svg.editor-canvas` rather than `.canvas-container svg`: the latter also matches small
+    // toolbar icons rendered by `CanvasControlComponent` at the top of the canvas column, and
+    // `.first()` would pick one of those (16×16) instead of the actual canvas.
+    const canvasBox = await page.locator('svg.editor-canvas').boundingBox();
+    expect(canvasBox).not.toBeNull();
+
+    // Aim into the right half of the canvas so the snap deterministically picks a right-side
+    // perimeter edge of the seeded hexagon. Centre would be ambiguous (all 6 edges equidistant).
+    await dragQueueSlot(page, '3', {
+      x: canvasBox!.x + canvasBox!.width * 0.7,
+      y: canvasBox!.y + canvasBox!.height / 2,
+    });
+
+    await expectHook.tilingPolygonCount(page, 2);
+  });
+
+  test('releasing a palette drag off-canvas does not place a polygon', async ({ page }) => {
+    // Why this test exists: a drag the user changes their mind about — released back over the
+    // palette area, away from any perimeter — must not commit a placement. This encodes the
+    // gesture's "no snap, no commit" rule so a future refactor can't silently start auto-placing
+    // on every drag-end.
+
+    await page.locator(
+      '.palette-queue-slot',
+      { has: page.locator('.polygon-label', { hasText: /^6$/ }) }
+    ).click();
+    // Wait for the rendered polygon — same canvas-mount precondition as the drag-and-place test
+    // above. Without it this test could pass coincidentally (count stuck at 1 because the
+    // canvas isn't mounted, not because the gesture cancelled cleanly).
+    await expect(page.locator('polygon.tiling-polygon')).toHaveCount(1);
+
+    // Aim at the top-left corner of the viewport — far from the canvas viewBox, so
+    // `isInsideCanvas` rejects every move and no `previewPlacement` ever latches.
+    await dragQueueSlot(page, '3', { x: 5, y: 5 });
+
+    // Count is unchanged from the seeded value — the gesture did not place a polygon.
+    // (The synthetic click that follows pointerup will set `selectedPolygon` for follow-up
+    // click-to-place — that's expected click-handler behaviour and out of scope for this test.)
+    await expectHook.tilingPolygonCount(page, 1);
+  });
+
   test('Help → About... opens the popup; close button dismisses it', async ({ page }) => {
     // The Help dropdown is opened on hover (CSS :hover-driven on desktop).
     const helpItem = page.locator('.menu-item', { has: page.locator('button.menu-button', { hasText: 'Help' }) });
