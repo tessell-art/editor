@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.TilingEquivalency.verticallyReflectedCopy
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
-import io.github.scala_tessella.dcel.{TilingDCEL, ValidationError}
+import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.{
   AnimationState,
   DoublingAnimation,
@@ -193,11 +193,7 @@ object TransformOperations:
     else
       val context = snapshotDoublingContext(tiling)
       clearAllAnimations()
-      val op      = () =>
-        try
-          context.tiling.doubleArea
-        catch
-          case e: Exception => Left(ValidationError(s"Error doubling: ${e.getMessage}"))
+      val op      = () => OperationRunner.safely("Error doubling")(context.tiling.doubleArea)
 
       OperationRunner.runTilingOp(op)(
         onSuccess =
@@ -244,10 +240,7 @@ object TransformOperations:
       val facePoints = precomputeFacePoints(tiling)
       val axisY      = mirrorAxisYFor(tiling)
       val op         = () =>
-        try
-          Right(tiling.verticallyReflectedCopy)
-        catch
-          case e: Exception => Left(ValidationError(s"Error mirroring: ${e.getMessage}"))
+        OperationRunner.safely("Error mirroring")(Right(tiling.verticallyReflectedCopy))
 
       OperationRunner.runTilingOp(op)(
         onSuccess =

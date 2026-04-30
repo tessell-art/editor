@@ -1,14 +1,27 @@
 package io.github.scala_tessella.editor.operations
 
-import io.github.scala_tessella.dcel.{TilingDCEL, TilingError}
+import io.github.scala_tessella.dcel.{TilingDCEL, TilingError, ValidationError}
 import io.github.scala_tessella.editor.models.EditorState
 import io.github.scala_tessella.editor.operations.UndoManager
 import io.github.scala_tessella.editor.utils.AsyncUtils
 import io.github.scala_tessella.editor.operations.ColorOperations.syncColorsForFaces
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
 object OperationRunner:
+
+  /** Run a DCEL mutation that returns `Either[TilingError, T]`, converting any thrown exception into a
+    * `Left(ValidationError("$errorContext: $message"))`. Use this instead of an inline `try { ... } catch {
+    * case e: Exception => Left(...) }` at every `runTilingOp` call site — it's just `Try.fold` with the
+    * exception-to-error formatting baked in.
+    *
+    * `Try` only catches `NonFatal` exceptions, so `InterruptedException` and the like still propagate as they
+    * should. Plain `case e: Exception` would have caught them too, which was a latent bug at the original
+    * sites.
+    */
+  def safely[T](errorContext: String)(op: => Either[TilingError, T]): Either[TilingError, T] =
+    Try(op).fold(e => Left(ValidationError(s"$errorContext: ${e.getMessage}")), identity)
 
   /** Run an async DCEL mutation that returns Either[TilingError, TilingDCEL]
     *   - Shows a loading state

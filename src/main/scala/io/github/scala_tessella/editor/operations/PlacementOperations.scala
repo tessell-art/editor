@@ -81,7 +81,7 @@ object PlacementOperations:
       val tiling         = context.tiling
       val perimeterEdges = tiling.boundaryVertices.toOption.get.map(_.toCoords).slidingO(2).toList
       val op             = () =>
-        try
+        OperationRunner.safely("Error growing edge"):
           if edgeIndex < perimeterEdges.length then
             val selectedEdge = perimeterEdges(edgeIndex)
             context.placement match
@@ -91,8 +91,6 @@ object PlacementOperations:
                 tiling.maybeAddSimplePolygonToBoundary(selectedEdge.head.id, angles)
           else
             Left(ValidationError("Invalid edge index"))
-        catch
-          case e: Exception => Left(ValidationError(s"Error growing edge: ${e.getMessage}"))
 
       OperationRunner.runTilingOp(op)(
         onSuccess = {
@@ -127,14 +125,12 @@ object PlacementOperations:
 
       val tiling = context.tiling
       val op     = () =>
-        try
+        OperationRunner.safely("Error inserting polygon"):
           context.placement match
             case RegularPlacement(sides)    =>
               tiling.maybeAddRegularPolygon(startVertexId, endVertexId, RegularPolygon(sides))
             case IrregularPlacement(angles) =>
               tiling.maybeAddSimplePolygon(startVertexId, endVertexId, angles)
-        catch
-          case e: Exception => Left(ValidationError(s"Error inserting polygon: ${e.getMessage}"))
 
       OperationRunner.runTilingOp(op)(
         onSuccess = {

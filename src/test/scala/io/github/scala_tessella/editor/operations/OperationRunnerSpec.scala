@@ -72,6 +72,40 @@ class OperationRunnerSpec extends FunSuite with EditorStateFixture:
     }
   }
 
+  // ---------- safely ----------
+
+  test("safely passes a Right through unchanged") {
+    val result = OperationRunner.safely("ctx")(Right(42))
+    assertEquals(result, Right(42))
+  }
+
+  test("safely passes a Left through unchanged (does not re-wrap an existing TilingError)") {
+    val original = Left(ValidationError("upstream failure"))
+    val result   = OperationRunner.safely[Int]("ctx")(original)
+    assertEquals(result, original)
+  }
+
+  test("safely converts a thrown exception into Left(ValidationError) with the context prefix") {
+    val result = OperationRunner.safely[Int]("Error doubling")(throw RuntimeException("kapow"))
+    result match
+      case Left(ValidationError(msg)) =>
+        assertEquals(msg, "Error doubling: kapow")
+      case other                      =>
+        fail(s"expected Left(ValidationError(...)), got $other")
+  }
+
+  test("safely lets fatal throwables propagate (only NonFatal is caught)") {
+    // `Try` catches only `NonFatal` — `InterruptedException`, `VirtualMachineError`, `ThreadDeath`
+    // and `LinkageError` are excluded and propagate. The original sites' `case e: Exception`
+    // would have swallowed `InterruptedException` (it extends Exception); this test locks in the
+    // fix. Use plain try/catch rather than `intercept[T]` because munit's intercept routes fatal
+    // throwables back as test failures rather than intercepted results.
+    var propagated = false
+    try OperationRunner.safely[Int]("ctx")(throw new InterruptedException("synthetic"))
+    catch case _: InterruptedException => propagated = true
+    assert(propagated, "InterruptedException should have propagated through safely, not been wrapped")
+  }
+
   test("runTilingOp should drop colors for faces not present in new tiling") {
     val oldTiling = TilingBuilders.freshSquare()
     val newTiling = TilingBuilders.freshTriangle()
