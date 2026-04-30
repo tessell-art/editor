@@ -18,7 +18,6 @@ object EditorCanvasComponent:
       // A new wrapper for the SVG and its overlays
       div(
         className := "editor-canvas-wrapper",
-        ErrorMessageComponent.element,
         ModeBadgeComponent.element,
         // Empty-state card shown when no tessellation exists
         child.maybe <-- EditorState.isTilingEmptySignal.map: isEmpty =>

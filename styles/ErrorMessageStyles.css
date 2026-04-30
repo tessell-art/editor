@@ -1,76 +1,7 @@
-/* Error surfaces. Two distinct flavors:
-   - `.error-container` / `.error-message` — inline canvas-anchored banner that explains a
-      validation failure (e.g. invalid placement). Sticks until dismissed.
-   - `#toast-container` / `.editor-toast` — bottom-right snackbar for transient feedback,
-      auto-dismissing. Three severities (info / warning / error) drive the color palette.
-   The `.editor-canvas-wrapper` anchor is declared in EditorLayout.css (`position: relative`).
+/* Toast snackbar — single, unified surface for transient feedback.
+   Bottom-right on desktop, full-width on mobile. Three severities (info / warning / error)
+   drive the colour palette. Errors are sticky (no auto-dismiss); info/warning auto-dismiss.
 */
-
-/* --- Inline error banner ---------------------------------------------------- */
-
-.error-container {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.error-message {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  background-color: var(--error-bg);
-  color: var(--error-text);
-  font-size: 0.85rem;
-  line-height: 1.4;
-  border: 1px solid var(--error-border);
-  border-radius: 8px;
-  padding: 0.6rem 0.8rem;
-  pointer-events: auto;
-  word-break: break-word;
-}
-
-.error-icon {
-  font-size: 1.1rem;
-  line-height: 1.2;
-  flex: 0 0 auto;
-}
-
-.error-text {
-  flex: 1 1 auto;
-}
-
-.error-close {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--error-text);
-  cursor: pointer;
-  padding: 0 0.3rem;
-  border-radius: 4px;
-  transition: color 0.15s ease, background 0.15s ease;
-  flex: 0 0 auto;
-}
-
-.error-close:hover {
-  color: var(--error-close-hover);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.light-mode .error-close:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.error-close:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-/* --- Toast snackbar -------------------------------------------------------- */
 
 #toast-container {
   position: fixed;
@@ -84,6 +15,9 @@
 }
 
 .editor-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
   background: var(--info-bg);
   color: var(--info-text);
   border: 1px solid var(--info-border);
@@ -93,7 +27,6 @@
   max-width: 420px;
   font: 0.9rem/1.4 inherit;
   white-space: pre-wrap;
-  cursor: pointer;
   pointer-events: auto;
   opacity: 0;
   transform: translateY(8px);
@@ -112,8 +45,45 @@
   border-color: var(--error-border);
 }
 
-.editor-toast:hover {
+.editor-toast-text {
+  flex: 1 1 auto;
+  word-break: break-word;
+}
+
+/* Auto-dismiss severities (info/warning) dismiss on click anywhere on the toast. */
+.editor-toast[data-dismiss="click"] {
+  cursor: pointer;
+}
+
+.editor-toast[data-dismiss="click"]:hover {
   filter: brightness(1.05);
+}
+
+.editor-toast-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+  flex: 0 0 auto;
+}
+
+.editor-toast-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.light-mode .editor-toast-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.editor-toast-close:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 @media (max-width: 600px) {

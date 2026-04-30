@@ -34,8 +34,11 @@ object ErrorOperations:
       currentId.foreach(dom.window.clearTimeout)
       currentId = None
 
-  // The error-message text stays for longer than the on-canvas overlay, so they're tracked
-  // separately. Rapid consecutive errors now correctly cancel *both* previous timers.
+  // `errorMessage` is a logical "last error reported" signal (used by tests and undo) and
+  // self-clears after 10s. The on-canvas polygon overlay (failedPlacement / failedDeletion)
+  // clears faster at 3s. Two timers, tracked separately so back-to-back errors don't cancel
+  // each other's unrelated timers. The toast surface has its own lifecycle (sticky for errors,
+  // 4s/6s auto-dismiss otherwise) — it is not driven by these timers.
   private val messageTimeout = new SingleTimeout
   private val overlayTimeout = new SingleTimeout
 
@@ -139,18 +142,39 @@ object ErrorOperations:
 
   private def showToast(text: String, severity: Severity, durationMs: Int): Unit =
     val container = ensureToastContainer()
+    // Errors stay until the user dismisses them (selectable text, no clock pressure).
+    // Info/warning auto-dismiss and also dismiss on click anywhere on the toast.
+    val isSticky  = severity == Severity.Error
 
-    // Create a div and safely narrow via pattern match
     dom.document.createElement("div") match
       case toast: dom.HTMLDivElement =>
-        toast.setAttribute("role", "status")
-        toast.setAttribute("aria-live", "polite")
+        toast.setAttribute("role", if isSticky then "alert" else "status")
+        toast.setAttribute("aria-live", if isSticky then "assertive" else "polite")
         toast.className = "editor-toast"
         toast.setAttribute("data-severity", severity.toString.toLowerCase)
-        toast.textContent = text
+        if !isSticky then toast.setAttribute("data-dismiss", "click")
 
-        // Click to dismiss early
-        toast.onclick = _ => removeToast(toast)
+        dom.document.createElement("span") match
+          case textEl: dom.HTMLElement =>
+            textEl.className = "editor-toast-text"
+            textEl.textContent = text
+            toast.appendChild(textEl): Unit
+          case _                       => ()
+
+        dom.document.createElement("button") match
+          case closeBtn: dom.HTMLButtonElement =>
+            closeBtn.`type` = "button"
+            closeBtn.className = "editor-toast-close"
+            closeBtn.setAttribute("aria-label", "Close")
+            closeBtn.textContent = "×"
+            closeBtn.onclick = (event: dom.MouseEvent) =>
+
+              event.stopPropagation()
+              removeToast(toast)
+            toast.appendChild(closeBtn): Unit
+          case _                               => ()
+
+        if !isSticky then toast.onclick = _ => removeToast(toast)
 
         container.appendChild(toast): Unit
 
@@ -161,10 +185,9 @@ object ErrorOperations:
           toast.style.transform = "translateY(0)"
         }: Unit
 
-        // Auto-dismiss
-        dom.window.setTimeout(() => removeToast(toast), durationMs): Unit
-        // Keep a placeholder listener for future extensibility
-        toast.addEventListener("transitionend", (_: dom.Event) => ()): Unit
+        // Only auto-dismiss non-error severities.
+        if !isSticky then
+          dom.window.setTimeout(() => removeToast(toast), durationMs): Unit
 
       case _ =>
         () // If not an HTMLDivElement, do nothing safely
