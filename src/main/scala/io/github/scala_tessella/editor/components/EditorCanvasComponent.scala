@@ -4,6 +4,7 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.interactions.{MouseEventHandler, TouchEventHandler}
 import io.github.scala_tessella.editor.models.{AddSubmode, EditorState, Tool}
+import io.github.scala_tessella.editor.operations.OperationGuard.gate
 
 object EditorCanvasComponent:
 
@@ -45,49 +46,19 @@ object EditorCanvasComponent:
           // Main content group with transforms
           contentGroup(),
 
-          // Disable mouse events when processing, without using .now()
-          onMouseDown.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> MouseEventHandler.handleMouseDown,
-          onMouseMove.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> MouseEventHandler.handleMouseMove,
-          onMouseUp.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> MouseEventHandler.handleMouseUp,
-          onWheel.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> MouseEventHandler.handleWheel,
-
-          // Touch events for mobile support (also gated)
-          onTouchStart.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> TouchEventHandler.handleTouchStart,
-          onTouchMove.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> TouchEventHandler.handleTouchMove,
-          onTouchEnd.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> TouchEventHandler.handleTouchEnd,
-          onTouchCancel.compose(
-            _.withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
-              .collect:
-                case (e, false) => e
-          ) --> TouchEventHandler.handleTouchCancel
+          // Mouse and touch events are dropped while a tiling op is in flight (`isProcessing`),
+          // so a click during the loading delay can't queue a stale interaction. The pan/zoom
+          // path stays on `MouseEventHandler`/`TouchEventHandler` (not Pointer Events) because
+          // those handlers branch on platform-specific semantics (wheel, pinch, two-finger
+          // rotate) — see `PaletteDragGesture` for why the palette gesture differs.
+          onMouseDown.compose(gate) --> MouseEventHandler.handleMouseDown,
+          onMouseMove.compose(gate) --> MouseEventHandler.handleMouseMove,
+          onMouseUp.compose(gate) --> MouseEventHandler.handleMouseUp,
+          onWheel.compose(gate) --> MouseEventHandler.handleWheel,
+          onTouchStart.compose(gate) --> TouchEventHandler.handleTouchStart,
+          onTouchMove.compose(gate) --> TouchEventHandler.handleTouchMove,
+          onTouchEnd.compose(gate) --> TouchEventHandler.handleTouchEnd,
+          onTouchCancel.compose(gate) --> TouchEventHandler.handleTouchCancel
         ),
         // Zoom / rotation status chip — mirrors ModeBadgeComponent's structure (label + value spans)
         // so ZoomRotation.css can render an identical-looking badge in the opposite corner.
