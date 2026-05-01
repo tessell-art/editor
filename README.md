@@ -44,6 +44,38 @@ The editor is part of the [scala-tessella](https://github.com/scala-tessella) pr
 - **Web Components:** [UI5 Web Components](https://sap.github.io/ui5-webcomponents/)
 - **Build Tools:** [SBT](https://www.scala-sbt.org/), [Vite](https://vitejs.dev/)
 
+## Architecture
+
+Source under `src/main/scala/.../editor/` is organized as a one-directional
+dependency graph (enforced at compile time by the `checkLayering` sbt task —
+see [ADR-001](docs/adr/001-package-layering.md)):
+
+```
+  components / interactions   (UI elements + DOM event handlers)
+            │
+            ▼
+        AppState               (thin façade composing operations)
+            │
+            ▼
+        operations             (business logic; sole writer of Vars)
+            │
+            ▼
+          models               (data, Vars, derived Signals)
+            │
+            ▼
+          utils                (no project imports)
+```
+
+State is global by necessity (Laminar `Var`s live at module scope) but flow
+is one-way: `components`/`interactions` subscribe to `models` signals and call
+into `operations` via `AppState`; `operations` is the only layer allowed to
+mutate state (see [ADR-002](docs/adr/002-state-container.md) for the
+13-aggregate `EditorState` container, and
+[`docs/laminar-conventions.md`](docs/laminar-conventions.md) for reactive-first
+patterns). The desktop shell under `desktop/src-tauri/` and the Playwright
+smoke suite under `e2e/` are sibling projects that consume the same
+`dist/` bundle Vite produces.
+
 ## Getting Started
 
 ### Prerequisites
