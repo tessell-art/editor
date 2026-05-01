@@ -20,7 +20,7 @@ object PaletteSnapHintRenderer:
   private val chevronLength: Double    = 14.0 // base → apex
   private val chevronHalfWidth: Double = 8.0  // half of base width
 
-  def render(hint: PaletteSnapHint): Element =
+  def render(hint: PaletteSnapHint, valid: Boolean): Element =
     val midpoint   = (hint.edgeStart + hint.edgeEnd) / 2.0
     val normal     = hint.growthNormal
     // The chevron base spans along the edge tangent (perpendicular to the growth normal); apex
@@ -38,12 +38,17 @@ object PaletteSnapHintRenderer:
         }
         .mkString(" ")
 
+    // The "disabled" suffix on the className drives the dimmed-chevron CSS for invalid
+    // placements; opacity is also halved here so the dim look survives even if the stylesheet
+    // is overridden or absent.
+    val baseClass         = "palette-snap-hint"
+    val classAttrName     = if valid then baseClass else s"$baseClass disabled"
     svg.g(
-      svg.className     := "palette-snap-hint",
+      svg.className     := classAttrName,
       svg.pointerEvents := "none",
       svg.polygon(
         svg.points  := chevronPointsStr,
         svg.fill <-- EditorState.overlayPreviewStrokeColor,
-        svg.opacity := "0.9"
+        svg.opacity := (if valid then "0.9" else "0.35")
       )
     )

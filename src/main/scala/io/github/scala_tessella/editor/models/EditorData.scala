@@ -373,11 +373,17 @@ case class PaletteSnapHint(
   *     `contentGroup` transform). Only set while the gesture is in flight.
   *   - `paletteSnapHint`: halo + directional chevron on the edge currently latched as the commit target.
   *     Cleared whenever the drag has no commit target (off-canvas / empty tiling).
+  *   - `previewIsValid`: when a `previewPlacement` is set, drives the visual: a valid placement paints the
+  *     normal theme-aware dotted preview; an invalid one (rejected by the cheap angle-at-endpoints check in
+  *     `PlacementValidation`) paints a red dotted outline and dims the chevron, so the user sees that the
+  *     target is recognised but won't accept the polygon. Defaults to `true`; only meaningful while a preview
+  *     is active.
   */
 case class PreviewState(
     previewPlacement: Option[FailedPolygonPlacement],
     paletteGhost: Option[Vector[Point]],
-    paletteSnapHint: Option[PaletteSnapHint]
+    paletteSnapHint: Option[PaletteSnapHint],
+    previewIsValid: Boolean = true
 )
 
 object PreviewState:

@@ -91,10 +91,13 @@ object TessellationRenderer:
     // there, while `previewPlacement` continues to silently track the snapped commit target.
     val previewPolygonWireframe = child.maybe <--
       EditorState.previewState.signal.map(_.previewPlacement).distinct
-        .combineWith(EditorState.uiState.signal.map(_.isPaletteDragActive).distinct)
-        .map: (placement, paletteDragActive) =>
+        .combineWith(
+          EditorState.uiState.signal.map(_.isPaletteDragActive).distinct,
+          EditorState.previewState.signal.map(_.previewIsValid).distinct
+        )
+        .map: (placement, paletteDragActive, valid) =>
           if paletteDragActive then None
-          else placement.map(PreviewPolygonRenderer.renderPreview)
+          else placement.map(PreviewPolygonRenderer.renderPreview(_, valid))
 
     // Free-floating ghost wireframe for the drag-from-palette gesture: tracks the cursor across the
     // canvas and re-orients to the nearest snappable edge while in range.
@@ -104,8 +107,10 @@ object TessellationRenderer:
 
     // Snap-target hint: halo on the latched edge + directional chevron showing growth side.
     val paletteSnapHintOverlay = child.maybe <--
-      EditorState.previewState.signal.map(_.paletteSnapHint).distinct.map: hint =>
-        hint.map(PaletteSnapHintRenderer.render)
+      EditorState.previewState.signal.map(_.paletteSnapHint).distinct
+        .combineWith(EditorState.previewState.signal.map(_.previewIsValid).distinct)
+        .map: (hint, valid) =>
+          hint.map(PaletteSnapHintRenderer.render(_, valid))
 
     // Failed polygon wireframe overlay for deletion
     val failedDeletionWireframe = child.maybe <--

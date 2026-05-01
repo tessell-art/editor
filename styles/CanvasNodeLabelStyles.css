@@ -96,6 +96,19 @@ svg:hover .node-label {
   stroke: var(--hover-green) !important; /* Bright green for hover */
 }
 
+/* Edges where the angle-at-endpoints check has rejected the currently armed polygon: skip the
+   green hover affordance so the user doesn't think the edge is a valid drop target. The cursor
+   also reverts to default — the click handler short-circuits these. The hover preview itself
+   still appears, painted red (see `.inserter-preview-wireframe-invalid`). */
+.editor-canvas.tool-add-outside .perimeter-edge-transparent.invalid-target {
+  cursor: default;
+}
+
+.editor-canvas.tool-add-outside .perimeter-edge-transparent.invalid-target:hover {
+  filter: none;
+  stroke: transparent !important;
+}
+
 /* Interior-edge highlight for the AddPolygon + Inside (inserter) sub-mode. The interior edges
    only get rendered while the user has clicked a polygon to expose them in Inside mode anyway,
    but scoping the hover rules keeps the cursor + halo consistent with the perimeter rules. */
@@ -132,13 +145,15 @@ svg:hover .node-label {
 
 /* Wireframe overlays */
 svg .failed-polygon-wireframe,
-svg .inserter-preview-wireframe {
+svg .inserter-preview-wireframe,
+svg .inserter-preview-wireframe-invalid {
     pointer-events: none; /* Never block interactions */
 }
 
 /* Ensure consistent, readable strokes at any zoom and polished joins/caps */
 svg .failed-polygon-wireframe polygon,
-svg .inserter-preview-wireframe polygon {
+svg .inserter-preview-wireframe polygon,
+svg .inserter-preview-wireframe-invalid polygon {
     vector-effect: non-scaling-stroke;
     stroke-linejoin: round;
     stroke-linecap: round;
@@ -148,6 +163,20 @@ svg .inserter-preview-wireframe polygon {
 svg .inserter-preview-wireframe polygon {
     filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
     opacity: 0.9;
+}
+
+/* Invalid-placement preview: red outline matching `.failed-polygon-wireframe`, no theme-aware
+   green glow — signals "recognised target, won't accept the polygon". */
+svg .inserter-preview-wireframe-invalid polygon {
+    filter: drop-shadow(0 0 4px rgba(255, 68, 68, 0.5));
+    opacity: 0.9;
+}
+
+/* Dim chevron when the snap target is angle-invalid: the chevron stays so the user sees the
+   intended growth side, but lower opacity reads as "disabled". */
+svg .palette-snap-hint.disabled polygon {
+    opacity: 0.35;
+    filter: none;
 }
 
 /* Grid pattern styling */

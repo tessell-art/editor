@@ -9,7 +9,7 @@ import io.github.scala_tessella.editor.models.{
   AddSubmode, EditorState, FailedPolygonPlacement, Tool, VertexCoord
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import io.github.scala_tessella.editor.operations.PlacementOperations
+import io.github.scala_tessella.editor.operations.{PlacementOperations, PlacementValidation}
 import io.github.scala_tessella.editor.operations.TessellationOperations.toCoords
 import io.github.scala_tessella.editor.utils.ColorRGB.*
 import io.github.scala_tessella.editor.utils.SvgDsl.lineCoords
@@ -39,6 +39,16 @@ object TessellationEdgeRenderer:
     */
   private def isPaletteDragActive: Boolean =
     EditorState.uiState.now().isPaletteDragActive
+
+  /** Resolves the angle vector for the polygon currently armed in the palette. Irregular wins if both are set
+    * (mirrors `PlacementOperations.resolvePolygonPlacementKind`). Returns `None` when nothing is selected —
+    * the validity check then defaults to "valid" so a tooless hover doesn't pre-reject every edge.
+    */
+  private def anglesFor(
+      maybeSides: Option[Int],
+      selectedIrregular: Option[Vector[AngleDegree]]
+  ): Option[Vector[AngleDegree]] =
+    selectedIrregular.orElse(maybeSides.filter(_ >= 3).map(s => RegularPolygon(s).angles))
 
   private def buildFailedPlacement(
       edgeIndex: Int,
@@ -174,12 +184,25 @@ object TessellationEdgeRenderer:
     val point1 = toCanvasPoint(vertex1)
     val point2 = toCanvasPoint(vertex2)
 
+    // Per-edge validity for the *currently selected* polygon. When false, the edge is a
+    // guaranteed-invalid drop target by the angle-at-endpoints check, and the hover-highlight
+    // CSS is suppressed via the extra `invalid-target` class. The hover preview itself still
+    // renders (in red) so the user sees that the target was recognised, just rejected.
+    val edgeValiditySignal: Signal[Boolean] =
+      previewStateSignal.map: (maybeSides, selectedIrregular, tiling) =>
+        anglesFor(maybeSides, selectedIrregular)
+          .fold(true)(angles => PlacementValidation.fitsAtEdge(tiling, edge, angles))
+
     val interactionArea = svg.line(
       lineCoords(LineSegment(point1, point2)),
       svg.stroke        := transparent,
       svg.strokeWidth   := "12",
       svg.strokeLineCap := "round",
-      svg.className     := "perimeter-edge-transparent",
+      svg.className <--
+        edgeValiditySignal.map(valid =>
+          if valid then "perimeter-edge-transparent"
+          else "perimeter-edge-transparent invalid-target"
+        ),
       svg.pointerEvents <--
         EditorState.measurementState.signal.map(_.highlightedPolygonId).distinct.map(_.fold("visiblePainted")(
           _ =>
@@ -206,12 +229,16 @@ object TessellationEdgeRenderer:
                 selectedIrregular = selectedIrregular,
                 tiling = tiling
               )
-            EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
+            val valid        = anglesFor(maybeSides, selectedIrregular)
+              .fold(true)(angles => PlacementValidation.fitsAtEdge(tiling, edge, angles))
+            EditorState.previewState.update(
+              _.copy(previewPlacement = placementOpt, previewIsValid = valid)
+            )
       },
       onMouseLeave.compose(gate) --> { _ =>
 
         if !isPaletteDragActive then
-          EditorState.previewState.update(_.copy(previewPlacement = None))
+          EditorState.previewState.update(_.copy(previewPlacement = None, previewIsValid = true))
       },
       onClick.compose(gate) --> { _ =>
 

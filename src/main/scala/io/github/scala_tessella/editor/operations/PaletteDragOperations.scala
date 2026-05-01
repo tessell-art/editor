@@ -270,25 +270,44 @@ object PaletteDragOperations:
             FreeFloating(centerOn(pointerCanvas, defaultGhostVerticesCanvasView(angles)))
 
   /** Apply a drag step to `previewState`: ghost is always set when over the canvas; `previewPlacement` and
-    * `paletteSnapHint` are set only when snapped to an edge.
+    * `paletteSnapHint` are set only when snapped to an edge. The cheap angle-at-endpoints check decides
+    * `previewIsValid`; an invalid snap still latches (so the user sees the red preview + dim chevron), but
+    * `commitDragRelease` will refuse to place.
     */
   def applyDragStep(clientX: Double, clientY: Double, angles: Vector[AngleDegree]): Unit =
     computeStep(clientX, clientY, angles) match
       case Some(Snapped(placement, ghost, snapHint)) =>
+        // Outside-mode snaps target a perimeter edge; check fits there.
+        // Inside-mode snaps target an interior edge — there is no boundary wedge to check, so
+        // we don't pre-reject. (`attemptPolygonInsertion` remains the safety net.)
+        val valid =
+          if placement.intoFace.isDefined then true
+          else PlacementValidation.fitsAtEdge(placement.tiling, placement.edge, angles)
         EditorState.previewState.update(
           _.copy(
             previewPlacement = Some(placement),
             paletteGhost = Some(ghost),
-            paletteSnapHint = Some(snapHint)
+            paletteSnapHint = Some(snapHint),
+            previewIsValid = valid
           )
         )
       case Some(FreeFloating(ghost))                 =>
         EditorState.previewState.update(
-          _.copy(previewPlacement = None, paletteGhost = Some(ghost), paletteSnapHint = None)
+          _.copy(
+            previewPlacement = None,
+            paletteGhost = Some(ghost),
+            paletteSnapHint = None,
+            previewIsValid = true
+          )
         )
       case None                                      =>
         EditorState.previewState.update(
-          _.copy(previewPlacement = None, paletteGhost = None, paletteSnapHint = None)
+          _.copy(
+            previewPlacement = None,
+            paletteGhost = None,
+            paletteSnapHint = None,
+            previewIsValid = true
+          )
         )
 
   /** Release-on-snap: route the latched commit placement to the matching placement operation. The dragged
@@ -298,27 +317,41 @@ object PaletteDragOperations:
     * Always clears the ghost and the drag-active flag.
     */
   def commitDragRelease(): Unit =
-    val placementOpt = EditorState.previewState.now().previewPlacement
+    val previewBefore = EditorState.previewState.now()
+    val placementOpt  = previewBefore.previewPlacement
+    val wasValid      = previewBefore.previewIsValid
     EditorState.previewState.update(
-      _.copy(previewPlacement = None, paletteGhost = None, paletteSnapHint = None)
+      _.copy(
+        previewPlacement = None,
+        paletteGhost = None,
+        paletteSnapHint = None,
+        previewIsValid = true
+      )
     )
     EditorState.uiState.update(_.copy(isPaletteDragActive = false))
-    placementOpt.foreach: placement =>
-      placement.intoFace match
-        case Some(_) =>
-          // Inside sub-mode: route through the same insertion path as the click-on-interior-edge flow.
-          PlacementOperations.attemptPolygonInsertion(placement.edge._1.id, placement.edge._2.id)
-        case None    =>
-          // Outside: edgeId is unused inside the operation (its callers just log it on error), so a
-          // generated label keeps the call site readable without inventing a registry.
-          PlacementOperations.attemptPolygonAddition(
-            s"perimeter-edge-${placement.edgeIndex}",
-            placement.edgeIndex
-          )
+    if wasValid then
+      placementOpt.foreach: placement =>
+        placement.intoFace match
+          case Some(_) =>
+            // Inside sub-mode: route through the same insertion path as the click-on-interior-edge flow.
+            PlacementOperations.attemptPolygonInsertion(placement.edge._1.id, placement.edge._2.id)
+          case None    =>
+            // Outside: edgeId is unused inside the operation (its callers just log it on error), so a
+            // generated label keeps the call site readable without inventing a registry.
+            PlacementOperations.attemptPolygonAddition(
+              s"perimeter-edge-${placement.edgeIndex}",
+              placement.edgeIndex
+            )
+    // Invalid drop: silent no-op. The dim chevron + red preview already told the user.
 
   /** Cancel-without-place: pointer cancelled, gesture interrupted, etc. Clears all transient state. */
   def cancelDrag(): Unit =
     EditorState.previewState.update(
-      _.copy(previewPlacement = None, paletteGhost = None, paletteSnapHint = None)
+      _.copy(
+        previewPlacement = None,
+        paletteGhost = None,
+        paletteSnapHint = None,
+        previewIsValid = true
+      )
     )
     EditorState.uiState.update(_.copy(isPaletteDragActive = false))

@@ -4,9 +4,10 @@ import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.structure.FaceId
 import io.github.scala_tessella.editor.models.{
-  AddSubmode, Anchor, ClickablePoint, EditorConfig, EditorMode, EditorState, Tool
+  AddSubmode, Anchor, ClickablePoint, EditorConfig, EditorMode, EditorState, Tool, ToolState
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
+import io.github.scala_tessella.editor.operations.TessellationOperations.toCoords
 import io.github.scala_tessella.editor.utils.Logger
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.toPoint
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
@@ -306,8 +307,30 @@ object SelectionOperations:
             case PerimeterClickContext(_, None, false)                  =>
               togglePerimeterEdgeSelection(edgeId)
             case PerimeterClickContext(tiling, _, _) if !tiling.isEmpty =>
-              PlacementOperations.attemptPolygonAddition(edgeId, edgeIndex)
+              if isPerimeterEdgeAttachable(tiling, edgeIndex, tools) then
+                PlacementOperations.attemptPolygonAddition(edgeId, edgeIndex)
+            // If pre-flight rejects, do nothing: the user already sees the red preview + dim
+            // chevron, so a silent no-op matches the "disabled" affordance — no toast needed.
             case _                                                      =>
               ErrorOperations.showError("No tiling available to grow")
         case _                                                         =>
           ()
+
+  /** Pre-flight angle-at-endpoints check: returns false only when placement is guaranteed-invalid by
+    * `PlacementValidation.fitsAtEdge`. Other failure modes (the polygon's far edges crossing distant boundary
+    * segments) still need the full DCEL check downstream — those become `attemptPolygonAddition`'s
+    * `FailedPolygonPlacement` toast.
+    */
+  private def isPerimeterEdgeAttachable(
+      tiling: TilingDCEL,
+      edgeIndex: Int,
+      tools: ToolState
+  ): Boolean =
+    val perimeter = tiling.boundaryVertices.toOption.map(_.map(_.toCoords).slidingO(2).toList)
+    val edgeOpt   = perimeter.flatMap(edges => edges.lift(edgeIndex)).map(pair => (pair(0), pair(1)))
+    val anglesOpt =
+      EditorState.irregularState.now().selectedShape
+        .orElse(tools.selectedPolygon.filter(_ >= 3).map(s => RegularPolygon(s).angles))
+    (edgeOpt, anglesOpt) match
+      case (Some(edge), Some(angles)) => PlacementValidation.fitsAtEdge(tiling, edge, angles)
+      case _                          => true
