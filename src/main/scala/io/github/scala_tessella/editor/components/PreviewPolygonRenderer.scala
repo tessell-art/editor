@@ -15,10 +15,13 @@ object PreviewPolygonRenderer:
     else renderInvalidWireframe(points)
 
   /** Free-floating drag-from-palette ghost: same dotted style as the hover preview, vertices already in
-    * canvas-view coordinates so it sits inside the canvas content group with no further transform.
+    * canvas-view coordinates so it sits inside the canvas content group with no further transform. When the
+    * gesture is snapped to an invalid edge the ghost turns red, matching the hover preview and dimmed chevron
+    * — a single visual language for "this won't fit".
     */
-  def renderGhost(points: Vector[Point]): Element =
-    renderWireframe(points)
+  def renderGhost(points: Vector[Point], valid: Boolean): Element =
+    if valid then renderWireframe(points)
+    else renderInvalidWireframe(points)
 
   private def renderWireframe(points: Vector[Point]): Element =
     val pointsStr = pointsToString(points)

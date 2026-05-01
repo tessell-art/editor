@@ -100,10 +100,13 @@ object TessellationRenderer:
           else placement.map(PreviewPolygonRenderer.renderPreview(_, valid))
 
     // Free-floating ghost wireframe for the drag-from-palette gesture: tracks the cursor across the
-    // canvas and re-orients to the nearest snappable edge while in range.
+    // canvas and re-orients to the nearest snappable edge while in range. Turns red when the
+    // snapped edge is angle-invalid, matching the dim chevron + red preview.
     val paletteDragGhostWireframe = child.maybe <--
-      EditorState.previewState.signal.map(_.paletteGhost).distinct.map: ghost =>
-        ghost.map(PreviewPolygonRenderer.renderGhost)
+      EditorState.previewState.signal.map(_.paletteGhost).distinct
+        .combineWith(EditorState.previewState.signal.map(_.previewIsValid).distinct)
+        .map: (ghost, valid) =>
+          ghost.map(PreviewPolygonRenderer.renderGhost(_, valid))
 
     // Snap-target hint: halo on the latched edge + directional chevron showing growth side.
     val paletteSnapHintOverlay = child.maybe <--
