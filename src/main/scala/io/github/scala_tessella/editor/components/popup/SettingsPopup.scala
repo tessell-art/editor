@@ -37,9 +37,11 @@ object SettingsPopup:
 
   private def resetToDefaults(): Unit =
     val (fill, perimeter, polygonEdge) = SettingsDefaults.tempDefaults
-    EditorState.colorState.update(_.copy(tempDefaultFillColor = fill))
-    EditorState.colorState.update(_.copy(tempPerimeterEdgeColor = perimeter))
-    EditorState.colorState.update(_.copy(tempPolygonEdgeColor = polygonEdge))
+    EditorState.colorState.update(_.copy(
+      tempDefaultFillColor = fill,
+      tempPerimeterEdgeColor = perimeter,
+      tempPolygonEdgeColor = polygonEdge
+    ))
     EditorState.settingsState.update(_.copy(
       tempBoundaryEdgeWidth = EditorConfig.defaultBoundaryEdgeWidth,
       tempPolygonEdgeWidth = EditorConfig.defaultPolygonEdgeWidth,
