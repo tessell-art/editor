@@ -277,12 +277,15 @@ object PaletteDragOperations:
   def applyDragStep(clientX: Double, clientY: Double, angles: Vector[AngleDegree]): Unit =
     computeStep(clientX, clientY, angles) match
       case Some(Snapped(placement, ghost, snapHint)) =>
-        // Outside-mode snaps target a perimeter edge; check fits there.
-        // Inside-mode snaps target an interior edge — there is no boundary wedge to check, so
-        // we don't pre-reject. (`attemptPolygonInsertion` remains the safety net.)
-        val valid =
-          if placement.intoFace.isDefined then true
-          else PlacementValidation.fitsAtEdge(placement.tiling, placement.edge, angles)
+        // Inside snaps check the face's interior angle at each endpoint; outside snaps check
+        // the boundary's free wedge. Either way we set previewIsValid so the chevron, ghost,
+        // and (in click-mode) hover preview pick up the red/dimmed treatment, and
+        // `commitDragRelease` refuses to drop on invalid.
+        val valid = placement.intoFace match
+          case Some(faceId) =>
+            PlacementValidation.fitsInFace(placement.tiling, faceId, placement.edge, angles)
+          case None         =>
+            PlacementValidation.fitsAtEdge(placement.tiling, placement.edge, angles)
         EditorState.previewState.update(
           _.copy(
             previewPlacement = Some(placement),

@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.geometry.AngleDegree
-import io.github.scala_tessella.dcel.structure.VertexId
+import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.editor.models.VertexCoord
 
 import scala.math.Ordering.Implicits.infixOrderingOps
@@ -41,3 +41,31 @@ object PlacementValidation:
 
   private def freeBoundaryWedge(tiling: TilingDCEL, vertexId: VertexId): Option[AngleDegree] =
     tiling.getInnerAnglesAtVertex(vertexId).toOption.map(_.sumExact.conjugate)
+
+  /** Inside-insertion analogue of `fitsAtEdge`: the new polygon shares an interior edge with face `faceId`
+    * and grows *into* that face, so the bound at each endpoint is the face's own interior angle there — not
+    * the boundary's free wedge. If the polygon's angle at either endpoint exceeds the face's angle, its
+    * adjacent edge would punch through one of the face's existing edges.
+    *
+    * `face.angles` is aligned with `findInnerFaceVertices` (both follow `outerComponent`'s face traversal):
+    * index `i` holds the interior angle at vertex `i`.
+    */
+  def fitsInFace(
+      tiling: TilingDCEL,
+      faceId: FaceId,
+      edge: (VertexCoord, VertexCoord),
+      angles: Vector[AngleDegree]
+  ): Boolean =
+    if angles.size < 3 then true
+    else
+      val angleAtStart                                          = angles(0)
+      val angleAtEnd                                            = angles(1)
+      val faceAngleByVertex: Option[Map[VertexId, AngleDegree]] =
+        for
+          face     <- tiling.findInnerFace(faceId).toOption
+          vertices <- tiling.findInnerFaceVertices(faceId).toOption
+          interior <- face.angles.toOption
+        yield vertices.map(_.id).zip(interior).toMap
+      val fitStart                                              = faceAngleByVertex.flatMap(_.get(edge._1.id)).forall(angleAtStart <= _)
+      val fitEnd                                                = faceAngleByVertex.flatMap(_.get(edge._2.id)).forall(angleAtEnd <= _)
+      fitStart && fitEnd

@@ -126,6 +126,24 @@ svg:hover .node-label {
     stroke: var(--hover-green) !important;
 }
 
+/* Interior edges where the angle-at-endpoints check has rejected the currently armed polygon:
+   suppress the green glow / stroke / pulse and revert the cursor — mirrors the perimeter
+   `.invalid-target` rules. The red dotted preview + dim chevron + red ghost still appear so
+   the user knows the edge was recognised but rejected. */
+.editor-canvas.tool-add-inside .interior-edge-group.invalid-target .interior-edge-transparent {
+    cursor: default;
+}
+
+.editor-canvas.tool-add-inside .interior-edge-group.invalid-target:hover .interior-edge {
+    stroke: #20A4BE !important;
+    filter: none !important;
+    animation: none !important;
+}
+
+.editor-canvas.tool-add-inside .interior-edge-group.invalid-target .interior-edge-transparent:hover {
+    stroke: transparent !important;
+}
+
 @keyframes edgePulse {
     0%   { stroke-width: 4.5px; filter: drop-shadow(0 0 2px rgba(0, 200, 83, 0.4)); }
     50%  { stroke-width: 6.5px; filter: drop-shadow(0 0 10px rgba(0, 200, 83, 0.9)); }

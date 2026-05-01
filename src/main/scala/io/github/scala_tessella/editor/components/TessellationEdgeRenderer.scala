@@ -111,6 +111,14 @@ object TessellationEdgeRenderer:
     val point1 = toCanvasPoint(edge._1.point)
     val point2 = toCanvasPoint(edge._2.point)
 
+    // Per-edge validity for inside-mode insertion: the polygon's corner at each endpoint of
+    // this interior edge must fit inside the face's interior angle there. Same dim/red feedback
+    // as the perimeter case.
+    val edgeValiditySignal: Signal[Boolean] =
+      previewStateSignal.map: (maybeSides, selectedIrregular, tiling) =>
+        anglesFor(maybeSides, selectedIrregular)
+          .fold(true)(angles => PlacementValidation.fitsInFace(tiling, faceId, edge, angles))
+
     val interactionArea = svg.line(
       lineCoords(LineSegment(point1, point2)),
       svg.stroke        := transparent,
@@ -137,21 +145,26 @@ object TessellationEdgeRenderer:
                 tiling = tiling,
                 intoFace = Some(faceId)
               )
-            EditorState.previewState.update(_.copy(previewPlacement = placementOpt))
+            val valid        = anglesFor(maybeSides, selectedIrregular)
+              .fold(true)(angles => PlacementValidation.fitsInFace(tiling, faceId, edge, angles))
+            EditorState.previewState.update(
+              _.copy(previewPlacement = placementOpt, previewIsValid = valid)
+            )
       },
       onMouseLeave.compose(gate) --> { _ =>
 
         if !isPaletteDragActive then
-          EditorState.previewState.update(_.copy(previewPlacement = None))
+          EditorState.previewState.update(_.copy(previewPlacement = None, previewIsValid = true))
       },
-      // Trigger insertion directly when clicking the highlighted interior edge
+      // Trigger insertion directly when clicking the highlighted interior edge — but only when
+      // (a) the inside sub-mode is active and (b) the edge is angle-valid for the armed polygon.
       onClick.preventDefault.compose(stream =>
-        gate(stream).withCurrentValueOf(EditorState.isAddInsideActive)
+        gate(stream).withCurrentValueOf(EditorState.isAddInsideActive, edgeValiditySignal)
       ) --> {
-        case (_, true)  =>
+        case (_, true, true) =>
           PlacementOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
-          EditorState.previewState.update(_.copy(previewPlacement = None))
-        case (_, false) => ()
+          EditorState.previewState.update(_.copy(previewPlacement = None, previewIsValid = true))
+        case _               => ()
       }
     )
 
@@ -167,7 +180,12 @@ object TessellationEdgeRenderer:
     )
 
     svg.g(
-      svg.className := "interior-edge-group",
+      // Mark the whole group as `invalid-target` when the edge is angle-rejected, so the CSS
+      // can drop the green hover stroke / glow / pulse and the cursor reverts to default.
+      svg.className <-- edgeValiditySignal.map(valid =>
+        if valid then "interior-edge-group"
+        else "interior-edge-group invalid-target"
+      ),
       visibleLine,
       interactionArea
     )
