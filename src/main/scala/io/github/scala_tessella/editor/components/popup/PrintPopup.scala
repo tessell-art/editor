@@ -15,7 +15,7 @@ object PrintPopup:
 
   import PopupCommons._
 
-  private val close: Observer[org.scalajs.dom.MouseEvent] =
+  private val close: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showPrintPopup = false)))
 
   def element: Element =

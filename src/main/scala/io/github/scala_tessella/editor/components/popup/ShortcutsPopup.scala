@@ -8,7 +8,7 @@ object ShortcutsPopup:
 
   import PopupCommons._
 
-  private val closeShortcuts: Observer[org.scalajs.dom.MouseEvent] =
+  private val closeShortcuts: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showShortcutsPopup = false)))
 
   def element: Element =

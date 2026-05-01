@@ -16,7 +16,7 @@ object UnsavedChangesPopup:
 
   import PopupCommons._
 
-  private val cancelObserver: Observer[org.scalajs.dom.MouseEvent] =
+  private val cancelObserver: Observer[Any] =
     Observer { _ =>
 
       DirtyTracker.cancel()

@@ -41,7 +41,7 @@ object TemplateGalleryPopup:
       case SemiRegular => PolygonNameGenerator.semiRegularNames
       case Aperiodic   => PolygonNameGenerator.irregularNames
 
-  private val close: Observer[org.scalajs.dom.MouseEvent] =
+  private val close: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showTemplateGallery = false)))
 
   def element: Element =

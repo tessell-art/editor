@@ -18,7 +18,7 @@ object SettingsPopup:
 
   private val settingsColorTarget: Var[SettingsColorTarget] = Var(SettingsColorTarget.DefaultFill)
 
-  private val closeSettings: Observer[org.scalajs.dom.MouseEvent] =
+  private val closeSettings: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showSettingsPopup = false)))
 
   private def openColorPicker(target: SettingsColorTarget, currentColor: ColorRGB): Unit =

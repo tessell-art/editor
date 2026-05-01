@@ -9,7 +9,7 @@ object AboutPopup:
 
   import PopupCommons._
 
-  private val closeAbout: Observer[org.scalajs.dom.MouseEvent] =
+  private val closeAbout: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showAboutPopup = false)))
 
   def element: Element =

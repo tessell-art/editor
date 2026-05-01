@@ -11,7 +11,7 @@ object GuidePopup:
 
   private val titleId = "guide-popup-title"
 
-  private val closeGuide: Observer[org.scalajs.dom.MouseEvent] =
+  private val closeGuide: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showGuidePopup = false)))
 
   def element: Element =

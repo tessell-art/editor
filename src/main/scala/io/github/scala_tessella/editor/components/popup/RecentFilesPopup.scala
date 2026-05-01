@@ -23,7 +23,7 @@ object RecentFilesPopup:
 
   private given scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
-  private val close: Observer[org.scalajs.dom.MouseEvent] =
+  private val close: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showRecentFilesPanel = false)))
 
   def element: Element =
