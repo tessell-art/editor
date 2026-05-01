@@ -35,3 +35,35 @@ object I18n:
       args.zipWithIndex.foldLeft(template) { case (acc, (value, idx)) =>
         acc.replace(s"{$idx}", value)
       }
+
+  /** Render a localized rich template into a sequence of inline children, suitable as a child modifier on
+    * `<li>`, `<p>`, `<span>` etc. The template may contain `{tokenName}` placeholders that get substituted
+    * with the corresponding element produced by `tokens(name)`. Reacts to locale changes — the tokens are
+    * factories (re-invoked on each emission) so any `tNow` lookups inside them pick up the new locale.
+    *
+    * Unmatched tokens render as the literal `{name}`, so a missing factory surfaces visibly in QA.
+    */
+  def tFragments(key: String, tokens: Map[String, () => Element]): Modifier[HtmlElement] =
+    children <-- t(key).map(parseTemplate(_, tokens))
+
+  private val tokenPattern: scala.util.matching.Regex = """\{([a-zA-Z][a-zA-Z0-9]*)\}""".r
+
+  private def parseTemplate(
+      template: String,
+      tokens: Map[String, () => Element]
+  ): List[Element] =
+    val parts   = scala.collection.mutable.ListBuffer.empty[Element]
+    var lastEnd = 0
+    tokenPattern.findAllMatchIn(template).foreach { m =>
+
+      if m.start > lastEnd then
+        parts += span(template.substring(lastEnd, m.start))
+      val name = m.group(1)
+      tokens.get(name) match
+        case Some(factory) => parts += factory()
+        case None          => parts += span(s"{$name}")
+      lastEnd = m.end
+    }
+    if lastEnd < template.length then
+      parts += span(template.substring(lastEnd))
+    parts.toList

@@ -12,12 +12,26 @@ object AboutPopup:
   private val closeAbout: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showAboutPopup = false)))
 
+  private def tokens: Map[String, () => Element] =
+    Map(
+      "projectName" -> (() => strong("scala-tessella")),
+      "ghLink"      ->
+        (() =>
+          a(
+            href   := "https://github.com/scala-tessella",
+            target := "_blank",
+            rel    := "noopener noreferrer",
+            I18n.tNow("popup.about.link.github")
+          )
+        )
+    )
+
   def element: Element =
     popupOverlay(closeAbout)(
       popupContent(closeAbout)(
         img(
           src       := "tessella-logo.svg",
-          alt       := "Tessella Logo",
+          alt <-- I18n.t("popup.about.imageAlt"),
           className := "popup-logo"
         ),
         h1(child.text <-- I18n.t("popup.about.title")),
@@ -26,26 +40,13 @@ object AboutPopup:
           child.text <-- I18n.t("popup.about.versionFmt", BuildInfo.version)
         ),
         h2(child.text <-- I18n.t("popup.about.tagline")),
-        // TODO i18n long-form: the body paragraphs below stay English in v1; mixed inline links + bold
-        // make per-fragment keys clumsy. Translate when the i18n pipeline gains rich-text support.
         div(
           className := "popup-text-scrollable",
-          p(
-            "Interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons."
-          ),
-          p(
-            "The editor is part of the ",
-            b("scala-tessella"),
-            " project. For more information, and to contribute, please visit the ",
-            a(
-              href   := "https://github.com/scala-tessella",
-              target := "_blank",
-              rel    := "noopener noreferrer",
-              "GitHub organization"
-            ),
-            "."
-          ),
-          p("Built with Scala.js and Laminar.")
+          tabIndex  := 0,
+          aria.label <-- I18n.t("popup.about.bodyAriaLabel"),
+          p(child.text <-- I18n.t("popup.about.body.intro")),
+          p(I18n.tFragments("popup.about.body.project", tokens)),
+          p(child.text <-- I18n.t("popup.about.body.builtWith"))
         )
       )
     )

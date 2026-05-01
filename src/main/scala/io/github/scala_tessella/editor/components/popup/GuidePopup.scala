@@ -14,270 +14,152 @@ object GuidePopup:
   private val closeGuide: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showGuidePopup = false)))
 
+  // Inline-element factories referenced by `{tokenName}` placeholders in the
+  // `popup.guide.*` templates. Each factory is invoked on every locale change,
+  // so embedded `tNow` lookups always reflect the current locale.
+  private def tokens: Map[String, () => Element] =
+    def emKey(key: String): () => Element                   = () => em(I18n.tNow(key))
+    def menuItem(menu: String, item: String): () => Element =
+      () => strong(s"${I18n.tNow(menu)} → ${I18n.tNow(item)}")
+    def menuOnly(key: String): () => Element                = () => strong(I18n.tNow(key))
+
+    Map(
+      "addOutside"         -> emKey("popup.guide.mode.outside"),
+      "addInside"          -> emKey("popup.guide.mode.inside"),
+      "selectAll"          -> emKey("popup.guide.tool.selectAll"),
+      "deselectAll"        -> emKey("popup.guide.tool.deselectAll"),
+      "selectButton"       -> emKey("popup.guide.tool.selectButton"),
+      "selectByColor"      -> emKey("popup.guide.tool.selectByColor"),
+      "shapeAndColor"      -> emKey("popup.guide.tool.shapeAndColor"),
+      "colorPicker"        -> emKey("popup.guide.tool.colorPicker"),
+      "fan"                -> emKey("popup.guide.tool.fan"),
+      "eraser"             -> emKey("popup.guide.tool.eraser"),
+      "measurement"        -> emKey("popup.guide.tool.measurement"),
+      "fit"                -> emKey("popup.guide.tool.fit"),
+      "iconPlus"           -> (() => IconsSVG.plusIcon),
+      "iconSelectAll"      -> (() => IconsSVG.selectionGridFilledIcon),
+      "iconDeselectAll"    -> (() => IconsSVG.selectionGridEmptyIcon),
+      "iconSelectByColor"  -> (() => IconsSVG.selectByColorIcon),
+      "iconShapeAndColor"  -> (() => IconsSVG.eyeDropperPentagonIcon),
+      "iconColorPicker"    -> (() => IconsSVG.eyeDropperIcon),
+      "iconEraser"         -> (() => IconsSVG.eraserIcon),
+      "iconFan"            -> (() => IconsSVG.fanIcon),
+      "iconRuler"          -> (() => IconsSVG.rulerIcon),
+      "iconMaximize"       -> (() => IconsSVG.maximizeIcon),
+      "kbdEsc"             -> (() => kbd("Esc")),
+      "kbdD"               -> (() => kbd('D')),
+      "kbdE"               -> (() => kbd('E')),
+      "kbdF"               -> (() => kbd('F')),
+      "kbdR"               -> (() => kbd('R')),
+      "kbdPlus"            -> (() => kbd('+')),
+      "kbdMinus"           -> (() => kbd('-')),
+      "menuDouble"         -> menuItem("menu.edit", "menu.edit.doubleToInfinite"),
+      "menuMirror"         -> menuItem("menu.edit", "menu.edit.mirror"),
+      "menuFillColor"      -> menuItem("menu.edit", "menu.edit.fillColor"),
+      "menuShowLabels"     -> menuItem("menu.view", "menu.view.showLabels"),
+      "menuShowUniformity" -> menuItem("menu.view", "menu.view.showUniformity"),
+      "menuShowRotation"   -> menuItem("menu.view", "menu.view.showRotation"),
+      "menuShowReflection" -> menuItem("menu.view", "menu.view.showReflection"),
+      "menuResetView"      -> menuItem("menu.view", "menu.view.resetView"),
+      "menuFile"           -> menuOnly("menu.file"),
+      "menuSaveSvg"        -> menuOnly("menu.file.saveSvg"),
+      "menuSaveSvgAs"      -> menuOnly("menu.file.saveSvgAs")
+    )
+
+  private def heading(key: String): Element =
+    h3(child.text <-- I18n.t(key))
+
+  private def item(key: String): Element =
+    li(I18n.tFragments(key, tokens))
+
   def element: Element =
     popupOverlay(closeGuide)(
       popupContent(closeGuide)(
         aria.labelledBy := titleId,
-        h2(idAttr    := titleId, child.text <-- I18n.t("popup.guide.title")),
-        // TODO i18n long-form: section titles + body paragraphs below remain English in v1.
-        // Mixed inline icons / kbd / bold elements per list item make per-fragment keys clumsy;
-        // translate when the i18n pipeline gains rich-text support.
+        h2(idAttr   := titleId, child.text <-- I18n.t("popup.guide.title")),
         div(
-          className  := "popup-text-scrollable",
-          tabIndex   := 0,
-          aria.label := "Guide content",
-          h3("Creating a tiling"),
+          className := "popup-text-scrollable",
+          tabIndex  := 0,
+          aria.label <-- I18n.t("popup.guide.bodyAriaLabel"),
+          heading("popup.guide.section.creating"),
           ul(
-            li(
-              "The editor has two adding modes. ",
-              em("Add (outside)"),
-              " grows the tiling by attaching polygons to its boundary; ",
-              em("Add (inside)"),
-              " fills an existing polygon with smaller regular ones."
-            ),
-            li(
-              "To start a new tiling, pick a polygon shape from the palette. ",
-              "It is placed on the canvas."
-            )
+            item("popup.guide.creating.modes"),
+            item("popup.guide.creating.start")
           ),
-          h3("Adding regular polygons (outside)"),
+          heading("popup.guide.section.addOutside"),
+          ul(item("popup.guide.addOutside.howTo")),
+          heading("popup.guide.section.addInside"),
           ul(
-            li(
-              "Pick a shape from the palette and drag it onto the canvas, ",
-              "or click any boundary edge to attach the shape there."
-            )
+            item("popup.guide.addInside.toggle"),
+            item("popup.guide.addInside.howTo")
           ),
-          h3("Adding regular polygons (inside)"),
+          heading("popup.guide.section.addIrregular"),
           ul(
-            li(
-              "Click the ",
-              IconsSVG.plusIcon,
-              " icon to enter ",
-              em("Add (inside)"),
-              " mode."
-            ),
-            li(
-              "Drag a shape from the palette onto an existing polygon, ",
-              "or click a polygon to highlight its edges, then click an edge to attach the chosen shape."
-            )
+            item("popup.guide.addIrregular.pick"),
+            item("popup.guide.addIrregular.shift"),
+            item("popup.guide.addIrregular.copy")
           ),
-          h3("Adding irregular polygons"),
+          heading("popup.guide.section.fanning"),
           ul(
-            li("Pick the irregular shape from the palette, just like a regular one."),
-            li(
-              "Click the ↺ button on the top-right corner of the palette item to shift the attaching edge."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.eyeDropperPentagonIcon,
-              " ",
-              em("Shape and color picker"),
-              " tool to copy the shape (and fill colour) of an existing irregular polygon."
-            )
+            item("popup.guide.fanning.tool"),
+            item("popup.guide.fanning.howTo")
           ),
-          h3("Fanning"),
+          heading("popup.guide.section.selecting"),
           ul(
-            li(
-              "Use the ",
-              IconsSVG.fanIcon,
-              " ",
-              em("Fan"),
-              " tool to add rotated copies of the tiling around a boundary vertex."
-            ),
-            li(
-              "Click a polygon to highlight its boundary vertices, then click one. ",
-              "As many copies as fit are added, up to a full circle."
-            )
+            item("popup.guide.selecting.click"),
+            item("popup.guide.selecting.all"),
+            item("popup.guide.selecting.deselectAll"),
+            item("popup.guide.selecting.sameShape"),
+            item("popup.guide.selecting.byColor")
           ),
-          h3("Selecting"),
+          heading("popup.guide.section.deleting"),
           ul(
-            li(
-              "In ",
-              em("Add (outside)"),
-              " mode, click any polygon to select it."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.selectionGridFilledIcon,
-              " ",
-              em("Select all"),
-              " button to select every polygon."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.selectionGridEmptyIcon,
-              " ",
-              em("Deselect all"),
-              " button — or press ",
-              kbd("Esc"),
-              " — to clear the selection."
-            ),
-            li(
-              "Use the ",
-              em("Select"),
-              " button at the bottom of the palette to select all regular polygons of the same shape."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.selectByColorIcon,
-              " ",
-              em("Select by color"),
-              " tool to select all polygons sharing the same fill colour."
-            )
+            item("popup.guide.deleting.tool"),
+            item("popup.guide.deleting.howTo")
           ),
-          h3("Deleting"),
+          heading("popup.guide.section.doubleMirror"),
           ul(
-            li(
-              "Use the ",
-              IconsSVG.eraserIcon,
-              " ",
-              em("Eraser"),
-              " tool to remove a vertex, an edge, or a whole polygon."
-            ),
-            li(
-              "Click a polygon to highlight its vertices, mid-edge points, and centre, ",
-              "then click the item you want to remove."
-            )
+            item("popup.guide.doubleMirror.double"),
+            item("popup.guide.doubleMirror.mirror")
           ),
-          h3("Doubling and mirroring"),
+          heading("popup.guide.section.styling"),
           ul(
-            li(
-              "Use ",
-              strong("Edit → Double (to infinite)"),
-              " or press ",
-              kbd('D'),
-              " to double the entire tiling. ",
-              "This works only when the boundary is a parallelogon ",
-              "(a polygon whose opposite sides are equal and parallel), ",
-              "so the doubled copies could tile the infinite plane."
-            ),
-            li(
-              "Use ",
-              strong("Edit → Mirror"),
-              " to switch to a mirror image of the tiling."
-            )
+            item("popup.guide.styling.fill"),
+            item("popup.guide.styling.applyTo"),
+            item("popup.guide.styling.copy"),
+            item("popup.guide.styling.copyShape")
           ),
-          h3("Styling"),
+          heading("popup.guide.section.visual"),
           ul(
-            li(
-              "In ",
-              em("Add (outside)"),
-              " mode, select one or more polygons, then click the colour button or use ",
-              strong("Edit → Fill Color…"),
-              " to open the colour picker."
-            ),
-            li(
-              "The chosen colour applies to the current selection and to any polygon you add next."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.eyeDropperIcon,
-              " ",
-              em("Color picker"),
-              " tool to copy the fill colour from an existing polygon."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.eyeDropperPentagonIcon,
-              " ",
-              em("Shape and color picker"),
-              " tool to copy both the shape and the fill colour."
-            )
+            item("popup.guide.visual.labels"),
+            item("popup.guide.visual.uniformity"),
+            item("popup.guide.visual.rotation"),
+            item("popup.guide.visual.reflection")
           ),
-          h3("Visual options"),
+          heading("popup.guide.section.measurement"),
           ul(
-            li(
-              strong("View → Show Node Labels"),
-              " shows the node label (unique number) of each vertex of the underlying graph."
-            ),
-            li(
-              strong("View → Show Uniformity"),
-              " marks nodes that share the same adjacent pattern."
-            ),
-            li(
-              strong("View → Show Rotational Symmetry"),
-              " shows the rotation axes that divide the tiling into identical rotated parts."
-            ),
-            li(
-              strong("View → Show Reflectional Symmetry"),
-              " shows the reflection axes that divide the tiling into mirrored halves."
-            )
+            item("popup.guide.measurement.unitLength"),
+            item("popup.guide.measurement.tool"),
+            item("popup.guide.measurement.startEnd"),
+            item("popup.guide.measurement.angle")
           ),
-          h3("Measurement"),
+          heading("popup.guide.section.navigating"),
           ul(
-            li(
-              "By design, every polygon side has unit length 1 (or an integer multiple of it)."
-            ),
-            li(
-              "Use the ",
-              IconsSVG.rulerIcon,
-              " ",
-              em("Measurement"),
-              " tool to measure unit distances and angles between key points (vertex, mid-edge, centre)."
-            ),
-            li(
-              "Click a polygon to highlight its key points; click one to set the (green) start, ",
-              "and click another to set the (red) end. ",
-              "The unit distance is displayed above the top-right corner of the canvas."
-            ),
-            li(
-              "Click another key point to choose a new (red) end. ",
-              "The angle between the previous and current end points is shown as an arc, ",
-              "with its measure in radians."
-            )
+            item("popup.guide.navigating.pan"),
+            item("popup.guide.navigating.zoom"),
+            item("popup.guide.navigating.rotate"),
+            item("popup.guide.navigating.fit"),
+            item("popup.guide.navigating.reset")
           ),
-          h3("Navigating the canvas"),
+          heading("popup.guide.section.savingLoading"),
           ul(
-            li("Pan: click and drag the canvas background (or drag with one finger on touch devices)."),
-            li(
-              "Zoom: scroll the mouse wheel, pinch on a touch device, or press ",
-              kbd('+'),
-              " / ",
-              kbd('-'),
-              "."
-            ),
-            li("Rotate: press ", kbd('E'), " (left) or ", kbd('R'), " (right)."),
-            li(
-              "Fit: use the ",
-              IconsSVG.maximizeIcon,
-              " ",
-              em("Fit"),
-              " button or press ",
-              kbd('F'),
-              " to fit the entire tiling in view."
-            ),
-            li(
-              "Reset: ",
-              strong("View → Reset View"),
-              " returns to the default position, zoom, and rotation."
-            )
+            item("popup.guide.savingLoading.svg"),
+            item("popup.guide.savingLoading.dot")
           ),
-          h3("Saving and loading"),
+          heading("popup.guide.section.validation"),
           ul(
-            li(
-              "Use the ",
-              strong("File"),
-              " menu to save your work as an SVG (",
-              strong("Save SVG"),
-              " or ",
-              strong("Save SVG as…"),
-              ") or to load a previously saved SVG tiling."
-            ),
-            li(
-              "The tiling's topological structure can also be exported as a DOT graph, in the Graphviz .gv format."
-            )
-          ),
-          h3("Validation rules"),
-          ul(
-            li(
-              "An added polygon must not cross the boundary or another polygon, ",
-              "so the result stays a proper edge-to-edge finite tessellation ",
-              "(every edge is shared by exactly one or two polygons, with no overlaps)."
-            ),
-            li(
-              "When you remove a polygon, the editor checks that the remaining tiling still has ",
-              "a single, non-self-intersecting boundary."
-            )
+            item("popup.guide.validation.add"),
+            item("popup.guide.validation.remove")
           )
         )
       )
