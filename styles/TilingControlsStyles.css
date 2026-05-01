@@ -121,13 +121,17 @@
   filter: brightness(1.1);
 }
 
-.undo-button {
-  padding: 0.5rem 1.0rem;
-}
-.redo-button {
-  /* Add styling similar to .undo-button */
-  margin-left: 5px;
-  padding: 0.5rem 1.0rem;
+/* Undo / Redo share the .toggle-btn shell (padding, border, hover, disabled).
+   The unicode arrow glyph would render at the inherited line-height (1.5),
+   inflating button height vs sibling buttons that use 1em SVG icons; pin it. */
+.undo-button .icon,
+.redo-button .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
 }
 
 .light-mode .canvas-controls,

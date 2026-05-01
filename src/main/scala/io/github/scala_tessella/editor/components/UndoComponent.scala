@@ -19,7 +19,7 @@ object UndoComponent:
     div(
       className := "undo-controls",
       button(
-        className := "undo-button",
+        className := "toggle-btn undo-button",
         disabled <-- UndoManager.canUndo.signal.map(
           !_
         ).combineWith(EditorState.uiState.signal.map(_.isProcessing).distinct).map(_ || _),
@@ -37,7 +37,7 @@ object UndoComponent:
 //        )
       ),
       button(
-        className := "redo-button",
+        className := "toggle-btn redo-button",
         disabled <-- UndoManager.canRedo.signal.map(
           !_
         ).combineWith(EditorState.uiState.signal.map(_.isProcessing).distinct).map(_ || _),
