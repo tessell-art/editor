@@ -322,6 +322,14 @@ body:has(.polygon-palette.is-palette-dragging) {
     max-height: 150px;
   }
 
+  /* Peek deliberately exposes only the first row — scrolling within that fixed slice would
+     blur the peek/full distinction and surface content that's supposed to require expanding.
+     `overflow: hidden` also suppresses Chrome-on-Android's persistent scrollbar thumb that
+     would otherwise peek through the bottom edge of a "closed" sheet. */
+  .polygon-palette.palette-sheet--peek .polygon-palette-content {
+    overflow: hidden;
+  }
+
   .polygon-palette.palette-sheet--full {
     max-height: 70vh;
   }
