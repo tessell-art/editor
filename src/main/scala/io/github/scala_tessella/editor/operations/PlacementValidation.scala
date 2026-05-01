@@ -4,6 +4,7 @@ import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
 import io.github.scala_tessella.editor.models.VertexCoord
+import io.github.scala_tessella.ring_seq.RingSeq.isRotationOrReflectionOf
 
 import scala.math.Ordering.Implicits.infixOrderingOps
 
@@ -42,10 +43,15 @@ object PlacementValidation:
   private def freeBoundaryWedge(tiling: TilingDCEL, vertexId: VertexId): Option[AngleDegree] =
     tiling.getInnerAnglesAtVertex(vertexId).toOption.map(_.sumExact.conjugate)
 
-  /** Inside-insertion analogue of `fitsAtEdge`: the new polygon shares an interior edge with face `faceId`
-    * and grows *into* that face, so the bound at each endpoint is the face's own interior angle there — not
-    * the boundary's free wedge. If the polygon's angle at either endpoint exceeds the face's angle, its
-    * adjacent edge would punch through one of the face's existing edges.
+  /** Inside-insertion analogue of `fitsAtEdge`. Two pre-emptive rejections:
+    *
+    *   1. *Same shape as receiving face* — an inserted polygon whose angle vector is a rotation or reflection
+    *      of the face's would coincide with the face itself, so the insertion is degenerate. (Trivially the
+    *      case for regular-into-regular of equal sides; for irregulars, also catches the palette
+    *      re-orientations that match the face's shape.)
+    *   2. *Corner doesn't fit the face's wedge* — the bound at each endpoint of the shared interior edge is
+    *      the face's own interior angle there. If the polygon's angle at either endpoint exceeds it, the
+    *      polygon's adjacent edge would punch through one of the face's existing edges.
     *
     * `face.angles` is aligned with `findInnerFaceVertices` (both follow `outerComponent`'s face traversal):
     * index `i` holds the interior angle at vertex `i`.
@@ -58,14 +64,19 @@ object PlacementValidation:
   ): Boolean =
     if angles.size < 3 then true
     else
-      val angleAtStart                                          = angles(0)
-      val angleAtEnd                                            = angles(1)
-      val faceAngleByVertex: Option[Map[VertexId, AngleDegree]] =
+      val faceData =
         for
           face     <- tiling.findInnerFace(faceId).toOption
           vertices <- tiling.findInnerFaceVertices(faceId).toOption
           interior <- face.angles.toOption
-        yield vertices.map(_.id).zip(interior).toMap
-      val fitStart                                              = faceAngleByVertex.flatMap(_.get(edge._1.id)).forall(angleAtStart <= _)
-      val fitEnd                                                = faceAngleByVertex.flatMap(_.get(edge._2.id)).forall(angleAtEnd <= _)
-      fitStart && fitEnd
+        yield (vertices.map(_.id).zip(interior).toMap, interior)
+      faceData match
+        case None                                 => true // permissive when face data unreadable
+        case Some((angleByVertex, faceInteriors)) =>
+          val sameShape =
+            faceInteriors.size == angles.size && faceInteriors.isRotationOrReflectionOf(angles)
+          if sameShape then false
+          else
+            val fitStart = angleByVertex.get(edge._1.id).forall(angles(0) <= _)
+            val fitEnd   = angleByVertex.get(edge._2.id).forall(angles(1) <= _)
+            fitStart && fitEnd
