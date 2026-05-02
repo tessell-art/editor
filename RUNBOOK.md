@@ -136,15 +136,51 @@ production branch.
 
 ### Cutting a release
 
+The version string is duplicated across four manifests (`build.sbt` for sbt,
+`package.json` for npm, `desktop/src-tauri/tauri.conf.json` for the Tauri
+shell, `desktop/src-tauri/Cargo.toml` for the Rust crate) plus two
+lockfiles. `scripts/sync-version.mjs` reads `package.json#version` and
+propagates it to the other three manifests, then runs
+`cargo update -p tessella-editor-desktop --offline` to refresh
+`Cargo.lock`. It's wired into the `npm version` lifecycle.
+
+Recommended flow — review before committing:
+
 ```bash
-# bump `version` in build.sbt, commit
-git tag v0.3.5
-git push origin v0.3.5
+# 1. Working tree must be clean.
+npm version 0.4.0 --no-git-tag-version    # bumps all 6 files in place
+
+# 2. Sanity-check the diff.
+git diff --stat
+#   expect 6 files: package.json, package-lock.json,
+#   build.sbt, tauri.conf.json, Cargo.toml, Cargo.lock
+
+# 3. Commit, tag, push.
+git commit -am "Bump to v0.4.0"
+git tag v0.4.0
+git push && git push origin v0.4.0
 ```
 
-The workflow runs `npm ci && npm run build` and deploys `dist/` to the
-production branch. To redeploy without a new tag, use the **Run workflow**
-button on the Actions tab (`workflow_dispatch`).
+The Cloudflare Pages workflow triggers off the `v*.*.*` tag — it runs
+`npm ci && npm run build` and deploys `dist/` to the production branch. To
+redeploy without a new tag, use the **Run workflow** button on the Actions
+tab (`workflow_dispatch`).
+
+**Re-syncing manually.** If you edited `package.json#version` by hand (or
+need to verify nothing drifted), run the propagator without the npm
+ceremony:
+
+```bash
+npm run version:sync
+```
+
+Idempotent — re-running is a no-op when everything is already in sync.
+
+**What is NOT bumped automatically.** The script's regex is scoped to the
+manifests' own version lines. Test fixtures (`UpdateCheckerSpec` uses
+`0.3.7` as a comparison example, not as the project's current version) and
+ADR text containing example payloads stay as-written. If you grep for the
+old version string after bumping, you'll see those — they are intentional.
 
 ### Manual deploy (local fallback)
 
