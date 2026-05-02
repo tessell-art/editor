@@ -4,11 +4,11 @@ import com.raquo.airstream.web.DomEventStream
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.components.{
   AppShellComponent, ColorPickerPopupComponent, EditorCanvasComponent, MobileBottomToolbar,
-  PolygonPaletteComponent
+  PolygonPaletteComponent, UpdateAvailableBanner
 }
 import io.github.scala_tessella.editor.interactions.KeyboardEventHandler
 import io.github.scala_tessella.editor.models.{ColorPickerContext, EditorState, Theme}
-import io.github.scala_tessella.editor.operations.{DirtyTracker, MotionPreferences}
+import io.github.scala_tessella.editor.operations.{DirtyTracker, MotionPreferences, UpdateChecker}
 import io.github.scala_tessella.editor.platform.desktop.DesktopMenuBridge
 import io.github.scala_tessella.editor.utils.{ColorRGB, Logger}
 import org.scalajs.dom
@@ -26,6 +26,10 @@ def Editor(): Unit =
   // Subscribe to Tauri native-menu events. No-op when running in a web browser
   // (window.__TAURI__ undefined). See ADR-008 + DesktopMenuBridge.scala.
   DesktopMenuBridge.install()
+  // Poll the deployed `version.json` for newer bundles (ADR-009). Web-only;
+  // skipped inside Tauri / file:// loaded shells, which update through their
+  // own packaging channel.
+  UpdateChecker.install()
   // Native unsaved-changes warning before the tab/window unloads. The browser shows its own
   // dialog (no custom message — modern browsers ignore returnValue text); our in-app
   // confirm popup handles the same prompt for in-app navigations (New / Load / Template / Recent).
@@ -109,6 +113,10 @@ object EditorApp:
         EditorState.effectiveTheme,
         Observer[Option[Theme]](pref => EditorState.themeState.update(_.copy(userThemePreference = pref)))
       ),
+      // Online-update banner (ADR-009). Renders nothing until UpdateChecker
+      // detects a strictly-newer published version; sits above the editor
+      // layout so it never overlaps the canvas.
+      UpdateAvailableBanner.element,
       div(
         className := "editor-layout",
         PolygonPaletteComponent.element,

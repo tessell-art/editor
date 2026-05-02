@@ -21,6 +21,7 @@
 @import url('./styles/Motion.css');
 @import url('./styles/ForcedColors.css');
 @import url('./styles/ErrorMessageStyles.css');
+@import url('./styles/UpdateAvailableBanner.css');
 @import url('./styles/ResponsiveDesignMediaQueries.css');
 @import url('./styles/ColorPicker.css');
 @import url('./styles/LoadingIndicator.css');

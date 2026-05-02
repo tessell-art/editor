@@ -136,6 +136,11 @@ object Translations:
     "unsaved.discard" -> "Discard",
     "unsaved.save"    -> "Save",
 
+    // Online update banner (ADR-009)
+    "update.available.message"          -> "A newer version is available: ",
+    "update.available.reload"           -> "Reload",
+    "update.available.dismissAriaLabel" -> "Dismiss update notification",
+
     // Common buttons
     "common.cancel" -> "Cancel",
     "common.ok"     -> "OK",
@@ -487,6 +492,11 @@ object Translations:
     "unsaved.cancel"  -> "Cancelar",
     "unsaved.discard" -> "Descartar",
     "unsaved.save"    -> "Guardar",
+
+    // Online update banner (ADR-009)
+    "update.available.message"          -> "Hay una versión más reciente disponible: ",
+    "update.available.reload"           -> "Recargar",
+    "update.available.dismissAriaLabel" -> "Descartar la notificación de actualización",
 
     // Common buttons
     "common.cancel" -> "Cancelar",

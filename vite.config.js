@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import scalaJSPlugin from "@scala-js/vite-plugin-scalajs";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 // Rewrites UI5 Web Components' hardcoded jsdelivr.net URLs (SAP "72" fonts
 // + OpenUI5 CLDR) to local relative paths served from public/ui5-assets/.
@@ -25,9 +27,38 @@ function ui5LocalAssets() {
     };
 }
 
+// ADR-009 — Emit dist/version.json so a long-lived tab can poll for newer
+// deploys and surface a "Reload" banner. Cache-Control for the file is
+// pinned to no-store via public/_headers (Cloudflare Pages convention).
+function versionJson() {
+    return {
+        name: 'version-json',
+        apply: 'build',
+        generateBundle() {
+            const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+            const commit =
+                process.env.GITHUB_SHA?.slice(0, 7) ??
+                (() => {
+                    try { return execSync('git rev-parse --short HEAD').toString().trim(); }
+                    catch { return 'dev'; }
+                })();
+            const payload = {
+                version: pkg.version,
+                commit,
+                builtAt: new Date().toISOString()
+            };
+            this.emitFile({
+                type: 'asset',
+                fileName: 'version.json',
+                source: JSON.stringify(payload) + '\n'
+            });
+        }
+    };
+}
+
 export default defineConfig({
     base: './',
-    plugins: [scalaJSPlugin(), ui5LocalAssets()],
+    plugins: [scalaJSPlugin(), ui5LocalAssets(), versionJson()],
     optimizeDeps: {
         include: [
             '@ui5/webcomponents/dist/ColorPicker.js',

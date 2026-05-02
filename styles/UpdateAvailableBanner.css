@@ -1,0 +1,86 @@
+/* ADR-009 — Non-blocking strip rendered above the editor layout when a newer
+   bundle is detected. Mirrors the toast colour/border tokens so it reads as
+   the same family of "ambient signal" surface. */
+
+.update-available-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.9rem;
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-bottom: 1px solid var(--info-border);
+  font: 0.9rem/1.4 inherit;
+}
+
+.update-available-banner-text {
+  flex: 1 1 auto;
+}
+
+.update-available-banner-version {
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+.update-available-banner-reload {
+  appearance: none;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.update-available-banner-reload:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.light-mode .update-available-banner-reload:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.update-available-banner-reload:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.update-available-banner-dismiss {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+.update-available-banner-dismiss:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.light-mode .update-available-banner-dismiss:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.update-available-banner-dismiss:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .update-available-banner {
+    flex-wrap: wrap;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .update-available-banner-text {
+    flex-basis: 100%;
+  }
+}
