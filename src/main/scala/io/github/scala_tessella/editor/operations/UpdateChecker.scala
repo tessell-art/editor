@@ -11,9 +11,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.scalajs.js
 import scala.util.{Failure, Success, Try}
 
-/** ADR-009 — Polls a static `version.json` published alongside the bundle and exposes a signal the banner
-  * watches. Strict-greater semantic comparison only: an equal or older response does nothing, so a CDN POP
-  * briefly serving a stale `version.json` won't false-alarm.
+/** Polls a static `version.json` published alongside the bundle and exposes a signal the banner watches.
+  * Strict-greater semantic comparison only: an equal or older response does nothing, so a CDN POP briefly
+  * serving a stale `version.json` won't false-alarm.
   *
   * Three trigger sources, all racing into the same fetch:
   *   - Initial check 5 s after startup (avoid blocking first paint).

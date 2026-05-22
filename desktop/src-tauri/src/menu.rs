@@ -1,12 +1,12 @@
 //! Native menu for the Tauri shell. Mirrors the DOM menu built in
 //! MenuBarComponent.scala:fileMenu/editMenu/viewMenu/helpMenu so users
 //! get the same entries via the OS menu bar (mandatory on macOS,
-//! additive on Windows/Linux — see ADR-008 §"Menu integration").
+//! additive on Windows/Linux).
 //!
 //! Click handling is intentionally thin: `on_event` emits a "menu"
 //! event whose payload is the item id. DesktopMenuBridge.scala
 //! subscribes there and dispatches to AppState — no exposed JS
-//! commands, preserves the "no JS bridge" posture from ADR-005.
+//! commands, no Rust-side handler we own.
 
 use tauri::{
     menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},

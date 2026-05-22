@@ -2,15 +2,15 @@ import { test, expect } from '@playwright/test';
 import { hooks, expectHook } from './fixtures/hooks';
 
 /**
- * Tessella Editor smoke suite (ADR-003 Tier 2).
+ * Tessella Editor smoke suite.
  *
  * Each test is intentionally small and focused on a single user-visible
  * outcome. The point is signal on what JSDOM cannot honestly cover — real
  * canvas/SVG rendering, real keyboard events, real CSS-driven hover behaviour
  * for the menu — not parallel coverage of what the unit tier already verifies.
  *
- * Domain-state assertions are made via the Scala-exposed hook API (ADR-004,
- * see `./fixtures/hooks.ts`); pure UI assertions (visibility, presence) keep
+ * Domain-state assertions are made via the Scala-exposed hook API (see
+ * `./fixtures/hooks.ts`); pure UI assertions (visibility, presence) keep
  * using Playwright locators directly.
  */
 test.describe('Tessella Editor smoke', () => {

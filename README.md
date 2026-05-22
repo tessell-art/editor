@@ -46,9 +46,8 @@ The editor is part of the [scala-tessella](https://github.com/scala-tessella) pr
 
 ## Architecture
 
-Source under `src/main/scala/.../editor/` is organized as a one-directional
-dependency graph (enforced at compile time by the `checkLayering` sbt task —
-see [ADR-001](docs/adr/001-package-layering.md)):
+Source under `src/main/scala/.../editor/` is organised as a one-directional
+dependency graph, enforced at compile time by the `checkLayering` sbt task:
 
 ```
   components / interactions   (UI elements + DOM event handlers)
@@ -69,12 +68,11 @@ see [ADR-001](docs/adr/001-package-layering.md)):
 State is global by necessity (Laminar `Var`s live at module scope) but flow
 is one-way: `components`/`interactions` subscribe to `models` signals and call
 into `operations` via `AppState`; `operations` is the only layer allowed to
-mutate state (see [ADR-002](docs/adr/002-state-container.md) for the
-13-aggregate `EditorState` container, and
-[`docs/laminar-conventions.md`](docs/laminar-conventions.md) for reactive-first
-patterns). The desktop shell under `desktop/src-tauri/` and the Playwright
-smoke suite under `e2e/` are sibling projects that consume the same
-`dist/` bundle Vite produces.
+mutate state. `EditorState` groups that state into thirteen aggregate case
+classes, each wrapped in its own `Var`; updates use `update(_.copy(...))` to
+keep mutations atomic. The desktop shell under `desktop/src-tauri/` and the
+Playwright smoke suite under `e2e/` are sibling projects that consume the
+same `dist/` bundle Vite produces.
 
 ## Getting Started
 
@@ -116,10 +114,17 @@ npm run build
 
 The output will be in the `dist` folder.
 
-### Tests and e2e
+### Tests
 
-See [RUNBOOK.md](RUNBOOK.md) for how to run unit tests, the Laminar-in-JSDOM
-component tests, and the Playwright smoke suite under `e2e/`.
+Unit tests (MUnit + ScalaCheck) and Laminar-in-JSDOM component mount specs both
+run under `sbt`:
+
+```bash
+sbt test
+```
+
+The Playwright smoke suite is a sibling project with its own `package.json`.
+See [`e2e/README.md`](e2e/README.md) for setup and commands.
 
 ## Contributing
 

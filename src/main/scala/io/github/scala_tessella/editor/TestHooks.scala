@@ -7,7 +7,7 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 
-/** Test-hook API exposed to end-to-end tests under `e2e/` (ADR-004).
+/** Test-hook API exposed to end-to-end tests under `e2e/`.
   *
   * Registers a narrow, read-only object at `window.__tessellaTestHooks__` so Playwright smoke tests can make
   * domain-native assertions ("the tiling has 1 inner face") without screen-scraping SVG selectors that would
@@ -15,12 +15,11 @@ import scala.scalajs.js
   *
   * Hooks are deliberately **observations, not mutations** — every state change an e2e test wants to trigger
   * should still go through a user-visible path (clicking a palette button, pressing a keyboard shortcut).
-  * This keeps the hook object from growing into a back-door editor API. See ADR-004 §Consequences for the
-  * rationale.
+  * This keeps the hook object from growing into a back-door editor API.
   *
   * The registered global lands in production bundles too. Payload is a handful of bytes per exported method
-  * plus the object registration; if bundle size ever matters, gate the [[install]] call on a build-time flag
-  * (ADR-004 §Consequences lists the options). Not done here on purpose — premature.
+  * plus the object registration; if bundle size ever matters, gate the [[install]] call on a build-time flag.
+  * Not done here on purpose — premature.
   *
   * Why manual installation rather than `@JSExportTopLevel`: this build uses `ModuleKind.ESModule` (see
   * `build.sbt`), under which `@JSExportTopLevel("name")` produces a *named ES module export* of the

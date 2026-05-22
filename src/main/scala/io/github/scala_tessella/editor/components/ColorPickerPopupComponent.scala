@@ -10,9 +10,9 @@ import io.github.scala_tessella.editor.utils.ColorRGB._
 
 object ColorPickerPopupComponent:
 
-  /** ADR-002: post-migration `tempColor` and `showColorPicker` are nested in `ColorState`, not standalone
-    * `Var`s. Callers supply a `Signal`/`Observer` pair for the working colour and a close action — all three
-    * wired up at the call site from the aggregate.
+  /** `tempColor` and `showColorPicker` are nested inside `ColorState` rather than standalone `Var`s. Callers
+    * supply a `Signal`/`Observer` pair for the working colour and a close action — all three wired up at the
+    * call site from the aggregate.
     */
   def element(
       tempColorSignal: Signal[ColorRGB],

@@ -20,15 +20,15 @@ def Editor(): Unit =
   // Initialize logging based on environment (dev vs prod)
   Logger.initFromEnvironment()
   Logger.info("Editor starting up")
-  // Register the e2e test-hook object on globalThis. See ADR-004 + TestHooks.scala for context.
+  // Register the e2e test-hook object on globalThis. See TestHooks.scala for context.
   // Lands in production bundles too; payload is tiny.
   TestHooks.install()
   // Subscribe to Tauri native-menu events. No-op when running in a web browser
-  // (window.__TAURI__ undefined). See ADR-008 + DesktopMenuBridge.scala.
+  // (window.__TAURI__ undefined). See DesktopMenuBridge.scala.
   DesktopMenuBridge.install()
-  // Poll the deployed `version.json` for newer bundles (ADR-009). Web-only;
-  // skipped inside Tauri / file:// loaded shells, which update through their
-  // own packaging channel.
+  // Poll the deployed `version.json` for newer bundles. Web-only; skipped
+  // inside Tauri / file:// loaded shells, which update through their own
+  // packaging channel.
   UpdateChecker.install()
   // Native unsaved-changes warning before the tab/window unloads. The browser shows its own
   // dialog (no custom message — modern browsers ignore returnValue text); our in-app
@@ -113,9 +113,9 @@ object EditorApp:
         EditorState.effectiveTheme,
         Observer[Option[Theme]](pref => EditorState.themeState.update(_.copy(userThemePreference = pref)))
       ),
-      // Online-update banner (ADR-009). Renders nothing until UpdateChecker
-      // detects a strictly-newer published version; sits above the editor
-      // layout so it never overlaps the canvas.
+      // Online-update banner. Renders nothing until UpdateChecker detects a
+      // strictly-newer published version; sits above the editor layout so it
+      // never overlaps the canvas.
       UpdateAvailableBanner.element,
       div(
         className := "editor-layout",

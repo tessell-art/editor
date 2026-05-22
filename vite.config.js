@@ -27,9 +27,10 @@ function ui5LocalAssets() {
     };
 }
 
-// ADR-009 — Emit dist/version.json so a long-lived tab can poll for newer
-// deploys and surface a "Reload" banner. Cache-Control for the file is
-// pinned to no-store via public/_headers (Cloudflare Pages convention).
+// Emit dist/version.json so a long-lived tab can poll for newer deploys
+// and surface a "Reload" banner (see UpdateChecker.scala). Cache-Control
+// for the file is pinned to no-store via public/_headers (Cloudflare
+// Pages convention).
 function versionJson() {
     return {
         name: 'version-json',

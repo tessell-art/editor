@@ -11,9 +11,8 @@ import scala.util.Try
 
 /** EditorState: the single entry point for every application Var.
   *
-  * Per ADR-002, each logical state group is a `Var[<SomeState>]` whose case class lives in
-  * `EditorData.scala`. Derived signals (cross-aggregate or single-field distinct views) live inside the
-  * `DerivedState` object below.
+  * Each logical state group is a `Var[<SomeState>]` whose case class lives in `EditorData.scala`. Derived
+  * signals (cross-aggregate or single-field distinct views) live inside the `DerivedState` object below.
   *
   * Pattern:
   *   - read a field: `EditorState.fooState.signal.map(_.bar).distinct`

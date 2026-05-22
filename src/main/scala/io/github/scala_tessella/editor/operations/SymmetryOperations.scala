@@ -36,8 +36,8 @@ object SymmetryOperations:
     *   - Else, if cache is populated, shows.
     *   - Else, computes asynchronously, caches, then shows (unless the user toggled off meanwhile).
     *
-    * Post ADR-002: the aggregate `Var[ViewState]` replaces the per-field `Var`s that used to back this
-    * helper, so the callers pass lens-style getters/setters over `ViewState` instead.
+    * Callers pass lens-style getters/setters over the aggregate `ViewState` so this helper stays agnostic to
+    * which specific overlay it is toggling.
     */
   private def toggleComputedOverlay[T](
       getShow: ViewState => Boolean,

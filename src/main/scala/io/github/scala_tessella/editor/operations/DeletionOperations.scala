@@ -8,7 +8,8 @@ import io.github.scala_tessella.editor.models.EditorState
   * centralised.
   *
   * `attempt…` naming: these return `Unit` — on validation failure an error message is surfaced via
-  * [[ErrorOperations]], not thrown. See ADR-001 for the layering rationale.
+  * [[ErrorOperations]], not thrown. Throwing would couple `operations` to caller-side error handling and
+  * defeat the one-way `components/interactions → operations → models` flow the build enforces.
   */
 object DeletionOperations:
 

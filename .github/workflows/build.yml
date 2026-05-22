@@ -1,6 +1,6 @@
 name: Build and Test
 
-# Excludes Playwright e2e tests (e2e/ — ADR-003 Tier 2). Those run separately.
+# Excludes the Playwright smoke suite (sibling project under e2e/). Those run separately.
 
 on:
   push:

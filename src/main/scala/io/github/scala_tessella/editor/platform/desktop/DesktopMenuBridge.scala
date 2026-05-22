@@ -11,17 +11,17 @@ import scala.scalajs.js
 
 /** Subscribes to the Tauri native menu's "menu" event and dispatches each item id to the same AppState /
   * EditorState entry point the DOM menu in [[io.github.scala_tessella.editor.components.MenuBarComponent]]
-  * already uses (ADR-008).
+  * already uses.
   *
   * Dormant on the web — [[isTauri]] guards the install so a web-served build is unaffected. Bundle cost in
   * the web output is a handful of bytes (the match cascade), not worth gating on a build-time flag.
   *
   * The JS side is reached via `window.__TAURI__`, which is exposed because `app.withGlobalTauri` is `true` in
   * `tauri.conf.json`. That keeps the Scala.js code free of `@tauri-apps/api` imports — no new npm dependency,
-  * no extra entry in `vite.config.js`. Same "no JS bridge we own" posture as ADR-005.
+  * no extra entry in `vite.config.js`.
   *
   * Menu item ids are authoritative: they're the strings Rust emits in `desktop/src-tauri/src/menu.rs`. Adding
-  * a new menu entry is still two edits (menu.rs + this dispatch), as documented in ADR-008 §Menu integration.
+  * a new menu entry is two edits (menu.rs + this dispatch).
   */
 object DesktopMenuBridge:
 

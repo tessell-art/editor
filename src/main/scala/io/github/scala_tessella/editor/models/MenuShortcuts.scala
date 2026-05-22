@@ -2,9 +2,10 @@ package io.github.scala_tessella.editor.models
 
 /** Single source of truth for menu accelerator labels.
   *
-  * Both [[io.github.scala_tessella.editor.components.MenuBarComponent]] (DOM menu hints) and the planned
-  * Tauri native menu (ADR-008) read from this table so the two can't drift. Adding a new labelled shortcut is
-  * one edit here; callers use [[MenuShortcuts.labelOf]].
+  * Both [[io.github.scala_tessella.editor.components.MenuBarComponent]] (DOM menu hints) and the Tauri native
+  * menu read from this table so the two can't drift; parity between this file and
+  * `desktop/src-tauri/src/menu_shortcuts.rs` is enforced by the `checkMenuShortcutsParity` sbt task. Adding a
+  * new labelled shortcut is one edit here; callers use [[MenuShortcuts.labelOf]].
   *
   * `primary` is the OS-conventional command modifier — Ctrl on Windows/Linux, Cmd on macOS. Label rendering
   * on the web always emits "Ctrl" (matches the pre-extraction behaviour); the Tauri menu in slice 2 renders

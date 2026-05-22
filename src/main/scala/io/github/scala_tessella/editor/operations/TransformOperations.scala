@@ -52,8 +52,8 @@ object TransformOperations:
     EditorState.animationState.set(AnimationState.initial)
 
   /** Clears the given animation after `durationMs`, only if it is still the current value (another animation
-    * may have replaced it meanwhile). Takes lens-style get/set lambdas over `AnimationState` — see
-    * `docs/laminar-conventions.md` §3a.
+    * may have replaced it meanwhile). Takes lens-style get/set lambdas over `AnimationState` so the caller
+    * scopes the cleanup to one aggregate slice rather than re-deriving the full state.
     */
   private def scheduleAnimationCleanup[A <: AnyRef](
       getAnimation: AnimationState => Option[A],

@@ -2,7 +2,7 @@
   "name": "tessella-editor-e2e",
   "private": true,
   "version": "0.0.0",
-  "description": "Playwright smoke suite for Tessella Editor (ADR-003 Tier 2). Sibling to the main project — own dependencies, own scripts, runs against `vite dev` in the parent dir.",
+  "description": "Playwright smoke suite for Tessella Editor. Sibling to the main project — own dependencies, own scripts, runs against `vite dev` in the parent dir.",
   "type": "module",
   "scripts": {
     "test": "playwright test",

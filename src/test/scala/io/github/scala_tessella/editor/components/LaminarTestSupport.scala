@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.*
 import munit.FunSuite
 import org.scalajs.dom
 
-/** Minimal scaffolding for Laminar-in-JSDOM component tests (ADR-003 Tier 1).
+/** Minimal scaffolding for Laminar-in-JSDOM component tests.
   *
   * Mounts a Laminar element into a fresh `<div>` attached to `document.body`, records the resulting
   * [[RootNode]] and the container, and tears both down in `afterEach`. Can be mixed in alongside

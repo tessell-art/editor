@@ -1,7 +1,7 @@
-//! Tauri desktop shell for Tessella (ADR-008). Thin wrapper: builds a
-//! native menu that mirrors the DOM menu in MenuBarComponent.scala,
-//! emits "menu" events with the clicked item's id as payload, and
-//! hands off to DesktopMenuBridge.scala on the JS side.
+//! Tauri desktop shell for Tessella. Thin wrapper: builds a native
+//! menu that mirrors the DOM menu in MenuBarComponent.scala, emits
+//! "menu" events with the clicked item's id as payload, and hands off
+//! to DesktopMenuBridge.scala on the JS side.
 
 mod menu;
 mod menu_shortcuts;

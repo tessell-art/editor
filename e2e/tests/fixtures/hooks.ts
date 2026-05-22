@@ -1,7 +1,7 @@
 import { Page, expect } from '@playwright/test';
 
 /**
- * Typed bindings for the Scala.js-exported test-hook object (ADR-004).
+ * Typed bindings for the Scala.js-exported test-hook object.
  *
  * Must stay in sync with `src/main/scala/io/github/scala_tessella/editor/TestHooks.scala`.
  * The hook surface is versioned by convention: adding a hook is free; renaming or removing one

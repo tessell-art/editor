@@ -8,16 +8,16 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 // Optional: format when compiling (can be noisy in PRs; turn off if you prefer manual runs)
 ThisBuild / scalafmtOnCompile := true
 
-// ADR-001 — Package layering enforcement
-// Fails the build if a layer imports from a layer it must not depend on.
-// See docs/adr/001-package-layering.md.
-lazy val checkLayering = taskKey[Unit]("Enforce ADR-001 package layering")
+// Package layering enforcement. Fails the build if a layer imports from a
+// layer it must not depend on. Allowed direction is one-way:
+//   components/interactions → AppState → operations → models → utils.
+lazy val checkLayering = taskKey[Unit]("Enforce one-way package layering")
 
-// ADR-008 — MenuShortcuts.scala ↔ menu_shortcuts.rs parity.
-// Fails the build if the two declarations drift. Soft-skip when the Rust
-// file is absent (fresh checkout without the desktop shell scaffolded).
-// See docs/adr/008-desktop-packaging-tauri.md §Menu integration.
-lazy val checkMenuShortcutsParity = taskKey[Unit]("Enforce ADR-008 menu shortcuts parity")
+// Keep the Scala menu shortcut table in sync with the Tauri menu's Rust
+// constants. Fails the build if MenuShortcuts.scala and menu_shortcuts.rs
+// drift. Soft-skips when the Rust file is absent (fresh checkout without
+// the desktop shell scaffolded).
+lazy val checkMenuShortcutsParity = taskKey[Unit]("Enforce menu-shortcut parity between Scala and Rust")
 
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
@@ -79,8 +79,7 @@ lazy val editor = project.in(file("."))
     // JSDOM env expects a script input (no module)
     Test / scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.NoModule)),
 
-    // ADR-001 layering check — runs before every compile.
-    // Allowed edges:
+    // Package layering check — runs before every compile. Allowed edges:
     //   components/interactions → operations, models, utils, AppState
     //   AppState                → operations, models, utils
     //   operations              → models, utils
@@ -108,10 +107,11 @@ lazy val editor = project.in(file("."))
       }
       if (violations.nonEmpty)
         sys.error(
-          "ADR-001 layering violations (see docs/adr/001-package-layering.md):\n" +
+          "Package layering violations — allowed direction is one-way " +
+            "(components/interactions → AppState → operations → models → utils):\n" +
             violations.mkString("\n")
         )
-      streams.value.log.info(s"ADR-001 layering check passed (${rules.size} layers)")
+      streams.value.log.info(s"Package layering check passed (${rules.size} layers)")
     },
     (Compile / compile) := (Compile / compile).dependsOn(checkLayering, checkMenuShortcutsParity).value,
 
@@ -127,7 +127,7 @@ lazy val editor = project.in(file("."))
       val rustFile  = base / "desktop" / "src-tauri" / "src" / "menu_shortcuts.rs"
       if (!rustFile.exists())
         log.warn(
-          s"ADR-008 parity check skipped: ${base.toPath.relativize(rustFile.toPath)} not found"
+          s"Menu-shortcut parity check skipped: ${base.toPath.relativize(rustFile.toPath)} not found"
         )
       else {
         val scalaSource = IO.read(scalaFile)
@@ -165,10 +165,10 @@ lazy val editor = project.in(file("."))
               Some(s"  orphan in menu_shortcuts.rs (no matching MenuAction): ${orphan.toSeq.sorted.mkString(", ")}")
             else None
           sys.error(
-            "ADR-008 menu parity violations:\n" + Seq(missingLine, orphanLine).flatten.mkString("\n")
+            "Menu-shortcut parity violations:\n" + Seq(missingLine, orphanLine).flatten.mkString("\n")
           )
         } else
-          log.info(s"ADR-008 menu parity check passed (${actions.size} actions)")
+          log.info(s"Menu-shortcut parity check passed (${actions.size} actions)")
       }
     },
 

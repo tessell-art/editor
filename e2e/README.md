@@ -1,7 +1,7 @@
 # Tessella Editor — Playwright smoke suite
 
-ADR-003 Tier 2: a small end-to-end smoke suite that validates what JSDOM cannot —
-real canvas/SVG layout, real pointer/keyboard events, and (eventually) visual
+A small end-to-end smoke suite that validates what JSDOM cannot — real
+canvas/SVG layout, real pointer/keyboard events, and (eventually) visual
 regression.
 
 This is a **sibling project** to the main editor, with its own `package.json` and
@@ -46,7 +46,7 @@ See `tests/smoke.spec.ts` — five scenarios:
    via `page.waitForEvent('download')`, and file-input feeding via
    `page.waitForEvent('filechooser')` + `setFiles`.
 
-## Domain-state assertions: Scala-exposed test hooks (ADR-004)
+## Domain-state assertions: Scala-exposed test hooks
 
 For assertions about editor *state* (rather than DOM presence), prefer the
 Scala-exposed hook API in `tests/fixtures/hooks.ts` over CSS selectors:
@@ -74,8 +74,8 @@ and (if useful) a polling helper under `expectHook`.
 
 ## What's deliberately *not* yet covered
 
-These remain on the ADR-003 roadmap and will be added when the editor surface
-they exercise is stable enough that snapshot churn won't dominate review:
+These will be added when the editor surface they exercise is stable enough
+that snapshot churn won't dominate review:
 
 - Touch / pointer gestures (`TouchEventHandler`).
 - Visual regression (`expect(page).toHaveScreenshot()`) for the canvas.

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright smoke-suite configuration for Tessella Editor (ADR-003 Tier 2).
+ * Playwright smoke-suite configuration for Tessella Editor.
  *
  * Auto-starts `vite dev` in the parent project so the suite is self-contained:
  * a single `npm test` from this directory boots the editor, runs all tests,
@@ -9,8 +9,8 @@ import { defineConfig, devices } from '@playwright/test';
  * dev server (the dev's own `npm run dev`) is reused instead of spawning a
  * second one.
  *
- * Chromium-only by default. The point of Tier 2 here is "things JSDOM can't
- * cover" (canvas/SVG layout, real pointer events, visual snapshots), not
+ * Chromium-only by default. The point here is "things JSDOM can't cover"
+ * (canvas/SVG layout, real pointer events, visual snapshots), not
  * cross-browser parity — adding Firefox/WebKit projects is one config edit if
  * the need ever arises.
  */

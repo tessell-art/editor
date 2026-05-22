@@ -2,8 +2,8 @@ package io.github.scala_tessella.editor.operations
 
 import munit.FunSuite
 
-/** ADR-009 — Pure unit tests for the version-comparison logic. The fetch / Var / DOM-listener side of
-  * `UpdateChecker` is not exercised here; the JSDOM e2e test in Tier 2 covers the integrated banner flow.
+/** Pure unit tests for the version-comparison logic. The fetch / Var / DOM-listener side of `UpdateChecker`
+  * is not exercised here; the Playwright smoke suite covers the integrated banner flow.
   */
 class UpdateCheckerSpec extends FunSuite:
 

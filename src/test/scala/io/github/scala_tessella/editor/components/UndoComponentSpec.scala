@@ -32,7 +32,7 @@ class UndoComponentSpec extends FunSuite with EditorStateFixture with LaminarTes
     assertEquals(UndoComponent.redoTitle(canRedo = false, preview = None), "No actions to redo")
     assertEquals(UndoComponent.redoTitle(canRedo = false, preview = Some("ignored")), "No actions to redo")
 
-  // --- Laminar-mount tests (ADR-003 Tier 1) ---
+  // --- Laminar-mount tests ---
   // The interesting wiring here is `disabled <--` driven by two combined signals
   // (UndoManager.canUndo + EditorState.uiState.isProcessing). The pure helpers above don't
   // exercise that — these mount tests do.

@@ -5,8 +5,8 @@ import io.github.scala_tessella.editor.components.LaminarTestSupport
 import io.github.scala_tessella.editor.models.EditorState
 import munit.FunSuite
 
-// First Laminar-in-JSDOM mount spec (ADR-003 Tier 1). AboutPopup is static content plus close
-// wiring — ideal for crystallising the LaminarTestSupport pattern on a small surface.
+// First Laminar-in-JSDOM mount spec. AboutPopup is static content plus close wiring —
+// ideal for crystallising the LaminarTestSupport pattern on a small surface.
 class AboutPopupSpec extends FunSuite with EditorStateFixture with LaminarTestSupport:
 
   test("renders title, version line, and close button"):

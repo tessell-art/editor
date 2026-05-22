@@ -4,9 +4,9 @@ import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.i18n.I18n
 import io.github.scala_tessella.editor.operations.UpdateChecker
 
-/** ADR-009 — Thin strip surfaced when `UpdateChecker` detects a newer published bundle. Two actions:
-  * **Reload** (primary, dirty-state-aware via `UpdateChecker.reloadNow`) and **Dismiss** (×, suppresses the
-  * announcement for the rest of the session). Renders nothing when there is no pending update.
+/** Thin strip surfaced when `UpdateChecker` detects a newer published bundle. Two actions: **Reload**
+  * (primary, dirty-state-aware via `UpdateChecker.reloadNow`) and **Dismiss** (×, suppresses the announcement
+  * for the rest of the session). Renders nothing when there is no pending update.
   */
 object UpdateAvailableBanner:
 
