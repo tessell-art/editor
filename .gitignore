@@ -36,3 +36,6 @@ e2e/playwright/.cache/
 # Tauri desktop shell
 /desktop/src-tauri/target/
 /desktop/src-tauri/gen/schemas/
+
+# Private development notes — separate untracked tree
+/docs/
