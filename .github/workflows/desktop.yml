@@ -126,9 +126,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/tessella-linux/*
-            artifacts/tessella-macos/*
-            artifacts/tessella-windows/*
+            artifacts/tessella-linux/deb/*.deb
+            artifacts/tessella-linux/appimage/*.AppImage
+            artifacts/tessella-macos/dmg/*.dmg
+            artifacts/tessella-windows/msi/*.msi
+            artifacts/tessella-windows/nsis/*.exe
           generate_release_notes: true
           draft: false
           prerelease: false
