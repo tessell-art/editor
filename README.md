@@ -4,6 +4,8 @@
 
 **Tessella Editor** is a simple polygon tessellation editor built with **Scala.js** and **Laminar**. It allows you to interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons.
 
+If you want to try it live, you can [open the web editor](https://tessell.art/editor).
+
 The editor is part of the [scala-tessella](https://github.com/scala-tessella) project.
 
 ## Key Features
@@ -86,8 +88,8 @@ same `dist/` bundle Vite produces.
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/scala-tessella/tessella-editor.git
-    cd tessella-editor
+    git clone https://github.com/tessell-art/editor.git
+    cd editor
     ```
 2.  Install dependencies:
     ```bash
@@ -128,7 +130,7 @@ See [`e2e/README.md`](e2e/README.md) for setup and commands.
 
 ## Contributing
 
-For more information and to contribute, please visit the [scala-tessella GitHub organization](https://github.com/scala-tessella).
+For more information and to contribute, please visit the [tessell.art site](https://www.tessell.art).
 
 ## Changelog
 
