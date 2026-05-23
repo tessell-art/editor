@@ -130,4 +130,8 @@ See [`e2e/README.md`](e2e/README.md) for setup and commands.
 
 For more information and to contribute, please visit the [scala-tessella GitHub organization](https://github.com/scala-tessella).
 
+## License
+
+Tessella Editor is released under the [Apache License 2.0](LICENSE).
+
 Built with Scala.js and Laminar.
