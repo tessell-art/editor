@@ -23,6 +23,24 @@ object AboutPopup:
             rel    := "noopener noreferrer",
             I18n.tNow("popup.about.link.github")
           )
+        ),
+      "licenseLink" ->
+        (() =>
+          a(
+            href   := "https://github.com/tessell-art/editor/blob/main/LICENSE",
+            target := "_blank",
+            rel    := "noopener noreferrer",
+            I18n.tNow("popup.about.link.license")
+          )
+        ),
+      "sourceLink"  ->
+        (() =>
+          a(
+            href   := "https://github.com/tessell-art/editor",
+            target := "_blank",
+            rel    := "noopener noreferrer",
+            I18n.tNow("popup.about.link.source")
+          )
         )
     )
 
@@ -46,7 +64,11 @@ object AboutPopup:
           aria.label <-- I18n.t("popup.about.bodyAriaLabel"),
           p(child.text <-- I18n.t("popup.about.body.intro")),
           p(I18n.tFragments("popup.about.body.project", tokens)),
-          p(child.text <-- I18n.t("popup.about.body.builtWith"))
+          p(child.text <-- I18n.t("popup.about.body.builtWith")),
+          p(
+            className := "about-license",
+            I18n.tFragments("popup.about.body.license", tokens)
+          )
         )
       )
     )

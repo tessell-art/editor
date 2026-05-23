@@ -189,7 +189,11 @@ object Translations:
     "popup.about.body.project"            ->
       "The editor is part of the {projectName} project. For more information, and to contribute, please visit the {ghLink}.",
     "popup.about.body.builtWith"          -> "Built with Scala.js and Laminar.",
+    "popup.about.body.license"            ->
+      "© 2026 Mario Callisto. Released under the {licenseLink}. {sourceLink}.",
     "popup.about.link.github"             -> "GitHub organization",
+    "popup.about.link.license"            -> "Apache License 2.0",
+    "popup.about.link.source"             -> "View source on GitHub",
     "popup.guide.title"                   -> "Guide",
     "popup.guide.bodyAriaLabel"           -> "Guide content",
     // Guide popup — section headings
@@ -546,7 +550,11 @@ object Translations:
     "popup.about.body.project"            ->
       "El editor forma parte del proyecto {projectName}. Para más información y para contribuir, visita la {ghLink}.",
     "popup.about.body.builtWith"          -> "Hecho con Scala.js y Laminar.",
+    "popup.about.body.license"            ->
+      "© 2026 Mario Callisto. Publicado bajo la {licenseLink}. {sourceLink}.",
     "popup.about.link.github"             -> "organización de GitHub",
+    "popup.about.link.license"            -> "Licencia Apache 2.0",
+    "popup.about.link.source"             -> "Ver el código en GitHub",
     "popup.guide.title"                   -> "Guía",
     "popup.guide.bodyAriaLabel"           -> "Contenido de la guía",
     // Guide popup — section headings
