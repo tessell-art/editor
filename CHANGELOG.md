@@ -11,6 +11,26 @@ and in the git history.
 
 ## [Unreleased]
 
+### Added
+- Eraser tool now shows deletable points (vertices, edge midpoints, face
+  centers) within a screen-space proximity radius of the pointer, instead
+  of requiring the pointer to first land on a face. Radius is wider for
+  touch (50 viewBox units) than for mouse (30) to accommodate finger
+  imprecision.
+- Tap-to-delete on touch: tapping near a deletable point with the eraser
+  active removes it without needing a drag gesture.
+
+### Changed
+- Eraser no longer surfaces clickable points via face hover
+  (`setupFaceClickablePoints`); detection is driven by
+  `EraserProximityQuery` over the whole tiling.
+- Client-pixel → SVG viewBox coordinate conversion now uses the SVG
+  element's `getScreenCTM()`, which correctly handles
+  `preserveAspectRatio` letterboxing, CSS sizing, and any other
+  transforms between client space and the viewBox. The previous
+  bounding-rect math is replaced everywhere via a single helper in
+  `EraserProximityQuery.clientToSvg`.
+
 ## [0.4.2] - 2026-05-23
 
 ### Added
