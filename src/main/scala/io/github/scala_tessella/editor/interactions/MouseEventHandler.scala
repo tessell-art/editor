@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
-import io.github.scala_tessella.editor.operations.ViewOperations
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Tool}
+import io.github.scala_tessella.editor.operations.{EraserProximityQuery, ViewOperations}
 import io.github.scala_tessella.editor.utils.geo.Point
 import org.scalajs.dom.{MouseEvent, WheelEvent}
 
@@ -54,6 +54,8 @@ object MouseEventHandler:
         val point: Point = Point(event.clientX, event.clientY)
         EditorState.uiState.update(_.copy(dragStart = Some(point)))
       }
+    else if EditorState.toolState.now().activeTool == Tool.Eraser then
+      EraserProximityQuery.updateNearbyPoints(event.clientX, event.clientY, isTouch = false)
 
   def handleMouseUp(event: MouseEvent): Unit =
     // Clear once

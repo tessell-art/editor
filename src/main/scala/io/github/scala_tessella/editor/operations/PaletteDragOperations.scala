@@ -100,18 +100,11 @@ object PaletteDragOperations:
     p3 + rotationCenter
 
   /** Convert a client-pixel pointer position into the SVG viewBox coordinate frame the canvas paints into.
-    * Uses the canvas DOM element's bounding rect so it stays correct when the SVG is CSS-sized to something
-    * other than its 800×600 viewBox.
+    * Delegates to `EraserProximityQuery.clientToSvg` which uses `getScreenCTM` to correctly handle
+    * `preserveAspectRatio` letterboxing, CSS sizing, and any other transforms.
     */
   private def clientPointToSvg(clientX: Double, clientY: Double): Option[Point] =
-    EditorState.uiState.now().canvasElementRef.map: canvasElement =>
-
-      val rect = canvasElement.getBoundingClientRect()
-      val rx   = if rect.width == 0 then 0.0
-      else (clientX - rect.left) * (EditorConfig.canvasViewBoxWidth / rect.width)
-      val ry   = if rect.height == 0 then 0.0
-      else (clientY - rect.top) * (EditorConfig.canvasViewBoxHeight / rect.height)
-      Point(rx, ry)
+    EraserProximityQuery.clientToSvg(clientX, clientY)
 
   /** Pick the absolute nearest perimeter edge to `p`. Returns `None` only when the tiling is empty. */
   private[operations] def snapToPerimeter(

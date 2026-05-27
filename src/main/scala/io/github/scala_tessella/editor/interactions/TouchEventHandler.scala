@@ -1,8 +1,8 @@
 package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
-import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, ViewTransform}
-import io.github.scala_tessella.editor.operations.ViewOperations
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Tool, ViewTransform}
+import io.github.scala_tessella.editor.operations.{EraserProximityQuery, ViewOperations}
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
 import org.scalajs.dom
 import org.scalajs.dom.{DOMRect, Touch, TouchEvent, TouchList}
@@ -54,6 +54,9 @@ object TouchEventHandler:
       touchStartPoint.set(Some(touchPoint))
       lastPanPoint.set(Some(touchPoint))
       isDragging.set(false)
+      // Eraser proximity: show nearby points on first tap
+      if EditorState.toolState.now().activeTool == Tool.Eraser then
+        EraserProximityQuery.updateNearbyPoints(touchPoint.x, touchPoint.y, isTouch = true)
     else if touches.length == 2 then
       event.preventDefault()
       isDragging.set(true)
@@ -140,8 +143,17 @@ object TouchEventHandler:
         case _                                                                                            => // State wasn't correctly initialized
 
   def handleTouchEnd(event: TouchEvent): Unit =
-    if isDragging.now() then
+    val wasDragging = isDragging.now()
+    if wasDragging then
       event.preventDefault()
+    else
+      // Tap (not drag) while eraser is active: check for direct-hit deletion
+      val tool = EditorState.toolState.now().activeTool
+      if tool == Tool.Eraser then
+        touchStartPoint.now().foreach: startPoint =>
+          EraserProximityQuery.findDirectHit(startPoint.x, startPoint.y).foreach: hit =>
+            io.github.scala_tessella.editor.operations.SelectionOperations
+              .handlePointClickForDeletion(hit)
     resetTouchState()
 
   def handleTouchCancel(event: TouchEvent): Unit =

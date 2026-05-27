@@ -227,8 +227,8 @@ object SelectionOperations:
       case Tool.Fan                 =>
         setupFaceClickablePoints(faceId, boundaryVerticesOnly = true)
       case Tool.Eraser              =>
-        setupFaceClickablePoints(faceId)
-      case Tool.AddPolygon          =>
+        () // Eraser uses proximity-based selection via EraserProximityQuery (ADR-013)
+      case Tool.AddPolygon =>
         tools.addSubmode match
           case AddSubmode.Inside  =>
             setupFaceClickablePoints(faceId, edgesOnly = true)
