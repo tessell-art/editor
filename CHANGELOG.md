@@ -21,6 +21,11 @@ and in the git history.
   active removes it without needing a drag gesture.
 
 ### Changed
+- Eraser cursor now carries a red crosshair pinned to its working tip, with
+  the cursor hotspot at the crosshair centre, so the aimed pixel is exactly
+  the deletion point that gets removed. This replaces the previous cursor
+  whose hotspot sat at an unmarked corner, making precise point selection
+  hard.
 - Eraser no longer surfaces clickable points via face hover
   (`setupFaceClickablePoints`); detection is driven by
   `EraserProximityQuery` over the whole tiling.
