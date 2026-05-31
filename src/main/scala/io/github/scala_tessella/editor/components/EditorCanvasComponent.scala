@@ -104,6 +104,7 @@ object EditorCanvasComponent:
         case Tool.SelectByColor       => "tool-select-by-color"
         case Tool.Measurement         => "tool-measurement"
         case Tool.Fan                 => "tool-fan"
+        case Tool.TranslateCopy       => "tool-translate-copy"
       s"editor-canvas $toolClass"
     }
 

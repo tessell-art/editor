@@ -55,7 +55,7 @@ lazy val editor = project.in(file("."))
     libraryDependencies += "io.github.iltotore" %%% "iron" % "3.2.3",
     libraryDependencies += "org.typelevel" %%% "spire" % "0.18.0",
     libraryDependencies += "io.github.scala-tessella" %%% "ring-seq" % "0.8.0",
-    libraryDependencies += "io.github.scala-tessella" %%% "dcel" % "0.1.0",
+    libraryDependencies += "io.github.scala-tessella" %%% "dcel" % "0.1.1",
 
     // Test dependencies
     libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0" % Test,

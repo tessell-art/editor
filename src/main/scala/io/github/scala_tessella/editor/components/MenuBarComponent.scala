@@ -19,6 +19,24 @@ object MenuBarComponent:
   def menuItems(): Seq[Element] =
     Seq(fileMenu(), editMenu(), viewMenu(), helpMenu())
 
+  // A nested flyout submenu inside a dropdown (e.g. "Add Copy ▸"). Hovering the row reveals `children`
+  // to the right via the `.submenu-item:hover > .submenu-content` rule in MenuBarStyles.css. The parent
+  // row itself is inert (it only expands); the leaf rows carry the actions.
+  private def submenuItem(titleKey: String, children: Mod[HtmlElement]*): Element =
+    div(
+      className := "submenu-item",
+      a(
+        href        := "#",
+        onClick.preventDefault --> { _ =>
+
+          ()
+        },
+        span(child.text <-- I18n.t(titleKey)),
+        span(className := "submenu-arrow", "▸")
+      ),
+      div(className := "submenu-content", children)
+    )
+
   // A helper to create a top-level menu item like "File", "Edit"
   private def menuItem(titleKey: String, children: Mod[HtmlElement]*): Element =
     div(
@@ -142,6 +160,18 @@ object MenuBarComponent:
       ),
       dropdownLink("menu.edit.mirror", AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
       dropdownLink("menu.edit.fan", AppState.enterFanMode(), enabled = EditorState.canMutateTilingSignal),
+      submenuItem(
+        "menu.edit.addCopy",
+        dropdownLink(
+          "menu.edit.addCopy.translate",
+          AppState.enterTranslateCopyMode(),
+          enabled = EditorState.canMutateTilingSignal
+        ),
+        // Reserved for later iterations — present but disabled.
+        dropdownLink("menu.edit.addCopy.rotate", (), enabled = Val(false)),
+        dropdownLink("menu.edit.addCopy.reflect", (), enabled = Val(false)),
+        dropdownLink("menu.edit.addCopy.glide", (), enabled = Val(false))
+      ),
       dropdownLink(
         "menu.edit.measurement",
         AppState.enterMeasureMode(),

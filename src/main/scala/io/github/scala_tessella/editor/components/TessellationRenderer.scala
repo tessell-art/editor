@@ -2,7 +2,12 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
-import io.github.scala_tessella.editor.models.{DoublingAnimation, EditorState, FanAnimation, MirrorAnimation}
+import io.github.scala_tessella.editor.models.{
+  DoublingAnimation, EditorState, FanAnimation, MirrorAnimation, Tool, TranslateCopyDrag
+}
+import io.github.scala_tessella.editor.operations.AddCopyOperations
+import io.github.scala_tessella.editor.utils.SvgDsl.circleCoordsRadius
+import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 
 object TessellationRenderer:
@@ -131,6 +136,23 @@ object TessellationRenderer:
             .map: p =>
               TessellationMeasurementRenderer.renderClickablePoint(p, tilingPointToCanvasView)
 
+    // Add Copy ▸ Translate: vertices shown as passive "clipping point" dots while the tool is active; the
+    // vertex currently snapped as the release target is enlarged and recoloured.
+    val translateCopyDots = children <--
+      EditorState.toolState.signal.map(_.activeTool == Tool.TranslateCopy).distinct
+        .combineWith(EditorState.previewState.signal.map(_.translateCopyDrag).distinct)
+        .map:
+          case (true, dragOpt) =>
+            val snapId = dragOpt.flatMap(_.snapTarget.map(_._1))
+            AddCopyOperations.vertexAnchorsCv(tiling).map: (id, p) =>
+              renderVertexDot(p, snapId.contains(id))
+          case _               => Nil
+
+    // The dashed skeleton of the whole tiling, translated by the live (free) drag offset.
+    val translateCopySkeleton = child.maybe <--
+      EditorState.previewState.signal.map(_.translateCopyDrag).distinct
+        .map(_.map(renderTranslateSkeleton))
+
     val measurementSignals =
       EditorState.measurementState.signal.map(_.measurementStartPoint).distinct
         .combineWith(
@@ -190,11 +212,44 @@ object TessellationRenderer:
       paletteDragGhostWireframe,
       failedDeletionWireframe,
       clickablePointsDisplay,
+      translateCopyDots,
+      translateCopySkeleton,
       measurementStartPointDisplay,
       measurementEndPointDisplay,
       measurementLineDisplay,
       previousMeasurementLineDisplay,
       measurementAngleArcDisplay
+    )
+
+  /** A single clipping-point dot (canvas-view coords). The live snap target is enlarged and tinted green. */
+  private def renderVertexDot(point: Point, isSnapTarget: Boolean): Element =
+    svg.circle(
+      circleCoordsRadius(point, if isSnapTarget then 7 else 4),
+      svg.fill          := (if isSnapTarget then "#34c759" else "#ff9500"),
+      svg.stroke        := "black",
+      svg.strokeWidth   := "1",
+      svg.opacity       := (if isSnapTarget then "1.0" else "0.85"),
+      svg.pointerEvents := "none",
+      svg.className     := "translate-copy-vertex"
+    )
+
+  /** Dashed outline of every face, grouped and translated by the live drag offset. Face point strings are
+    * already in canvas-view coords (snapshot at drag start), so only the group transform changes per move.
+    */
+  private def renderTranslateSkeleton(drag: TranslateCopyDrag): Element =
+    svg.g(
+      svg.transform     := s"translate(${drag.deltaCv.x}, ${drag.deltaCv.y})",
+      svg.pointerEvents := "none",
+      svg.className     := "translate-copy-skeleton",
+      drag.facePoints.map: (_, pointsStr) =>
+        svg.polygon(
+          svg.points          := pointsStr,
+          svg.fill            := "none",
+          svg.stroke <-- EditorState.overlayPreviewStrokeColor,
+          svg.strokeWidth     := "2",
+          svg.strokeDashArray := "5,5",
+          svg.opacity         := "0.9"
+        )
     )
 
   def renderFanAnimation(animation: FanAnimation): Element =

@@ -147,6 +147,13 @@ object AppState:
         clearMeasurements()
         toolState.update(_.copy(activeTool = Tool.Fan))
 
+  /** Activates the Add Copy ▸ Translate tool. The tiling's vertices then show as clipping-point dots; the
+    * user drags the dashed skeleton and releases on a vertex to weld a translated copy. Does nothing if
+    * processing or if the tiling is empty.
+    */
+  def enterTranslateCopyMode(): Unit =
+    AddCopyOperations.enterTranslateCopyMode()
+
   /** Activates the Measurement tool. The user then clicks a polygon to expose its clickable points (vertices,
     * edge midpoints, center). Does nothing if processing or if the tiling is empty.
     */
