@@ -12,6 +12,22 @@ and in the git history.
 ## [Unreleased]
 
 ### Added
+- **Edit ▸ Add Copy** submenu — four direct-manipulation tools that grow the
+  tiling by welding on a copy of itself under a plane isometry (dcel's
+  `maybeAdd…Copy`). Each drags a dashed skeleton preview, snaps to exact tiling
+  anchors, names itself in the top-left mode chip, and runs the full validation
+  pipeline (a rejected copy surfaces a toast and leaves the tiling unchanged):
+  - **Translate** — drag the skeleton; both endpoints snap to vertices, so the
+    slide vector is exact.
+  - **Rotate** — press a centre (any vertex, edge midpoint, or the centre of a
+    rotationally-symmetric face) and drag around it; the angle snaps to the
+    values that can weld for that centre (vertex → edge-alignment angles;
+    edge midpoint → 180°; face centre → multiples of 360/k).
+  - **Reflect** — press one anchor, drag to a second; the mirror axis is the
+    line through the two, shown as a spanning guide with a live reflected
+    preview.
+  - **Glide reflect** — like Reflect, but the copy is also slid along the axis
+    by the drag vector (so the press→release direction and length matter).
 - Eraser tool now shows deletable points (vertices, edge midpoints, face
   centers) within a screen-space proximity radius of the pointer, instead
   of requiring the pointer to first land on a face. Radius is wider for
@@ -21,6 +37,14 @@ and in the git history.
   active removes it without needing a drag gesture.
 
 ### Changed
+- Build depends on the published `dcel` 0.1.2 (previously 0.1.0), which adds
+  the grow-by-isometry API (`maybeAddTranslatedCopy` / `maybeAddRotatedCopy` /
+  `maybeAddMirroredCopy` / `maybeAddGlideReflectedCopy`) used by Add Copy.
+- Error toasts now clip to a mobile-friendly preview (~6 lines / 280
+  characters) with an ellipsis, keeping the full text in the toast's hover
+  tooltip, and the toast body scrolls internally past 40vh. Previously a long
+  message grew the bottom-anchored toast upward until its close button slid off
+  the top of the screen.
 - Eraser cursor now carries a red crosshair pinned to its working tip, with
   the cursor hotspot at the crosshair centre, so the aimed pixel is exactly
   the deletion point that gets removed. This replaces the previous cursor
