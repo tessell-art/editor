@@ -124,6 +124,23 @@ object ErrorOperations:
 
   // --- Minimal toast/snackbar implementation (non-blocking UI) ---
 
+  /** Toast display caps, sized for mobile screens. DCEL error strings can run to many lines; the toast grows
+    * upward from the bottom-right, so an unbounded message can push its own close button off the top of the
+    * screen. We show a clipped preview in the toast (full text stays in `errorState.errorMessage` and in the
+    * toast's `title` tooltip).
+    */
+  private val MaxToastLines = 6
+  private val MaxToastChars = 280
+
+  /** Clip `text` to at most `MaxToastLines` lines and `MaxToastChars` characters, appending an ellipsis when
+    * anything was cut. Returns the original text untouched when it already fits.
+    */
+  private[operations] def truncateForToast(text: String): String =
+    val limitedLines = text.linesIterator.take(MaxToastLines).mkString("\n")
+    val limited      =
+      if limitedLines.length > MaxToastChars then limitedLines.take(MaxToastChars) else limitedLines
+    if limited.length < text.stripTrailing.length then s"${limited.stripTrailing}…" else text
+
   private def ensureToastContainer(): dom.HTMLElement =
     Option(dom.document.getElementById("toast-container")) match
       case Some(el: dom.HTMLElement) => el
@@ -157,7 +174,10 @@ object ErrorOperations:
         dom.document.createElement("span") match
           case textEl: dom.HTMLElement =>
             textEl.className = "editor-toast-text"
-            textEl.textContent = text
+            val display = truncateForToast(text)
+            textEl.textContent = display
+            // Keep the full message available on hover when the preview was clipped.
+            if display != text then textEl.setAttribute("title", text)
             toast.appendChild(textEl): Unit
           case _                       => ()
 

@@ -48,6 +48,11 @@
 .editor-toast-text {
   flex: 1 1 auto;
   word-break: break-word;
+  /* Safety net: even if a message slips past the JS length cap, it scrolls inside the toast
+     rather than growing it tall enough to push the close button off the top of the screen. */
+  max-height: 40vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Auto-dismiss severities (info/warning) dismiss on click anywhere on the toast. */

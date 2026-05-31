@@ -24,6 +24,27 @@ class ErrorOperationsSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.errorState.now().errorMessage, Some("New error"))
   }
 
+  test("truncateForToast leaves short messages unchanged") {
+    val short = "Cannot add rotated copy: overlap"
+    assertEquals(ErrorOperations.truncateForToast(short), short)
+  }
+
+  test("truncateForToast clips messages with too many lines and appends an ellipsis") {
+    val many   = (1 to 30).map(i => s"line $i").mkString("\n")
+    val result = ErrorOperations.truncateForToast(many)
+    assert(result.endsWith("…"))
+    assert(result.linesIterator.size <= 7) // 6 kept lines (the last carries the ellipsis)
+    assert(!result.contains("line 30"))
+  }
+
+  test("truncateForToast clips a single very long line by character count") {
+    val long   = "x" * 1000
+    val result = ErrorOperations.truncateForToast(long)
+    assert(result.endsWith("…"))
+    assert(result.length < long.length)
+    assert(result.length <= 281) // 280 chars + ellipsis
+  }
+
   test("clearError should remove error message") {
     EditorState.errorState.update(_.copy(errorMessage = Some("Test error")))
 
