@@ -136,7 +136,8 @@ object KeyboardEventHandler:
           SvgExporter.saveTilingToSVG()
       else if event.key == "Escape" then
         event.preventDefault()
-        if EditorState.toolState.now().activeTool == Tool.TranslateCopy then
+        val tool = EditorState.toolState.now().activeTool
+        if tool == Tool.TranslateCopy || tool == Tool.RotateCopy then
           AddCopyOperations.exitMode()
         else
           clearAllSelections()

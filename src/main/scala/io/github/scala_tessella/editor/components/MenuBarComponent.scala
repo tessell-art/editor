@@ -167,8 +167,12 @@ object MenuBarComponent:
           AppState.enterTranslateCopyMode(),
           enabled = EditorState.canMutateTilingSignal
         ),
+        dropdownLink(
+          "menu.edit.addCopy.rotate",
+          AppState.enterRotateCopyMode(),
+          enabled = EditorState.canMutateTilingSignal
+        ),
         // Reserved for later iterations — present but disabled.
-        dropdownLink("menu.edit.addCopy.rotate", (), enabled = Val(false)),
         dropdownLink("menu.edit.addCopy.reflect", (), enabled = Val(false)),
         dropdownLink("menu.edit.addCopy.glide", (), enabled = Val(false))
       ),

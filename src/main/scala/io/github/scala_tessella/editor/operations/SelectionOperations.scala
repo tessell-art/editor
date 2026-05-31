@@ -230,6 +230,8 @@ object SelectionOperations:
         () // Eraser uses proximity-based selection via EraserProximityQuery (ADR-013)
       case Tool.TranslateCopy =>
         () // Add Copy ▸ Translate is a canvas-level drag gesture, not a polygon click
+      case Tool.RotateCopy =>
+        () // Add Copy ▸ Rotate is a canvas-level drag gesture, not a polygon click
       case Tool.AddPolygon =>
         tools.addSubmode match
           case AddSubmode.Inside  =>

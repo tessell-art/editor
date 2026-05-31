@@ -154,6 +154,13 @@ object AppState:
   def enterTranslateCopyMode(): Unit =
     AddCopyOperations.enterTranslateCopyMode()
 
+  /** Activates the Add Copy ▸ Rotate tool. Rotation centres (vertices, edge midpoints, symmetric face
+    * centres) show as dots; the user presses one and drags around it to set the angle, releasing on a snap to
+    * weld a rotated copy. Does nothing if processing or if the tiling is empty.
+    */
+  def enterRotateCopyMode(): Unit =
+    AddCopyOperations.enterRotateCopyMode()
+
   /** Activates the Measurement tool. The user then clicks a polygon to expose its clickable points (vertices,
     * edge midpoints, center). Does nothing if processing or if the tiling is empty.
     */

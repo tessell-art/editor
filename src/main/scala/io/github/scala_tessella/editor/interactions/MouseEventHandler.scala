@@ -31,9 +31,11 @@ object MouseEventHandler:
 
   def handleMouseDown(event: MouseEvent): Unit =
     event.preventDefault()
-    // Translate-copy owns the drag: grab the skeleton instead of panning the canvas.
+    // Add-Copy tools own the drag: grab the skeleton instead of panning the canvas.
     if EditorState.toolState.now().activeTool == Tool.TranslateCopy then
       AddCopyOperations.beginDrag(event.clientX, event.clientY)
+    else if EditorState.toolState.now().activeTool == Tool.RotateCopy then
+      AddCopyOperations.beginRotateDrag(event.clientX, event.clientY)
     else
       // Snapshot once
       EditorState.uiState.update(_.copy(isDragging = true))
@@ -47,6 +49,8 @@ object MouseEventHandler:
 
     if EditorState.previewState.now().translateCopyDrag.isDefined then
       AddCopyOperations.updateDrag(event.clientX, event.clientY)
+    else if EditorState.previewState.now().rotateCopyDrag.isDefined then
+      AddCopyOperations.updateRotateDrag(event.clientX, event.clientY)
     else if dragging then
       dragStartOpt.foreach { start =>
 
@@ -66,6 +70,8 @@ object MouseEventHandler:
   def handleMouseUp(event: MouseEvent): Unit =
     if EditorState.previewState.now().translateCopyDrag.isDefined then
       AddCopyOperations.endDrag()
+    else if EditorState.previewState.now().rotateCopyDrag.isDefined then
+      AddCopyOperations.endRotateDrag()
     // Clear once
     EditorState.uiState.update(_.copy(isDragging = false))
     EditorState.uiState.update(_.copy(dragStart = None))

@@ -62,6 +62,23 @@ case class TranslateCopyDrag(
     snapTarget: Option[(VertexId, Point)]
 )
 
+/** In-flight "Add Copy ▸ Rotate" drag. The user pressed near a centre dot — `centerAnchor` identifies it
+  * (`Vertex` / `MidPoint` / `Center`) so the exact `BigPoint` pivot is recomputed at commit, while `centerCv`
+  * (canvas-view) drives the angle math and the skeleton's `rotate(...)` transform. `candidates` are the snap
+  * angles allowed for this centre type (vertex → edge-alignment; midpoint → 180°; symmetric face → 360/k
+  * multiples). As the user drags, `appliedDeg` is the live rotation shown (snapped or free) and `snapped` is
+  * the candidate within tolerance — the angle welded on release via `maybeAddRotatedCopy`.
+  */
+case class RotateCopyDrag(
+    facePoints: List[(FaceId, String)],
+    centerAnchor: Anchor,
+    centerCv: Point,
+    candidates: List[AngleDegree],
+    grabAngle: Radian,
+    appliedDeg: Double,
+    snapped: Option[AngleDegree]
+)
+
 enum Anchor:
 
   case Vertex(vertexId: VertexId)
@@ -77,7 +94,8 @@ enum EditorMode:
 // Tool enumeration. AddPolygon is the default mode (always one mode is active);
 // Inserter has been folded into AddPolygon + AddSubmode.Inside.
 enum Tool:
-  case AddPolygon, ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement, Fan, TranslateCopy
+  case AddPolygon, ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement, Fan, TranslateCopy,
+    RotateCopy
 
 // Sub-mode for AddPolygon. Outside places on perimeter edges; Inside places inside a face
 // (formerly the Inserter tool). Meaningful only when activeTool == AddPolygon.
@@ -401,7 +419,8 @@ case class PreviewState(
     paletteGhost: Option[Vector[Point]],
     paletteSnapHint: Option[PaletteSnapHint],
     previewIsValid: Boolean = true,
-    translateCopyDrag: Option[TranslateCopyDrag] = None
+    translateCopyDrag: Option[TranslateCopyDrag] = None,
+    rotateCopyDrag: Option[RotateCopyDrag] = None
 )
 
 object PreviewState:

@@ -31,6 +31,7 @@ object TessellationCursorStyles:
       case Tool.Measurement         => s"cursor: $measurementCursor;"
       case Tool.Fan                 => s"cursor: $fanCursor;"
       case Tool.TranslateCopy       => "cursor: grab;"
+      case Tool.RotateCopy          => "cursor: grab;"
       case Tool.Eraser              => s"cursor: $eraserCursor;"
       case Tool.AddPolygon          => addSubmode match
           case AddSubmode.Inside  => mode match

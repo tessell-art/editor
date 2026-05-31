@@ -1,30 +1,55 @@
 package io.github.scala_tessella.editor.operations
 
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, BigPoint}
+import io.github.scala_tessella.dcel.geometry.BigPoint.centroid
 import io.github.scala_tessella.dcel.structure.{FaceId, VertexId}
-import io.github.scala_tessella.editor.models.{AddSubmode, EditorConfig, EditorState, Tool, TranslateCopyDrag}
+import io.github.scala_tessella.editor.models.{
+  AddSubmode,
+  Anchor,
+  EditorConfig,
+  EditorState,
+  RotateCopyDrag,
+  Tool,
+  TranslateCopyDrag
+}
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.PaletteDragOperations.screenSvgToCanvasView
-import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.{tilingPointToCanvasView, toPoint}
+import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
+import spire.math.Rational
 
 /** Operations for the **Edit ▸ Add Copy** family — growing a tiling by welding on a copy of itself under a
-  * plane isometry (dcel 0.1.1). Only the **Translate** variant is wired today; rotate / reflect / glide
-  * reflect are reserved for later iterations.
+  * plane isometry (dcel 0.1.1). **Translate** and **Rotate** are wired; reflect / glide reflect are reserved
+  * for later iterations.
   *
-  * Translate is a direct-manipulation gesture: the user drags a dashed skeleton of the whole tiling across
-  * the canvas; the `from` endpoint is the vertex nearest the press and the `to` endpoint snaps to the vertex
-  * nearest the release. Because both endpoints are exact tiling vertices (`vertex.coords`, exact
-  * `BigPoint`s), the translation vector is exact and the copy can coincide with the existing composition —
-  * the precondition `maybeAddTranslatedCopy` needs to accept the weld. The validation pipeline still runs; a
-  * rejected copy surfaces via [[ErrorOperations]].
+  * Both are direct-manipulation gestures driven by [[interactions.MouseEventHandler]] (which suppresses
+  * panning while the tool is active) and rendered as a dashed skeleton overlay.
+  *
+  *   - **Translate**: drag the skeleton; the `from` endpoint is the vertex nearest the press, the `to`
+  *     endpoint snaps to the vertex nearest the release. Both are exact tiling vertices (`vertex.coords`,
+  *     exact `BigPoint`s) so the vector is exact and the copy can coincide exactly.
+  *   - **Rotate**: press near a centre dot (vertex / edge-midpoint / symmetric face-centre), drag around it;
+  *     the rotation snaps to the angles that can weld for that centre type (vertex → edge alignments;
+  *     midpoint → 180°; face centre → 360/k multiples). The exact pivot is recomputed from the anchor at
+  *     commit via `BigPoint.centroid`; the angle is tolerated by the weld so a `Double`-derived value is
+  *     fine.
+  *
+  * Either way the validation pipeline runs and a rejected copy surfaces via [[ErrorOperations]].
   */
 object AddCopyOperations:
 
-  /** Snap radius for the release endpoint, in canvas-view units (≈ 0.4 tiling units). Releasing farther than
-    * this from any vertex cancels the drag rather than snapping to a distant vertex.
+  /** Snap radius for the translate release endpoint, in canvas-view units (≈ 0.4 tiling units). Releasing
+    * farther than this from any vertex cancels the drag rather than snapping to a distant vertex.
     */
   private val snapRadiusCv: Double = 0.4 * EditorConfig.canvasScale
+
+  /** Angular tolerance (degrees) for snapping the rotate drag to a candidate angle. */
+  private val snapAngleToleranceDeg: Double = 10.0
+
+  /** Epsilon (tiling-coord units) for the rotational-symmetry coincidence check. */
+  private val symmetryEps: Double = 1e-6
 
   /** Activates the Translate-copy tool. The tiling's vertices then show as clipping-point dots; the user
     * drags the skeleton and releases on a vertex to weld a translated copy. No-op while processing or empty.
@@ -44,7 +69,7 @@ object AddCopyOperations:
     EditorState.toolState.update(_.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Outside))
 
   private def clearDrag(): Unit =
-    EditorState.previewState.update(_.copy(translateCopyDrag = None))
+    EditorState.previewState.update(_.copy(translateCopyDrag = None, rotateCopyDrag = None))
 
   /** Distinct tiling vertices as `(id, canvas-view point)`, for dot rendering and snap hit-testing. */
   def vertexAnchorsCv(tiling: TilingDCEL): List[(VertexId, Point)] =
@@ -145,4 +170,200 @@ object AddCopyOperations:
       )(
         onSuccess = TessellationOperations.clearStaleAfterMutation(),
         onFailure = err => ErrorOperations.showError(s"Cannot add translated copy: ${err.message}")
+      )
+
+  // ---- Rotate ---------------------------------------------------------------------------------------------
+
+  /** Activates the Rotate-copy tool. Rotation centres (vertices, edge midpoints, symmetric face centres) show
+    * as dots; the user presses one and drags around it to set the angle. No-op while processing or empty.
+    */
+  def enterRotateCopyMode(): Unit =
+    ifNotProcessing:
+      if !EditorState.tessellationState.now().currentTiling.isEmpty then
+        MeasurementOperations.clearAll()
+        clearDrag()
+        EditorState.toolState.update(_.copy(activeTool = Tool.RotateCopy))
+
+  /** Candidate rotation centres as `(anchor, canvas-view point)`: every vertex, every edge midpoint, and the
+    * centre of each face that has rotational symmetry (order ≥ 2). For dot rendering and press hit-testing.
+    */
+  def rotationCentres(tiling: TilingDCEL): List[(Anchor, Point)] =
+    if tiling.isEmpty then Nil
+    else
+      val faces           = tiling.innerFacesVertices
+      val vertexCentres   =
+        faces
+          .flatMap((_, vs) => vs.map(v => v.id -> v.coords.toPoint))
+          .toMap
+          .map((id, p) => (Anchor.Vertex(id): Anchor) -> tilingPointToCanvasView(p))
+          .toList
+      val midpointCentres =
+        faces
+          .flatMap: (_, vs) =>
+            vs.toVector.slidingO(2).toList.map: pair =>
+
+              val (a, b) = (pair(0), pair(1))
+              val mid    = LineSegment(a.coords.toPoint, b.coords.toPoint).midPoint
+              Set(a.id, b.id) -> ((Anchor.MidPoint(a.id, b.id): Anchor) -> tilingPointToCanvasView(mid))
+          .toMap
+          .values
+          .toList
+      val faceCentres     =
+        faces.flatMap: (fid, vs) =>
+
+          val pts = vs.map(_.coords.toPoint)
+          Option.when(faceSymmetryOrder(pts) >= 2)(
+            (Anchor.Center(fid): Anchor) -> tilingPointToCanvasView(centroidOf(pts))
+          )
+      vertexCentres ++ midpointCentres ++ faceCentres
+
+  /** Largest `k` dividing `n` such that rotating the vertex ring by 360/k about its centroid maps the polygon
+    * onto itself (coincidence within `symmetryEps`). Uses coordinates, so it captures side lengths too (a
+    * rectangle → 2, a square → 4, an equilateral triangle → 3, a scalene shape → 1). `1` means no rotational
+    * symmetry.
+    */
+  def faceSymmetryOrder(faceVertices: List[Point]): Int =
+    val n = faceVertices.size
+    if n < 2 then 1
+    else
+      val c                         = centroidOf(faceVertices)
+      def mapsOnto(k: Int): Boolean =
+        val rotated = faceVertices.map(_.rotateAround(c, Radian.fromDegrees(360.0 / k)))
+        rotated.forall(rp => faceVertices.exists(_.distanceTo(rp) < symmetryEps))
+      (n to 2 by -1).find(k => n % k == 0 && mapsOnto(k)).getOrElse(1)
+
+  /** Snap angles allowed for a rotation centre, by anchor type (see object doc). */
+  private def candidateAngles(tiling: TilingDCEL, anchor: Anchor): List[AngleDegree] =
+    anchor match
+      case Anchor.MidPoint(_, _) =>
+        List(AngleDegree(180))
+      case Anchor.Center(fid)    =>
+        val pts = tiling.findInnerFaceVertices(fid).toOption.map(_.map(_.coords.toPoint)).getOrElse(Nil)
+        val k   = faceSymmetryOrder(pts)
+        (1 until k).toList.map(m => AngleDegree(360 * m) / k)
+      case Anchor.Vertex(id)     =>
+        val dirs  = incidentEdgeAnglesDeg(tiling, id)
+        val diffs =
+          for
+            a <- dirs
+            b <- dirs
+            if a != b
+          yield normalizeSignedDeg(b - a)
+        diffs
+          .filter(d => math.abs(d) > 0.5)
+          .distinctBy(d => math.round(d * 1000))
+          .map(d => AngleDegree(Rational(d)))
+
+  /** Polar angles (degrees) of every edge incident to the vertex, gathered from the face rings it belongs to,
+    * deduped within a small tolerance.
+    */
+  private def incidentEdgeAnglesDeg(tiling: TilingDCEL, vertexId: VertexId): List[Double] =
+    val angles =
+      tiling.innerFacesVertices.flatMap: (_, vs) =>
+
+        val ring = vs.toVector
+        val n    = ring.size
+        ring.indices.filter(i => ring(i).id == vertexId).flatMap: i =>
+
+          val centre     = ring(i).coords.toPoint
+          val neighbours = List(ring((i - 1 + n) % n), ring((i + 1) % n))
+          neighbours.map(nb => centre.angleTo(nb.coords.toPoint).toDegrees)
+    angles.distinctBy(a => math.round(a * 1000)).toList
+
+  /** Exact rotation pivot recomputed from the centre anchor — vertex coord, edge-midpoint, or face centroid.
+    */
+  private def centreBigPoint(tiling: TilingDCEL, anchor: Anchor): Option[BigPoint] =
+    anchor match
+      case Anchor.Vertex(id)     => tiling.findVertex(id).toOption.map(_.coords)
+      case Anchor.MidPoint(a, b) =>
+        for
+          va <- tiling.findVertex(a).toOption
+          vb <- tiling.findVertex(b).toOption
+        yield List(va.coords, vb.coords).centroid
+      case Anchor.Center(fid)    =>
+        tiling.findInnerFaceVertices(fid).toOption.map(vs => vs.map(_.coords).centroid)
+
+  private def centroidOf(points: List[Point]): Point =
+    if points.isEmpty then Point.origin
+    else points.reduce(_ + _) / points.size.toDouble
+
+  /** Reduce a degree value to `(-180, 180]`. */
+  private def normalizeSignedDeg(d: Double): Double =
+    val m = ((d % 360) + 360) % 360
+    if m > 180.0 then m - 360.0 else m
+
+  private def signedDeg(angle: AngleDegree): Double = normalizeSignedDeg(angle.toRational.toDouble)
+
+  private def circularDistanceDeg(a: Double, b: Double): Double = math.abs(normalizeSignedDeg(a - b))
+
+  private def nearestCentre(target: Point, centres: List[(Anchor, Point)]): Option[(Anchor, Point)] =
+    centres.minByOption { case (_, p) =>
+      p.distanceTo(target)
+    }
+
+  /** Begin a rotate drag: pick the centre anchor nearest the press, snapshot the skeleton, and precompute the
+    * candidate snap angles for that centre.
+    */
+  def beginRotateDrag(clientX: Double, clientY: Double): Unit =
+    val tiling = EditorState.tessellationState.now().currentTiling
+    if !tiling.isEmpty then
+      clientToCanvasView(clientX, clientY).foreach: pressCv =>
+        nearestCentre(pressCv, rotationCentres(tiling)).foreach: (anchor, centerCv) =>
+          EditorState.previewState.update(
+            _.copy(rotateCopyDrag =
+              Some(
+                RotateCopyDrag(
+                  facePoints = precomputeFacePoints(tiling),
+                  centerAnchor = anchor,
+                  centerCv = centerCv,
+                  candidates = candidateAngles(tiling, anchor),
+                  grabAngle = centerCv.angleTo(pressCv),
+                  appliedDeg = 0.0,
+                  snapped = None
+                )
+              )
+            )
+          )
+
+  /** Update the live rotate drag: compute the free (clockwise-positive) angle from the grab, then snap to the
+    * nearest candidate within tolerance. The skeleton renders at the snapped angle (or free when unsnapped).
+    */
+  def updateRotateDrag(clientX: Double, clientY: Double): Unit =
+    EditorState.previewState.now().rotateCopyDrag.foreach: drag =>
+      clientToCanvasView(clientX, clientY).foreach: currentCv =>
+
+        val freeDeg            = drag.centerCv.angleTo(currentCv).normalizeDeltaAngle(drag.grabAngle).toDegrees
+        val best               =
+          drag.candidates
+            .map(c => c -> signedDeg(c))
+            .minByOption { case (_, cd) =>
+              circularDistanceDeg(freeDeg, cd)
+            }
+            .filter { case (_, cd) =>
+              circularDistanceDeg(freeDeg, cd) <= snapAngleToleranceDeg
+            }
+        val (snapped, applied) = best match
+          case Some((c, cd)) => (Some(c), cd)
+          case None          => (None, freeDeg)
+        EditorState.previewState.update(
+          _.copy(rotateCopyDrag = Some(drag.copy(appliedDeg = applied, snapped = snapped)))
+        )
+
+  /** Finish the rotate drag: if snapped to a candidate angle, weld a copy rotated about the centre's exact
+    * pivot. Otherwise cancel. The mode stays active for adding further copies.
+    */
+  def endRotateDrag(): Unit =
+    val dragOpt = EditorState.previewState.now().rotateCopyDrag
+    clearDrag()
+    for
+      drag   <- dragOpt
+      angle  <- drag.snapped
+      tiling  = EditorState.tessellationState.now().currentTiling
+      centre <- centreBigPoint(tiling, drag.centerAnchor)
+    do
+      OperationRunner.runTilingOp(() =>
+        OperationRunner.safely("Error adding rotated copy")(tiling.maybeAddRotatedCopy(centre, angle))
+      )(
+        onSuccess = TessellationOperations.clearStaleAfterMutation(),
+        onFailure = err => ErrorOperations.showError(s"Cannot add rotated copy: ${err.message}")
       )
