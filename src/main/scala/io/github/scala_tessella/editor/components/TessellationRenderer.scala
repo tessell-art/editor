@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.models.{
-  Anchor, DoublingAnimation, EditorState, FanAnimation, MirrorAnimation, RotateCopyDrag, Tool,
+  Anchor, DoublingAnimation, EditorState, FanAnimation, MirrorAnimation, ReflectCopyDrag, RotateCopyDrag,
+  Tool,
   TranslateCopyDrag
 }
 import io.github.scala_tessella.editor.operations.AddCopyOperations
@@ -171,6 +172,23 @@ object TessellationRenderer:
       EditorState.previewState.signal.map(_.rotateCopyDrag).distinct
         .map(_.map(renderRotateSkeleton))
 
+    // Add Copy ▸ Reflect: axis-anchor dots while the tool is active; axis point A and the snapped B enlarged.
+    val reflectCopyAnchors = children <--
+      EditorState.toolState.signal.map(_.activeTool == Tool.ReflectCopy).distinct
+        .combineWith(EditorState.previewState.signal.map(_.reflectCopyDrag).distinct)
+        .map:
+          case (true, dragOpt) =>
+            val picked: Set[Anchor] =
+              dragOpt.toSet.flatMap(d => Set(d.axisAnchor) ++ d.snapTarget.map(_._1))
+            AddCopyOperations.reflectAnchors(tiling).map: (anchor, p) =>
+              renderCentreDot(p, anchor, picked.contains(anchor))
+          case _               => Nil
+
+    // The dashed skeleton mirrored across the live axis A–B, with a spanning axis guide line.
+    val reflectCopySkeleton = child.maybe <--
+      EditorState.previewState.signal.map(_.reflectCopyDrag).distinct
+        .map(_.flatMap(renderReflectSkeleton))
+
     val measurementSignals =
       EditorState.measurementState.signal.map(_.measurementStartPoint).distinct
         .combineWith(
@@ -234,6 +252,8 @@ object TessellationRenderer:
       translateCopySkeleton,
       rotateCopyCentres,
       rotateCopySkeleton,
+      reflectCopyAnchors,
+      reflectCopySkeleton,
       measurementStartPointDisplay,
       measurementEndPointDisplay,
       measurementLineDisplay,
@@ -318,6 +338,58 @@ object TessellationRenderer:
         s"${math.round(drag.appliedDeg)}°"
       )
     )
+
+  /** How far the mirror-axis guide line is extended past the picked anchors, in canvas-view units. */
+  private val axisGuideExtent: Double = 5000.0
+
+  /** Dashed skeleton reflected across the live axis A–B, plus the spanning axis guide line. `None` while the
+    * axis is degenerate (B still coincident with A). The reflection is applied as an SVG `matrix(...)`
+    * derived from the axis: across a line through A at angle θ, the linear part is
+    * `[cos2θ sin2θ; sin2θ −cos2θ]`.
+    */
+  private def renderReflectSkeleton(drag: ReflectCopyDrag): Option[Element] =
+    val a   = drag.axisACv
+    val b   = drag.axisBCv
+    val dx  = b.x - a.x
+    val dy  = b.y - a.y
+    val len = math.hypot(dx, dy)
+    if len < 1e-6 then None
+    else
+      val theta2           = 2.0 * a.angleTo(b).toDouble
+      val cos2             = math.cos(theta2)
+      val sin2             = math.sin(theta2)
+      val (ma, mb, mc, md) = (cos2, sin2, sin2, -cos2)
+      val me               = a.x - (ma * a.x + mc * a.y)
+      val mf               = a.y - (mb * a.x + md * a.y)
+      val (ux, uy)         = (dx / len, dy / len)
+      Some(
+        svg.g(
+          svg.pointerEvents := "none",
+          svg.className     := "reflect-copy-skeleton",
+          svg.line(
+            svg.x1              := (a.x - ux * axisGuideExtent).toString,
+            svg.y1              := (a.y - uy * axisGuideExtent).toString,
+            svg.x2              := (a.x + ux * axisGuideExtent).toString,
+            svg.y2              := (a.y + uy * axisGuideExtent).toString,
+            svg.stroke <-- EditorState.overlayPreviewStrokeColor,
+            svg.strokeWidth     := "1",
+            svg.strokeDashArray := "4,4",
+            svg.opacity         := "0.7"
+          ),
+          svg.g(
+            svg.transform       := s"matrix($ma $mb $mc $md $me $mf)",
+            drag.facePoints.map: (_, pointsStr) =>
+              svg.polygon(
+                svg.points          := pointsStr,
+                svg.fill            := "none",
+                svg.stroke <-- EditorState.overlayPreviewStrokeColor,
+                svg.strokeWidth     := "2",
+                svg.strokeDashArray := "5,5",
+                svg.opacity         := "0.9"
+              )
+          )
+        )
+      )
 
   def renderFanAnimation(animation: FanAnimation): Element =
     TessellationAnimationRenderer.renderFanAnimation(

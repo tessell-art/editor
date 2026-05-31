@@ -161,6 +161,13 @@ object AppState:
   def enterRotateCopyMode(): Unit =
     AddCopyOperations.enterRotateCopyMode()
 
+  /** Activates the Add Copy ▸ Reflect tool. Anchors (vertices, edge midpoints, face centres) show as dots;
+    * the user presses one and drags to another to define a mirror axis, releasing to weld a reflected copy.
+    * Does nothing if processing or if the tiling is empty.
+    */
+  def enterReflectCopyMode(): Unit =
+    AddCopyOperations.enterReflectCopyMode()
+
   /** Activates the Measurement tool. The user then clicks a polygon to expose its clickable points (vertices,
     * edge midpoints, center). Does nothing if processing or if the tiling is empty.
     */

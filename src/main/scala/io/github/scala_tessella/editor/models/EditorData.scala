@@ -79,6 +79,21 @@ case class RotateCopyDrag(
     snapped: Option[AngleDegree]
 )
 
+/** In-flight "Add Copy ▸ Reflect" drag. The mirror axis is the line through two tiling anchors: `axisAnchor`
+  * (point A, fixed at press) and the snapped second anchor. `axisACv`/`axisBCv` are the canvas-view endpoints
+  * driving the live reflected-skeleton matrix and the spanning axis guide line (B follows the cursor,
+  * snapping to the nearest anchor). On release with a `snapTarget`, the copy is welded across line A–B via
+  * `maybeAddMirroredCopy`, with exact `BigPoint`s recomputed from the two anchors. Reflection across a line
+  * through rational points is exact, so a snapped axis yields exact coincidence.
+  */
+case class ReflectCopyDrag(
+    facePoints: List[(FaceId, String)],
+    axisAnchor: Anchor,
+    axisACv: Point,
+    axisBCv: Point,
+    snapTarget: Option[(Anchor, Point)]
+)
+
 enum Anchor:
 
   case Vertex(vertexId: VertexId)
@@ -95,7 +110,7 @@ enum EditorMode:
 // Inserter has been folded into AddPolygon + AddSubmode.Inside.
 enum Tool:
   case AddPolygon, ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement, Fan, TranslateCopy,
-    RotateCopy
+    RotateCopy, ReflectCopy
 
 // Sub-mode for AddPolygon. Outside places on perimeter edges; Inside places inside a face
 // (formerly the Inserter tool). Meaningful only when activeTool == AddPolygon.
@@ -420,7 +435,8 @@ case class PreviewState(
     paletteSnapHint: Option[PaletteSnapHint],
     previewIsValid: Boolean = true,
     translateCopyDrag: Option[TranslateCopyDrag] = None,
-    rotateCopyDrag: Option[RotateCopyDrag] = None
+    rotateCopyDrag: Option[RotateCopyDrag] = None,
+    reflectCopyDrag: Option[ReflectCopyDrag] = None
 )
 
 object PreviewState:

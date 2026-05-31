@@ -174,6 +174,7 @@ object Translations:
     "modeBadge.fan"           -> "Fan",
     "modeBadge.translateCopy" -> "Translate copy",
     "modeBadge.rotateCopy"    -> "Rotate copy",
+    "modeBadge.reflectCopy"   -> "Reflect copy",
 
     // Tiling info panel
     "info.title"               -> "Tiling info",
@@ -542,6 +543,7 @@ object Translations:
     "modeBadge.fan"           -> "Abanico",
     "modeBadge.translateCopy" -> "Trasladar copia",
     "modeBadge.rotateCopy"    -> "Girar copia",
+    "modeBadge.reflectCopy"   -> "Reflejar copia",
 
     // Tiling info panel
     "info.title"               -> "Información de la teselación",

@@ -137,7 +137,7 @@ object KeyboardEventHandler:
       else if event.key == "Escape" then
         event.preventDefault()
         val tool = EditorState.toolState.now().activeTool
-        if tool == Tool.TranslateCopy || tool == Tool.RotateCopy then
+        if tool == Tool.TranslateCopy || tool == Tool.RotateCopy || tool == Tool.ReflectCopy then
           AddCopyOperations.exitMode()
         else
           clearAllSelections()

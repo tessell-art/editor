@@ -9,6 +9,7 @@ import io.github.scala_tessella.editor.models.{
   Anchor,
   EditorConfig,
   EditorState,
+  ReflectCopyDrag,
   RotateCopyDrag,
   Tool,
   TranslateCopyDrag
@@ -69,7 +70,9 @@ object AddCopyOperations:
     EditorState.toolState.update(_.copy(activeTool = Tool.AddPolygon, addSubmode = AddSubmode.Outside))
 
   private def clearDrag(): Unit =
-    EditorState.previewState.update(_.copy(translateCopyDrag = None, rotateCopyDrag = None))
+    EditorState.previewState.update(
+      _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None)
+    )
 
   /** Distinct tiling vertices as `(id, canvas-view point)`, for dot rendering and snap hit-testing. */
   def vertexAnchorsCv(tiling: TilingDCEL): List[(VertexId, Point)] =
@@ -184,20 +187,22 @@ object AddCopyOperations:
         clearDrag()
         EditorState.toolState.update(_.copy(activeTool = Tool.RotateCopy))
 
-  /** Candidate rotation centres as `(anchor, canvas-view point)`: every vertex, every edge midpoint, and the
-    * centre of each face that has rotational symmetry (order ≥ 2). For dot rendering and press hit-testing.
+  /** All tiling anchors as `(anchor, canvas-view point)`: every distinct vertex, every distinct edge
+    * midpoint, and face centres. When `symmetricFacesOnly`, face centres are restricted to faces with
+    * rotational symmetry (order ≥ 2) — the only ones usable as a rotation centre; reflection axes accept any
+    * face centre. For dot rendering and press hit-testing.
     */
-  def rotationCentres(tiling: TilingDCEL): List[(Anchor, Point)] =
+  def anchorsCv(tiling: TilingDCEL, symmetricFacesOnly: Boolean): List[(Anchor, Point)] =
     if tiling.isEmpty then Nil
     else
       val faces           = tiling.innerFacesVertices
-      val vertexCentres   =
+      val vertexAnchors   =
         faces
           .flatMap((_, vs) => vs.map(v => v.id -> v.coords.toPoint))
           .toMap
           .map((id, p) => (Anchor.Vertex(id): Anchor) -> tilingPointToCanvasView(p))
           .toList
-      val midpointCentres =
+      val midpointAnchors =
         faces
           .flatMap: (_, vs) =>
             vs.toVector.slidingO(2).toList.map: pair =>
@@ -208,14 +213,22 @@ object AddCopyOperations:
           .toMap
           .values
           .toList
-      val faceCentres     =
+      val faceAnchors     =
         faces.flatMap: (fid, vs) =>
 
           val pts = vs.map(_.coords.toPoint)
-          Option.when(faceSymmetryOrder(pts) >= 2)(
+          Option.when(!symmetricFacesOnly || faceSymmetryOrder(pts) >= 2)(
             (Anchor.Center(fid): Anchor) -> tilingPointToCanvasView(centroidOf(pts))
           )
-      vertexCentres ++ midpointCentres ++ faceCentres
+      vertexAnchors ++ midpointAnchors ++ faceAnchors
+
+  /** Rotation centres: vertices, edge midpoints, and centres of rotationally-symmetric faces. */
+  def rotationCentres(tiling: TilingDCEL): List[(Anchor, Point)] =
+    anchorsCv(tiling, symmetricFacesOnly = true)
+
+  /** Reflection axis anchors: every vertex, edge midpoint, and face centre (any line is valid). */
+  def reflectAnchors(tiling: TilingDCEL): List[(Anchor, Point)] =
+    anchorsCv(tiling, symmetricFacesOnly = false)
 
   /** Largest `k` dividing `n` such that rotating the vertex ring by 360/k about its centroid maps the polygon
     * onto itself (coincidence within `symmetryEps`). Uses coordinates, so it captures side lengths too (a
@@ -270,9 +283,10 @@ object AddCopyOperations:
           neighbours.map(nb => centre.angleTo(nb.coords.toPoint).toDegrees)
     angles.distinctBy(a => math.round(a * 1000)).toList
 
-  /** Exact rotation pivot recomputed from the centre anchor — vertex coord, edge-midpoint, or face centroid.
+  /** Exact point recomputed from an anchor — vertex coord, edge-midpoint, or face centroid. Used as the
+    * rotation pivot and as the reflection axis endpoints.
     */
-  private def centreBigPoint(tiling: TilingDCEL, anchor: Anchor): Option[BigPoint] =
+  private def anchorBigPoint(tiling: TilingDCEL, anchor: Anchor): Option[BigPoint] =
     anchor match
       case Anchor.Vertex(id)     => tiling.findVertex(id).toOption.map(_.coords)
       case Anchor.MidPoint(a, b) =>
@@ -359,11 +373,86 @@ object AddCopyOperations:
       drag   <- dragOpt
       angle  <- drag.snapped
       tiling  = EditorState.tessellationState.now().currentTiling
-      centre <- centreBigPoint(tiling, drag.centerAnchor)
+      centre <- anchorBigPoint(tiling, drag.centerAnchor)
     do
       OperationRunner.runTilingOp(() =>
         OperationRunner.safely("Error adding rotated copy")(tiling.maybeAddRotatedCopy(centre, angle))
       )(
         onSuccess = TessellationOperations.clearStaleAfterMutation(),
         onFailure = err => ErrorOperations.showError(s"Cannot add rotated copy: ${err.message}")
+      )
+
+  // ---- Reflect --------------------------------------------------------------------------------------------
+
+  /** Activates the Reflect-copy tool. Anchors (vertices, edge midpoints, face centres) show as dots; the user
+    * presses one (axis point A) and drags to another (axis point B) to define the mirror line. No-op while
+    * processing or empty.
+    */
+  def enterReflectCopyMode(): Unit =
+    ifNotProcessing:
+      if !EditorState.tessellationState.now().currentTiling.isEmpty then
+        MeasurementOperations.clearAll()
+        clearDrag()
+        EditorState.toolState.update(_.copy(activeTool = Tool.ReflectCopy))
+
+  /** Begin a reflect drag: axis point A is the anchor nearest the press; B starts coincident with A
+    * (degenerate, no preview) until the user drags.
+    */
+  def beginReflectDrag(clientX: Double, clientY: Double): Unit =
+    val tiling = EditorState.tessellationState.now().currentTiling
+    if !tiling.isEmpty then
+      clientToCanvasView(clientX, clientY).foreach: pressCv =>
+        nearestCentre(pressCv, reflectAnchors(tiling)).foreach: (anchor, aCv) =>
+          EditorState.previewState.update(
+            _.copy(reflectCopyDrag =
+              Some(
+                ReflectCopyDrag(
+                  facePoints = precomputeFacePoints(tiling),
+                  axisAnchor = anchor,
+                  axisACv = aCv,
+                  axisBCv = aCv,
+                  snapTarget = None
+                )
+              )
+            )
+          )
+
+  /** Update the live reflect drag: axis point B snaps to the nearest anchor (≠ A) within the snap radius; the
+    * skeleton mirrors across line A–B. Off any anchor, B follows the cursor (preview only, no commit).
+    */
+  def updateReflectDrag(clientX: Double, clientY: Double): Unit =
+    EditorState.previewState.now().reflectCopyDrag.foreach: drag =>
+      clientToCanvasView(clientX, clientY).foreach: currentCv =>
+
+        val tiling     = EditorState.tessellationState.now().currentTiling
+        val others     = reflectAnchors(tiling).filterNot { case (anchor, _) =>
+          anchor == drag.axisAnchor
+        }
+        val snapTarget =
+          nearestCentre(currentCv, others).filter { case (_, p) =>
+            p.distanceTo(currentCv) <= snapRadiusCv
+          }
+        val bCv        = snapTarget.map((_, p) => p).getOrElse(currentCv)
+        EditorState.previewState.update(
+          _.copy(reflectCopyDrag = Some(drag.copy(axisBCv = bCv, snapTarget = snapTarget)))
+        )
+
+  /** Finish the reflect drag: if snapped to a second anchor, weld a copy mirrored across the exact line
+    * through the two anchors. Otherwise cancel. The mode stays active for adding further copies.
+    */
+  def endReflectDrag(): Unit =
+    val dragOpt = EditorState.previewState.now().reflectCopyDrag
+    clearDrag()
+    for
+      drag         <- dragOpt
+      (bAnchor, _) <- drag.snapTarget
+      tiling        = EditorState.tessellationState.now().currentTiling
+      a            <- anchorBigPoint(tiling, drag.axisAnchor)
+      b            <- anchorBigPoint(tiling, bAnchor)
+    do
+      OperationRunner.runTilingOp(() =>
+        OperationRunner.safely("Error adding mirrored copy")(tiling.maybeAddMirroredCopy(a, b))
+      )(
+        onSuccess = TessellationOperations.clearStaleAfterMutation(),
+        onFailure = err => ErrorOperations.showError(s"Cannot add mirrored copy: ${err.message}")
       )
