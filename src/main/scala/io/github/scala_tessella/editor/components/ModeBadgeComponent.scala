@@ -29,6 +29,10 @@ object ModeBadgeComponent:
       case Tool.Eraser              => "modeBadge.eraser"
       case Tool.Measurement         => "modeBadge.measurement"
       case Tool.Fan                 => "modeBadge.fan"
+      case Tool.TranslateCopy       => "modeBadge.translateCopy"
+      case Tool.RotateCopy          => "modeBadge.rotateCopy"
+      case Tool.ReflectCopy         => "modeBadge.reflectCopy"
+      case Tool.GlideReflectCopy    => "modeBadge.glideReflectCopy"
 
   private val labelSignal: Signal[String] =
     EditorState.toolState.signal.map(_.activeTool).distinct
@@ -45,6 +49,10 @@ object ModeBadgeComponent:
 
   private def resetToDefault(): Unit =
     AppState.clearMeasurements()
+    // Cancel any in-progress Add-Copy skeleton drag (translate or rotate) when escaping to the default mode.
+    EditorState.previewState.update(
+      _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None)
+    )
     EditorState.toolState.update(_.copy(
       activeTool = Tool.AddPolygon,
       addSubmode = AddSubmode.Outside

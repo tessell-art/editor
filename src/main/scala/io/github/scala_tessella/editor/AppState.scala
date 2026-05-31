@@ -147,6 +147,33 @@ object AppState:
         clearMeasurements()
         toolState.update(_.copy(activeTool = Tool.Fan))
 
+  /** Activates the Add Copy ▸ Translate tool. The tiling's vertices then show as clipping-point dots; the
+    * user drags the dashed skeleton and releases on a vertex to weld a translated copy. Does nothing if
+    * processing or if the tiling is empty.
+    */
+  def enterTranslateCopyMode(): Unit =
+    AddCopyOperations.enterTranslateCopyMode()
+
+  /** Activates the Add Copy ▸ Rotate tool. Rotation centres (vertices, edge midpoints, symmetric face
+    * centres) show as dots; the user presses one and drags around it to set the angle, releasing on a snap to
+    * weld a rotated copy. Does nothing if processing or if the tiling is empty.
+    */
+  def enterRotateCopyMode(): Unit =
+    AddCopyOperations.enterRotateCopyMode()
+
+  /** Activates the Add Copy ▸ Reflect tool. Anchors (vertices, edge midpoints, face centres) show as dots;
+    * the user presses one and drags to another to define a mirror axis, releasing to weld a reflected copy.
+    * Does nothing if processing or if the tiling is empty.
+    */
+  def enterReflectCopyMode(): Unit =
+    AddCopyOperations.enterReflectCopyMode()
+
+  /** Activates the Add Copy ▸ Glide reflect tool. Same two-anchor axis gesture as Reflect, but the copy is
+    * also slid along the axis by the vector B − A. Does nothing if processing or if the tiling is empty.
+    */
+  def enterGlideReflectCopyMode(): Unit =
+    AddCopyOperations.enterGlideReflectCopyMode()
+
   /** Activates the Measurement tool. The user then clicks a polygon to expose its clickable points (vertices,
     * edge midpoints, center). Does nothing if processing or if the tiling is empty.
     */

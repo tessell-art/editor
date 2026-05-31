@@ -30,6 +30,10 @@ object TessellationCursorStyles:
       case Tool.SelectByColor       => s"cursor: $selectByColorCursor;"
       case Tool.Measurement         => s"cursor: $measurementCursor;"
       case Tool.Fan                 => s"cursor: $fanCursor;"
+      case Tool.TranslateCopy       => "cursor: grab;"
+      case Tool.RotateCopy          => "cursor: grab;"
+      case Tool.ReflectCopy         => "cursor: crosshair;"
+      case Tool.GlideReflectCopy    => "cursor: crosshair;"
       case Tool.Eraser              => s"cursor: $eraserCursor;"
       case Tool.AddPolygon          => addSubmode match
           case AddSubmode.Inside  => mode match

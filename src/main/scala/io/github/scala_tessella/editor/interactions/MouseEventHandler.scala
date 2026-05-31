@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Tool}
-import io.github.scala_tessella.editor.operations.{EraserProximityQuery, ViewOperations}
+import io.github.scala_tessella.editor.operations.{AddCopyOperations, EraserProximityQuery, ViewOperations}
 import io.github.scala_tessella.editor.utils.geo.Point
 import org.scalajs.dom.{MouseEvent, WheelEvent}
 
@@ -31,17 +31,33 @@ object MouseEventHandler:
 
   def handleMouseDown(event: MouseEvent): Unit =
     event.preventDefault()
-    // Snapshot once
-    EditorState.uiState.update(_.copy(isDragging = true))
-    val point: Point = Point(event.clientX, event.clientY)
-    EditorState.uiState.update(_.copy(dragStart = Some(point)))
+    // Add-Copy tools own the drag: grab the skeleton instead of panning the canvas.
+    if EditorState.toolState.now().activeTool == Tool.TranslateCopy then
+      AddCopyOperations.beginDrag(event.clientX, event.clientY)
+    else if EditorState.toolState.now().activeTool == Tool.RotateCopy then
+      AddCopyOperations.beginRotateDrag(event.clientX, event.clientY)
+    else if EditorState.toolState.now().activeTool == Tool.ReflectCopy then
+      AddCopyOperations.beginReflectDrag(event.clientX, event.clientY)
+    else if EditorState.toolState.now().activeTool == Tool.GlideReflectCopy then
+      AddCopyOperations.beginGlideReflectDrag(event.clientX, event.clientY)
+    else
+      // Snapshot once
+      EditorState.uiState.update(_.copy(isDragging = true))
+      val point: Point = Point(event.clientX, event.clientY)
+      EditorState.uiState.update(_.copy(dragStart = Some(point)))
 
   def handleMouseMove(event: MouseEvent): Unit =
     // Snapshot once per event
     val dragging     = EditorState.uiState.now().isDragging
     val dragStartOpt = EditorState.uiState.now().dragStart
 
-    if dragging then
+    if EditorState.previewState.now().translateCopyDrag.isDefined then
+      AddCopyOperations.updateDrag(event.clientX, event.clientY)
+    else if EditorState.previewState.now().rotateCopyDrag.isDefined then
+      AddCopyOperations.updateRotateDrag(event.clientX, event.clientY)
+    else if EditorState.previewState.now().reflectCopyDrag.isDefined then
+      AddCopyOperations.updateReflectDrag(event.clientX, event.clientY)
+    else if dragging then
       dragStartOpt.foreach { start =>
 
         val eventPoint   = Point(event.clientX, event.clientY)
@@ -58,6 +74,12 @@ object MouseEventHandler:
       EraserProximityQuery.updateNearbyPoints(event.clientX, event.clientY, isTouch = false)
 
   def handleMouseUp(event: MouseEvent): Unit =
+    if EditorState.previewState.now().translateCopyDrag.isDefined then
+      AddCopyOperations.endDrag()
+    else if EditorState.previewState.now().rotateCopyDrag.isDefined then
+      AddCopyOperations.endRotateDrag()
+    else if EditorState.previewState.now().reflectCopyDrag.isDefined then
+      AddCopyOperations.endReflectDrag()
     // Clear once
     EditorState.uiState.update(_.copy(isDragging = false))
     EditorState.uiState.update(_.copy(dragStart = None))

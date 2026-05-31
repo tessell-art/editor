@@ -3,9 +3,9 @@ package io.github.scala_tessella.editor.interactions
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.AppState
-import io.github.scala_tessella.editor.models.{EditorConfig, EditorState}
+import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
-import io.github.scala_tessella.editor.operations.ViewOperations
+import io.github.scala_tessella.editor.operations.{AddCopyOperations, ViewOperations}
 import io.github.scala_tessella.editor.utils.file.SvgExporter
 import io.github.scala_tessella.editor.operations.UndoManager
 import org.scalajs.dom
@@ -136,7 +136,13 @@ object KeyboardEventHandler:
           SvgExporter.saveTilingToSVG()
       else if event.key == "Escape" then
         event.preventDefault()
-        clearAllSelections()
+        val tool = EditorState.toolState.now().activeTool
+        if tool == Tool.TranslateCopy || tool == Tool.RotateCopy || tool == Tool.ReflectCopy ||
+          tool == Tool.GlideReflectCopy
+        then
+          AddCopyOperations.exitMode()
+        else
+          clearAllSelections()
       else if event.key == "Delete" || event.key == "Backspace" then
         event.preventDefault()
         // Future deletion logic can be added here

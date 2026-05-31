@@ -45,6 +45,58 @@ case class MirrorAnimation(
     durationMs: Int
 )
 
+/** In-flight "Add Copy ▸ Translate" drag. While the user drags the dashed skeleton of the whole tiling,
+  * `facePoints` (canvas-view polygon strings, snapshot at drag start) are re-rendered translated by `deltaCv`
+  * (a free, unsnapped canvas-view offset = current pointer − `grabPointCv`, so the skeleton tracks the cursor
+  * 1:1). `sourceVertexId`/`sourcePointCv` is the vertex nearest the press — the eventual translation's
+  * `from`. `snapTarget` is the vertex nearest the current candidate (`sourcePointCv + deltaCv`) within the
+  * snap radius, highlighted live; on release it becomes the `to` endpoint. Both endpoints resolve to exact
+  * `BigPoint` vertex coords so the welded copy can coincide exactly.
+  */
+case class TranslateCopyDrag(
+    facePoints: List[(FaceId, String)],
+    sourceVertexId: VertexId,
+    sourcePointCv: Point,
+    grabPointCv: Point,
+    deltaCv: Point,
+    snapTarget: Option[(VertexId, Point)]
+)
+
+/** In-flight "Add Copy ▸ Rotate" drag. The user pressed near a centre dot — `centerAnchor` identifies it
+  * (`Vertex` / `MidPoint` / `Center`) so the exact `BigPoint` pivot is recomputed at commit, while `centerCv`
+  * (canvas-view) drives the angle math and the skeleton's `rotate(...)` transform. `candidates` are the snap
+  * angles allowed for this centre type (vertex → edge-alignment; midpoint → 180°; symmetric face → 360/k
+  * multiples). As the user drags, `appliedDeg` is the live rotation shown (snapped or free) and `snapped` is
+  * the candidate within tolerance — the angle welded on release via `maybeAddRotatedCopy`.
+  */
+case class RotateCopyDrag(
+    facePoints: List[(FaceId, String)],
+    centerAnchor: Anchor,
+    centerCv: Point,
+    candidates: List[AngleDegree],
+    grabAngle: Radian,
+    appliedDeg: Double,
+    snapped: Option[AngleDegree]
+)
+
+/** In-flight "Add Copy ▸ Reflect" (or **Glide reflect** when `glide`) drag. The mirror axis is the line
+  * through two tiling anchors: `axisAnchor` (point A, fixed at press) and the snapped second anchor.
+  * `axisACv`/`axisBCv` are the canvas-view endpoints driving the live skeleton transform and the spanning
+  * axis guide line (B follows the cursor, snapping to the nearest anchor). On release with a `snapTarget`,
+  * the copy is welded via `maybeAddMirroredCopy` (reflect) or `maybeAddGlideReflectedCopy` (glide — reflect
+  * across A–B then slide along it by the vector B − A, so for glide the A→B *direction and length* matter,
+  * not just the line). Exact `BigPoint`s are recomputed from the two anchors; both isometries are exact
+  * rational maps, so a snapped axis yields exact coincidence.
+  */
+case class ReflectCopyDrag(
+    facePoints: List[(FaceId, String)],
+    axisAnchor: Anchor,
+    axisACv: Point,
+    axisBCv: Point,
+    snapTarget: Option[(Anchor, Point)],
+    glide: Boolean = false
+)
+
 enum Anchor:
 
   case Vertex(vertexId: VertexId)
@@ -60,7 +112,8 @@ enum EditorMode:
 // Tool enumeration. AddPolygon is the default mode (always one mode is active);
 // Inserter has been folded into AddPolygon + AddSubmode.Inside.
 enum Tool:
-  case AddPolygon, ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement, Fan
+  case AddPolygon, ColorPicker, ShapeAndColorPicker, SelectByColor, Eraser, Measurement, Fan, TranslateCopy,
+    RotateCopy, ReflectCopy, GlideReflectCopy
 
 // Sub-mode for AddPolygon. Outside places on perimeter edges; Inside places inside a face
 // (formerly the Inserter tool). Meaningful only when activeTool == AddPolygon.
@@ -383,7 +436,10 @@ case class PreviewState(
     previewPlacement: Option[FailedPolygonPlacement],
     paletteGhost: Option[Vector[Point]],
     paletteSnapHint: Option[PaletteSnapHint],
-    previewIsValid: Boolean = true
+    previewIsValid: Boolean = true,
+    translateCopyDrag: Option[TranslateCopyDrag] = None,
+    rotateCopyDrag: Option[RotateCopyDrag] = None,
+    reflectCopyDrag: Option[ReflectCopyDrag] = None
 )
 
 object PreviewState:
