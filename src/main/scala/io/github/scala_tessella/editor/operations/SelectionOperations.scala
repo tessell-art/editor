@@ -234,6 +234,8 @@ object SelectionOperations:
         () // Add Copy ▸ Rotate is a canvas-level drag gesture, not a polygon click
       case Tool.ReflectCopy =>
         () // Add Copy ▸ Reflect is a canvas-level drag gesture, not a polygon click
+      case Tool.GlideReflectCopy =>
+        () // Add Copy ▸ Glide reflect is a canvas-level drag gesture, not a polygon click
       case Tool.AddPolygon =>
         tools.addSubmode match
           case AddSubmode.Inside  =>

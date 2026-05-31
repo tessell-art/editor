@@ -172,9 +172,12 @@ object TessellationRenderer:
       EditorState.previewState.signal.map(_.rotateCopyDrag).distinct
         .map(_.map(renderRotateSkeleton))
 
-    // Add Copy ▸ Reflect: axis-anchor dots while the tool is active; axis point A and the snapped B enlarged.
+    // Add Copy ▸ Reflect / Glide reflect: axis-anchor dots while either tool is active; axis point A and the
+    // snapped B enlarged.
     val reflectCopyAnchors = children <--
-      EditorState.toolState.signal.map(_.activeTool == Tool.ReflectCopy).distinct
+      EditorState.toolState.signal
+        .map(t => t.activeTool == Tool.ReflectCopy || t.activeTool == Tool.GlideReflectCopy)
+        .distinct
         .combineWith(EditorState.previewState.signal.map(_.reflectCopyDrag).distinct)
         .map:
           case (true, dragOpt) =>
@@ -355,13 +358,18 @@ object TessellationRenderer:
     val len = math.hypot(dx, dy)
     if len < 1e-6 then None
     else
-      val theta2           = 2.0 * a.angleTo(b).toDouble
-      val cos2             = math.cos(theta2)
-      val sin2             = math.sin(theta2)
-      val (ma, mb, mc, md) = (cos2, sin2, sin2, -cos2)
-      val me               = a.x - (ma * a.x + mc * a.y)
-      val mf               = a.y - (mb * a.x + md * a.y)
-      val (ux, uy)         = (dx / len, dy / len)
+      val theta2            = 2.0 * a.angleTo(b).toDouble
+      val cos2              = math.cos(theta2)
+      val sin2              = math.sin(theta2)
+      val (ma, mb, mc, md)  = (cos2, sin2, sin2, -cos2)
+      val me                = a.x - (ma * a.x + mc * a.y)
+      val mf                = a.y - (mb * a.x + md * a.y)
+      val (ux, uy)          = (dx / len, dy / len)
+      // Glide reflect = reflect then slide along the axis by B − A. In SVG, `translate(g) matrix(M)` applies
+      // M (the reflection) first, then the glide translation — exactly reflect-then-glide.
+      val skeletonTransform =
+        if drag.glide then s"translate($dx $dy) matrix($ma $mb $mc $md $me $mf)"
+        else s"matrix($ma $mb $mc $md $me $mf)"
       Some(
         svg.g(
           svg.pointerEvents := "none",
@@ -377,7 +385,7 @@ object TessellationRenderer:
             svg.opacity         := "0.7"
           ),
           svg.g(
-            svg.transform       := s"matrix($ma $mb $mc $md $me $mf)",
+            svg.transform       := skeletonTransform,
             drag.facePoints.map: (_, pointsStr) =>
               svg.polygon(
                 svg.points          := pointsStr,

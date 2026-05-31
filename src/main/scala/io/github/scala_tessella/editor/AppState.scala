@@ -168,6 +168,12 @@ object AppState:
   def enterReflectCopyMode(): Unit =
     AddCopyOperations.enterReflectCopyMode()
 
+  /** Activates the Add Copy ▸ Glide reflect tool. Same two-anchor axis gesture as Reflect, but the copy is
+    * also slid along the axis by the vector B − A. Does nothing if processing or if the tiling is empty.
+    */
+  def enterGlideReflectCopyMode(): Unit =
+    AddCopyOperations.enterGlideReflectCopyMode()
+
   /** Activates the Measurement tool. The user then clicks a polygon to expose its clickable points (vertices,
     * edge midpoints, center). Does nothing if processing or if the tiling is empty.
     */

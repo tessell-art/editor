@@ -107,6 +107,7 @@ object EditorCanvasComponent:
         case Tool.TranslateCopy       => "tool-translate-copy"
         case Tool.RotateCopy          => "tool-rotate-copy"
         case Tool.ReflectCopy         => "tool-reflect-copy"
+        case Tool.GlideReflectCopy    => "tool-glide-reflect-copy"
       s"editor-canvas $toolClass"
     }
 

@@ -382,23 +382,37 @@ object AddCopyOperations:
         onFailure = err => ErrorOperations.showError(s"Cannot add rotated copy: ${err.message}")
       )
 
-  // ---- Reflect --------------------------------------------------------------------------------------------
+  // ---- Reflect / Glide reflect ----------------------------------------------------------------------------
 
   /** Activates the Reflect-copy tool. Anchors (vertices, edge midpoints, face centres) show as dots; the user
     * presses one (axis point A) and drags to another (axis point B) to define the mirror line. No-op while
     * processing or empty.
     */
-  def enterReflectCopyMode(): Unit =
+  def enterReflectCopyMode(): Unit = enterAxisCopyMode(Tool.ReflectCopy)
+
+  /** Activates the Glide-reflect-copy tool. Same two-anchor axis gesture as Reflect, but the copy is
+    * reflected across A–B *and* slid along it by the vector B − A (so the A→B direction and length matter).
+    */
+  def enterGlideReflectCopyMode(): Unit = enterAxisCopyMode(Tool.GlideReflectCopy)
+
+  private def enterAxisCopyMode(tool: Tool): Unit =
     ifNotProcessing:
       if !EditorState.tessellationState.now().currentTiling.isEmpty then
         MeasurementOperations.clearAll()
         clearDrag()
-        EditorState.toolState.update(_.copy(activeTool = Tool.ReflectCopy))
+        EditorState.toolState.update(_.copy(activeTool = tool))
 
   /** Begin a reflect drag: axis point A is the anchor nearest the press; B starts coincident with A
     * (degenerate, no preview) until the user drags.
     */
   def beginReflectDrag(clientX: Double, clientY: Double): Unit =
+    beginAxisDrag(clientX, clientY, glide = false)
+
+  /** Begin a glide-reflect drag (same gesture as reflect, flagged as a glide). */
+  def beginGlideReflectDrag(clientX: Double, clientY: Double): Unit =
+    beginAxisDrag(clientX, clientY, glide = true)
+
+  private def beginAxisDrag(clientX: Double, clientY: Double, glide: Boolean): Unit =
     val tiling = EditorState.tessellationState.now().currentTiling
     if !tiling.isEmpty then
       clientToCanvasView(clientX, clientY).foreach: pressCv =>
@@ -411,7 +425,8 @@ object AddCopyOperations:
                   axisAnchor = anchor,
                   axisACv = aCv,
                   axisBCv = aCv,
-                  snapTarget = None
+                  snapTarget = None,
+                  glide = glide
                 )
               )
             )
@@ -437,8 +452,9 @@ object AddCopyOperations:
           _.copy(reflectCopyDrag = Some(drag.copy(axisBCv = bCv, snapTarget = snapTarget)))
         )
 
-  /** Finish the reflect drag: if snapped to a second anchor, weld a copy mirrored across the exact line
-    * through the two anchors. Otherwise cancel. The mode stays active for adding further copies.
+  /** Finish the reflect / glide-reflect drag: if snapped to a second anchor, weld a copy mirrored across the
+    * exact line through the two anchors (and, for glide, slid along it by B − A). Otherwise cancel. The mode
+    * stays active for adding further copies.
     */
   def endReflectDrag(): Unit =
     val dragOpt = EditorState.previewState.now().reflectCopyDrag
@@ -450,9 +466,12 @@ object AddCopyOperations:
       a            <- anchorBigPoint(tiling, drag.axisAnchor)
       b            <- anchorBigPoint(tiling, bAnchor)
     do
-      OperationRunner.runTilingOp(() =>
-        OperationRunner.safely("Error adding mirrored copy")(tiling.maybeAddMirroredCopy(a, b))
-      )(
+      val (label, op) =
+        if drag.glide then
+          ("glide-reflected", () => tiling.maybeAddGlideReflectedCopy(a, b))
+        else
+          ("mirrored", () => tiling.maybeAddMirroredCopy(a, b))
+      OperationRunner.runTilingOp(() => OperationRunner.safely(s"Error adding $label copy")(op()))(
         onSuccess = TessellationOperations.clearStaleAfterMutation(),
-        onFailure = err => ErrorOperations.showError(s"Cannot add mirrored copy: ${err.message}")
+        onFailure = err => ErrorOperations.showError(s"Cannot add $label copy: ${err.message}")
       )

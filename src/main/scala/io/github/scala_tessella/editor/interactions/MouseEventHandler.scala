@@ -38,6 +38,8 @@ object MouseEventHandler:
       AddCopyOperations.beginRotateDrag(event.clientX, event.clientY)
     else if EditorState.toolState.now().activeTool == Tool.ReflectCopy then
       AddCopyOperations.beginReflectDrag(event.clientX, event.clientY)
+    else if EditorState.toolState.now().activeTool == Tool.GlideReflectCopy then
+      AddCopyOperations.beginGlideReflectDrag(event.clientX, event.clientY)
     else
       // Snapshot once
       EditorState.uiState.update(_.copy(isDragging = true))

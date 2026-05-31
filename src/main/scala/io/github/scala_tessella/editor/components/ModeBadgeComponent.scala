@@ -32,6 +32,7 @@ object ModeBadgeComponent:
       case Tool.TranslateCopy       => "modeBadge.translateCopy"
       case Tool.RotateCopy          => "modeBadge.rotateCopy"
       case Tool.ReflectCopy         => "modeBadge.reflectCopy"
+      case Tool.GlideReflectCopy    => "modeBadge.glideReflectCopy"
 
   private val labelSignal: Signal[String] =
     EditorState.toolState.signal.map(_.activeTool).distinct
