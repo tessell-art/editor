@@ -36,6 +36,12 @@ and in the git history.
 - Tap-to-delete on touch: tapping near a deletable point with the eraser
   active removes it without needing a drag gesture.
 
+### Fixed
+- **Add Copy** tools now respond to touch. The drag gesture was wired only into
+  the mouse handler, so on touch a press did nothing and a drag panned the
+  canvas. Touch now grabs the skeleton (one finger to drag, two-finger
+  pinch/zoom still works) by sharing a single dispatch with the mouse path.
+
 ### Changed
 - Build depends on the published `dcel` 0.1.2 (previously 0.1.0), which adds
   the grow-by-isometry API (`maybeAddTranslatedCopy` / `maybeAddRotatedCopy` /

@@ -25,8 +25,10 @@ import spire.math.Rational
   * plane isometry (dcel 0.1.1). **Translate** and **Rotate** are wired; reflect / glide reflect are reserved
   * for later iterations.
   *
-  * Both are direct-manipulation gestures driven by [[interactions.MouseEventHandler]] (which suppresses
-  * panning while the tool is active) and rendered as a dashed skeleton overlay.
+  * Both are direct-manipulation gestures driven by [[interactions.MouseEventHandler]] and
+  * [[interactions.TouchEventHandler]] (which suppress panning while a drag is in flight — see
+  * [[beginDragForActiveTool]] / [[updateActiveDrag]] / [[endActiveDrag]], the shared dispatch both call)
+  * and rendered as a dashed skeleton overlay.
   *
   *   - **Translate**: drag the skeleton; the `from` endpoint is the vertex nearest the press, the `to`
   *     endpoint snaps to the vertex nearest the release. Both are exact tiling vertices (`vertex.coords`,
@@ -73,6 +75,56 @@ object AddCopyOperations:
     EditorState.previewState.update(
       _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None)
     )
+
+  /** Abandon any in-flight Add-Copy drag without committing (e.g. on touch-cancel). */
+  def cancelDrag(): Unit = clearDrag()
+
+  /** True while any Add-Copy skeleton drag is in flight. Lets the pointer handlers route move/up/end events
+    * to the copy gesture and suppress panning.
+    */
+  def hasActiveDrag: Boolean =
+    val ps = EditorState.previewState.now()
+    ps.translateCopyDrag.isDefined || ps.rotateCopyDrag.isDefined || ps.reflectCopyDrag.isDefined
+
+  /** If an Add-Copy tool is active, begin the matching skeleton drag at the pointer and return `true` (so the
+    * caller can suppress its default press behaviour, e.g. panning). Otherwise `false`. Shared by the mouse
+    * and touch handlers so both gesture paths stay in sync.
+    */
+  def beginDragForActiveTool(clientX: Double, clientY: Double): Boolean =
+    EditorState.toolState.now().activeTool match
+      case Tool.TranslateCopy    => beginDrag(clientX, clientY); true
+      case Tool.RotateCopy       => beginRotateDrag(clientX, clientY); true
+      case Tool.ReflectCopy      => beginReflectDrag(clientX, clientY); true
+      case Tool.GlideReflectCopy => beginGlideReflectDrag(clientX, clientY); true
+      case _                     => false
+
+  /** If an Add-Copy drag is in flight, forward the move to the matching update and return `true`. */
+  def updateActiveDrag(clientX: Double, clientY: Double): Boolean =
+    val ps = EditorState.previewState.now()
+    if ps.translateCopyDrag.isDefined then
+      updateDrag(clientX, clientY)
+      true
+    else if ps.rotateCopyDrag.isDefined then
+      updateRotateDrag(clientX, clientY)
+      true
+    else if ps.reflectCopyDrag.isDefined then
+      updateReflectDrag(clientX, clientY)
+      true
+    else false
+
+  /** If an Add-Copy drag is in flight, finish it (committing the weld if snapped) and return `true`. */
+  def endActiveDrag(): Boolean =
+    val ps = EditorState.previewState.now()
+    if ps.translateCopyDrag.isDefined then
+      endDrag()
+      true
+    else if ps.rotateCopyDrag.isDefined then
+      endRotateDrag()
+      true
+    else if ps.reflectCopyDrag.isDefined then
+      endReflectDrag()
+      true
+    else false
 
   /** Distinct tiling vertices as `(id, canvas-view point)`, for dot rendering and snap hit-testing. */
   def vertexAnchorsCv(tiling: TilingDCEL): List[(VertexId, Point)] =
