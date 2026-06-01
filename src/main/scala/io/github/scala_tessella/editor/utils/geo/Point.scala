@@ -116,3 +116,8 @@ object Point:
     def projectOn(axis: Point): Point =
       val u = axis.normalized
       u * dot(u)
+
+    /** Reflection of this point across the infinite line through `a` and `b`. */
+    def reflectAcross(a: Point, b: Point): Point =
+      val v = point - a
+      a + v.projectOn(b - a) * 2.0 - v

@@ -28,6 +28,12 @@ and in the git history.
     preview.
   - **Glide reflect** — like Reflect, but the copy is also slid along the axis
     by the drag vector (so the press→release direction and length matter).
+  - The welded copy now **inherits the fill colors** of the source polygons
+    instead of coming out in the flat default fill. Colors are matched
+    geometrically (each result face's centroid mapped back through the isometry),
+    so it is robust to the weld renumbering faces. Where the copy superimposes
+    the existing tiling, the **original face's color is kept** (the copy only
+    colors genuinely new area).
 - **Add Copy** is now reachable directly from the canvas tool strip: a new
   button after Measurement opens a chevron flyout with the four operations
   (Translate / Rotate / Reflect / Glide reflect), highlighted while any copy

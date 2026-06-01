@@ -16,16 +16,17 @@ import io.github.scala_tessella.editor.models.{
 }
 import io.github.scala_tessella.editor.operations.OperationGuard.ifNotProcessing
 import io.github.scala_tessella.editor.operations.PaletteDragOperations.screenSvgToCanvasView
+import io.github.scala_tessella.editor.utils.ColorRGB
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.{tilingPointToCanvasView, toPoint}
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point, Radian}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import spire.math.Rational
 
 /** Operations for the **Edit ▸ Add Copy** family — growing a tiling by welding on a copy of itself under a
-  * plane isometry (dcel 0.1.1). **Translate** and **Rotate** are wired; reflect / glide reflect are reserved
-  * for later iterations.
+  * plane isometry (dcel `maybeAdd…Copy`). All four operations — **Translate**, **Rotate**, **Reflect** and
+  * **Glide reflect** — are wired.
   *
-  * Both are direct-manipulation gestures driven by [[interactions.MouseEventHandler]] and
+  * They are direct-manipulation gestures driven by [[interactions.MouseEventHandler]] and
   * [[interactions.TouchEventHandler]] (which suppress panning while a drag is in flight — see
   * [[beginDragForActiveTool]] / [[updateActiveDrag]] / [[endActiveDrag]], the shared dispatch both call) and
   * rendered as a dashed skeleton overlay.
@@ -38,8 +39,12 @@ import spire.math.Rational
   *     midpoint → 180°; face centre → 360/k multiples). The exact pivot is recomputed from the anchor at
   *     commit via `BigPoint.centroid`; the angle is tolerated by the weld so a `Double`-derived value is
   *     fine.
+  *   - **Reflect** / **Glide reflect**: press one anchor and drag to a second (vertex / edge-midpoint /
+  *     face-centre); the two anchors define the mirror axis, and glide additionally slides the copy along it
+  *     by B − A. The exact anchors keep the reflection exact.
   *
-  * Either way the validation pipeline runs and a rejected copy surfaces via [[ErrorOperations]].
+  * On a successful weld the copy inherits the source polygons' fill colors (see [[transferCopyColors]]); the
+  * validation pipeline runs and a rejected copy surfaces via [[ErrorOperations]].
   */
 object AddCopyOperations:
 
@@ -53,6 +58,12 @@ object AddCopyOperations:
 
   /** Epsilon (tiling-coord units) for the rotational-symmetry coincidence check. */
   private val symmetryEps: Double = 1e-6
+
+  /** Tolerance (tiling-coord units) for matching a welded result face's centroid back to a source or copy
+    * centroid when transferring colors. Generous against distinct-centroid separation (≫ this) yet tight
+    * enough to absorb the rotate angle's `Double` rounding.
+    */
+  private val colorMatchEps: Double = 0.05
 
   /** Activates the Translate-copy tool. The tiling's vertices then show as clipping-point dots; the user
     * drags the skeleton and releases on a vertex to weld a translated copy. No-op while processing or empty.
@@ -220,10 +231,15 @@ object AddCopyOperations:
       from          <- tiling.findVertex(drag.sourceVertexId).toOption.map(_.coords)
       to            <- tiling.findVertex(targetId).toOption.map(_.coords)
     do
+      val oldColors = EditorState.colorState.now().polygonColors
+      val delta     = to.toPoint - from.toPoint
       OperationRunner.runTilingOp(() =>
         OperationRunner.safely("Error adding translated copy")(tiling.maybeAddTranslatedCopy(from, to))
       )(
-        onSuccess = TessellationOperations.clearStaleAfterMutation(),
+        onSuccess = {
+          TessellationOperations.clearStaleAfterMutation()
+          transferCopyColors(tiling, oldColors, _ + delta)
+        },
         onFailure = err => ErrorOperations.showError(s"Cannot add translated copy: ${err.message}")
       )
 
@@ -353,6 +369,42 @@ object AddCopyOperations:
     if points.isEmpty then Point.origin
     else points.reduce(_ + _) / points.size.toDouble
 
+  /** Each inner face as `(id, tiling-coord centroid)`. */
+  private def faceCentroids(tiling: TilingDCEL): List[(FaceId, Point)] =
+    tiling.innerFacesVertices.map((fid, vs) => fid -> centroidOf(vs.map(_.coords.toPoint)))
+
+  /** Re-derive every result face's fill color geometrically after a copy weld (policy: **original wins** on
+    * superimposition). For each result-face centroid, match it to a source centroid — preferring an original
+    * face (so existing colors survive where the copy overlaps the tiling), else the isometry image of a
+    * source centroid (so genuinely-new copy faces inherit their source's color). Faces with no explicit
+    * source color are left out and render the default fill. FaceId-agnostic: it makes no assumption about how
+    * dcel numbered the welded faces, only about geometry.
+    *
+    * @param oldTiling
+    *   the tiling before the weld
+    * @param oldColors
+    *   `polygonColors` snapshot before the weld
+    * @param isometry
+    *   the plane isometry that produced the copy (tiling coords)
+    */
+  private def transferCopyColors(
+      oldTiling: TilingDCEL,
+      oldColors: Map[FaceId, ColorRGB],
+      isometry: Point => Point
+  ): Unit =
+    val oldCentroids                     = faceCentroids(oldTiling)
+    // Originals first so they win when a copy face coincides with an existing one.
+    val desired: List[(Point, ColorRGB)] =
+      oldCentroids.flatMap((fid, c) => oldColors.get(fid).map(c -> _)) ++
+        oldCentroids.flatMap((fid, c) => oldColors.get(fid).map(isometry(c) -> _))
+    val newTiling                        = EditorState.tessellationState.now().currentTiling
+    val newColors: Map[FaceId, ColorRGB] =
+      faceCentroids(newTiling).flatMap { (fid, c) =>
+
+        desired.find((p, _) => p.distanceTo(c) <= colorMatchEps).map((_, rgb) => fid -> rgb)
+      }.toMap
+    EditorState.colorState.update(_.copy(polygonColors = newColors))
+
   /** Reduce a degree value to `(-180, 180]`. */
   private def normalizeSignedDeg(d: Double): Double =
     val m = ((d % 360) + 360) % 360
@@ -427,10 +479,16 @@ object AddCopyOperations:
       tiling  = EditorState.tessellationState.now().currentTiling
       centre <- anchorBigPoint(tiling, drag.centerAnchor)
     do
+      val oldColors   = EditorState.colorState.now().polygonColors
+      val centrePoint = centre.toPoint
+      val rad         = Radian.fromDegrees(angle.toRational.toDouble)
       OperationRunner.runTilingOp(() =>
         OperationRunner.safely("Error adding rotated copy")(tiling.maybeAddRotatedCopy(centre, angle))
       )(
-        onSuccess = TessellationOperations.clearStaleAfterMutation(),
+        onSuccess = {
+          TessellationOperations.clearStaleAfterMutation()
+          transferCopyColors(tiling, oldColors, _.rotateAround(centrePoint, rad))
+        },
         onFailure = err => ErrorOperations.showError(s"Cannot add rotated copy: ${err.message}")
       )
 
@@ -518,12 +576,26 @@ object AddCopyOperations:
       a            <- anchorBigPoint(tiling, drag.axisAnchor)
       b            <- anchorBigPoint(tiling, bAnchor)
     do
-      val (label, op) =
+      val oldColors             = EditorState.colorState.now().polygonColors
+      val aP                    = a.toPoint
+      val bP                    = b.toPoint
+      val (label, op, isometry) =
         if drag.glide then
-          ("glide-reflected", () => tiling.maybeAddGlideReflectedCopy(a, b))
+          (
+            "glide-reflected",
+            () => tiling.maybeAddGlideReflectedCopy(a, b),
+            (p: Point) => p.reflectAcross(aP, bP) + (bP - aP)
+          )
         else
-          ("mirrored", () => tiling.maybeAddMirroredCopy(a, b))
+          (
+            "mirrored",
+            () => tiling.maybeAddMirroredCopy(a, b),
+            (p: Point) => p.reflectAcross(aP, bP)
+          )
       OperationRunner.runTilingOp(() => OperationRunner.safely(s"Error adding $label copy")(op()))(
-        onSuccess = TessellationOperations.clearStaleAfterMutation(),
+        onSuccess = {
+          TessellationOperations.clearStaleAfterMutation()
+          transferCopyColors(tiling, oldColors, isometry)
+        },
         onFailure = err => ErrorOperations.showError(s"Cannot add $label copy: ${err.message}")
       )

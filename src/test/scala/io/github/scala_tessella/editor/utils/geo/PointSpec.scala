@@ -189,3 +189,16 @@ class PointSpec extends FunSuite:
     val expected    = u * expectedLen
     assertPointEquals(proj2, expected.x, expected.y, tol = 1e-12)
   }
+
+  test("reflectAcross a line") {
+    // Across the x-axis: y flips.
+    assertPointEquals(Point(3.0, 2.0).reflectAcross(Point(0, 0), Point(1, 0)), 3.0, -2.0, tol = 1e-12)
+    // Across the y-axis: x flips.
+    assertPointEquals(Point(3.0, 2.0).reflectAcross(Point(0, 0), Point(0, 1)), -3.0, 2.0, tol = 1e-12)
+    // Across the y = x diagonal: coordinates swap.
+    assertPointEquals(Point(3.0, 2.0).reflectAcross(Point(0, 0), Point(1, 1)), 2.0, 3.0, tol = 1e-12)
+    // A point on the line is its own reflection (line offset from the origin).
+    assertPointEquals(Point(2.0, 5.0).reflectAcross(Point(2, 0), Point(2, 9)), 2.0, 5.0, tol = 1e-12)
+    // Across the vertical line x = 2: mirror distance is preserved.
+    assertPointEquals(Point(5.0, 1.0).reflectAcross(Point(2, 0), Point(2, 9)), -1.0, 1.0, tol = 1e-12)
+  }
