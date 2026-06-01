@@ -32,7 +32,6 @@ object GuidePopup:
       "selectByColor"      -> emKey("popup.guide.tool.selectByColor"),
       "shapeAndColor"      -> emKey("popup.guide.tool.shapeAndColor"),
       "colorPicker"        -> emKey("popup.guide.tool.colorPicker"),
-      "fan"                -> emKey("popup.guide.tool.fan"),
       "eraser"             -> emKey("popup.guide.tool.eraser"),
       "measurement"        -> emKey("popup.guide.tool.measurement"),
       "fit"                -> emKey("popup.guide.tool.fit"),
@@ -43,17 +42,14 @@ object GuidePopup:
       "iconShapeAndColor"  -> (() => IconsSVG.eyeDropperPentagonIcon),
       "iconColorPicker"    -> (() => IconsSVG.eyeDropperIcon),
       "iconEraser"         -> (() => IconsSVG.eraserIcon),
-      "iconFan"            -> (() => IconsSVG.fanIcon),
       "iconRuler"          -> (() => IconsSVG.rulerIcon),
       "iconMaximize"       -> (() => IconsSVG.maximizeIcon),
       "kbdEsc"             -> (() => kbd("Esc")),
-      "kbdD"               -> (() => kbd('D')),
+      "kbdQ"               -> (() => kbd('Q')),
       "kbdE"               -> (() => kbd('E')),
       "kbdF"               -> (() => kbd('F')),
-      "kbdR"               -> (() => kbd('R')),
       "kbdPlus"            -> (() => kbd('+')),
       "kbdMinus"           -> (() => kbd('-')),
-      "menuDouble"         -> menuItem("menu.edit", "menu.edit.doubleToInfinite"),
       "menuMirror"         -> menuItem("menu.edit", "menu.edit.mirror"),
       "menuFillColor"      -> menuItem("menu.edit", "menu.edit.fillColor"),
       "menuShowLabels"     -> menuItem("menu.view", "menu.view.showLabels"),
@@ -99,11 +95,6 @@ object GuidePopup:
             item("popup.guide.addIrregular.shift"),
             item("popup.guide.addIrregular.copy")
           ),
-          heading("popup.guide.section.fanning"),
-          ul(
-            item("popup.guide.fanning.tool"),
-            item("popup.guide.fanning.howTo")
-          ),
           heading("popup.guide.section.selecting"),
           ul(
             item("popup.guide.selecting.click"),
@@ -117,10 +108,9 @@ object GuidePopup:
             item("popup.guide.deleting.tool"),
             item("popup.guide.deleting.howTo")
           ),
-          heading("popup.guide.section.doubleMirror"),
+          heading("popup.guide.section.mirror"),
           ul(
-            item("popup.guide.doubleMirror.double"),
-            item("popup.guide.doubleMirror.mirror")
+            item("popup.guide.mirror.howTo")
           ),
           heading("popup.guide.section.styling"),
           ul(

@@ -152,30 +152,26 @@ object MenuBarComponent:
       ),
       div(className := "menu-separator"),
       dropdownLink("menu.edit.clearTiling", AppState.clearTiling()),
-      dropdownLink(
-        "menu.edit.doubleToInfinite",
-        AppState.doubleTiling(),
-        enabled = EditorState.canMutateTilingSignal,
-        shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditDoubleToInfinite))
-      ),
       dropdownLink("menu.edit.mirror", AppState.mirrorTiling(), enabled = EditorState.canMutateTilingSignal),
-      dropdownLink("menu.edit.fan", AppState.enterFanMode(), enabled = EditorState.canMutateTilingSignal),
       submenuItem(
         "menu.edit.addCopy",
         dropdownLink(
           "menu.edit.addCopy.translate",
           AppState.enterTranslateCopyMode(),
-          enabled = EditorState.canMutateTilingSignal
+          enabled = EditorState.canMutateTilingSignal,
+          shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditAddCopyTranslate))
         ),
         dropdownLink(
           "menu.edit.addCopy.rotate",
           AppState.enterRotateCopyMode(),
-          enabled = EditorState.canMutateTilingSignal
+          enabled = EditorState.canMutateTilingSignal,
+          shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditAddCopyRotate))
         ),
         dropdownLink(
           "menu.edit.addCopy.reflect",
           AppState.enterReflectCopyMode(),
-          enabled = EditorState.canMutateTilingSignal
+          enabled = EditorState.canMutateTilingSignal,
+          shortcut = Some(MenuShortcuts.labelOf(MenuAction.EditAddCopyReflect))
         ),
         dropdownLink(
           "menu.edit.addCopy.glide",

@@ -16,10 +16,10 @@ class KeyboardEventHandlerSpec extends FunSuite with EditorStateFixture:
   // --- pure helpers ---
 
   test("rotationDeltaForKey maps rotation keys"):
-    assertEquals(KeyboardEventHandler.rotationDeltaForKey("r"), Some(15))
-    assertEquals(KeyboardEventHandler.rotationDeltaForKey("R"), Some(15))
-    assertEquals(KeyboardEventHandler.rotationDeltaForKey("e"), Some(-15))
-    assertEquals(KeyboardEventHandler.rotationDeltaForKey("E"), Some(-15))
+    assertEquals(KeyboardEventHandler.rotationDeltaForKey("e"), Some(15))
+    assertEquals(KeyboardEventHandler.rotationDeltaForKey("E"), Some(15))
+    assertEquals(KeyboardEventHandler.rotationDeltaForKey("q"), Some(-15))
+    assertEquals(KeyboardEventHandler.rotationDeltaForKey("Q"), Some(-15))
     assertEquals(KeyboardEventHandler.rotationDeltaForKey("x"), None)
 
   test("zoomFactorForKey maps zoom keys"):

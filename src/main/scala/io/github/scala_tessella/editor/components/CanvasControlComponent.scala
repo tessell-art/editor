@@ -3,7 +3,8 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.i18n.I18n
-import io.github.scala_tessella.editor.models.{AddSubmode, EditorState, Tool}
+import io.github.scala_tessella.editor.models.MenuShortcuts.MenuAction
+import io.github.scala_tessella.editor.models.{AddSubmode, EditorState, MenuShortcuts, Tool}
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
 import io.github.scala_tessella.editor.operations.{ColorOperations, ToolActions}
 
@@ -16,9 +17,10 @@ import io.github.scala_tessella.editor.operations.{ColorOperations, ToolActions}
   *   4. Shape & Color Picker
   *   5. Select-by-Color
   *   6. Measurement
-  *   7. Spacer
-  *   8. Labels toggle
-  *   9. Undo / Redo
+  *   7. Add Copy (chevron flyout → Translate / Rotate / Reflect / Glide reflect)
+  *   8. Spacer
+  *   9. Labels toggle
+  *   10. Undo / Redo
   *
   * Mobile bottom-toolbar is a separate component (Phase 3).
   */
@@ -70,6 +72,80 @@ object CanvasControlComponent:
         ToolActions.toggleTool(tool)
       },
       title <-- I18n.t(titleKey)
+    )
+
+  /** True while any of the four Add-Copy tools is active; drives the trigger's `.active` highlight. */
+  private val isAddCopyToolActive: Signal[Boolean] =
+    EditorState.toolState.signal.map { s =>
+
+      s.activeTool == Tool.TranslateCopy || s.activeTool == Tool.RotateCopy ||
+      s.activeTool == Tool.ReflectCopy || s.activeTool == Tool.GlideReflectCopy
+    }.distinct
+
+  /** Add-Copy flyout: a trigger button whose chevron toggles a vertical submenu of the four grow-by-isometry
+    * tools. Mirrors the Edit ▸ Add Copy menu submenu; each option is disabled while the tiling can't be
+    * mutated. Selecting an option activates that copy mode and closes the flyout; clicking outside it (or the
+    * trigger again) also closes it.
+    */
+  private def addCopyButton(): Element =
+    val isOpen = Var(false)
+
+    def option(labelKey: String, shortcut: Option[String], action: => Unit): Element =
+      button(
+        className := "tool-submenu-option",
+        tpe       := "button",
+        span(child.text <-- I18n.t(labelKey)),
+        shortcut.map(s => span(className := "tool-submenu-shortcut", s)),
+        disabled <-- EditorState.canMutateTilingSignal.map(!_),
+        onClick.compose(gate) --> { _ =>
+
+          action
+          isOpen.set(false)
+        }
+      )
+
+    div(
+      className := "tool-submenu",
+      cls("open") <-- isOpen.signal,
+      // Close when a click lands outside the flyout (the trigger toggles; options close on select).
+      inContext: root =>
+        documentEvents(_.onClick) --> { ev =>
+
+          if isOpen.now() && !root.ref.contains(ev.target.asInstanceOf[org.scalajs.dom.Node]) then
+            isOpen.set(false)
+        },
+      button(
+        className := "toggle-btn tool-submenu-trigger",
+        tpe       := "button",
+        cls("active") <-- isAddCopyToolActive,
+        title <-- I18n.t("tool.addCopy.title"),
+        onClick --> { _ =>
+
+          isOpen.update(!_)
+        },
+        IconsSVG.quadrupleIcon,
+        span(className := "tool-button-label", child.text <-- I18n.t("tool.addCopy")),
+        span(className := "tool-submenu-chevron", "▾")
+      ),
+      div(
+        className := "tool-submenu-content",
+        option(
+          "menu.edit.addCopy.translate",
+          Some(MenuShortcuts.labelOf(MenuAction.EditAddCopyTranslate)),
+          AppState.enterTranslateCopyMode()
+        ),
+        option(
+          "menu.edit.addCopy.rotate",
+          Some(MenuShortcuts.labelOf(MenuAction.EditAddCopyRotate)),
+          AppState.enterRotateCopyMode()
+        ),
+        option(
+          "menu.edit.addCopy.reflect",
+          Some(MenuShortcuts.labelOf(MenuAction.EditAddCopyReflect)),
+          AppState.enterReflectCopyMode()
+        ),
+        option("menu.edit.addCopy.glide", None, AppState.enterGlideReflectCopyMode())
+      )
     )
 
   /** Compact swatch showing the current fill color. Click opens the color picker; OK applies to the current
@@ -199,7 +275,13 @@ object CanvasControlComponent:
             "tool.selectByColor.title",
             IconsSVG.selectByColorIcon
           ),
-          createToolButton(Tool.Measurement, "tool.measurement", "tool.measurement.title", IconsSVG.rulerIcon)
+          createToolButton(
+            Tool.Measurement,
+            "tool.measurement",
+            "tool.measurement.title",
+            IconsSVG.rulerIcon
+          ),
+          addCopyButton()
         ),
         // Spacer pushes ancillary controls to the right
         div(className := "tool-strip-spacer"),

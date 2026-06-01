@@ -14,7 +14,7 @@ use tauri::{
 };
 
 use crate::menu_shortcuts::{
-    EDIT_DESELECT_ALL, EDIT_DOUBLE_TO_INFINITE, EDIT_REDO, EDIT_UNDO, FILE_SAVE,
+    EDIT_DESELECT_ALL, EDIT_REDO, EDIT_UNDO, FILE_SAVE,
     VIEW_FIT_TO_CANVAS, VIEW_ROTATE_LEFT, VIEW_ROTATE_RIGHT, VIEW_ZOOM_IN, VIEW_ZOOM_OUT,
 };
 
@@ -77,11 +77,6 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         )
         .separator()
         .text("clear-tiling", "Clear Tiling")
-        .item(
-            &MenuItemBuilder::with_id("double-to-infinite", "Double (to infinite)")
-                .accelerator(EDIT_DOUBLE_TO_INFINITE.accelerator())
-                .build(app)?,
-        )
         .text("mirror", "Mirror")
         .separator()
         // Our "Select All" selects polygons, not text. Rename so it doesn't

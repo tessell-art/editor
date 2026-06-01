@@ -28,6 +28,13 @@ and in the git history.
     preview.
   - **Glide reflect** — like Reflect, but the copy is also slid along the axis
     by the drag vector (so the press→release direction and length matter).
+- **Add Copy** is now reachable directly from the canvas tool strip: a new
+  button after Measurement opens a chevron flyout with the four operations
+  (Translate / Rotate / Reflect / Glide reflect), highlighted while any copy
+  mode is active.
+- Keyboard shortcuts for Add Copy: **`T`** (Translate), **`R`** (Rotate),
+  **`Y`** (Reflect). Glide reflect stays keyless. Shown in the Edit ▸ Add Copy
+  submenu, the toolbar flyout, and the Keyboard Shortcuts popup.
 - Eraser tool now shows deletable points (vertices, edge midpoints, face
   centers) within a screen-space proximity radius of the pointer, instead
   of requiring the pointer to first land on a face. Radius is wider for
@@ -36,6 +43,12 @@ and in the git history.
 - Tap-to-delete on touch: tapping near a deletable point with the eraser
   active removes it without needing a drag gesture.
 
+### Removed
+- **Edit ▸ Double (to infinite)** and **Edit ▸ Fan** — superseded by Add Copy
+  (Translate covers doubling, Rotate covers fanning). Removed from the Edit
+  menu, the native desktop menu, the keyboard shortcuts (the `D` accelerator is
+  gone), and the in-app guide. Mirror is unaffected.
+
 ### Fixed
 - **Add Copy** tools now respond to touch. The drag gesture was wired only into
   the mouse handler, so on touch a press did nothing and a drag panned the
@@ -43,6 +56,12 @@ and in the git history.
   pinch/zoom still works) by sharing a single dispatch with the mouse path.
 
 ### Changed
+- `Esc` now exits **Measurement** and **Eraser** modes (clearing the clickable-point
+  overlay and returning to Add Polygon), matching how it already exits the Add Copy
+  modes.
+- Canvas rotation shortcuts moved to the gaming-standard **`Q`** (rotate left) /
+  **`E`** (rotate right). Previously `E` rotated left and `R` rotated right;
+  `R` is now free (earmarked for an Add Copy shortcut).
 - Build depends on the published `dcel` 0.1.2 (previously 0.1.0), which adds
   the grow-by-isometry API (`maybeAddTranslatedCopy` / `maybeAddRotatedCopy` /
   `maybeAddMirroredCopy` / `maybeAddGlideReflectedCopy`) used by Add Copy.

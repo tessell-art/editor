@@ -5,7 +5,7 @@ import io.github.scala_tessella.dcel.TilingDCEL
 import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Tool}
 import io.github.scala_tessella.editor.operations.SelectionOperations.clearAllSelections
-import io.github.scala_tessella.editor.operations.{AddCopyOperations, ViewOperations}
+import io.github.scala_tessella.editor.operations.{AddCopyOperations, ToolActions, ViewOperations}
 import io.github.scala_tessella.editor.utils.file.SvgExporter
 import io.github.scala_tessella.editor.operations.UndoManager
 import org.scalajs.dom
@@ -87,8 +87,8 @@ object KeyboardEventHandler:
 
   private[interactions] def rotationDeltaForKey(key: String): Option[Int] =
     key match
-      case "r" | "R" => Some(15)
-      case "e" | "E" => Some(-15)
+      case "e" | "E" => Some(15)
+      case "q" | "Q" => Some(-15)
       case _         => None
 
   private[interactions] def zoomFactorForKey(key: String): Option[Double] =
@@ -117,12 +117,20 @@ object KeyboardEventHandler:
 
   def handleKeyDown(event: KeyboardEvent, currentTiling: TilingDCEL, hasFileName: Boolean): Unit =
     if !isTargetInput(event) then
-      if (event.key == "d" || event.key == "D") && !currentTiling.isEmpty then
-        event.preventDefault()
-        AppState.doubleTiling()
-      else if event.key == "f" || event.key == "F" then
+      if event.key == "f" || event.key == "F" then
         event.preventDefault()
         AppState.fitTilingToCanvas()
+      // Add Copy modes — plain T / R / Y. Guarded on `!primaryMod` so Ctrl/Cmd+R (reload),
+      // Ctrl/Cmd+T (new tab) etc. still reach the browser.
+      else if (event.key == "t" || event.key == "T") && !primaryMod(event) && !currentTiling.isEmpty then
+        event.preventDefault()
+        AppState.enterTranslateCopyMode()
+      else if (event.key == "r" || event.key == "R") && !primaryMod(event) && !currentTiling.isEmpty then
+        event.preventDefault()
+        AppState.enterRotateCopyMode()
+      else if (event.key == "y" || event.key == "Y") && !primaryMod(event) && !currentTiling.isEmpty then
+        event.preventDefault()
+        AppState.enterReflectCopyMode()
       else if isRedoShortcut(event.key, primaryMod(event), event.shiftKey) then
         event.preventDefault()
         UndoManager.redo()
@@ -141,6 +149,10 @@ object KeyboardEventHandler:
           tool == Tool.GlideReflectCopy
         then
           AddCopyOperations.exitMode()
+        else if tool == Tool.Measurement || tool == Tool.Eraser then
+          // Leave the point-tool the same way clicking its active toolbar button would:
+          // back to Add Polygon, clearing the clickable-point overlay.
+          ToolActions.toggleTool(tool)
         else
           clearAllSelections()
       else if event.key == "Delete" || event.key == "Backspace" then

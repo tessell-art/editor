@@ -43,10 +43,12 @@ impl Shortcut {
 pub const FILE_SAVE:               Shortcut = Shortcut::primary("S");
 pub const EDIT_UNDO:               Shortcut = Shortcut::primary("Z");
 pub const EDIT_REDO:               Shortcut = Shortcut::primary_shift("Z");
-pub const EDIT_DOUBLE_TO_INFINITE: Shortcut = Shortcut::key("D");
 pub const EDIT_DESELECT_ALL:       Shortcut = Shortcut::key("Escape");
+pub const EDIT_ADD_COPY_TRANSLATE: Shortcut = Shortcut::key("T");
+pub const EDIT_ADD_COPY_ROTATE:    Shortcut = Shortcut::key("R");
+pub const EDIT_ADD_COPY_REFLECT:   Shortcut = Shortcut::key("Y");
 pub const VIEW_FIT_TO_CANVAS:      Shortcut = Shortcut::key("F");
 pub const VIEW_ZOOM_IN:            Shortcut = Shortcut::key("+");
 pub const VIEW_ZOOM_OUT:           Shortcut = Shortcut::key("-");
-pub const VIEW_ROTATE_LEFT:        Shortcut = Shortcut::key("E");
-pub const VIEW_ROTATE_RIGHT:       Shortcut = Shortcut::key("R");
+pub const VIEW_ROTATE_LEFT:        Shortcut = Shortcut::key("Q");
+pub const VIEW_ROTATE_RIGHT:       Shortcut = Shortcut::key("E");

@@ -32,9 +32,12 @@ object ShortcutsPopup:
               row("popup.shortcuts.deselectAll", kbd("Esc")),
               row("popup.shortcuts.zoomIn", kbd("+")),
               row("popup.shortcuts.zoomOut", kbd("-")),
-              row("popup.shortcuts.rotateLeft", kbd("E")),
-              row("popup.shortcuts.rotateRight", kbd("R")),
-              row("popup.shortcuts.fitToCanvas", kbd("F"))
+              row("popup.shortcuts.rotateLeft", kbd("Q")),
+              row("popup.shortcuts.rotateRight", kbd("E")),
+              row("popup.shortcuts.fitToCanvas", kbd("F")),
+              row("popup.shortcuts.addCopyTranslate", kbd("T")),
+              row("popup.shortcuts.addCopyRotate", kbd("R")),
+              row("popup.shortcuts.addCopyReflect", kbd("Y"))
             )
           )
         )

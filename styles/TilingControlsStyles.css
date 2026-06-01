@@ -63,7 +63,7 @@
   flex-direction: row;
   align-items: center;
   gap: 0.4em;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 2px solid var(--toggle-border);
   background: transparent;
   color: var(--toggle-border);
@@ -95,6 +95,74 @@
 
 .add-polygon-btn .tool-button-label {
   font-variant-numeric: tabular-nums;
+}
+
+/* --- Add-Copy flyout: a toolbar button whose chevron reveals a vertical submenu.
+   Hover/focus-within driven (no JS state), mirroring the Edit ▸ Add Copy menu submenu. --- */
+.tool-submenu {
+  position: relative;
+  display: inline-flex;
+}
+
+.tool-submenu-chevron {
+  font-size: 0.7em;
+  line-height: 1;
+  margin-left: 0.15em;
+}
+
+.tool-submenu-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 2px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100%;
+  padding: 2px;
+  background: var(--menu-dropdown-bg);
+  color: var(--menu-dropdown-text);
+  border: 1px solid var(--menu-dropdown-border);
+  border-radius: 4px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 30;
+}
+
+.tool-submenu.open > .tool-submenu-content {
+  display: flex;
+}
+
+.tool-submenu-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 94%;
+  text-align: left;
+  white-space: nowrap;
+  padding: 3px 3px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.tool-submenu-option:hover:not(:disabled) {
+  background: var(--menu-dropdown-hover);
+}
+
+.tool-submenu-shortcut {
+  opacity: 0.6;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tool-submenu-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .toggle-btn.mode-select {

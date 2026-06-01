@@ -57,7 +57,6 @@ object DesktopMenuBridge:
     case "undo"                         => UndoManager.undo()
     case "redo"                         => UndoManager.redo()
     case "clear-tiling"                 => AppState.clearTiling()
-    case "double-to-infinite"           => AppState.doubleTiling()
     case "mirror"                       => AppState.mirrorTiling()
     case "select-all-polygons"          => AppState.selectAll()
     case "deselect-all"                 => AppState.deselectAll()

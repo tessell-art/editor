@@ -37,9 +37,7 @@ object Translations:
     "menu.edit.undo"              -> "↶ Undo",
     "menu.edit.redo"              -> "↷ Redo",
     "menu.edit.clearTiling"       -> "Clear Tiling",
-    "menu.edit.doubleToInfinite"  -> "Double (to infinite)",
     "menu.edit.mirror"            -> "Mirror",
-    "menu.edit.fan"               -> "Fan",
     "menu.edit.measurement"       -> "Measurement",
     "menu.edit.addCopy"           -> "Add Copy",
     "menu.edit.addCopy.translate" -> "Translate",
@@ -80,12 +78,14 @@ object Translations:
     "tool.eraser.title"                -> "Activate deletion mode to delete polygons",
     "tool.colorPicker"                 -> "Color",
     "tool.colorPicker.title"           -> "Pick a color from an existing polygon",
-    "tool.shapeColor"                  -> "Shape+Color",
+    "tool.shapeColor"                  -> "Shape",
     "tool.shapeColor.title"            -> "Pick the shape and color from an existing polygon",
     "tool.selectByColor"               -> "SelByCol",
     "tool.selectByColor.title"         -> "Select all polygons with the same color",
     "tool.measurement"                 -> "Measure",
     "tool.measurement.title"           -> "Measure distances and angles",
+    "tool.addCopy"                     -> "Add copy",
+    "tool.addCopy.title"               -> "Add a copy of the tiling under an isometry",
     "tool.fill.title"                  -> "Fill color — click to change",
     "tool.labels.on"                   -> "Labels: ON",
     "tool.labels.off"                  -> "Labels: OFF",
@@ -210,10 +210,9 @@ object Translations:
     "popup.guide.section.addOutside"      -> "Adding regular polygons (outside)",
     "popup.guide.section.addInside"       -> "Adding regular polygons (inside)",
     "popup.guide.section.addIrregular"    -> "Adding irregular polygons",
-    "popup.guide.section.fanning"         -> "Fanning",
     "popup.guide.section.selecting"       -> "Selecting",
     "popup.guide.section.deleting"        -> "Deleting",
-    "popup.guide.section.doubleMirror"    -> "Doubling and mirroring",
+    "popup.guide.section.mirror"          -> "Mirroring",
     "popup.guide.section.styling"         -> "Styling",
     "popup.guide.section.visual"          -> "Visual options",
     "popup.guide.section.measurement"     -> "Measurement",
@@ -229,7 +228,6 @@ object Translations:
     "popup.guide.tool.selectByColor"      -> "Select by color",
     "popup.guide.tool.shapeAndColor"      -> "Shape and color picker",
     "popup.guide.tool.colorPicker"        -> "Color picker",
-    "popup.guide.tool.fan"                -> "Fan",
     "popup.guide.tool.eraser"             -> "Eraser",
     "popup.guide.tool.measurement"        -> "Measurement",
     "popup.guide.tool.fit"                -> "Fit",
@@ -250,10 +248,6 @@ object Translations:
       "Click the ↺ button on the top-right corner of the palette item to shift the attaching edge.",
     "popup.guide.addIrregular.copy"       ->
       "Use the {iconShapeAndColor} {shapeAndColor} tool to copy the shape (and fill colour) of an existing irregular polygon.",
-    "popup.guide.fanning.tool"            ->
-      "Use the {iconFan} {fan} tool to add rotated copies of the tiling around a boundary vertex.",
-    "popup.guide.fanning.howTo"           ->
-      "Click a polygon to highlight its boundary vertices, then click one. As many copies as fit are added, up to a full circle.",
     "popup.guide.selecting.click"         ->
       "In {addOutside} mode, click any polygon to select it.",
     "popup.guide.selecting.all"           ->
@@ -268,9 +262,7 @@ object Translations:
       "Use the {iconEraser} {eraser} tool to remove a vertex, an edge, or a whole polygon.",
     "popup.guide.deleting.howTo"          ->
       "Click a polygon to highlight its vertices, mid-edge points, and centre, then click the item you want to remove.",
-    "popup.guide.doubleMirror.double"     ->
-      "Use {menuDouble} or press {kbdD} to double the entire tiling. This works only when the boundary is a parallelogon (a polygon whose opposite sides are equal and parallel), so the doubled copies could tile the infinite plane.",
-    "popup.guide.doubleMirror.mirror"     ->
+    "popup.guide.mirror.howTo"            ->
       "Use {menuMirror} to switch to a mirror image of the tiling.",
     "popup.guide.styling.fill"            ->
       "In {addOutside} mode, select one or more polygons, then click the colour button or use {menuFillColor} to open the colour picker.",
@@ -301,7 +293,7 @@ object Translations:
     "popup.guide.navigating.zoom"         ->
       "Zoom: scroll the mouse wheel, pinch on a touch device, or press {kbdPlus} / {kbdMinus}.",
     "popup.guide.navigating.rotate"       ->
-      "Rotate: press {kbdE} (left) or {kbdR} (right).",
+      "Rotate: press {kbdQ} (left) or {kbdE} (right).",
     "popup.guide.navigating.fit"          ->
       "Fit: use the {iconMaximize} {fit} button or press {kbdF} to fit the entire tiling in view.",
     "popup.guide.navigating.reset"        ->
@@ -326,6 +318,9 @@ object Translations:
     "popup.shortcuts.rotateLeft"          -> "Rotate Left",
     "popup.shortcuts.rotateRight"         -> "Rotate Right",
     "popup.shortcuts.fitToCanvas"         -> "Fit to Canvas",
+    "popup.shortcuts.addCopyTranslate"    -> "Add copy: Translate",
+    "popup.shortcuts.addCopyRotate"       -> "Add copy: Rotate",
+    "popup.shortcuts.addCopyReflect"      -> "Add copy: Reflect",
     "popup.irregular.title"               -> "Adjust attaching edge",
     "popup.irregular.empty"               -> "No irregular polygon",
     "popup.irregular.shiftLeft"           -> "Move head left",
@@ -406,9 +401,7 @@ object Translations:
     "menu.edit.undo"              -> "↶ Deshacer",
     "menu.edit.redo"              -> "↷ Rehacer",
     "menu.edit.clearTiling"       -> "Vaciar la teselación",
-    "menu.edit.doubleToInfinite"  -> "Duplicar (al infinito)",
     "menu.edit.mirror"            -> "Reflejar",
-    "menu.edit.fan"               -> "Abanico",
     "menu.edit.measurement"       -> "Medir",
     "menu.edit.addCopy"           -> "Añadir copia",
     "menu.edit.addCopy.translate" -> "Trasladar",
@@ -449,12 +442,14 @@ object Translations:
     "tool.eraser.title"                -> "Activar el modo de borrado para eliminar polígonos",
     "tool.colorPicker"                 -> "Color",
     "tool.colorPicker.title"           -> "Tomar el color de un polígono existente",
-    "tool.shapeColor"                  -> "Forma+color",
+    "tool.shapeColor"                  -> "Forma",
     "tool.shapeColor.title"            -> "Tomar la forma y el color de un polígono existente",
     "tool.selectByColor"               -> "PorColor",
     "tool.selectByColor.title"         -> "Seleccionar todos los polígonos del mismo color",
     "tool.measurement"                 -> "Medir",
     "tool.measurement.title"           -> "Medir distancias y ángulos",
+    "tool.addCopy"                     -> "Añadir copia",
+    "tool.addCopy.title"               -> "Añadir una copia de la teselación bajo una isometría",
     "tool.fill.title"                  -> "Color de relleno — pulsar para cambiar",
     "tool.labels.on"                   -> "Etiquetas: SÍ",
     "tool.labels.off"                  -> "Etiquetas: NO",
@@ -580,10 +575,9 @@ object Translations:
     "popup.guide.section.addOutside"      -> "Añadir polígonos regulares (exterior)",
     "popup.guide.section.addInside"       -> "Añadir polígonos regulares (interior)",
     "popup.guide.section.addIrregular"    -> "Añadir polígonos irregulares",
-    "popup.guide.section.fanning"         -> "Abanico",
     "popup.guide.section.selecting"       -> "Selección",
     "popup.guide.section.deleting"        -> "Borrado",
-    "popup.guide.section.doubleMirror"    -> "Duplicar y reflejar",
+    "popup.guide.section.mirror"          -> "Reflejar",
     "popup.guide.section.styling"         -> "Estilo",
     "popup.guide.section.visual"          -> "Opciones visuales",
     "popup.guide.section.measurement"     -> "Medición",
@@ -599,7 +593,6 @@ object Translations:
     "popup.guide.tool.selectByColor"      -> "Seleccionar por color",
     "popup.guide.tool.shapeAndColor"      -> "Selector de forma y color",
     "popup.guide.tool.colorPicker"        -> "Selector de color",
-    "popup.guide.tool.fan"                -> "Abanico",
     "popup.guide.tool.eraser"             -> "Borrador",
     "popup.guide.tool.measurement"        -> "Medición",
     "popup.guide.tool.fit"                -> "Ajustar",
@@ -620,10 +613,6 @@ object Translations:
       "Pulsa el botón ↺ en la esquina superior derecha del elemento de la paleta para desplazar la arista de unión.",
     "popup.guide.addIrregular.copy"       ->
       "Usa la herramienta {iconShapeAndColor} {shapeAndColor} para copiar la forma (y el color de relleno) de un polígono irregular existente.",
-    "popup.guide.fanning.tool"            ->
-      "Usa la herramienta {iconFan} {fan} para añadir copias rotadas de la teselación alrededor de un vértice del contorno.",
-    "popup.guide.fanning.howTo"           ->
-      "Pulsa un polígono para resaltar sus vértices del contorno y luego pulsa uno. Se añaden tantas copias como quepan, hasta una circunferencia completa.",
     "popup.guide.selecting.click"         ->
       "En el modo {addOutside}, pulsa cualquier polígono para seleccionarlo.",
     "popup.guide.selecting.all"           ->
@@ -638,9 +627,7 @@ object Translations:
       "Usa la herramienta {iconEraser} {eraser} para borrar un vértice, una arista o un polígono entero.",
     "popup.guide.deleting.howTo"          ->
       "Pulsa un polígono para resaltar sus vértices, puntos medios de arista y centro, y luego pulsa el elemento que quieras borrar.",
-    "popup.guide.doubleMirror.double"     ->
-      "Usa {menuDouble} o pulsa {kbdD} para duplicar la teselación entera. Solo funciona cuando el contorno es un paralelogon (un polígono cuyos lados opuestos son iguales y paralelos), de modo que las copias duplicadas podrían cubrir el plano infinito.",
-    "popup.guide.doubleMirror.mirror"     ->
+    "popup.guide.mirror.howTo"            ->
       "Usa {menuMirror} para cambiar a una imagen reflejada de la teselación.",
     "popup.guide.styling.fill"            ->
       "En el modo {addOutside}, selecciona uno o más polígonos y luego pulsa el botón de color o usa {menuFillColor} para abrir el selector de color.",
@@ -671,7 +658,7 @@ object Translations:
     "popup.guide.navigating.zoom"         ->
       "Zoom: gira la rueda del ratón, pellizca en pantalla táctil o pulsa {kbdPlus} / {kbdMinus}.",
     "popup.guide.navigating.rotate"       ->
-      "Girar: pulsa {kbdE} (izquierda) o {kbdR} (derecha).",
+      "Girar: pulsa {kbdQ} (izquierda) o {kbdE} (derecha).",
     "popup.guide.navigating.fit"          ->
       "Ajustar: usa el botón {iconMaximize} {fit} o pulsa {kbdF} para encajar toda la teselación en la vista.",
     "popup.guide.navigating.reset"        ->
@@ -696,6 +683,9 @@ object Translations:
     "popup.shortcuts.rotateLeft"          -> "Girar a la izquierda",
     "popup.shortcuts.rotateRight"         -> "Girar a la derecha",
     "popup.shortcuts.fitToCanvas"         -> "Ajustar al lienzo",
+    "popup.shortcuts.addCopyTranslate"    -> "Añadir copia: Trasladar",
+    "popup.shortcuts.addCopyRotate"       -> "Añadir copia: Girar",
+    "popup.shortcuts.addCopyReflect"      -> "Añadir copia: Reflejar",
     "popup.irregular.title"               -> "Ajustar arista de unión",
     "popup.irregular.empty"               -> "Sin polígono irregular",
     "popup.irregular.shiftLeft"           -> "Mover el inicio a la izquierda",

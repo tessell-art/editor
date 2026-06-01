@@ -17,8 +17,10 @@ object MenuShortcuts:
     case FileSave,
       EditUndo,
       EditRedo,
-      EditDoubleToInfinite,
       EditDeselectAll,
+      EditAddCopyTranslate,
+      EditAddCopyRotate,
+      EditAddCopyReflect,
       ViewFitToCanvas,
       ViewZoomIn,
       ViewZoomOut,
@@ -47,13 +49,15 @@ object MenuShortcuts:
     MenuAction.FileSave             -> Shortcut("S", primary = true),
     MenuAction.EditUndo             -> Shortcut("Z", primary = true),
     MenuAction.EditRedo             -> Shortcut("Z", primary = true, shift = true),
-    MenuAction.EditDoubleToInfinite -> Shortcut("D"),
     MenuAction.EditDeselectAll      -> Shortcut("Esc"),
+    MenuAction.EditAddCopyTranslate -> Shortcut("T"),
+    MenuAction.EditAddCopyRotate    -> Shortcut("R"),
+    MenuAction.EditAddCopyReflect   -> Shortcut("Y"),
     MenuAction.ViewFitToCanvas      -> Shortcut("F"),
     MenuAction.ViewZoomIn           -> Shortcut("+"),
     MenuAction.ViewZoomOut          -> Shortcut("-"),
-    MenuAction.ViewRotateLeft       -> Shortcut("E"),
-    MenuAction.ViewRotateRight      -> Shortcut("R")
+    MenuAction.ViewRotateLeft       -> Shortcut("Q"),
+    MenuAction.ViewRotateRight      -> Shortcut("E")
   )
 
   def of(action: MenuAction): Shortcut = bindings(action)
