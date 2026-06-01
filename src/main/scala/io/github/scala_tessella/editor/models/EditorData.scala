@@ -211,7 +211,7 @@ object MeasurementState:
     clickablePoints = Nil,
     measurementResult = None,
     measurementAngle = None,
-    isAngleShownInRad = true
+    isAngleShownInRad = false
   )
 
 /** Popup-state aggregate: visibility flags for the app's modal popups. */
