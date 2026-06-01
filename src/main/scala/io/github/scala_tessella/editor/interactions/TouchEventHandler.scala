@@ -158,19 +158,18 @@ object TouchEventHandler:
     if AddCopyOperations.hasActiveDrag then
       event.preventDefault()
       val _ = AddCopyOperations.endActiveDrag()
-      resetTouchState()
-      return
-    val wasDragging = isDragging.now()
-    if wasDragging then
-      event.preventDefault()
     else
-      // Tap (not drag) while eraser is active: check for direct-hit deletion
-      val tool = EditorState.toolState.now().activeTool
-      if tool == Tool.Eraser then
-        touchStartPoint.now().foreach: startPoint =>
-          EraserProximityQuery.findDirectHit(startPoint.x, startPoint.y).foreach: hit =>
-            io.github.scala_tessella.editor.operations.SelectionOperations
-              .handlePointClickForDeletion(hit)
+      val wasDragging = isDragging.now()
+      if wasDragging then
+        event.preventDefault()
+      else
+        // Tap (not drag) while eraser is active: check for direct-hit deletion
+        val tool = EditorState.toolState.now().activeTool
+        if tool == Tool.Eraser then
+          touchStartPoint.now().foreach: startPoint =>
+            EraserProximityQuery.findDirectHit(startPoint.x, startPoint.y).foreach: hit =>
+              io.github.scala_tessella.editor.operations.SelectionOperations
+                .handlePointClickForDeletion(hit)
     resetTouchState()
 
   def handleTouchCancel(event: TouchEvent): Unit =
