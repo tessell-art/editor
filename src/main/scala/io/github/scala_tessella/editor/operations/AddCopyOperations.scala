@@ -27,8 +27,8 @@ import spire.math.Rational
   *
   * Both are direct-manipulation gestures driven by [[interactions.MouseEventHandler]] and
   * [[interactions.TouchEventHandler]] (which suppress panning while a drag is in flight — see
-  * [[beginDragForActiveTool]] / [[updateActiveDrag]] / [[endActiveDrag]], the shared dispatch both call)
-  * and rendered as a dashed skeleton overlay.
+  * [[beginDragForActiveTool]] / [[updateActiveDrag]] / [[endActiveDrag]], the shared dispatch both call) and
+  * rendered as a dashed skeleton overlay.
   *
   *   - **Translate**: drag the skeleton; the `from` endpoint is the vertex nearest the press, the `to`
   *     endpoint snaps to the vertex nearest the release. Both are exact tiling vertices (`vertex.coords`,
