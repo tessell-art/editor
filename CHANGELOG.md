@@ -59,6 +59,10 @@ and in the git history.
   gone), and the in-app guide. Mirror is unaffected.
 
 ### Fixed
+- The info toasts announcing computed **uniformity classes** and **rotational /
+  reflectional** symmetry classes now stay until the user closes them, instead of
+  auto-dismissing after 4s — matching error-toast behaviour, so the summary can be
+  read at leisure. Other info/warning toasts still auto-dismiss.
 - **Show Uniformity** dots and the **symmetry axes** (rotational / reflectional) no
   longer vanish when zooming out below 50%. They were gated by the same level-of-detail
   threshold (`lodMinScale = 0.5`) as the node labels, but they describe the tiling's

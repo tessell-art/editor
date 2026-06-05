@@ -27,8 +27,11 @@ object SymmetryOperations:
     )
 
   private def displaySizeInfo(size: Int, dataType: String): Unit =
+    // Sticky: these summaries describe what the overlay shows; the user reads them at
+    // leisure and dismisses manually (same as error toasts), rather than racing a timer.
     ErrorOperations.info(
-      s"$dataType data computed: $size ${if size == 1 then "class" else "classes"} found"
+      s"$dataType data computed: $size ${if size == 1 then "class" else "classes"} found",
+      sticky = true
     )
 
   /** Toggles a visibility flag backed by a cache of computed data.

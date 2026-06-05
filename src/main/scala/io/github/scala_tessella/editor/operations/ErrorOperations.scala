@@ -54,7 +54,8 @@ object ErrorOperations:
       context: Option[String] = None,
       hint: Option[String] = None,
       asToast: Boolean = true,
-      severity: Severity = Severity.Error
+      severity: Severity = Severity.Error,
+      sticky: Boolean = false
   ): Unit =
     val friendly    = context.fold(message)(ctx => s"$ctx: $message")
     val fullMessage =
@@ -86,7 +87,12 @@ object ErrorOperations:
           )
         }
         if asToast then
-          showToast(fullMessage, severity, durationMs = if severity == Severity.Error then 6000 else 4000)
+          showToast(
+            fullMessage,
+            severity,
+            durationMs = if severity == Severity.Error then 6000 else 4000,
+            sticky = sticky
+          )
     }.recover {
       case _ => // Ignore errors in test environment (no `window`)
     }: Unit
@@ -95,9 +101,17 @@ object ErrorOperations:
       message: String,
       context: Option[String] = None,
       hint: Option[String] = None,
-      asToast: Boolean = true
+      asToast: Boolean = true,
+      sticky: Boolean = false
   ): Unit =
-    showError(message, context = context, hint = hint, asToast = asToast, severity = Severity.Info)
+    showError(
+      message,
+      context = context,
+      hint = hint,
+      asToast = asToast,
+      severity = Severity.Info,
+      sticky = sticky
+    )
 
   def warn(
       message: String,
@@ -157,11 +171,12 @@ object ErrorOperations:
         val fallback = dom.document.body
         fallback
 
-  private def showToast(text: String, severity: Severity, durationMs: Int): Unit =
+  private def showToast(text: String, severity: Severity, durationMs: Int, sticky: Boolean): Unit =
     val container = ensureToastContainer()
-    // Errors stay until the user dismisses them (selectable text, no clock pressure).
-    // Info/warning auto-dismiss and also dismiss on click anywhere on the toast.
-    val isSticky  = severity == Severity.Error
+    // Errors stay until the user dismisses them (selectable text, no clock pressure); other
+    // severities can opt in via `sticky` (e.g. symmetry/uniformity summaries the user reads at leisure).
+    // Non-sticky info/warning auto-dismiss and also dismiss on click anywhere on the toast.
+    val isSticky  = severity == Severity.Error || sticky
 
     dom.document.createElement("div") match
       case toast: dom.HTMLDivElement =>
