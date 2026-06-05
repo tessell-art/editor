@@ -48,6 +48,9 @@ and in the git history.
   imprecision.
 - Tap-to-delete on touch: tapping near a deletable point with the eraser
   active removes it without needing a drag gesture.
+- New **Uniformity** category in the template gallery, alongside Regular,
+  Semi-regular and Aperiodic. It offers six k-uniform tilings (2-uniform
+  through 7-uniform) loaded from `public/templates/uniformity/`.
 
 ### Removed
 - **Edit ▸ Double (to infinite)** and **Edit ▸ Fan** — superseded by Add Copy
@@ -56,6 +59,12 @@ and in the git history.
   gone), and the in-app guide. Mirror is unaffected.
 
 ### Fixed
+- **Show Uniformity** dots no longer vanish when zooming out below 50%. They were
+  gated by the same level-of-detail threshold (`lodMinScale = 0.5`) as the node
+  labels and symmetry axes, but showing uniformity makes the polygon fills
+  transparent — so culling the dots blanked the canvas exactly when the overall
+  pattern is most worth seeing. The uniformity overlay is now exempt from the LOD
+  threshold and stays visible at any zoom; labels and symmetry axes still auto-hide.
 - **Add Copy** tools now respond to touch. The drag gesture was wired only into
   the mouse handler, so on touch a press did nothing and a drag panned the
   canvas. Touch now grabs the skeleton (one finger to drag, two-finger

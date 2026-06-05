@@ -30,8 +30,9 @@ object TessellationRenderer:
             TessellationEdgeRenderer.renderInteriorEdgesForFace(tiling, fid, tilingPointToCanvasView)
           case _                 => List.empty
 
-    // Secondary overlays (labels + uniformity / rotation / reflection) honour the user's toggle AND
+    // Secondary overlays (labels / rotation / reflection) honour the user's toggle AND
     // the level-of-detail threshold — at low zoom they auto-hide to reduce visual noise.
+    // Uniformity dots are the exception (see below).
 
     val nodeLabels = children <--
       EditorState.viewState.signal.map(_.showNodeLabels).distinct
@@ -41,12 +42,14 @@ object TessellationRenderer:
             TessellationOverlayRenderer.renderNodeLabels(tiling.coordinates, tilingPointToCanvasView)
           else List.empty
 
+    // Uniformity dots are exempt from the LOD threshold: showing uniformity makes the
+    // polygon fills transparent, so the dots are the whole view — culling them on zoom-out
+    // would blank the canvas exactly when the overall pattern is most worth seeing.
     val nodeUniformity = children <--
       EditorState.viewState.signal.map(_.showUniformity).distinct
         .combineWith(EditorState.viewState.signal.map(_.uniformityMap).distinct)
-        .combineWith(EditorState.isAboveLodThreshold)
-        .map: (showUni, uniOpt, aboveLod) =>
-          if showUni && aboveLod && uniOpt.nonEmpty then
+        .map: (showUni, uniOpt) =>
+          if showUni && uniOpt.nonEmpty then
             TessellationOverlayRenderer.renderUniformity(
               tiling.coordinates,
               uniOpt.get,
