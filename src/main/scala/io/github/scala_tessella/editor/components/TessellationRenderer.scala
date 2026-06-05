@@ -30,9 +30,9 @@ object TessellationRenderer:
             TessellationEdgeRenderer.renderInteriorEdgesForFace(tiling, fid, tilingPointToCanvasView)
           case _                 => List.empty
 
-    // Secondary overlays (labels / rotation / reflection) honour the user's toggle AND
-    // the level-of-detail threshold — at low zoom they auto-hide to reduce visual noise.
-    // Uniformity dots are the exception (see below).
+    // Node labels honour the user's toggle AND the level-of-detail threshold — at low zoom
+    // they auto-hide to reduce visual noise. The uniformity dots and symmetry axes below are
+    // exempt: they describe global structure and stay visible at any zoom.
 
     val nodeLabels = children <--
       EditorState.viewState.signal.map(_.showNodeLabels).distinct
@@ -57,12 +57,13 @@ object TessellationRenderer:
             )
           else List.empty
 
+    // Symmetry axes (rotational / reflectional) are likewise exempt from the LOD threshold:
+    // they describe the global structure of the tiling, which is most useful when zoomed out.
     val nodeRotation = children <--
       EditorState.viewState.signal.map(_.showRotation).distinct
         .combineWith(EditorState.viewState.signal.map(_.rotationVertexIds).distinct)
-        .combineWith(EditorState.isAboveLodThreshold)
-        .map: (showRot, rotOpt, aboveLod) =>
-          if showRot && aboveLod && rotOpt.nonEmpty then
+        .map: (showRot, rotOpt) =>
+          if showRot && rotOpt.nonEmpty then
             TessellationOverlayRenderer.renderRotation(
               tiling.coordinates,
               rotOpt.get,
@@ -73,9 +74,8 @@ object TessellationRenderer:
     val nodeReflection = children <--
       EditorState.viewState.signal.map(_.showReflection).distinct
         .combineWith(EditorState.viewState.signal.map(_.reflectionVertexIds).distinct)
-        .combineWith(EditorState.isAboveLodThreshold)
-        .map: (showRefl, reflOpt, aboveLod) =>
-          if showRefl && aboveLod && reflOpt.nonEmpty then
+        .map: (showRefl, reflOpt) =>
+          if showRefl && reflOpt.nonEmpty then
             TessellationOverlayRenderer.renderReflection(
               tiling.coordinates,
               reflOpt.get,

@@ -19,9 +19,9 @@ object EditorConfig:
   val minViewScale: Double = 0.1
   val maxViewScale: Double = 20.0
 
-  // Below this view scale, secondary overlays (node labels, symmetry axes) auto-hide to
-  // reduce visual noise (level-of-detail). Uniformity dots are exempt — they remain visible
-  // at any zoom because showing uniformity hides the polygon fills.
+  // Below this view scale, node labels auto-hide to reduce visual noise (level-of-detail).
+  // Uniformity dots and symmetry axes are exempt — they describe the tiling's global
+  // structure and stay visible at any zoom.
   val lodMinScale: Double = 0.5
 
   // View zoom factors by input modality

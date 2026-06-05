@@ -59,12 +59,13 @@ and in the git history.
   gone), and the in-app guide. Mirror is unaffected.
 
 ### Fixed
-- **Show Uniformity** dots no longer vanish when zooming out below 50%. They were
-  gated by the same level-of-detail threshold (`lodMinScale = 0.5`) as the node
-  labels and symmetry axes, but showing uniformity makes the polygon fills
-  transparent — so culling the dots blanked the canvas exactly when the overall
-  pattern is most worth seeing. The uniformity overlay is now exempt from the LOD
-  threshold and stays visible at any zoom; labels and symmetry axes still auto-hide.
+- **Show Uniformity** dots and the **symmetry axes** (rotational / reflectional) no
+  longer vanish when zooming out below 50%. They were gated by the same level-of-detail
+  threshold (`lodMinScale = 0.5`) as the node labels, but they describe the tiling's
+  global structure, which is most useful when zoomed out — and showing uniformity makes
+  the polygon fills transparent, so culling the dots blanked the canvas entirely. These
+  overlays are now exempt from the LOD threshold and stay visible at any zoom; node
+  labels still auto-hide below 50%.
 - **Add Copy** tools now respond to touch. The drag gesture was wired only into
   the mouse handler, so on touch a press did nothing and a drag panned the
   canvas. Touch now grabs the skeleton (one finger to drag, two-finger
