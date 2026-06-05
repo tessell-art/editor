@@ -23,23 +23,26 @@ object TemplateGalleryPopup:
   import PopupCommons._
 
   private enum Category:
-    case Regular, SemiRegular, Aperiodic
+    case Regular, SemiRegular, Aperiodic, Uniformity
 
   private object Category:
     def labelKey(c: Category): String = c match
       case Regular     => "popup.templates.regular"
       case SemiRegular => "popup.templates.semiRegular"
       case Aperiodic   => "popup.templates.aperiodic"
+      case Uniformity  => "popup.templates.uniformity"
 
     def directory(c: Category): String = c match
       case Regular     => "regular"
       case SemiRegular => "semiregular"
       case Aperiodic   => "aperiodic"
+      case Uniformity  => "uniformity"
 
     def templates(c: Category): List[Template] = c match
       case Regular     => PolygonNameGenerator.regularNames
       case SemiRegular => PolygonNameGenerator.semiRegularNames
       case Aperiodic   => PolygonNameGenerator.irregularNames
+      case Uniformity  => PolygonNameGenerator.uniformityNames
 
   private val close: Observer[Any] =
     closePopup(EditorState.popupState.update(_.copy(showTemplateGallery = false)))
@@ -61,7 +64,7 @@ object TemplateGalleryPopup:
   private def categorySidebar(selected: Var[Category]): Element =
     div(
       className := "template-gallery-sidebar",
-      List(Category.Regular, Category.SemiRegular, Category.Aperiodic).map: c =>
+      List(Category.Regular, Category.SemiRegular, Category.Aperiodic, Category.Uniformity).map: c =>
         button(
           tpe       := "button",
           className := "template-gallery-category",

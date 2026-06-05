@@ -332,6 +332,7 @@ object Translations:
     "popup.templates.regular"             -> "Regular",
     "popup.templates.semiRegular"         -> "Semi-regular",
     "popup.templates.aperiodic"           -> "Aperiodic",
+    "popup.templates.uniformity"          -> "Uniformity",
     "popup.recent.title"                  -> "Recent files",
     "popup.recent.empty"                  -> "No recent files yet. Templates loaded from the gallery will appear here.",
     "popup.recent.footnote"               ->
@@ -697,6 +698,7 @@ object Translations:
     "popup.templates.regular"             -> "Regulares",
     "popup.templates.semiRegular"         -> "Semi-regulares",
     "popup.templates.aperiodic"           -> "Aperiódicas",
+    "popup.templates.uniformity"          -> "Uniformidad",
     "popup.recent.title"                  -> "Archivos recientes",
     "popup.recent.empty"                  ->
       "Aún no hay archivos recientes. Las plantillas que cargues desde la galería aparecerán aquí.",

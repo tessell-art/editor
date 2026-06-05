@@ -59,3 +59,13 @@ object PolygonNameGenerator:
       ("Penrose", "P1", "penrose_P1.svg"),
       ("Penrose", "P3", "penrose_P3.svg")
     )
+
+  def uniformityNames: List[Template] =
+    List(
+      ("2-uniform", "2-Archimedean", "uni2.svg"),
+      ("3-uniform", "3-Archimedean", "uni3.svg"),
+      ("4-uniform", "4-Archimedean", "uni4.svg"),
+      ("5-uniform", "5-Archimedean", "uni5.svg"),
+      ("6-uniform", "6-Archimedean", "uni6.svg"),
+      ("7-uniform", "7-Archimedean", "uni7.svg")
+    )
