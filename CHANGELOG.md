@@ -76,6 +76,19 @@ and in the git history.
   pinch/zoom still works) by sharing a single dispatch with the mouse path.
 
 ### Changed
+- **Anchor markers** (vertex / edge-midpoint / face-centroid) are now harmonised
+  across every tool. Shape encodes the anchor *type* — vertex = solid
+  disc, mid-edge = ellipse aligned to its edge, centroid = hollow ring — and
+  colour/size encodes the *role* — idle, active (snapped/picked), measurement
+  start/end. Previously the shape was always a circle and colour meant different
+  things in different tools (type in Add Copy, but a flat orange in Eraser and
+  Measurement). Eraser and Measurement points are now type-aware, and the
+  palette/radii live in one place (`MarkerStyle` / `AnchorMarker`) instead of
+  being hardcoded per renderer.
+- **Measurement start/end** no longer rely on a green/red pair (indistinguishable
+  for red-green colour-blindness). They now use the colour-blind-safe
+  blue↔vermillion pair, and the measurement line carries an arrowhead pointing
+  start → end so the order is legible without colour.
 - `Esc` now exits **Measurement** and **Eraser** modes (clearing the clickable-point
   overlay and returning to Add Polygon), matching how it already exits the Add Copy
   modes.

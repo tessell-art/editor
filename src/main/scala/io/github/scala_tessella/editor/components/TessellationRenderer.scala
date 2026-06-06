@@ -7,9 +7,8 @@ import io.github.scala_tessella.editor.models.{
   Tool,
   TranslateCopyDrag
 }
+import io.github.scala_tessella.editor.components.AnchorMarker.MarkerState
 import io.github.scala_tessella.editor.operations.AddCopyOperations
-import io.github.scala_tessella.editor.utils.SvgDsl.circleCoordsRadius
-import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 
 object TessellationRenderer:
@@ -139,7 +138,11 @@ object TessellationRenderer:
             .filterNot: p =>
               startPointOpt.contains(p)
             .map: p =>
-              TessellationMeasurementRenderer.renderClickablePoint(p, tilingPointToCanvasView)
+              TessellationMeasurementRenderer.renderClickablePoint(
+                p,
+                tilingPointToCanvasView,
+                AnchorMarker.edgeAngleDeg(tiling, p.anchor, tilingPointToCanvasView)
+              )
 
     // Add Copy ▸ Translate: vertices shown as passive "clipping point" dots while the tool is active; the
     // vertex currently snapped as the release target is enlarged and recoloured.
@@ -150,7 +153,13 @@ object TessellationRenderer:
           case (true, dragOpt) =>
             val snapId = dragOpt.flatMap(_.snapTarget.map(_._1))
             AddCopyOperations.vertexAnchorsCv(tiling).map: (id, p) =>
-              renderVertexDot(p, snapId.contains(id))
+              AnchorMarker.renderPassive(
+                p,
+                Anchor.Vertex(id),
+                if snapId.contains(id) then MarkerState.Active else MarkerState.Idle,
+                None,
+                "translate-copy-vertex"
+              )
           case _               => Nil
 
     // The dashed skeleton of the whole tiling, translated by the live (free) drag offset.
@@ -167,7 +176,13 @@ object TessellationRenderer:
           case (true, dragOpt) =>
             val picked = dragOpt.map(_.centerAnchor)
             AddCopyOperations.rotationCentres(tiling).map: (anchor, p) =>
-              renderCentreDot(p, anchor, picked.contains(anchor))
+              AnchorMarker.renderPassive(
+                p,
+                anchor,
+                if picked.contains(anchor) then MarkerState.Active else MarkerState.Idle,
+                AnchorMarker.edgeAngleDeg(tiling, anchor, tilingPointToCanvasView),
+                "rotate-copy-centre"
+              )
           case _               => Nil
 
     // The dashed skeleton rotated by the live (snapped or free) angle about the picked centre.
@@ -187,7 +202,13 @@ object TessellationRenderer:
             val picked: Set[Anchor] =
               dragOpt.toSet.flatMap(d => Set(d.axisAnchor) ++ d.snapTarget.map(_._1))
             AddCopyOperations.reflectAnchors(tiling).map: (anchor, p) =>
-              renderCentreDot(p, anchor, picked.contains(anchor))
+              AnchorMarker.renderPassive(
+                p,
+                anchor,
+                if picked.contains(anchor) then MarkerState.Active else MarkerState.Idle,
+                AnchorMarker.edgeAngleDeg(tiling, anchor, tilingPointToCanvasView),
+                "rotate-copy-centre"
+              )
           case _               => Nil
 
     // The dashed skeleton mirrored across the live axis A–B, with a spanning axis guide line.
@@ -205,11 +226,19 @@ object TessellationRenderer:
     val measurementStartPointDisplay =
       child.maybe <-- EditorState.measurementState.signal.map(_.measurementStartPoint).distinct.map:
         _.map: p =>
-          TessellationMeasurementRenderer.renderMeasurementStartPoint(p, tilingPointToCanvasView)
+          TessellationMeasurementRenderer.renderMeasurementStartPoint(
+            p,
+            tilingPointToCanvasView,
+            AnchorMarker.edgeAngleDeg(tiling, p.anchor, tilingPointToCanvasView)
+          )
     val measurementEndPointDisplay   =
       child.maybe <-- EditorState.measurementState.signal.map(_.measurementEndPoint).distinct.map:
         _.map: p =>
-          TessellationMeasurementRenderer.renderMeasurementEndPoint(p, tilingPointToCanvasView)
+          TessellationMeasurementRenderer.renderMeasurementEndPoint(
+            p,
+            tilingPointToCanvasView,
+            AnchorMarker.edgeAngleDeg(tiling, p.anchor, tilingPointToCanvasView)
+          )
     val measurementLineDisplay       = child.maybe <-- measurementSignals.map:
       case (Some(start), _, Some(end)) =>
         Some(TessellationMeasurementRenderer.renderMeasurementLine(start, end, tilingPointToCanvasView))
@@ -267,18 +296,6 @@ object TessellationRenderer:
       measurementAngleArcDisplay
     )
 
-  /** A single clipping-point dot (canvas-view coords). The live snap target is enlarged and tinted green. */
-  private def renderVertexDot(point: Point, isSnapTarget: Boolean): Element =
-    svg.circle(
-      circleCoordsRadius(point, if isSnapTarget then 7 else 4),
-      svg.fill          := (if isSnapTarget then "#34c759" else "#ff9500"),
-      svg.stroke        := "black",
-      svg.strokeWidth   := "1",
-      svg.opacity       := (if isSnapTarget then "1.0" else "0.85"),
-      svg.pointerEvents := "none",
-      svg.className     := "translate-copy-vertex"
-    )
-
   /** Dashed outline of every face, grouped and translated by the live drag offset. Face point strings are
     * already in canvas-view coords (snapshot at drag start), so only the group transform changes per move.
     */
@@ -296,24 +313,6 @@ object TessellationRenderer:
           svg.strokeDashArray := "5,5",
           svg.opacity         := "0.9"
         )
-    )
-
-  /** A rotation-centre dot, colour-coded by anchor kind (vertex = orange, edge midpoint = blue, face centre =
-    * green). The picked centre is enlarged during a drag.
-    */
-  private def renderCentreDot(point: Point, anchor: Anchor, isPicked: Boolean): Element =
-    val fill          = anchor match
-      case Anchor.Vertex(_)      => "#ff9500"
-      case Anchor.MidPoint(_, _) => "#0a84ff"
-      case Anchor.Center(_)      => "#34c759"
-    svg.circle(
-      circleCoordsRadius(point, if isPicked then 7 else 4),
-      svg.fill          := fill,
-      svg.stroke        := "black",
-      svg.strokeWidth   := "1",
-      svg.opacity       := (if isPicked then "1.0" else "0.85"),
-      svg.pointerEvents := "none",
-      svg.className     := "rotate-copy-centre"
     )
 
   /** Dashed skeleton rotated about the picked centre by the live angle, with a small angle readout (the label

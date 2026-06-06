@@ -3,8 +3,9 @@ package io.github.scala_tessella.editor.components
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.{AddSubmode, ClickablePoint, EditorState, Tool}
+import io.github.scala_tessella.editor.components.AnchorMarker.MarkerState
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import io.github.scala_tessella.editor.utils.SvgDsl.{circleCoordsRadius, lineCoords}
+import io.github.scala_tessella.editor.utils.SvgDsl.lineCoords
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object TessellationMeasurementRenderer:
@@ -18,16 +19,17 @@ object TessellationMeasurementRenderer:
 
   def renderClickablePoint(
       p: ClickablePoint,
-      toCanvasPoint: Point => Point
+      toCanvasPoint: Point => Point,
+      angleDeg: Option[Double]
   ): Element =
     val point = toCanvasPoint(p.point)
 
-    svg.circle(
-      circleCoordsRadius(point, 4),
-      svg.fill          := "#ff9500",
-      svg.stroke        := "black",
-      svg.strokeWidth   := "1",
-      svg.className     := "clickable-point",
+    AnchorMarker.renderInteractive(
+      point,
+      p.anchor,
+      MarkerState.Idle,
+      angleDeg,
+      "clickable-point",
       onClick.preventDefault
         .mapTo(p)
         .compose(stream =>
@@ -46,30 +48,33 @@ object TessellationMeasurementRenderer:
   private def renderMeasurementPoint(
       p: ClickablePoint,
       toCanvasPoint: Point => Point,
+      angleDeg: Option[Double],
       isStartPoint: Boolean = true
   ): Element =
     val point = toCanvasPoint(p.point)
 
-    svg.circle(
-      circleCoordsRadius(point, 5),
-      svg.fill        := (if isStartPoint then "#00C853" else "#D50000"),
-      svg.stroke      := "black",
-      svg.strokeWidth := "1",
-      svg.className   := s"measurement-${if isStartPoint then "start" else "end"}-point",
+    AnchorMarker.renderInteractive(
+      point,
+      p.anchor,
+      if isStartPoint then MarkerState.MeasureStart else MarkerState.MeasureEnd,
+      angleDeg,
+      s"measurement-${if isStartPoint then "start" else "end"}-point",
       onClick.preventDefault.mapTo(p) --> AppState.handlePointClickForMeasurement
     )
 
   def renderMeasurementStartPoint(
       p: ClickablePoint,
-      toCanvasPoint: Point => Point
+      toCanvasPoint: Point => Point,
+      angleDeg: Option[Double]
   ): Element =
-    renderMeasurementPoint(p, toCanvasPoint, isStartPoint = true)
+    renderMeasurementPoint(p, toCanvasPoint, angleDeg, isStartPoint = true)
 
   def renderMeasurementEndPoint(
       p: ClickablePoint,
-      toCanvasPoint: Point => Point
+      toCanvasPoint: Point => Point,
+      angleDeg: Option[Double]
   ): Element =
-    renderMeasurementPoint(p, toCanvasPoint, isStartPoint = false)
+    renderMeasurementPoint(p, toCanvasPoint, angleDeg, isStartPoint = false)
 
   def renderMeasurementAngleArc(
       start: ClickablePoint,
@@ -130,11 +135,38 @@ object TessellationMeasurementRenderer:
     val point1 = toCanvasPoint(start.point)
     val point2 = toCanvasPoint(end.point)
 
-    svg.line(
-      lineCoords(LineSegment(point1, point2)),
-      svg.stroke          := "#ffffff",
-      svg.strokeWidth     := "2",
-      svg.strokeDashArray := "5, 5",
-      svg.className       := "measurement-line",
-      svg.pointerEvents   := "none"
+    svg.g(
+      svg.className     := "measurement-line",
+      svg.pointerEvents := "none",
+      svg.line(
+        lineCoords(LineSegment(point1, point2)),
+        svg.stroke          := "#ffffff",
+        svg.strokeWidth     := "2",
+        svg.strokeDashArray := "5, 5"
+      ),
+      measurementArrowhead(point1, point2)
     )
+
+  /** A small white arrowhead at the midpoint of the measurement line, pointing start → end. This makes the
+    * Start/End order legible without relying on colour (ADR-014 — colour-blind redundancy). `None` when the
+    * two points are coincident.
+    */
+  private def measurementArrowhead(from: Point, to: Point): Modifier[Element] =
+    val dx  = to.x - from.x
+    val dy  = to.y - from.y
+    val len = math.hypot(dx, dy)
+    if len < 1e-6 then emptyMod
+    else
+      val (ux, uy)   = (dx / len, dy / len)
+      val (px, py)   = (-uy, ux) // unit perpendicular
+      val size       = 7.0       // tip-to-base length
+      val half       = 4.0       // base half-width
+      val mid        = Point((from.x + to.x) / 2, (from.y + to.y) / 2)
+      val tip        = Point(mid.x + ux * size / 2, mid.y + uy * size / 2)
+      val baseCentre = Point(mid.x - ux * size / 2, mid.y - uy * size / 2)
+      val left       = Point(baseCentre.x + px * half, baseCentre.y + py * half)
+      val right      = Point(baseCentre.x - px * half, baseCentre.y - py * half)
+      svg.polygon(
+        svg.points := s"${tip.x},${tip.y} ${left.x},${left.y} ${right.x},${right.y}",
+        svg.fill   := "#ffffff"
+      )
