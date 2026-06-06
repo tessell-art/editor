@@ -67,3 +67,23 @@ class AddCopyValiditySpec extends FunSuite:
     assert(pierces(Vector(deg(45)), Vector((0.0, deg(90)))))
     assert(!pierces(Vector(0.0, deg(90)), Vector((0.0, deg(90))))) // boundary rays coincide, not pierce
     assert(!pierces(Vector(deg(180)), Vector((0.0, deg(90))))) // ray in the exterior gap
+
+  // A boundary edge-midpoint: edge along the x-axis (rays 0 and π), one π-wide face in the upper half.
+  private val boundaryMid = Figure(rays = Vector(0.0, math.Pi), occupied = Vector((0.0, math.Pi)))
+
+  test("boundary edge-midpoint: reflecting across the edge line folds the face to the empty side"):
+    assert(compatible(boundaryMid, reflected(boundaryMid, 0.0)))
+
+  test("boundary edge-midpoint: reflecting across the perpendicular keeps the face in place"):
+    assert(compatible(boundaryMid, reflected(boundaryMid, math.Pi / 2)))
+
+  test("boundary edge-midpoint: reflecting across a diagonal axis cuts the face (NOT compatible)"):
+    assert(!compatible(boundaryMid, reflected(boundaryMid, math.Pi / 4)))
+
+  // An interior edge-midpoint: both half-planes occupied (full disk).
+  private val interiorMid =
+    Figure(rays = Vector(0.0, math.Pi), occupied = Vector((0.0, math.Pi), (math.Pi, math.Pi)))
+
+  test("interior edge-midpoint: an axis along the edge does not pierce, a diagonal one does"):
+    assert(compatible(interiorMid, reflected(interiorMid, 0.0)))
+    assert(!compatible(interiorMid, reflected(interiorMid, math.Pi / 4)))

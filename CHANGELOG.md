@@ -106,13 +106,15 @@ and in the git history.
   length label between the source and target to show the translation's
   direction and distance, and its dashed skeleton snaps to the latched target
   so the preview matches the copy that will actually be welded.
-- **Add Copy** now hides anchors and snaps that provably cannot weld.
+- **Add Copy** now hides anchors and snaps that provably cannot weld (ADR-015).
   A fast, sound contact-compatibility check (the copy's vertex figure must
   overlay the original's with only coincidences) prunes incompatible Translate
   targets and Reflect / Glide axis ends from snapping and from the proximity
-  dots, and hides Rotate centres that have no weldable angle. The check is a
-  necessary condition only — it never hides something that could weld, and
-  `maybeAdd…Copy` remains the final authority.
+  dots, hides Rotate centres that have no weldable angle (including interior
+  edge-midpoints whose two faces aren't point-symmetric), restricts the Rotate
+  snap to weldable angles, and prunes Reflect / Glide axes that would cut a face
+  at an edge-midpoint. The check is a necessary condition only — it never hides
+  something that could weld, and `maybeAdd…Copy` remains the final authority.
 - The in-app **Guide** now documents the four Add Copy tools (Translate /
   Rotate / Reflect / Glide reflect) in a new section, and its Measurement entry
   was rewritten for the proximity flow (no polygon-first step; blue start /

@@ -447,7 +447,11 @@ object AddCopyOperations:
                   facePoints = precomputeFacePoints(tiling),
                   centerAnchor = anchor,
                   centerCv = centerCv,
-                  candidates = candidateAngles(tiling, anchor),
+                  // Only angles that can actually weld at this centre are offered as snaps (ADR-015).
+                  candidates =
+                    candidateAngles(tiling, anchor).filter(c =>
+                      AddCopyValidity.rotateAngleShows(tiling, anchor, signedDeg(c))
+                    ),
                   grabAngle = centerCv.angleTo(pressCv),
                   appliedDeg = 0.0,
                   snapped = None
