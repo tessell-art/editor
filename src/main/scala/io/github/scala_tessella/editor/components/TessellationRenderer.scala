@@ -2,13 +2,17 @@ package io.github.scala_tessella.editor.components
 
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.structure.VertexId
 import io.github.scala_tessella.editor.models.{
-  Anchor, DoublingAnimation, EditorState, FanAnimation, MirrorAnimation, ReflectCopyDrag, RotateCopyDrag,
+  Anchor, DoublingAnimation, EditorConfig, EditorState, FanAnimation, MirrorAnimation, ReflectCopyDrag,
+  RotateCopyDrag,
   Tool,
   TranslateCopyDrag
 }
 import io.github.scala_tessella.editor.components.AnchorMarker.MarkerState
 import io.github.scala_tessella.editor.operations.AddCopyOperations
+import io.github.scala_tessella.editor.utils.SvgDsl
+import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
 
 object TessellationRenderer:
@@ -144,28 +148,54 @@ object TessellationRenderer:
                 AnchorMarker.edgeAngleDeg(tiling, p.anchor, tilingPointToCanvasView)
               )
 
-    // Add Copy ▸ Translate: vertices shown as passive "clipping point" dots while the tool is active; the
-    // vertex currently snapped as the release target is enlarged and recoloured.
+    // Add Copy ▸ Translate: only the vertices near the pointer are revealed (proximity), instead of every
+    // vertex. While dragging, the source vertex stays highlighted as the "from" (blue) and the snapped
+    // release target as the "to" (vermillion), mirroring Measurement's start/end (ADR-013 amendment).
     val translateCopyDots = children <--
       EditorState.toolState.signal.map(_.activeTool == Tool.TranslateCopy).distinct
-        .combineWith(EditorState.previewState.signal.map(_.translateCopyDrag).distinct)
+        .combineWith(
+          EditorState.previewState.signal.map(_.translateCopyDrag).distinct,
+          EditorState.previewState.signal.map(_.translateHoverCv).distinct
+        )
         .map:
-          case (true, dragOpt) =>
-            val snapId = dragOpt.flatMap(_.snapTarget.map(_._1))
-            AddCopyOperations.vertexAnchorsCv(tiling).map: (id, p) =>
-              AnchorMarker.renderPassive(
-                p,
-                Anchor.Vertex(id),
-                if snapId.contains(id) then MarkerState.Active else MarkerState.Idle,
-                None,
-                "translate-copy-vertex"
-              )
-          case _               => Nil
+          case (true, dragOpt, hoverOpt) =>
+            val anchors                                         = AddCopyOperations.vertexAnchorsCv(tiling)
+            def dot(id: VertexId, p: Point, state: MarkerState) =
+              AnchorMarker.renderPassive(p, Anchor.Vertex(id), state, None, "translate-copy-vertex")
+            dragOpt match
+              case Some(drag) =>
+                val candidate  = drag.sourcePointCv + drag.deltaCv
+                val snapId     = drag.snapTarget.map(_._1)
+                val sourceDot  = dot(drag.sourceVertexId, drag.sourcePointCv, MarkerState.MeasureStart)
+                val targetDots = drag.snapTarget.toList.map((id, p) => dot(id, p, MarkerState.MeasureEnd))
+                val idleDots   =
+                  anchors
+                    .filter((id, p) =>
+                      id != drag.sourceVertexId && !snapId.contains(id) &&
+                        p.distanceTo(candidate) <= AddCopyOperations.revealRadiusCv
+                    )
+                    .map((id, p) => dot(id, p, MarkerState.Idle))
+                sourceDot :: (targetDots ++ idleDots)
+              case None       =>
+                hoverOpt match
+                  case Some(hoverCv) =>
+                    anchors
+                      .filter((_, p) => p.distanceTo(hoverCv) <= AddCopyOperations.revealRadiusCv)
+                      .map((id, p) => dot(id, p, MarkerState.Idle))
+                  case None          => Nil
+          case _                         => Nil
 
     // The dashed skeleton of the whole tiling, translated by the live (free) drag offset.
     val translateCopySkeleton = child.maybe <--
       EditorState.previewState.signal.map(_.translateCopyDrag).distinct
         .map(_.map(renderTranslateSkeleton))
+
+    // The translation vector: a segment from the source vertex to the snapped (or free) head, with a
+    // mid-arrow for direction and a tiling-unit length label — the Translate analogue of the Measurement
+    // line (ADR-013 amendment, shares `SvgDsl.midArrow`).
+    val translateCopyVector = child.maybe <--
+      EditorState.previewState.signal.map(_.translateCopyDrag).distinct
+        .map(_.map(renderTranslateVector(_, tiling)))
 
     // Add Copy ▸ Rotate: rotation-centre dots (colour-coded by kind) while the tool is active; the picked
     // centre is enlarged during a drag.
@@ -285,6 +315,7 @@ object TessellationRenderer:
       clickablePointsDisplay,
       translateCopyDots,
       translateCopySkeleton,
+      translateCopyVector,
       rotateCopyCentres,
       rotateCopySkeleton,
       reflectCopyAnchors,
@@ -296,12 +327,58 @@ object TessellationRenderer:
       measurementAngleArcDisplay
     )
 
+  /** Vermillion = the "to" colour; the translation vector points towards it (matches the snap-target dot). */
+  private val translateVectorColour = "#d55e00"
+
+  /** The live translation vector: source vertex → snapped target (or the free candidate when nothing is
+    * snapped), with a mid-arrow for direction and a tiling-unit length label. Shares `SvgDsl.midArrow` with
+    * the Measurement line so both read the same.
+    */
+  private def renderTranslateVector(drag: TranslateCopyDrag, tiling: TilingDCEL): Element =
+    val tail = drag.sourcePointCv
+    val head = drag.snapTarget.map(_._2).getOrElse(drag.sourcePointCv + drag.deltaCv)
+
+    val lengthTiling =
+      drag.snapTarget match
+        case Some((targetId, _)) =>
+          (for
+            from <- tiling.findVertex(drag.sourceVertexId).toOption.map(_.coords.toPoint)
+            to   <- tiling.findVertex(targetId).toOption.map(_.coords.toPoint)
+          yield from.distanceTo(to)).getOrElse(0.0)
+        case None                =>
+          math.hypot(drag.deltaCv.x, drag.deltaCv.y) / EditorConfig.canvasScale
+
+    svg.g(
+      svg.className     := "translate-copy-vector",
+      svg.pointerEvents := "none",
+      svg.line(
+        svg.x1          := tail.x.toString,
+        svg.y1          := tail.y.toString,
+        svg.x2          := head.x.toString,
+        svg.y2          := head.y.toString,
+        svg.stroke      := translateVectorColour,
+        svg.strokeWidth := "2"
+      ),
+      SvgDsl.midArrow(tail, head, translateVectorColour),
+      svg.text(
+        svg.x           := ((tail.x + head.x) / 2).toString,
+        svg.y           := ((tail.y + head.y) / 2 - 8).toString,
+        svg.textAnchor  := "middle",
+        svg.fontSize    := "12",
+        svg.fill <-- EditorState.overlayPreviewStrokeColor,
+        SvgDsl.fmt(lengthTiling, 2)
+      )
+    )
+
   /** Dashed outline of every face, grouped and translated by the live drag offset. Face point strings are
     * already in canvas-view coords (snapshot at drag start), so only the group transform changes per move.
+    * While a release target is latched the skeleton snaps to it (exact `target − source`), matching the
+    * vector arrow, the target dot, and the weld that will actually commit; otherwise it follows the cursor.
     */
   private def renderTranslateSkeleton(drag: TranslateCopyDrag): Element =
+    val delta     = drag.snapTarget.map((_, p) => p - drag.sourcePointCv).getOrElse(drag.deltaCv)
     svg.g(
-      svg.transform     := s"translate(${drag.deltaCv.x}, ${drag.deltaCv.y})",
+      svg.transform     := s"translate(${delta.x}, ${delta.y})",
       svg.pointerEvents := "none",
       svg.className     := "translate-copy-skeleton",
       drag.facePoints.map: (_, pointsStr) =>

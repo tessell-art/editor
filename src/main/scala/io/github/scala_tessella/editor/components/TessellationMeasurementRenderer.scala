@@ -5,7 +5,7 @@ import io.github.scala_tessella.editor.AppState
 import io.github.scala_tessella.editor.models.{AddSubmode, ClickablePoint, EditorState, Tool}
 import io.github.scala_tessella.editor.components.AnchorMarker.MarkerState
 import io.github.scala_tessella.editor.operations.OperationGuard.gate
-import io.github.scala_tessella.editor.utils.SvgDsl.lineCoords
+import io.github.scala_tessella.editor.utils.SvgDsl.{lineCoords, midArrow}
 import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 
 object TessellationMeasurementRenderer:
@@ -144,29 +144,7 @@ object TessellationMeasurementRenderer:
         svg.strokeWidth     := "2",
         svg.strokeDashArray := "5, 5"
       ),
-      measurementArrowhead(point1, point2)
+      // White arrowhead pointing start → end, so the order is legible without colour
+      // (ADR-014 — colour-blind redundancy). Shared with Add Copy ▸ Translate.
+      midArrow(point1, point2)
     )
-
-  /** A small white arrowhead at the midpoint of the measurement line, pointing start → end. This makes the
-    * Start/End order legible without relying on colour (ADR-014 — colour-blind redundancy). `None` when the
-    * two points are coincident.
-    */
-  private def measurementArrowhead(from: Point, to: Point): Modifier[Element] =
-    val dx  = to.x - from.x
-    val dy  = to.y - from.y
-    val len = math.hypot(dx, dy)
-    if len < 1e-6 then emptyMod
-    else
-      val (ux, uy)   = (dx / len, dy / len)
-      val (px, py)   = (-uy, ux) // unit perpendicular
-      val size       = 7.0       // tip-to-base length
-      val half       = 4.0       // base half-width
-      val mid        = Point((from.x + to.x) / 2, (from.y + to.y) / 2)
-      val tip        = Point(mid.x + ux * size / 2, mid.y + uy * size / 2)
-      val baseCentre = Point(mid.x - ux * size / 2, mid.y - uy * size / 2)
-      val left       = Point(baseCentre.x + px * half, baseCentre.y + py * half)
-      val right      = Point(baseCentre.x - px * half, baseCentre.y - py * half)
-      svg.polygon(
-        svg.points := s"${tip.x},${tip.y} ${left.x},${left.y} ${right.x},${right.y}",
-        svg.fill   := "#ffffff"
-      )

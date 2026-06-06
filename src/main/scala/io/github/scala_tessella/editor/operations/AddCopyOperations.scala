@@ -53,6 +53,11 @@ object AddCopyOperations:
     */
   private val snapRadiusCv: Double = 0.4 * EditorConfig.canvasScale
 
+  /** Reveal radius (canvas-view units) for Translate's proximity dots: only vertices within this distance of
+    * the hovered point (or, mid-drag, the candidate landing point) are shown, instead of every vertex.
+    */
+  val revealRadiusCv: Double = 1.5 * EditorConfig.canvasScale
+
   /** Angular tolerance (degrees) for snapping the rotate drag to a candidate angle. */
   private val snapAngleToleranceDeg: Double = 10.0
 
@@ -84,8 +89,15 @@ object AddCopyOperations:
 
   private def clearDrag(): Unit =
     EditorState.previewState.update(
-      _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None)
+      _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None, translateHoverCv = None)
     )
+
+  /** Records the live pointer (canvas-view) so Translate reveals only the vertices near it (proximity)
+    * instead of all of them. Called on hover when the Translate tool is active and no drag is in flight.
+    */
+  def updateTranslateHover(clientX: Double, clientY: Double): Unit =
+    clientToCanvasView(clientX, clientY).foreach: cv =>
+      EditorState.previewState.update(_.copy(translateHoverCv = Some(cv)))
 
   /** Abandon any in-flight Add-Copy drag without committing (e.g. on touch-cancel). */
   def cancelDrag(): Unit = clearDrag()

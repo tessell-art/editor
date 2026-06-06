@@ -82,6 +82,35 @@ object SvgDsl:
       svg.y2 := segment.p2.y.toString
     )
 
+  /** A small filled arrowhead at the midpoint of the `from`→`to` segment, pointing towards `to`. Shared by
+    * the Measurement line and the Add Copy ▸ Translate vector so both read identically (ADR-014). Renders
+    * nothing when the two points coincide.
+    */
+  def midArrow(
+      from: Point,
+      to: Point,
+      colour: String = "#ffffff",
+      size: Double = 7.0,
+      halfWidth: Double = 4.0
+  ): Modifier[Element] =
+    val dx  = to.x - from.x
+    val dy  = to.y - from.y
+    val len = math.hypot(dx, dy)
+    if len < 1e-6 then emptyMod
+    else
+      val (ux, uy) = (dx / len, dy / len)
+      val (px, py) = (-uy, ux) // unit perpendicular
+      val mx       = (from.x + to.x) / 2
+      val my       = (from.y + to.y) / 2
+      val tip      = (mx + ux * size / 2, my + uy * size / 2)
+      val base     = (mx - ux * size / 2, my - uy * size / 2)
+      val left     = (base._1 + px * halfWidth, base._2 + py * halfWidth)
+      val right    = (base._1 - px * halfWidth, base._2 - py * halfWidth)
+      svg.polygon(
+        svg.points := s"${tip._1},${tip._2} ${left._1},${left._2} ${right._1},${right._2}",
+        svg.fill   := colour
+      )
+
   def textCoords(point: Point): Seq[KeySetter.SvgAttrSetter[String]] =
     Seq(
       svg.x := point.x.toString,
