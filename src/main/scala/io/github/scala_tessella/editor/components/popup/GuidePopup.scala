@@ -48,9 +48,17 @@ object GuidePopup:
       "kbdQ"               -> (() => kbd('Q')),
       "kbdE"               -> (() => kbd('E')),
       "kbdF"               -> (() => kbd('F')),
+      "kbdT"               -> (() => kbd('T')),
+      "kbdR"               -> (() => kbd('R')),
+      "kbdY"               -> (() => kbd('Y')),
       "kbdPlus"            -> (() => kbd('+')),
       "kbdMinus"           -> (() => kbd('-')),
       "menuMirror"         -> menuItem("menu.edit", "menu.edit.mirror"),
+      "menuAddCopy"        -> menuItem("menu.edit", "menu.edit.addCopy"),
+      "acTranslate"        -> menuOnly("menu.edit.addCopy.translate"),
+      "acRotate"           -> menuOnly("menu.edit.addCopy.rotate"),
+      "acReflect"          -> menuOnly("menu.edit.addCopy.reflect"),
+      "acGlide"            -> menuOnly("menu.edit.addCopy.glide"),
       "menuFillColor"      -> menuItem("menu.edit", "menu.edit.fillColor"),
       "menuShowLabels"     -> menuItem("menu.view", "menu.view.showLabels"),
       "menuShowUniformity" -> menuItem("menu.view", "menu.view.showUniformity"),
@@ -111,6 +119,15 @@ object GuidePopup:
           heading("popup.guide.section.mirror"),
           ul(
             item("popup.guide.mirror.howTo")
+          ),
+          heading("popup.guide.section.addCopy"),
+          ul(
+            item("popup.guide.addCopy.intro"),
+            item("popup.guide.addCopy.proximity"),
+            item("popup.guide.addCopy.translate"),
+            item("popup.guide.addCopy.rotate"),
+            item("popup.guide.addCopy.reflect"),
+            item("popup.guide.addCopy.glide")
           ),
           heading("popup.guide.section.styling"),
           ul(

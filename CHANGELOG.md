@@ -106,6 +106,10 @@ and in the git history.
   length label between the source and target to show the translation's
   direction and distance, and its dashed skeleton snaps to the latched target
   so the preview matches the copy that will actually be welded.
+- The in-app **Guide** now documents the four Add Copy tools (Translate /
+  Rotate / Reflect / Glide reflect) in a new section, and its Measurement entry
+  was rewritten for the proximity flow (no polygon-first step; blue start /
+  vermillion end with a direction arrow). English and Spanish both updated.
 - `Esc` now exits **Measurement** and **Eraser** modes (clearing the clickable-point
   overlay and returning to Add Polygon), matching how it already exits the Add Copy
   modes.

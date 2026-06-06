@@ -213,6 +213,7 @@ object Translations:
     "popup.guide.section.selecting"       -> "Selecting",
     "popup.guide.section.deleting"        -> "Deleting",
     "popup.guide.section.mirror"          -> "Mirroring",
+    "popup.guide.section.addCopy"         -> "Add Copy",
     "popup.guide.section.styling"         -> "Styling",
     "popup.guide.section.visual"          -> "Visual options",
     "popup.guide.section.measurement"     -> "Measurement",
@@ -264,6 +265,18 @@ object Translations:
       "Click a polygon to highlight its vertices, mid-edge points, and centre, then click the item you want to remove.",
     "popup.guide.mirror.howTo"            ->
       "Use {menuMirror} to switch to a mirror image of the tiling.",
+    "popup.guide.addCopy.intro"           ->
+      "{menuAddCopy} grows the tiling by welding on a copy of itself under an isometry. Pick one of the four tools, drag on the canvas, and release on a snapped anchor to weld. An invalid copy is rejected with a message and leaves the tiling unchanged.",
+    "popup.guide.addCopy.proximity"       ->
+      "While a tool is active, only the anchors near the pointer are revealed (vertex, mid-edge, centre). During a drag the anchor you pressed stays highlighted blue and the snapped target turns vermillion, like the measurement start/end.",
+    "popup.guide.addCopy.translate"       ->
+      "{acTranslate} ({kbdT}): drag from one vertex to another; the copy slides by that exact vector. A segment with an arrow and a length label shows the translation.",
+    "popup.guide.addCopy.rotate"          ->
+      "{acRotate} ({kbdR}): press a centre — any vertex, mid-edge, or the centre of a rotationally-symmetric face — and drag around it. The rotation snaps to angles that can weld (vertex → edge alignments; mid-edge → 180°; face centre → multiples of 360°/k); the live angle is shown.",
+    "popup.guide.addCopy.reflect"         ->
+      "{acReflect} ({kbdY}): press one anchor and drag to a second; the copy is mirrored across the line through the two, drawn as a spanning axis.",
+    "popup.guide.addCopy.glide"           ->
+      "{acGlide}: like Reflect, but the copy is also slid along the axis by the press → release vector, so its direction and length both matter.",
     "popup.guide.styling.fill"            ->
       "In {addOutside} mode, select one or more polygons, then click the colour button or use {menuFillColor} to open the colour picker.",
     "popup.guide.styling.applyTo"         ->
@@ -285,9 +298,9 @@ object Translations:
     "popup.guide.measurement.tool"        ->
       "Use the {iconRuler} {measurement} tool to measure unit distances and angles between key points (vertex, mid-edge, centre).",
     "popup.guide.measurement.startEnd"    ->
-      "Click a polygon to highlight its key points; click one to set the (green) start, and click another to set the (red) end. The unit distance is displayed above the top-right corner of the canvas.",
+      "Move the pointer near a key point to reveal it — no need to pick a polygon first — then click it to set the start (blue). Click another to set the end (vermillion); an arrow on the connecting line points start → end, and the unit distance appears above the top-right corner of the canvas.",
     "popup.guide.measurement.angle"       ->
-      "Click another key point to choose a new (red) end. The angle between the previous and current end points is shown as an arc, with its measure in radians.",
+      "Click a further key point to move the end (vermillion); the angle between the previous and current end is drawn as an arc, measured in radians.",
     "popup.guide.navigating.pan"          ->
       "Pan: click and drag the canvas background (or drag with one finger on touch devices).",
     "popup.guide.navigating.zoom"         ->
@@ -579,6 +592,7 @@ object Translations:
     "popup.guide.section.selecting"       -> "Selección",
     "popup.guide.section.deleting"        -> "Borrado",
     "popup.guide.section.mirror"          -> "Reflejar",
+    "popup.guide.section.addCopy"         -> "Añadir copia",
     "popup.guide.section.styling"         -> "Estilo",
     "popup.guide.section.visual"          -> "Opciones visuales",
     "popup.guide.section.measurement"     -> "Medición",
@@ -630,6 +644,18 @@ object Translations:
       "Pulsa un polígono para resaltar sus vértices, puntos medios de arista y centro, y luego pulsa el elemento que quieras borrar.",
     "popup.guide.mirror.howTo"            ->
       "Usa {menuMirror} para cambiar a una imagen reflejada de la teselación.",
+    "popup.guide.addCopy.intro"           ->
+      "{menuAddCopy} hace crecer la teselación soldando una copia de sí misma bajo una isometría. Elige una de las cuatro herramientas, arrastra sobre el lienzo y suelta sobre un ancla ajustada para soldar. Una copia inválida se rechaza con un mensaje y deja la teselación sin cambios.",
+    "popup.guide.addCopy.proximity"       ->
+      "Mientras una herramienta está activa, solo se revelan las anclas cercanas al puntero (vértice, punto medio de arista, centro). Durante el arrastre, el ancla que pulsaste permanece resaltada en azul y el destino ajustado se vuelve bermellón, como el inicio/final de la medición.",
+    "popup.guide.addCopy.translate"       ->
+      "{acTranslate} ({kbdT}): arrastra de un vértice a otro; la copia se traslada por ese vector exacto. Un segmento con una flecha y una etiqueta de longitud muestra la traslación.",
+    "popup.guide.addCopy.rotate"          ->
+      "{acRotate} ({kbdR}): pulsa un centro —cualquier vértice, punto medio de arista o el centro de una cara con simetría rotacional— y arrastra a su alrededor. El giro se ajusta a ángulos que pueden soldar (vértice → alineaciones de aristas; punto medio → 180°; centro de cara → múltiplos de 360°/k); se muestra el ángulo en vivo.",
+    "popup.guide.addCopy.reflect"         ->
+      "{acReflect} ({kbdY}): pulsa un ancla y arrastra hasta una segunda; la copia se refleja respecto a la recta que pasa por ambas, dibujada como un eje que la atraviesa.",
+    "popup.guide.addCopy.glide"           ->
+      "{acGlide}: como Reflejar, pero la copia también se desliza a lo largo del eje según el vector pulsar → soltar, por lo que importan su dirección y su longitud.",
     "popup.guide.styling.fill"            ->
       "En el modo {addOutside}, selecciona uno o más polígonos y luego pulsa el botón de color o usa {menuFillColor} para abrir el selector de color.",
     "popup.guide.styling.applyTo"         ->
@@ -651,9 +677,9 @@ object Translations:
     "popup.guide.measurement.tool"        ->
       "Usa la herramienta {iconRuler} {measurement} para medir distancias unitarias y ángulos entre puntos clave (vértice, punto medio de arista, centro).",
     "popup.guide.measurement.startEnd"    ->
-      "Pulsa un polígono para resaltar sus puntos clave; pulsa uno para fijar el inicio (verde) y pulsa otro para fijar el final (rojo). La distancia unitaria se muestra sobre la esquina superior derecha del lienzo.",
+      "Acerca el puntero a un punto clave para revelarlo —sin necesidad de elegir antes un polígono— y púlsalo para fijar el inicio (azul). Pulsa otro para fijar el final (bermellón); una flecha sobre la línea que los une apunta del inicio al final y la distancia unitaria aparece sobre la esquina superior derecha del lienzo.",
     "popup.guide.measurement.angle"       ->
-      "Pulsa otro punto clave para elegir un nuevo final (rojo). El ángulo entre los puntos final anterior y actual se muestra como un arco, con su medida en radianes.",
+      "Pulsa otro punto clave para mover el final (bermellón); el ángulo entre el final anterior y el actual se dibuja como un arco, medido en radianes.",
     "popup.guide.navigating.pan"          ->
       "Mover: pulsa y arrastra el fondo del lienzo (o arrastra con un dedo en pantallas táctiles).",
     "popup.guide.navigating.zoom"         ->
