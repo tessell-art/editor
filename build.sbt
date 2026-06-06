@@ -22,13 +22,9 @@ lazy val checkMenuShortcutsParity = taskKey[Unit]("Enforce menu-shortcut parity 
 lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
-    scalaVersion := "3.8.3",
+    scalaVersion := "3.8.4",
     version := "0.4.2",
     name := "Tessella Editor",
-
-    // TODO: remove once dcel publishes 0.1.0-SNAPSHOT to a public repo.
-    // Vendored Ivy-style artifacts live under lib-repo/.
-    resolvers += Resolver.file("local-lib", file("lib-repo"))(Resolver.ivyStylePatterns),
 
     // Tell Scala.js that this is an application with a main method
     scalaJSUseMainModuleInitializer := true,
