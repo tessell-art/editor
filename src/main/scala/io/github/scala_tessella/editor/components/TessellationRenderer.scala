@@ -10,7 +10,7 @@ import io.github.scala_tessella.editor.models.{
   TranslateCopyDrag
 }
 import io.github.scala_tessella.editor.components.AnchorMarker.MarkerState
-import io.github.scala_tessella.editor.operations.AddCopyOperations
+import io.github.scala_tessella.editor.operations.{AddCopyOperations, AddCopyValidity}
 import io.github.scala_tessella.editor.utils.SvgDsl
 import io.github.scala_tessella.editor.utils.geo.Point
 import io.github.scala_tessella.editor.utils.geo.TessellationGeometry.*
@@ -172,7 +172,8 @@ object TessellationRenderer:
                   anchors
                     .filter((id, p) =>
                       id != drag.sourceVertexId && !snapId.contains(id) &&
-                        p.distanceTo(candidate) <= AddCopyOperations.revealRadiusCv
+                        p.distanceTo(candidate) <= AddCopyOperations.revealRadiusCv &&
+                        AddCopyValidity.translateShows(tiling, drag.sourceVertexId, id)
                     )
                     .map((id, p) => dot(id, p, MarkerState.Idle))
                 sourceDot :: (targetDots ++ idleDots)
@@ -224,7 +225,10 @@ object TessellationRenderer:
                   case Some(hoverCv) =>
                     AddCopyOperations
                       .rotationCentres(tiling)
-                      .filter((_, p) => p.distanceTo(hoverCv) <= AddCopyOperations.revealRadiusCv)
+                      .filter((anchor, p) =>
+                        p.distanceTo(hoverCv) <= AddCopyOperations.revealRadiusCv &&
+                          AddCopyValidity.rotateCentreShows(tiling, anchor)
+                      )
                       .map((anchor, p) => centre(anchor, p, MarkerState.Idle))
                   case None          => Nil
           case _                         => Nil
@@ -266,7 +270,15 @@ object TessellationRenderer:
                     .reflectAnchors(tiling)
                     .filter((anchor, p) =>
                       anchor != drag.axisAnchor && !snapAnchor.contains(anchor) &&
-                        p.distanceTo(drag.axisBCv) <= AddCopyOperations.revealRadiusCv
+                        p.distanceTo(drag.axisBCv) <= AddCopyOperations.revealRadiusCv &&
+                        AddCopyValidity.reflectShows(
+                          tiling,
+                          drag.axisAnchor,
+                          drag.axisACv,
+                          anchor,
+                          p,
+                          drag.glide
+                        )
                     )
                     .map((anchor, p) => anchorDot(anchor, p, MarkerState.Idle))
                 aDot :: (bDot ++ nearby)

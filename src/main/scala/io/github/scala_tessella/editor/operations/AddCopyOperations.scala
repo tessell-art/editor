@@ -218,8 +218,9 @@ object AddCopyOperations:
         val deltaCv    = currentCv - drag.grabPointCv
         val candidate  = drag.sourcePointCv + deltaCv
         val tiling     = EditorState.tessellationState.now().currentTiling
-        val anchors    = vertexAnchorsCv(tiling).filterNot { case (id, _) =>
-          id == drag.sourceVertexId
+        // Only vertices that can actually weld with the source are snap candidates (ADR-015).
+        val anchors    = vertexAnchorsCv(tiling).filter { case (id, _) =>
+          id != drag.sourceVertexId && AddCopyValidity.translateShows(tiling, drag.sourceVertexId, id)
         }
         val snapTarget =
           nearest(candidate, anchors).filter { case (_, p) =>
@@ -562,8 +563,10 @@ object AddCopyOperations:
       clientToCanvasView(clientX, clientY).foreach: currentCv =>
 
         val tiling     = EditorState.tessellationState.now().currentTiling
-        val others     = reflectAnchors(tiling).filterNot { case (anchor, _) =>
-          anchor == drag.axisAnchor
+        // Only anchors whose axis can actually weld are snap candidates (ADR-015).
+        val others     = reflectAnchors(tiling).filter { case (anchor, p) =>
+          anchor != drag.axisAnchor &&
+          AddCopyValidity.reflectShows(tiling, drag.axisAnchor, drag.axisACv, anchor, p, drag.glide)
         }
         val snapTarget =
           nearestCentre(currentCv, others).filter { case (_, p) =>
