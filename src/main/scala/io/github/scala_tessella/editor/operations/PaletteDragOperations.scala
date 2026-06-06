@@ -100,11 +100,11 @@ object PaletteDragOperations:
     p3 + rotationCenter
 
   /** Convert a client-pixel pointer position into the SVG viewBox coordinate frame the canvas paints into.
-    * Delegates to `EraserProximityQuery.clientToSvg` which uses `getScreenCTM` to correctly handle
+    * Delegates to `ProximityQuery.clientToSvg` which uses `getScreenCTM` to correctly handle
     * `preserveAspectRatio` letterboxing, CSS sizing, and any other transforms.
     */
   private def clientPointToSvg(clientX: Double, clientY: Double): Option[Point] =
-    EraserProximityQuery.clientToSvg(clientX, clientY)
+    ProximityQuery.clientToSvg(clientX, clientY)
 
   /** Pick the absolute nearest perimeter edge to `p`. Returns `None` only when the tiling is empty. */
   private[operations] def snapToPerimeter(

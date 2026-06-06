@@ -89,6 +89,13 @@ and in the git history.
   for red-green colour-blindness). They now use the colour-blind-safe
   blue↔vermillion pair, and the measurement line carries an arrowhead pointing
   start → end so the order is legible without colour.
+- **Measurement** now discovers points by proximity to the pointer, like the
+  Eraser, instead of the two-step "click a polygon, then click one of its
+  points" flow (ADR-013 amendment). Hovering (or, on touch, tapping near) a
+  vertex / edge-midpoint / face-centre reveals and snaps to it directly,
+  halving the clicks needed per measurement. The shared
+  `EraserProximityQuery` is renamed `ProximityQuery` since it now serves both
+  tools. Fan and AddPolygon ▸ Inside keep their polygon-first flow.
 - `Esc` now exits **Measurement** and **Eraser** modes (clearing the clickable-point
   overlay and returning to Add Polygon), matching how it already exits the Add Copy
   modes.

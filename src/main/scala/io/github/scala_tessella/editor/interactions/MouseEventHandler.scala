@@ -2,7 +2,7 @@ package io.github.scala_tessella.editor.interactions
 
 import com.raquo.laminar.api.L._
 import io.github.scala_tessella.editor.models.{EditorConfig, EditorState, Tool}
-import io.github.scala_tessella.editor.operations.{AddCopyOperations, EraserProximityQuery, ViewOperations}
+import io.github.scala_tessella.editor.operations.{AddCopyOperations, ProximityQuery, ViewOperations}
 import io.github.scala_tessella.editor.utils.geo.Point
 import org.scalajs.dom.{MouseEvent, WheelEvent}
 
@@ -57,8 +57,11 @@ object MouseEventHandler:
           val point: Point = Point(event.clientX, event.clientY)
           EditorState.uiState.update(_.copy(dragStart = Some(point)))
         }
-      else if EditorState.toolState.now().activeTool == Tool.Eraser then
-        EraserProximityQuery.updateNearbyPoints(event.clientX, event.clientY, isTouch = false)
+      else
+        val tool = EditorState.toolState.now().activeTool
+        // Eraser and Measurement both discover points by proximity to the pointer (ADR-013).
+        if tool == Tool.Eraser || tool == Tool.Measurement then
+          ProximityQuery.updateNearbyPoints(event.clientX, event.clientY, isTouch = false)
 
   def handleMouseUp(event: MouseEvent): Unit =
     val _ = AddCopyOperations.endActiveDrag()

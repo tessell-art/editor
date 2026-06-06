@@ -59,7 +59,7 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
     assertEquals(EditorState.toolState.now().activeTool, Tool.AddPolygon)
   }
 
-  test("Measurement tool should populate clickable points and highlight face") {
+  test("Measurement tool polygon click should NOT populate clickable points (ADR-013 amendment)") {
     val tiling = TilingBuilders.freshSquare()
     val faceId = tiling.innerFaces.head.id
 
@@ -68,8 +68,9 @@ class SelectionOperationsSpec extends FunSuite with EditorStateFixture:
 
     SelectionOperations.handleTilingPolygonClick(faceId)
 
-    assertEquals(EditorState.measurementState.now().highlightedPolygonId, Some(faceId))
-    assert(EditorState.measurementState.now().clickablePoints.nonEmpty)
+    // Points now come from ProximityQuery on pointer-move, not from selecting a polygon.
+    assertEquals(EditorState.measurementState.now().clickablePoints, Nil)
+    assertEquals(EditorState.measurementState.now().highlightedPolygonId, None)
   }
 
   test("Fan tool should only expose vertex clickable points") {

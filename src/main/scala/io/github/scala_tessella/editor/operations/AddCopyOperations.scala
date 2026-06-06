@@ -162,7 +162,7 @@ object AddCopyOperations:
 
   /** Pointer client pixels → canvas-view coords (the frame the content `<g>` paints into). */
   private def clientToCanvasView(clientX: Double, clientY: Double): Option[Point] =
-    EraserProximityQuery
+    ProximityQuery
       .clientToSvg(clientX, clientY)
       .map(screenSvgToCanvasView(_, EditorState.viewState.now().viewTransform))
 

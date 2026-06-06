@@ -223,11 +223,11 @@ object SelectionOperations:
       case Tool.SelectByColor       =>
         selectPolygonsByColor(faceId)
       case Tool.Measurement         =>
-        setupFaceClickablePoints(faceId)
-      case Tool.Fan                 =>
+        () // Measurement uses proximity-based selection via ProximityQuery (ADR-013 amendment)
+      case Tool.Fan    =>
         setupFaceClickablePoints(faceId, boundaryVerticesOnly = true)
-      case Tool.Eraser              =>
-        () // Eraser uses proximity-based selection via EraserProximityQuery (ADR-013)
+      case Tool.Eraser =>
+        () // Eraser uses proximity-based selection via ProximityQuery (ADR-013)
       case Tool.TranslateCopy =>
         () // Add Copy ▸ Translate is a canvas-level drag gesture, not a polygon click
       case Tool.RotateCopy =>

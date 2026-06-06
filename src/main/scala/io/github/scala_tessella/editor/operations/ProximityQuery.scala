@@ -7,14 +7,15 @@ import io.github.scala_tessella.editor.utils.geo.{LineSegment, Point}
 import io.github.scala_tessella.ring_seq.RingSeq.slidingO
 import org.scalajs.dom
 
-/** Proximity-based point detection for the eraser tool (ADR-013 Option C).
+/** Proximity-based point detection for the Eraser and Measurement tools (ADR-013, Option C and its 2026-06-06
+  * amendment extending it to Measurement).
   *
-  * Computes all deletable points (vertices, edge midpoints, face centers) for the entire tiling and finds
-  * those within a screen-space radius of the pointer. Points are stored in tiling-world coordinates (same
+  * Computes all anchor points (vertices, edge midpoints, face centers) for the entire tiling and finds those
+  * within a screen-space radius of the pointer. Points are stored in tiling-world coordinates (same
   * convention as `setupFaceClickablePoints`), but distance comparisons happen in SVG-screen space so the
   * radius means "pixels on screen" regardless of zoom.
   */
-object EraserProximityQuery:
+object ProximityQuery:
 
   /** Proximity radius in SVG viewBox units for mouse interaction. */
   private[operations] val MOUSE_RADIUS: Double = 30.0
@@ -112,7 +113,7 @@ object EraserProximityQuery:
         case _             => None
 
   /** Updates `EditorState.measurementState.clickablePoints` with points near the pointer. Called from
-    * mouse/touch handlers when the eraser tool is active.
+    * mouse/touch handlers when the Eraser or Measurement tool is active.
     *
     * @param clientX
     *   browser client X coordinate
