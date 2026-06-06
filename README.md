@@ -1,3 +1,7 @@
+[![Scala 3](https://img.shields.io/badge/scala-3.8.4-red.svg)](https://scala-lang.org)
+[![Scala.js](https://www.scala-js.org/assets/badges/scalajs-1.16.0.svg)](https://www.scala-js.org)
+[![CI](https://github.com/tessell-art/editor/actions/workflows/build.yml/badge.svg)](https://github.com/tessell-art/editor/actions/workflows/build.yml)
+
 # Tessella Editor
 
 ![Tessella Logo](public/tessella-logo.svg)
@@ -18,8 +22,8 @@ The editor is part of the [scala-tessella](https://github.com/scala-tessella) pr
 - **Advanced Editing Tools:**
   - **Eraser Tool:** Delete vertices, edges, or entire polygons while maintaining tiling integrity.
   - **Insertion Tool:** Add regular polygons to the interior of existing ones.
-  - **Fanning:** Add copies of the tiling rotating around a boundary vertex.
-  - **Doubling & Mirroring:** Double the entire tiling (for parallelogons) or switch to a mirror image.
+  - **Add Copy:** Grow the tiling by welding on a copy of itself under a plane isometry, snapping to exact tiling anchors. Four direct-manipulation tools: **Translate**, **Rotate**, **Reflect**, and **Glide reflect**.
+  - **Mirroring:** Switch the entire tiling to its mirror image.
 
 - **Selection & Styling:**
   - Select polygons by clicking, by color, or by shape.
