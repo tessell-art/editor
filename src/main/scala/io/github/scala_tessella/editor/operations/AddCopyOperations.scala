@@ -89,15 +89,15 @@ object AddCopyOperations:
 
   private def clearDrag(): Unit =
     EditorState.previewState.update(
-      _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None, translateHoverCv = None)
+      _.copy(translateCopyDrag = None, rotateCopyDrag = None, reflectCopyDrag = None, addCopyHoverCv = None)
     )
 
-  /** Records the live pointer (canvas-view) so Translate reveals only the vertices near it (proximity)
-    * instead of all of them. Called on hover when the Translate tool is active and no drag is in flight.
+  /** Records the live pointer (canvas-view) so an Add Copy tool reveals only the anchors near it (proximity)
+    * instead of all of them. Called on hover when Translate / Rotate is active and no drag is in flight.
     */
-  def updateTranslateHover(clientX: Double, clientY: Double): Unit =
+  def updateAddCopyHover(clientX: Double, clientY: Double): Unit =
     clientToCanvasView(clientX, clientY).foreach: cv =>
-      EditorState.previewState.update(_.copy(translateHoverCv = Some(cv)))
+      EditorState.previewState.update(_.copy(addCopyHoverCv = Some(cv)))
 
   /** Abandon any in-flight Add-Copy drag without committing (e.g. on touch-cancel). */
   def cancelDrag(): Unit = clearDrag()

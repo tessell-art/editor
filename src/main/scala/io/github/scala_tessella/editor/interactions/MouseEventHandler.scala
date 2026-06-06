@@ -62,9 +62,12 @@ object MouseEventHandler:
         // Eraser and Measurement both discover points by proximity to the pointer (ADR-013).
         if tool == Tool.Eraser || tool == Tool.Measurement then
           ProximityQuery.updateNearbyPoints(event.clientX, event.clientY, isTouch = false)
-        // Translate reveals only the vertices near the cursor (ADR-013 amendment).
-        else if tool == Tool.TranslateCopy then
-          AddCopyOperations.updateTranslateHover(event.clientX, event.clientY)
+        // Every Add Copy tool reveals only the anchors near the cursor (ADR-013 amendment).
+        else if
+          tool == Tool.TranslateCopy || tool == Tool.RotateCopy ||
+          tool == Tool.ReflectCopy || tool == Tool.GlideReflectCopy
+        then
+          AddCopyOperations.updateAddCopyHover(event.clientX, event.clientY)
 
   def handleMouseUp(event: MouseEvent): Unit =
     val _ = AddCopyOperations.endActiveDrag()

@@ -440,9 +440,9 @@ case class PreviewState(
     translateCopyDrag: Option[TranslateCopyDrag] = None,
     rotateCopyDrag: Option[RotateCopyDrag] = None,
     reflectCopyDrag: Option[ReflectCopyDrag] = None,
-    // Live pointer (canvas-view) while the Translate tool is active but no drag is in flight, so only the
-    // vertices near the cursor are revealed (proximity) rather than all of them — ADR-013 amendment.
-    translateHoverCv: Option[Point] = None
+    // Live pointer (canvas-view) while an Add Copy tool (Translate / Rotate) is active but no drag is in
+    // flight, so only the anchors near the cursor are revealed (proximity) rather than all — ADR-013 amendment.
+    addCopyHoverCv: Option[Point] = None
 )
 
 object PreviewState:

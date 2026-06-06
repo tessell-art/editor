@@ -155,7 +155,7 @@ object TessellationRenderer:
       EditorState.toolState.signal.map(_.activeTool == Tool.TranslateCopy).distinct
         .combineWith(
           EditorState.previewState.signal.map(_.translateCopyDrag).distinct,
-          EditorState.previewState.signal.map(_.translateHoverCv).distinct
+          EditorState.previewState.signal.map(_.addCopyHoverCv).distinct
         )
         .map:
           case (true, dragOpt, hoverOpt) =>
@@ -197,49 +197,88 @@ object TessellationRenderer:
       EditorState.previewState.signal.map(_.translateCopyDrag).distinct
         .map(_.map(renderTranslateVector(_, tiling)))
 
-    // Add Copy ▸ Rotate: rotation-centre dots (colour-coded by kind) while the tool is active; the picked
-    // centre is enlarged during a drag.
+    // Add Copy ▸ Rotate: only the rotation-centre anchors near the cursor are revealed (proximity); once a
+    // pivot is picked, the drag shows just that centre, enlarged (ADR-013 amendment).
     val rotateCopyCentres = children <--
       EditorState.toolState.signal.map(_.activeTool == Tool.RotateCopy).distinct
-        .combineWith(EditorState.previewState.signal.map(_.rotateCopyDrag).distinct)
+        .combineWith(
+          EditorState.previewState.signal.map(_.rotateCopyDrag).distinct,
+          EditorState.previewState.signal.map(_.addCopyHoverCv).distinct
+        )
         .map:
-          case (true, dragOpt) =>
-            val picked = dragOpt.map(_.centerAnchor)
-            AddCopyOperations.rotationCentres(tiling).map: (anchor, p) =>
+          case (true, dragOpt, hoverOpt) =>
+            def centre(anchor: Anchor, p: Point, state: MarkerState) =
               AnchorMarker.renderPassive(
                 p,
                 anchor,
-                if picked.contains(anchor) then MarkerState.Active else MarkerState.Idle,
+                state,
                 AnchorMarker.edgeAngleDeg(tiling, anchor, tilingPointToCanvasView),
                 "rotate-copy-centre"
               )
-          case _               => Nil
+            dragOpt match
+              case Some(drag) =>
+                // Pivot is locked: show only it, enlarged.
+                List(centre(drag.centerAnchor, drag.centerCv, MarkerState.Active))
+              case None       =>
+                hoverOpt match
+                  case Some(hoverCv) =>
+                    AddCopyOperations
+                      .rotationCentres(tiling)
+                      .filter((_, p) => p.distanceTo(hoverCv) <= AddCopyOperations.revealRadiusCv)
+                      .map((anchor, p) => centre(anchor, p, MarkerState.Idle))
+                  case None          => Nil
+          case _                         => Nil
 
     // The dashed skeleton rotated by the live (snapped or free) angle about the picked centre.
     val rotateCopySkeleton = child.maybe <--
       EditorState.previewState.signal.map(_.rotateCopyDrag).distinct
         .map(_.map(renderRotateSkeleton))
 
-    // Add Copy ▸ Reflect / Glide reflect: axis-anchor dots while either tool is active; axis point A and the
-    // snapped B enlarged.
+    // Add Copy ▸ Reflect / Glide reflect: only the anchors near the cursor are revealed (proximity). While
+    // dragging, axis point A is the "from" (blue) and the snapped second anchor B is the "to" (vermillion),
+    // mirroring Measurement's start/end (ADR-013 amendment).
     val reflectCopyAnchors = children <--
       EditorState.toolState.signal
         .map(t => t.activeTool == Tool.ReflectCopy || t.activeTool == Tool.GlideReflectCopy)
         .distinct
-        .combineWith(EditorState.previewState.signal.map(_.reflectCopyDrag).distinct)
+        .combineWith(
+          EditorState.previewState.signal.map(_.reflectCopyDrag).distinct,
+          EditorState.previewState.signal.map(_.addCopyHoverCv).distinct
+        )
         .map:
-          case (true, dragOpt) =>
-            val picked: Set[Anchor] =
-              dragOpt.toSet.flatMap(d => Set(d.axisAnchor) ++ d.snapTarget.map(_._1))
-            AddCopyOperations.reflectAnchors(tiling).map: (anchor, p) =>
+          case (true, dragOpt, hoverOpt) =>
+            def anchorDot(anchor: Anchor, p: Point, state: MarkerState) =
               AnchorMarker.renderPassive(
                 p,
                 anchor,
-                if picked.contains(anchor) then MarkerState.Active else MarkerState.Idle,
+                state,
                 AnchorMarker.edgeAngleDeg(tiling, anchor, tilingPointToCanvasView),
                 "rotate-copy-centre"
               )
-          case _               => Nil
+            dragOpt match
+              case Some(drag) =>
+                val snapAnchor = drag.snapTarget.map(_._1)
+                val aDot       = anchorDot(drag.axisAnchor, drag.axisACv, MarkerState.MeasureStart)
+                val bDot       =
+                  drag.snapTarget.toList.map((anchor, p) => anchorDot(anchor, p, MarkerState.MeasureEnd))
+                val nearby     =
+                  AddCopyOperations
+                    .reflectAnchors(tiling)
+                    .filter((anchor, p) =>
+                      anchor != drag.axisAnchor && !snapAnchor.contains(anchor) &&
+                        p.distanceTo(drag.axisBCv) <= AddCopyOperations.revealRadiusCv
+                    )
+                    .map((anchor, p) => anchorDot(anchor, p, MarkerState.Idle))
+                aDot :: (bDot ++ nearby)
+              case None       =>
+                hoverOpt match
+                  case Some(hoverCv) =>
+                    AddCopyOperations
+                      .reflectAnchors(tiling)
+                      .filter((_, p) => p.distanceTo(hoverCv) <= AddCopyOperations.revealRadiusCv)
+                      .map((anchor, p) => anchorDot(anchor, p, MarkerState.Idle))
+                  case None          => Nil
+          case _                         => Nil
 
     // The dashed skeleton mirrored across the live axis A–B, with a spanning axis guide line.
     val reflectCopySkeleton = child.maybe <--

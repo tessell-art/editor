@@ -96,6 +96,16 @@ and in the git history.
   halving the clicks needed per measurement. The shared
   `EraserProximityQuery` is renamed `ProximityQuery` since it now serves both
   tools. Fan and AddPolygon ▸ Inside keep their polygon-first flow.
+- **Add Copy** tools now reveal anchors by proximity. Instead of lighting up
+  every candidate at once, only the anchors near the cursor are shown, across
+  all four tools (Translate / Rotate / Reflect / Glide reflect). While dragging,
+  the picked anchors stay highlighted using the Measurement tool's start/end
+  colours: Translate and Reflect / Glide show the "from" anchor in blue and the
+  snapped "to" anchor in vermillion, while Rotate shows just the picked pivot.
+- **Add Copy ▸ Translate** additionally draws a segment with a mid-arrow and a
+  length label between the source and target to show the translation's
+  direction and distance, and its dashed skeleton snaps to the latched target
+  so the preview matches the copy that will actually be welded.
 - `Esc` now exits **Measurement** and **Eraser** modes (clearing the clickable-point
   overlay and returning to Add Polygon), matching how it already exits the Add Copy
   modes.
