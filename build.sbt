@@ -23,7 +23,7 @@ lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
     scalaVersion := "3.8.4",
-    version := "0.5.0",
+    version := "0.6.0",
     name := "Tessella Editor",
 
     // Tell Scala.js that this is an application with a main method

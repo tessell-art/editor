@@ -1,0 +1,7 @@
+<resources>
+    <!-- Bare full-bleed theme for the WebView host; no support-library deps. -->
+    <style name="Theme.TessellaEditor" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#FFFFFFFF</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

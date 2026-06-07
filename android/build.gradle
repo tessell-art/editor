@@ -1,0 +1,23 @@
+// Top-level build file. The scala-android-plugin classpath is resolved from
+// Maven Central (the template's reference points at mavenLocal only).
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        classpath(libs.scala.android.plugin)
+    }
+}
+
+plugins {
+    alias(libs.plugins.android.application) apply false
+}
+
+// Pin dependency versions for reproducible F-Droid builds. Regenerate with:
+//   ./gradlew :app:assembleRelease --write-locks
+allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+}

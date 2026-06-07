@@ -1,0 +1,107 @@
+name: Android APK
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # AGP 8.13 requires JDK 17. sbt/Scala.js (run by the Vite plugin) is fine on 17.
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: sbt
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Writes keystore.properties + the keystore only when the signing secrets
+      # are present (they won't be on forks / PRs); otherwise the release APK is
+      # built unsigned and the build still succeeds.
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/release.jks
+            cat > android/keystore.properties <<EOF
+          storeFile=release.jks
+          storePassword=${KEYSTORE_PASSWORD}
+          keyAlias=${KEY_ALIAS}
+          keyPassword=${KEY_PASSWORD}
+          EOF
+            echo "Release signing configured."
+          else
+            echo "No KEYSTORE_BASE64 secret — building unsigned."
+          fi
+
+      # Chains sbt fullLinkJS (via Vite plugin) -> Vite dist -> Gradle assemble.
+      - name: Build release APK
+        run: bash android/build-android.sh Release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: tessella-android
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v6
+        with:
+          name: tessella-android
+          path: artifacts
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true

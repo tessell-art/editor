@@ -59,6 +59,15 @@ function versionJson() {
 
 export default defineConfig({
     base: './',
+    // Pin the syntax floor explicitly instead of inheriting Vite's moving
+    // default. es2020 == optional chaining / nullish coalescing == Chromium
+    // 80+ / Safari 13.1+. Matches the minimum-engine guard in index.html, and
+    // keeps the floor stable across Vite upgrades. Lower targets aren't worth
+    // it: the UI5 Web Components runtime needs a roughly current engine anyway,
+    // and the guard handles older ones gracefully. See ADR-005 "minimum WebView".
+    build: {
+        target: 'es2020'
+    },
     plugins: [scalaJSPlugin(), ui5LocalAssets(), versionJson()],
     optimizeDeps: {
         include: [

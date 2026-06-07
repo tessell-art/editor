@@ -1,0 +1,84 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+plugins.apply("com.soundcorset.scala-android")
+
+// Release signing from a gitignored keystore.properties (created locally, or
+// by CI from repo secrets). When absent, the release build stays unsigned so
+// contributor / PR builds still succeed. F-Droid signs with its own key
+// regardless; this signs the GitHub-release APK for direct sideloading.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+android {
+    namespace 'io.github.scala_tessella.editor'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "io.github.scala_tessella.editor"
+        minSdk 29
+        targetSdk 35
+        // Kept in sync with package.json by scripts/sync-version.mjs.
+        // versionCode = major*10000 + minor*100 + patch (monotonic).
+        versionCode 600
+        versionName "0.6.0"
+    }
+
+    signingConfigs {
+        if (keystorePropsFile.exists()) {
+            release {
+                storeFile rootProject.file(keystoreProps.getProperty('storeFile'))
+                storePassword keystoreProps.getProperty('storePassword')
+                keyAlias keystoreProps.getProperty('keyAlias')
+                keyPassword keystoreProps.getProperty('keyPassword')
+            }
+        }
+    }
+
+    buildTypes {
+        // scala-android-plugin requires minifyEnabled on every build type:
+        // the Scala standard library is shipped as a regular jar (not a native
+        // Android artifact), so R8 must shrink it (see ADR-005 §3).
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // MainActivity is Scala, so the Java class AGP's lint expects is absent.
+    lint {
+        disable 'MissingClass'
+    }
+}
+
+dependencies {
+    implementation libs.scala3.library.x
+    implementation libs.androidx.webkit
+}
+
+// Stage the Vite production bundle (editor/dist) into the app's assets so
+// WebViewAssetLoader can serve it. Run `npm run build` in the editor root
+// first (build-android.sh chains both). Hooked into preBuild so any Gradle
+// assemble picks up the latest bundle. Sync (not Copy) so stale hashed assets
+// from previous bundles are removed rather than accumulating in the APK.
+tasks.register('copyWebDist', Sync) {
+    from "${rootDir}/../dist"
+    into layout.projectDirectory.dir("src/main/assets")
+}
+tasks.named('preBuild') { dependsOn 'copyWebDist' }

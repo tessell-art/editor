@@ -9,6 +9,37 @@
     <link rel="manifest" href="/site.webmanifest">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tessella - Simple polygon tessellation editor</title>
+    <script>
+      // Minimum-engine guard. This is a CLASSIC script (not a module) so it
+      // parses and runs on engines too old for the ES-module app bundle —
+      // notably old, non-updatable Android System WebViews. The bundle is
+      // built to the es2020 syntax floor (optional chaining / nullish
+      // coalescing, Chromium 80+); engines below that would otherwise just
+      // show a blank screen. See ADR-005 "minimum WebView".
+      (function () {
+        try {
+          // Throws SyntaxError on engines without ?. / ?? (e.g. Chromium < 80).
+          new Function("var o = {}; return o?.x ?? 0;")();
+        } catch (e) {
+          document.addEventListener("DOMContentLoaded", function () {
+            // Full-screen overlay with its own background/colour so the app's
+            // (dark) theme CSS can't render this dark-on-dark.
+            document.body.innerHTML =
+              // Longhand offsets, not `inset` (CSS `inset` shorthand is Chrome
+              // 87+; this overlay must lay out on the very engines it warns about).
+              '<div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483647;' +
+              'overflow:auto;background:#ffffff;color:#222222;font-family:sans-serif;line-height:1.6">' +
+              '<div style="max-width:32rem;margin:0 auto;padding:2.5rem 1.25rem">' +
+              '<h2 style="color:#222222;margin-top:0">Browser engine out of date</h2>' +
+              '<p>Tessella needs a newer browser engine than this device provides.</p>' +
+              '<p>On Android, open the Play Store and update <b>Android System WebView</b> ' +
+              '(and Chrome), then reopen Tessella. In a desktop browser, please update to a ' +
+              'current version.</p>' +
+              '</div></div>';
+          });
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
