@@ -4,6 +4,26 @@ plugins {
 
 plugins.apply("com.soundcorset.scala-android")
 
+// Release signing from a gitignored keystore.properties (created locally, or
+// by CI from repo secrets). When absent, the release build stays unsigned so
+// contributor / PR builds still succeed. F-Droid signs with its own key
+// regardless; this signs the GitHub-release APK for direct sideloading.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+// Single source of truth for the version is the root package.json (propagated
+// elsewhere by scripts/sync-version.mjs). Read it at build time so a release
+// tag automatically yields the right versionName + a monotonic versionCode.
+def pkgVersion = new groovy.json.JsonSlurper().parse(rootProject.file("../package.json")).version
+def vMatch = (pkgVersion =~ /(\d+)\.(\d+)\.(\d+)/)
+if (!vMatch) throw new GradleException("Cannot parse SemVer from package.json: ${pkgVersion}")
+def (vMajor, vMinor, vPatch) = [vMatch[0][1] as int, vMatch[0][2] as int, vMatch[0][3] as int]
+def appVersionName = pkgVersion
+def appVersionCode = vMajor * 10000 + vMinor * 100 + vPatch
+
 android {
     namespace 'io.github.scala_tessella.editor'
     compileSdk 35
@@ -12,8 +32,19 @@ android {
         applicationId "io.github.scala_tessella.editor"
         minSdk 29
         targetSdk 35
-        versionCode 1
-        versionName "0.5.0"
+        versionCode appVersionCode
+        versionName appVersionName
+    }
+
+    signingConfigs {
+        if (keystorePropsFile.exists()) {
+            release {
+                storeFile rootProject.file(keystoreProps.getProperty('storeFile'))
+                storePassword keystoreProps.getProperty('storePassword')
+                keyAlias keystoreProps.getProperty('keyAlias')
+                keyPassword keystoreProps.getProperty('keyPassword')
+            }
+        }
     }
 
     buildTypes {
@@ -27,6 +58,9 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

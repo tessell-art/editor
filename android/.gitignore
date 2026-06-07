@@ -17,3 +17,8 @@ local.properties
 
 # Web assets are copied in from ../dist at build time (copyWebDist task)
 /app/src/main/assets/
+
+# Release signing — never commit the keystore or its passwords
+/keystore.properties
+*.jks
+*.keystore

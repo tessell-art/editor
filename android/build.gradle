@@ -13,3 +13,11 @@ buildscript {
 plugins {
     alias(libs.plugins.android.application) apply false
 }
+
+// Pin dependency versions for reproducible F-Droid builds. Regenerate with:
+//   ./gradlew :app:assembleRelease --write-locks
+allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+}
