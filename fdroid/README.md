@@ -47,9 +47,11 @@ The 3-toolchain build (sbt + Node + Gradle) is unusual for F-Droid, so expect
 - [ ] **`subdir: android`** is the Gradle root (holds `gradlew` +
       `settings.gradle`); `gradle: [yes]` runs `assembleRelease` there, building
       the single `:app` module. Confirm F-Droid locates the wrapper.
-- [ ] **Bundled UI5 "72" font** (`public/ui5-assets/fonts/72-*.woff2`, pulled
-      into the APK). Verify its licence is F-Droid-acceptable; if not, replace
-      with a libre font or drop it. **Most likely review blocker.**
+- [x] **Bundled UI5 "72" font** (`public/ui5-assets/fonts/72-*.woff2`):
+      **Apache-2.0 — not a blocker.** Verified via the REUSE report for
+      `SAP/theming-base-content` (all 1,969 files Apache-2.0, no font-specific
+      or proprietary licence): <https://api.reuse.software/info/github.com/SAP/theming-base-content>.
+      Apache-2.0 is F-Droid-acceptable.
 - [ ] **Reproducibility.** `android/app/gradle.lockfile` pins deps; the build
       should be deterministic. Reproducible-builds opt-in (publishing the
       dev-signed APK) is a later, optional step.
