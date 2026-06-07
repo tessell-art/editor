@@ -49,8 +49,9 @@ dependencies {
 // Stage the Vite production bundle (editor/dist) into the app's assets so
 // WebViewAssetLoader can serve it. Run `npm run build` in the editor root
 // first (build-android.sh chains both). Hooked into preBuild so any Gradle
-// assemble picks up the latest bundle.
-tasks.register('copyWebDist', Copy) {
+// assemble picks up the latest bundle. Sync (not Copy) so stale hashed assets
+// from previous bundles are removed rather than accumulating in the APK.
+tasks.register('copyWebDist', Sync) {
     from "${rootDir}/../dist"
     into layout.projectDirectory.dir("src/main/assets")
 }

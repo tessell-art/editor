@@ -22,14 +22,16 @@ class WebAppInterface(activity: MainActivity):
   @JavascriptInterface
   def saveBase64(filename: String, mimeType: String, base64Data: String): Unit =
     val bytes    = Base64.decode(base64Data, Base64.DEFAULT)
-    val cleanMime = mimeType.takeWhile(_ != ';') // strip ";charset=utf-8"
     val resolver = activity.getContentResolver
 
     val values = new ContentValues()
-    // DISPLAY_NAME / MIME_TYPE are declared on MediaColumns; Scala interop does
-    // not resolve them through the Downloads sub-interface (unlike Java).
+    // DISPLAY_NAME is declared on MediaColumns; Scala interop does not resolve
+    // it through the Downloads sub-interface (unlike Java).
+    // MIME_TYPE is intentionally NOT set: MediaStore infers it from the
+    // filename extension and would otherwise append a second extension when the
+    // supplied MIME doesn't match (e.g. "tessellation.gv" + text/plain →
+    // "tessellation.gv.txt"). Inferring keeps ".gv"/".svg" as-is.
     values.put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-    values.put(MediaStore.MediaColumns.MIME_TYPE, cleanMime)
 
     val itemUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
     if itemUri == null then toast(s"Could not save $filename")
