@@ -11,6 +11,8 @@ and in the git history.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-07
+
 ### Added
 - **Edit ▸ Add Copy** submenu — four direct-manipulation tools that grow the
   tiling by welding on a copy of itself under a plane isometry (dcel's
