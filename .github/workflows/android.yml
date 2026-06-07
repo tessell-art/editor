@@ -7,6 +7,10 @@ on:
   push:
     tags:
       - 'v*.*.*'
+    # TEMPORARY (smoke test): run the build job on the feature branch. The
+    # release job is tag-guarded, so nothing is published. Remove before merge.
+    branches:
+      - 'android-fdroid-packaging'
   workflow_dispatch:
 
 concurrency:
