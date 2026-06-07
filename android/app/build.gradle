@@ -1,0 +1,57 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+plugins.apply("com.soundcorset.scala-android")
+
+android {
+    namespace 'io.github.scala_tessella.editor'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "io.github.scala_tessella.editor"
+        minSdk 29
+        targetSdk 35
+        versionCode 1
+        versionName "0.5.0"
+    }
+
+    buildTypes {
+        // scala-android-plugin requires minifyEnabled on every build type:
+        // the Scala standard library is shipped as a regular jar (not a native
+        // Android artifact), so R8 must shrink it (see ADR-005 §3).
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // MainActivity is Scala, so the Java class AGP's lint expects is absent.
+    lint {
+        disable 'MissingClass'
+    }
+}
+
+dependencies {
+    implementation libs.scala3.library.x
+    implementation libs.androidx.webkit
+}
+
+// Stage the Vite production bundle (editor/dist) into the app's assets so
+// WebViewAssetLoader can serve it. Run `npm run build` in the editor root
+// first (build-android.sh chains both). Hooked into preBuild so any Gradle
+// assemble picks up the latest bundle.
+tasks.register('copyWebDist', Copy) {
+    from "${rootDir}/../dist"
+    into layout.projectDirectory.dir("src/main/assets")
+}
+tasks.named('preBuild') { dependsOn 'copyWebDist' }
