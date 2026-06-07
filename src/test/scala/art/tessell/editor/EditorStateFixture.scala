@@ -4,7 +4,6 @@ import art.tessell.editor.models.{
   AnimationState, AppStateSnapshot, ColorState, EditorState, ErrorState, FileState, IrregularState,
   MeasurementState, PopupState, PreviewState, TessellationState, ToolState, UIState, ViewState
 }
-import art.tessell.editor.models.*
 import munit.FunSuite
 
 // Mixin for test suites to get robust state isolation.

@@ -8,7 +8,6 @@ import art.tessell.editor.i18n.{I18n, Locale}
 import art.tessell.editor.models.{EditorState, Theme}
 import art.tessell.editor.utils.LocaleStorage
 import com.raquo.laminar.api.L.*
-import art.tessell.editor.components.popup.*
 
 /** Top app shell — the persistent surface that surrounds the editor.
   *

@@ -24,7 +24,7 @@ object FileDownloader:
         .unescape(js.Dynamic.global.encodeURIComponent(content))
         .asInstanceOf[String]
     )
-    bridge.saveBase64(filename, mimeType, base64)
+    val _      = bridge.saveBase64(filename, mimeType, base64)
 
   private def browserDownload(content: String, filename: String, mimeType: String): Unit =
     val blobPropertyBag = new BlobPropertyBag { `type` = mimeType }

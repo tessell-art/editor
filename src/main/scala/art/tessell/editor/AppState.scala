@@ -12,8 +12,6 @@ import art.tessell.editor.utils.file.SvgImporter
 import com.raquo.laminar.api.L.*
 import io.github.scala_tessella.dcel.geometry.AngleDegree
 import io.github.scala_tessella.dcel.structure.FaceId
-import art.tessell.editor.models.*
-import art.tessell.editor.operations.*
 import art.tessell.editor.operations.OperationGuard.ifNotProcessing
 import art.tessell.editor.utils.{ColorRGB, FirstRunStorage}
 
