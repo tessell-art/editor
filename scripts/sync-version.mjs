@@ -27,8 +27,15 @@ if (!/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(newVersion)) {
     process.exit(1);
 }
 
+// Android versionCode: major*10000 + minor*100 + patch (monotonic). Must stay
+// in lockstep with the literal in android/app/build.gradle.
+const [maj, min, pat] = newVersion.split('-')[0].split('.').map(Number);
+const androidVersionCode = maj * 10000 + min * 100 + pat;
+
 // Each target uses an anchored regex so we only touch the manifest's own version,
 // not nested dependency `version = "..."` lines (relevant for Cargo.toml).
+// `replace` defaults to substituting the quoted SemVer; targets that need a
+// different value (e.g. Android's integer versionCode) provide their own.
 const targets = [
     {
         path: 'build.sbt',
@@ -41,19 +48,29 @@ const targets = [
     {
         path: 'desktop/src-tauri/Cargo.toml',
         pattern: /^(version\s*=\s*)"[^"]+"/m
+    },
+    {
+        path: 'android/app/build.gradle',
+        pattern: /^(\s*versionName\s+)"[^"]+"/m
+    },
+    {
+        path: 'android/app/build.gradle',
+        pattern: /^(\s*versionCode\s+)\d+/m,
+        replace: (_, prefix) => `${prefix}${androidVersionCode}`,
+        display: androidVersionCode
     }
 ];
 
-for (const { path, pattern } of targets) {
+for (const { path, pattern, replace, display } of targets) {
     const file = resolve(root, path);
     const before = readFileSync(file, 'utf-8');
-    const after = before.replace(pattern, (_, prefix) => `${prefix}"${newVersion}"`);
+    const after = before.replace(pattern, replace ?? ((_, prefix) => `${prefix}"${newVersion}"`));
     if (before === after) {
         console.error(`sync-version: no version line matched in ${path} (regex needs updating)`);
         process.exit(1);
     }
     writeFileSync(file, after);
-    console.log(`sync-version: ${path} -> ${newVersion}`);
+    console.log(`sync-version: ${path} -> ${display ?? newVersion}`);
 }
 
 // Refresh Cargo.lock so the desktop crate's locked version matches Cargo.toml.
