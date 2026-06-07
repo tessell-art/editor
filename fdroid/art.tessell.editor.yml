@@ -50,6 +50,7 @@ Builds:
       - apt-get install -y sbt
     gradle:
       - yes
+    output: app/build/outputs/apk/release/app-release-unsigned.apk
     prebuild: cd .. && npm ci && npm run build
     scandelete:
       - node_modules
