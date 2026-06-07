@@ -11,6 +11,21 @@ and in the git history.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-07
+
+### Added
+- **Android app** (`android/`) — a Scala 3 WebView shell packaging the editor
+  for F-Droid. Serves the Vite bundle from app assets via
+  `WebViewAssetLoader`, exports SVG/DOT to the system Downloads collection,
+  routes external links to the system browser, and shows a clear "update your
+  WebView" message on engines too old to run the bundle. Includes release
+  signing, a reproducible `gradle.lockfile`, and a tag-triggered `android.yml`
+  workflow that builds and attaches the APK.
+
+### Changed
+- Vite `build.target` pinned to `es2020`, making the supported browser-engine
+  floor explicit and stable across Vite upgrades.
+
 ## [0.5.0] - 2026-06-07
 
 ### Added
@@ -170,5 +185,7 @@ and in the git history.
   Pages deploy workflow, clearing the Node 20 deprecation warning on
   every deploy run.
 
-[Unreleased]: https://github.com/tessell-art/editor/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/tessell-art/editor/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/tessell-art/editor/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/tessell-art/editor/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/tessell-art/editor/compare/v0.4.0...v0.4.2
