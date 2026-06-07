@@ -1,0 +1,280 @@
+package art.tessell.editor.components
+
+import art.tessell.editor.AppState
+import art.tessell.editor.models.{AddSubmode, EditorState, FailedPolygonPlacement, Tool, VertexCoord}
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.geometry.{AngleDegree, RegularPolygon}
+import io.github.scala_tessella.dcel.structure.{FaceId, Vertex}
+import art.tessell.editor.operations.OperationGuard.gate
+import art.tessell.editor.operations.{PlacementOperations, PlacementValidation}
+import art.tessell.editor.operations.TessellationOperations.toCoords
+import art.tessell.editor.utils.ColorRGB.*
+import art.tessell.editor.utils.SvgDsl.lineCoords
+import art.tessell.editor.utils.geo.{LineSegment, Point}
+import io.github.scala_tessella.ring_seq.RingSeq.slidingO
+import org.scalajs.dom.EndingType.transparent
+
+object TessellationEdgeRenderer:
+
+  private type PreviewState =
+    (Option[Int], Option[Vector[AngleDegree]], TilingDCEL)
+
+  private val previewStateSignal: Signal[PreviewState] =
+    EditorState.toolState.signal.map(_.selectedPolygon).distinct
+      .combineWith(EditorState.irregularState.signal.map(_.selectedShape).distinct)
+      .combineWith(EditorState.tessellationState.signal.map(_.currentTiling).distinct)
+
+  /** Snapshot helper: true only when the active tool is AddPolygon in its Outside sub-mode — the one mode
+    * where hovering a perimeter edge should paint the dotted placement preview.
+    */
+  private def isAddOutsideMode: Boolean =
+    val tools = EditorState.toolState.now()
+    tools.activeTool == Tool.AddPolygon && tools.addSubmode == AddSubmode.Outside
+
+  /** During a drag-from-palette gesture, the gesture itself owns `previewState.previewPlacement` (snapping to
+    * the nearest valid edge). Hover handlers stand down to avoid fighting the snap.
+    */
+  private def isPaletteDragActive: Boolean =
+    EditorState.uiState.now().isPaletteDragActive
+
+  /** Resolves the angle vector for the polygon currently armed in the palette. Irregular wins if both are set
+    * (mirrors `PlacementOperations.resolvePolygonPlacementKind`). Returns `None` when nothing is selected —
+    * the validity check then defaults to "valid" so a tooless hover doesn't pre-reject every edge.
+    */
+  private def anglesFor(
+      maybeSides: Option[Int],
+      selectedIrregular: Option[Vector[AngleDegree]]
+  ): Option[Vector[AngleDegree]] =
+    selectedIrregular.orElse(maybeSides.filter(_ >= 3).map(s => RegularPolygon(s).angles))
+
+  private def buildFailedPlacement(
+      edgeIndex: Int,
+      edge: (VertexCoord, VertexCoord),
+      maybeSides: Option[Int],
+      selectedIrregular: Option[Vector[AngleDegree]],
+      tiling: TilingDCEL,
+      intoFace: Option[FaceId] = None
+  ): Option[FailedPolygonPlacement] =
+    selectedIrregular match
+      case Some(angles) =>
+        Some(FailedPolygonPlacement(edgeIndex, angles, edge, tiling, intoFace = intoFace))
+      case None         =>
+        maybeSides.filter(_ >= 3).map: sides =>
+          FailedPolygonPlacement(
+            edgeIndex,
+            RegularPolygon(sides).angles,
+            edge,
+            tiling,
+            intoFace = intoFace
+          )
+
+  def renderPerimeterEdges(
+      tiling: TilingDCEL,
+      toCanvasPoint: Point => Point
+  ): List[Element] =
+    tiling.boundaryVertices.toOption.get
+      .map(_.toCoords)
+      .slidingO(2).toList.zipWithIndex
+      .map: (vs, index) =>
+        renderPerimeterEdge((vs(0), vs(1)), index, s"perimeter-edge-$index", toCanvasPoint)
+
+  def renderInteriorEdgesForFace(
+      tiling: TilingDCEL,
+      faceId: FaceId,
+      toCanvasPoint: Point => Point
+  ): List[Element] =
+    if tiling.isEmpty then Nil
+    else
+      tiling.findInnerFaceVertices(faceId).toOption match
+        case Some(vertices) => rawRender(faceId, vertices, toCanvasPoint)
+        case None           => Nil
+
+  private def rawRender(
+      faceId: FaceId,
+      vertices: List[Vertex],
+      toCanvasPoint: Point => Point
+  ): List[Element] =
+    val edges = vertices.map(_.toCoords).slidingO(2).toList
+    edges.zipWithIndex.map:
+      case (pair, idx) =>
+        renderInteriorEdge((pair(0), pair(1)), faceId, idx, toCanvasPoint)
+
+  private def renderInteriorEdge(
+      edge: (VertexCoord, VertexCoord),
+      faceId: FaceId,
+      edgeIndex: Int,
+      toCanvasPoint: Point => Point
+  ): Element =
+    val point1 = toCanvasPoint(edge._1.point)
+    val point2 = toCanvasPoint(edge._2.point)
+
+    // Per-edge validity for inside-mode insertion: the polygon's corner at each endpoint of
+    // this interior edge must fit inside the face's interior angle there. Same dim/red feedback
+    // as the perimeter case.
+    val edgeValiditySignal: Signal[Boolean] =
+      previewStateSignal.map: (maybeSides, selectedIrregular, tiling) =>
+        anglesFor(maybeSides, selectedIrregular)
+          .fold(true)(angles => PlacementValidation.fitsInFace(tiling, faceId, edge, angles))
+
+    val interactionArea = svg.line(
+      lineCoords(LineSegment(point1, point2)),
+      svg.stroke        := transparent,
+      svg.strokeWidth   := "10",
+      svg.strokeLineCap := "round",
+      svg.className     := "interior-edge-transparent",
+      // Show inner preview oriented into this face
+      onMouseEnter.compose(stream =>
+        gate(stream).withCurrentValueOf(previewStateSignal)
+      ) --> {
+        case (
+              _,
+              maybeSides: Option[Int],
+              selectedIrregular: Option[Vector[AngleDegree]],
+              tiling: TilingDCEL
+            ) =>
+          if !isPaletteDragActive then
+            val placementOpt =
+              buildFailedPlacement(
+                edgeIndex = edgeIndex,
+                edge = edge,
+                maybeSides = maybeSides,
+                selectedIrregular = selectedIrregular,
+                tiling = tiling,
+                intoFace = Some(faceId)
+              )
+            val valid        = anglesFor(maybeSides, selectedIrregular)
+              .fold(true)(angles => PlacementValidation.fitsInFace(tiling, faceId, edge, angles))
+            EditorState.previewState.update(
+              _.copy(previewPlacement = placementOpt, previewIsValid = valid)
+            )
+      },
+      onMouseLeave.compose(gate) --> { _ =>
+
+        if !isPaletteDragActive then
+          EditorState.previewState.update(_.copy(previewPlacement = None, previewIsValid = true))
+      },
+      // Trigger insertion directly when clicking the highlighted interior edge — but only when
+      // (a) the inside sub-mode is active and (b) the edge is angle-valid for the armed polygon.
+      onClick.preventDefault.compose(stream =>
+        gate(stream).withCurrentValueOf(EditorState.isAddInsideActive, edgeValiditySignal)
+      ) --> {
+        case (_, true, true) =>
+          PlacementOperations.attemptPolygonInsertion(edge._1.id, edge._2.id)
+          EditorState.previewState.update(_.copy(previewPlacement = None, previewIsValid = true))
+        case _               => ()
+      }
+    )
+
+    val visibleLine = svg.line(
+      lineCoords(LineSegment(point1, point2)),
+      svg.stroke        := "#20A4BE",
+      // Match the boundary edge width so the highlighted face's edges read with the same
+      // visual weight as the perimeter — they are, after all, the candidate placement edges.
+      svg.strokeWidth   := "4.5",
+      svg.strokeLineCap := "round",
+      svg.className     := "interior-edge",
+      svg.pointerEvents := "none"
+    )
+
+    svg.g(
+      // Mark the whole group as `invalid-target` when the edge is angle-rejected, so the CSS
+      // can drop the green hover stroke / glow / pulse and the cursor reverts to default.
+      svg.className <-- edgeValiditySignal.map(valid =>
+        if valid then "interior-edge-group"
+        else "interior-edge-group invalid-target"
+      ),
+      visibleLine,
+      interactionArea
+    )
+
+  private def renderPerimeterEdge(
+      edge: (VertexCoord, VertexCoord),
+      edgeIndex: Int,
+      id: String,
+      toCanvasPoint: Point => Point
+  ): Element =
+    val vertex1 = edge._1.point
+    val vertex2 = edge._2.point
+
+    val point1 = toCanvasPoint(vertex1)
+    val point2 = toCanvasPoint(vertex2)
+
+    // Per-edge validity for the *currently selected* polygon. When false, the edge is a
+    // guaranteed-invalid drop target by the angle-at-endpoints check, and the hover-highlight
+    // CSS is suppressed via the extra `invalid-target` class. The hover preview itself still
+    // renders (in red) so the user sees that the target was recognised, just rejected.
+    val edgeValiditySignal: Signal[Boolean] =
+      previewStateSignal.map: (maybeSides, selectedIrregular, tiling) =>
+        anglesFor(maybeSides, selectedIrregular)
+          .fold(true)(angles => PlacementValidation.fitsAtEdge(tiling, edge, angles))
+
+    val interactionArea = svg.line(
+      lineCoords(LineSegment(point1, point2)),
+      svg.stroke        := transparent,
+      svg.strokeWidth   := "12",
+      svg.strokeLineCap := "round",
+      svg.className <--
+        edgeValiditySignal.map(valid =>
+          if valid then "perimeter-edge-transparent"
+          else "perimeter-edge-transparent invalid-target"
+        ),
+      svg.pointerEvents <--
+        EditorState.measurementState.signal.map(_.highlightedPolygonId).distinct.map(_.fold("visiblePainted")(
+          _ =>
+            "none"
+        )),
+      // Enhanced visual feedback and click handling. The dotted-polygon preview only makes
+      // sense in AddPolygon + Outside, where the click would actually grow the tiling — gate
+      // the mouse-enter handler accordingly so other tools don't paint a misleading preview.
+      onMouseEnter.compose(stream =>
+        gate(stream).withCurrentValueOf(previewStateSignal)
+      ) --> {
+        case (
+              _,
+              maybeSides: Option[Int],
+              selectedIrregular: Option[Vector[AngleDegree]],
+              tiling: TilingDCEL
+            ) =>
+          if isAddOutsideMode && !isPaletteDragActive then
+            val placementOpt =
+              buildFailedPlacement(
+                edgeIndex = edgeIndex,
+                edge = edge,
+                maybeSides = maybeSides,
+                selectedIrregular = selectedIrregular,
+                tiling = tiling
+              )
+            val valid        = anglesFor(maybeSides, selectedIrregular)
+              .fold(true)(angles => PlacementValidation.fitsAtEdge(tiling, edge, angles))
+            EditorState.previewState.update(
+              _.copy(previewPlacement = placementOpt, previewIsValid = valid)
+            )
+      },
+      onMouseLeave.compose(gate) --> { _ =>
+
+        if !isPaletteDragActive then
+          EditorState.previewState.update(_.copy(previewPlacement = None, previewIsValid = true))
+      },
+      onClick.compose(gate) --> { _ =>
+
+        AppState.handlePerimeterEdgeClick(id, edgeIndex)
+      }
+    )
+
+    val visibleLine = svg.line(
+      lineCoords(LineSegment(point1, point2)),
+      svg.stroke <-- EditorState.colorState.signal.map(_.perimeterEdgeColor).distinct.map:
+        _.toRgb
+      ,
+      svg.strokeWidth <--
+        EditorState.settingsState.signal.map(_.boundaryEdgeWidth).distinct.map(_.toString),
+      svg.strokeLineCap := "round",
+      svg.className     := "perimeter-edge",
+      svg.pointerEvents := "none"
+    )
+
+    svg.g(
+      visibleLine,
+      interactionArea
+    )

@@ -11,6 +11,15 @@ and in the git history.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-07
+
+### Changed
+- Android `applicationId` renamed `io.github.scala_tessella.editor` →
+  `art.tessell.editor` (reverse-DNS of the owned `tessell.art` domain) before
+  F-Droid publication, so the app's permanent identity matches the project
+  domain. The Android shell's Scala package moved to match; the web frontend
+  package is unchanged. (`v0.6.0` shipped the previous id.)
+
 ## [0.6.0] - 2026-06-07
 
 ### Added
@@ -185,7 +194,8 @@ and in the git history.
   Pages deploy workflow, clearing the Node 20 deprecation warning on
   every deploy run.
 
-[Unreleased]: https://github.com/tessell-art/editor/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/tessell-art/editor/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/tessell-art/editor/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/tessell-art/editor/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tessell-art/editor/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/tessell-art/editor/compare/v0.4.0...v0.4.2

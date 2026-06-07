@@ -23,7 +23,7 @@ lazy val editor = project.in(file("."))
   .enablePlugins(ScalaJSPlugin) // Enable the Scala.js plugin in this project
   .settings(
     scalaVersion := "3.8.4",
-    version := "0.6.0",
+    version := "0.6.1",
     name := "Tessella Editor",
 
     // Tell Scala.js that this is an application with a main method
@@ -83,7 +83,7 @@ lazy val editor = project.in(file("."))
     //   utils                   → (nothing in this project)
     checkLayering := {
       val scalaDir =
-        (Compile / sourceDirectory).value / "scala" / "io" / "github" / "scala_tessella" / "editor"
+        (Compile / sourceDirectory).value / "scala" / "art" / "tessell" / "editor"
       val rules: Seq[(String, Seq[String])] = Seq(
         "models"     -> Seq("AppState", "operations", "components", "interactions"),
         "operations" -> Seq("AppState", "components", "interactions"),
@@ -92,7 +92,7 @@ lazy val editor = project.in(file("."))
       val violations = rules.flatMap { case (layer, forbidden) =>
         val layerDir = scalaDir / layer
         val pattern  =
-          ("""^\s*import\s+io\.github\.scala_tessella\.editor\.(""" +
+          ("""^\s*import\s+art\.tessell\.editor\.(""" +
             forbidden.mkString("|") + """)($|[\s.{])""").r
         (layerDir ** "*.scala").get.flatMap { f =>
           IO.readLines(f).zipWithIndex.collect {
@@ -118,7 +118,7 @@ lazy val editor = project.in(file("."))
       val log       = streams.value.log
       val base      = baseDirectory.value
       val scalaFile =
-        (Compile / sourceDirectory).value / "scala" / "io" / "github" / "scala_tessella" / "editor" /
+        (Compile / sourceDirectory).value / "scala" / "art" / "tessell" / "editor" /
           "models" / "MenuShortcuts.scala"
       val rustFile  = base / "desktop" / "src-tauri" / "src" / "menu_shortcuts.rs"
       if (!rustFile.exists())
@@ -170,11 +170,11 @@ lazy val editor = project.in(file("."))
 
     // Generate a Scala object with the app version from SBT `version`
     Compile / sourceGenerators += Def.task {
-      val out = (Compile / sourceManaged).value / "io" / "github" / "scala_tessella" / "editor" / "buildinfo"
+      val out = (Compile / sourceManaged).value / "art" / "tessell" / "editor" / "buildinfo"
       val file = out / "BuildInfo.scala"
       IO.write(
         file,
-        s"""package io.github.scala_tessella.editor.buildinfo
+        s"""package art.tessell.editor.buildinfo
            |object BuildInfo {
            |  val version: String = "${version.value}"
            |}

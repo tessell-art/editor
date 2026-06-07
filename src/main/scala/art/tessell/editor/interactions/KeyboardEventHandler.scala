@@ -1,0 +1,161 @@
+package art.tessell.editor.interactions
+
+import art.tessell.editor.AppState
+import art.tessell.editor.models.{EditorConfig, EditorState, Tool}
+import com.raquo.laminar.api.L.*
+import io.github.scala_tessella.dcel.TilingDCEL
+import art.tessell.editor.operations.SelectionOperations.clearAllSelections
+import art.tessell.editor.operations.{AddCopyOperations, ToolActions, UndoManager, ViewOperations}
+import art.tessell.editor.utils.file.SvgExporter
+import org.scalajs.dom
+import org.scalajs.dom.KeyboardEvent
+
+object KeyboardEventHandler:
+
+  private inline def isMac: Boolean =
+    // Uses platform to detect macOS reliably across Chrome/Safari/Firefox
+    dom.window.navigator.platform.toLowerCase.contains("mac")
+
+  private inline def primaryMod(e: KeyboardEvent): Boolean =
+    // Command on macOS, Ctrl elsewhere
+    if isMac then e.metaKey else e.ctrlKey
+
+  def keyboardEventHandlers: Mod[HtmlElement] =
+    onMountCallback: ctx =>
+
+      val owner    = ctx.owner
+      // Gate the stream using the processing signal without calling .now() per keydown
+      val keyDowns = windowEvents(_.onKeyDown)
+        .withCurrentValueOf(EditorState.uiState.signal.map(_.isProcessing).distinct)
+        .collect:
+          case (event, false) => event
+
+      val rotationStream = keyDowns
+        .map: event =>
+          if isTargetInput(event) then None
+          else
+            rotationDeltaForKey(event.key).map: delta =>
+
+              event.preventDefault()
+              delta
+        .collect:
+          case Some(delta) => delta
+
+      val zoomStream = keyDowns
+        .map: event =>
+          if isTargetInput(event) then None
+          else
+            zoomFactorForKey(event.key).map: factor =>
+
+              event.preventDefault()
+              factor
+        .collect:
+          case Some(factor) => factor
+
+      rotationStream
+        .debounce(debounceMs)
+        .foreach(ViewOperations.rotateView)(using owner): Unit
+
+      zoomStream
+        .debounce(debounceMs)
+        .foreach { factor =>
+
+          EditorState.viewState.update: s =>
+
+            val vt   = s.viewTransform
+            val next = vt.scale * factor
+            s.copy(viewTransform = vt.copy(scale = ViewOperations.clampViewScale(next)))
+        }(using owner): Unit
+
+      keyDowns
+        .filter: event =>
+          !isTargetInput(event) &&
+            rotationDeltaForKey(event.key).isEmpty &&
+            zoomFactorForKey(event.key).isEmpty
+        .withCurrentValueOf(
+          EditorState.tessellationState.signal.map(_.currentTiling).distinct,
+          EditorState.fileState.signal.map(_.currentFileName).distinct
+        )
+        .foreach { (event, tiling, fileNameOpt) =>
+
+          handleKeyDown(event, tiling, fileNameOpt.isDefined)
+        }(using owner): Unit
+
+  // --- Debounced rotate / zoom config ---
+  private val debounceMs = 20 // ~1 frame @ 50fps; adjust 16–33ms as desired
+
+  private[interactions] def rotationDeltaForKey(key: String): Option[Int] =
+    key match
+      case "e" | "E" => Some(15)
+      case "q" | "Q" => Some(-15)
+      case _         => None
+
+  private[interactions] def zoomFactorForKey(key: String): Option[Double] =
+    key match
+      case "+" | "=" => Some(EditorConfig.keyboardZoomFactor)
+      case "-" | "_" => Some(1.0 / EditorConfig.keyboardZoomFactor)
+      case _         => None
+
+  private[interactions] def isUndoShortcut(key: String, primary: Boolean, shift: Boolean): Boolean =
+    primary && key == "z" && !shift
+
+  private[interactions] def isRedoShortcut(key: String, primary: Boolean, shift: Boolean): Boolean =
+    primary && shift && (key == "Z" || key == "z")
+
+  private[interactions] def isSaveShortcut(key: String, primary: Boolean): Boolean =
+    primary && key == "s"
+
+  private def isTargetInput(event: KeyboardEvent): Boolean =
+    Option(event.target).exists {
+      case _: dom.html.Input                            => true
+      case _: dom.html.TextArea                         => true
+      case _: dom.html.Select                           => true
+      case el: dom.html.Element if el.isContentEditable => true
+      case _                                            => false
+    }
+
+  def handleKeyDown(event: KeyboardEvent, currentTiling: TilingDCEL, hasFileName: Boolean): Unit =
+    if !isTargetInput(event) then
+      if event.key == "f" || event.key == "F" then
+        event.preventDefault()
+        AppState.fitTilingToCanvas()
+      // Add Copy modes — plain T / R / Y. Guarded on `!primaryMod` so Ctrl/Cmd+R (reload),
+      // Ctrl/Cmd+T (new tab) etc. still reach the browser.
+      else if (event.key == "t" || event.key == "T") && !primaryMod(event) && !currentTiling.isEmpty then
+        event.preventDefault()
+        AppState.enterTranslateCopyMode()
+      else if (event.key == "r" || event.key == "R") && !primaryMod(event) && !currentTiling.isEmpty then
+        event.preventDefault()
+        AppState.enterRotateCopyMode()
+      else if (event.key == "y" || event.key == "Y") && !primaryMod(event) && !currentTiling.isEmpty then
+        event.preventDefault()
+        AppState.enterReflectCopyMode()
+      else if isRedoShortcut(event.key, primaryMod(event), event.shiftKey) then
+        event.preventDefault()
+        UndoManager.redo()
+      else if isUndoShortcut(event.key, primaryMod(event), event.shiftKey) then
+        event.preventDefault()
+        UndoManager.undo()
+      else if isSaveShortcut(event.key, primaryMod(event)) then
+        event.preventDefault()
+        // Use the snapshots captured above
+        if hasFileName && !currentTiling.isEmpty then
+          SvgExporter.saveTilingToSVG()
+      else if event.key == "Escape" then
+        event.preventDefault()
+        val tool = EditorState.toolState.now().activeTool
+        if tool == Tool.TranslateCopy || tool == Tool.RotateCopy || tool == Tool.ReflectCopy ||
+          tool == Tool.GlideReflectCopy
+        then
+          AddCopyOperations.exitMode()
+        else if tool == Tool.Measurement || tool == Tool.Eraser then
+          // Leave the point-tool the same way clicking its active toolbar button would:
+          // back to Add Polygon, clearing the clickable-point overlay.
+          ToolActions.toggleTool(tool)
+        else
+          clearAllSelections()
+      else if event.key == "Delete" || event.key == "Backspace" then
+        event.preventDefault()
+        // Future deletion logic can be added here
+        ()
+      else ()

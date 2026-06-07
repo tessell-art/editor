@@ -1,0 +1,275 @@
+package art.tessell.editor.utils.file
+
+import art.tessell.editor.i18n.I18n
+import art.tessell.editor.models.{EditorConfig, EditorState}
+import art.tessell.editor.operations.{ColorOperations, DirtyTracker}
+import art.tessell.editor.utils.{AsyncUtils, SvgDsl}
+import io.github.scala_tessella.dcel.geometry.{BigLineSegment, BigPoint}
+import io.github.scala_tessella.dcel.conversion.TilingSVG.toMetadata
+import io.github.scala_tessella.dcel.structure.{Vertex, VertexId}
+import io.github.scala_tessella.dcel.TilingDCEL
+import io.github.scala_tessella.dcel.TilingSymmetry.{BoundaryEdge, BoundaryLocation, BoundaryVertex}
+import art.tessell.editor.utils.ColorRGB.*
+import art.tessell.editor.utils.SvgDsl.uniformColorMap
+import art.tessell.editor.utils.geo.Geometry.{fitPointsToViewBox, transformPointsForSvg}
+import art.tessell.editor.utils.geo.{LineSegment, Point}
+import art.tessell.editor.utils.geo.TessellationGeometry.*
+import org.scalajs.dom
+
+object SvgExporter:
+
+  // "Save As..." functionality
+  def saveAsTilingToSVG(): Unit =
+    val tiling = EditorState.tessellationState.now().currentTiling
+    if !tiling.isEmpty then
+      val currentName = EditorState.fileState.now().currentFileName
+        .getOrElse(I18n.tNow("file.saveAs.defaultName"))
+      Option(dom.window.prompt(I18n.tNow("file.saveAs.prompt"), currentName)).foreach { newName =>
+
+        if newName.nonEmpty then
+          AsyncUtils.withLoadingState { () =>
+
+            val finalName  = if newName.toLowerCase.endsWith(".svg") then newName else s"$newName.svg"
+            val view       = EditorState.viewState.now()
+            val svgContent =
+              generateSvgContent(
+                tiling,
+                view.showNodeLabels,
+                view.showUniformity,
+                view.showRotation,
+                view.showReflection
+              )
+            FileDownloader.trigger(svgContent, finalName, "image/svg+xml;charset=utf-8")
+            EditorState.fileState.update(_.copy(currentFileName = Some(finalName)))
+            DirtyTracker.markSaved()
+          }: Unit
+      }
+
+  // "Save" functionality
+  def saveTilingToSVG(): Unit =
+    AsyncUtils.withLoadingState(() =>
+      EditorState.fileState.now().currentFileName.foreach { fileName =>
+
+        val tiling = EditorState.tessellationState.now().currentTiling
+        if !tiling.isEmpty then
+          val view       = EditorState.viewState.now()
+          val svgContent =
+            generateSvgContent(
+              tiling,
+              view.showNodeLabels,
+              view.showUniformity,
+              view.showRotation,
+              view.showReflection
+            )
+          FileDownloader.trigger(svgContent, fileName, "image/svg+xml;charset=utf-8")
+          DirtyTracker.markSaved()
+      }
+    ): Unit
+
+  private[utils] def generateSvgContent(
+      tiling: TilingDCEL,
+      showNodeLabels: Boolean,
+      showUniformity: Boolean,
+      showRotation: Boolean,
+      showReflection: Boolean
+  ): String =
+    val coordinates = tiling.coordinates
+    if coordinates.isEmpty then
+      ""
+    else
+      val points = coordinates.values.toList.map(_.toPoint)
+
+      val (scale, strokeWidth, strokeWidthPeri) = (EditorConfig.canvasScale, 1.5, 10.5)
+      val padding                               = 20.0
+
+      val (width, height, offset) = points.fitPointsToViewBox(scale, padding)
+
+      val polygonsXml   = generatePolygonsXml(tiling, scale, offset, strokeWidth)
+      val perimeterXml  = generatePerimeterXml(tiling, scale, offset, strokeWidthPeri)
+      val uniformityXml = if showUniformity then generateUniformityXml(coordinates, scale, offset) else ""
+      val rotationXml   = if showRotation then generateRotationXml(coordinates, scale, offset) else ""
+      val reflectionXml = if showReflection then generateReflectionXml(coordinates, scale, offset) else ""
+      val labelsXml     = if showNodeLabels then generateLabelsXml(coordinates, scale, offset) else ""
+      val metadataXml   = generateMetadataXml(tiling)
+
+      val sWidth  = SvgDsl.fmt4(width)
+      val sHeight = SvgDsl.fmt4(height)
+
+      s"""<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:tess="https://github.com/scala-tessella/tessella" width="$sWidth" height="$sHeight" viewBox="0 0 $sWidth $sHeight" xmlns="http://www.w3.org/2000/svg">
+         |  <rect width="100%" height="100%" fill="white"/>
+         |$perimeterXml
+         |$polygonsXml${if showUniformity then s"\n$uniformityXml" else ""}${
+          if showRotation then s"\n$rotationXml" else ""
+        }${if showReflection then s"\n$reflectionXml" else ""}${
+          if showNodeLabels then s"\n$labelsXml" else ""
+        }
+         |$metadataXml
+         |</svg>""".stripMargin
+
+  private[utils] def pointsString(
+      nodes: Seq[VertexId],
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    val points = nodes.map(coordinates).map(_.toPoint)
+    points.transformPointsForSvg(scale, offset)
+      .map(SvgDsl.fmt6Point)
+      .mkString(" ")
+
+  private def pointsString(vertices: Seq[Vertex], scale: Double, offset: Point): String =
+    val points = vertices.map(_.coords.toPoint)
+    points.transformPointsForSvg(scale, offset)
+      .map(SvgDsl.fmt6Point)
+      .mkString(" ")
+
+  private[utils] def generatePolygonsXml(
+      tiling: TilingDCEL,
+      scale: Double,
+      offset: Point,
+      strokeWidth: Double
+  ): String =
+    val polygonsXml =
+      tiling.innerFacesVertices.map { (faceId, faceVertices) =>
+
+        val color    = ColorOperations.getPolygonColor(faceId).getOrElse(EditorConfig.defaultPolygonColor).toRgb
+        val points   = pointsString(faceVertices, scale, offset)
+        val nodesStr = "" // nodes.map(_.toString).mkString(",")
+
+        s"""    <polygon data-nodes="$nodesStr" points="$points" fill="$color" />"""
+      }.mkString("\n")
+    s"""  <g id="tiling-polygons" stroke="#333" stroke-width="$strokeWidth">
+       |$polygonsXml
+       |  </g>""".stripMargin
+
+  private[utils] def generatePerimeterXml(
+      tiling: TilingDCEL,
+      scale: Double,
+      offset: Point,
+      strokeWidthPeri: Double
+  ): String =
+    val perimeterNodes = tiling.boundaryVertices.toOption.get
+    if perimeterNodes.isEmpty then ""
+    else
+      val points   = pointsString(perimeterNodes, scale, offset)
+      val nodesStr = "" // perimeterNodes.map(_.toString).mkString(",")
+
+      s"""  <polygon data-nodes="$nodesStr" points="$points" fill="none" stroke="#e4e4e4" stroke-width="$strokeWidthPeri" />"""
+
+  private[utils] def generateUniformityXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val uniMap   = EditorState.viewState.now().uniformityMap.getOrElse(Map.empty)
+      val nodesXml = coordinates
+        .filter { (vertexId, _) =>
+
+          uniMap.contains(vertexId)
+        }
+        .map { (vertexId, vertex) =>
+
+          val point = vertex.toPoint.scaleAndTranslate(scale, offset)
+          val color = uniformColorMap.getOrElse(uniMap(vertexId), "black")
+
+          s"""    <circle cx="${SvgDsl.fmt4(point.x)}" cy="${SvgDsl.fmt4(
+              point.y
+            )}" r="16" stroke="$color" fill="$color" />"""
+        }.mkString("\n")
+      s"""  <g id="node-uniformity" stroke-width="1" >
+         |$nodesXml
+         |  </g>""".stripMargin
+
+  private[utils] def generateRotationXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val rotList   = EditorState.viewState.now().rotationVertexIds.getOrElse(Nil)
+      val rotCoords = rotList.map:
+        case BoundaryVertex(i)  => i -> coordinates(i)
+        case BoundaryEdge(i, j) => i -> BigLineSegment(coordinates(i), coordinates(j)).midPoint
+      if rotCoords.isEmpty then ""
+      else
+        val center   = rotCoords.map(_._2).centroid.toPoint.scaleAndTranslate(scale, offset)
+        val nodesXml =
+          rotCoords.map { (_, coords) =>
+
+            val segment =
+              LineSegment(center, coords.toPoint.scaleAndTranslate(scale, offset)).extendFromOrigin
+            s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${
+                SvgDsl.fmt4(
+                  segment.p1.y
+                )
+              }"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
+          }.mkString("\n")
+
+        s"""  <g id="node-reflection" stroke="Gold" stroke-width="1" stroke-dasharray="2,2" >
+           |$nodesXml
+           |  </g>""".stripMargin
+
+  private[utils] def generateReflectionXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val refList = EditorState.viewState.now().reflectionVertexIds.getOrElse(Nil)
+
+      def locationToPoint(loc: BoundaryLocation): Point =
+        (loc match {
+          case BoundaryVertex(i)  => coordinates(i).toPoint
+          case BoundaryEdge(i, j) => LineSegment(coordinates(i).toPoint, coordinates(j).toPoint).midPoint
+        }).scaleAndTranslate(scale, offset)
+
+      val nodesXml =
+        refList.map { (loc1, loc2) =>
+
+          val vertex1 = locationToPoint(loc1)
+          val vertex2 = locationToPoint(loc2)
+          val segment = LineSegment(vertex1, vertex2).extendFromMidPoint
+          s"""    <line x1="${SvgDsl.fmt4(segment.p1.x)}" y1="${SvgDsl.fmt4(
+              segment.p1.y
+            )}"  x2="${SvgDsl.fmt4(segment.p2.x)}" y2="${SvgDsl.fmt4(segment.p2.y)}" />"""
+        }.mkString("\n")
+
+      s"""  <g id="node-reflection" stroke="DarkOrange" stroke-width="1" stroke-dasharray="5,5" >
+         |$nodesXml
+         |  </g>""".stripMargin
+
+  private[utils] def generateLabelsXml(
+      coordinates: Map[VertexId, BigPoint],
+      scale: Double,
+      offset: Point
+  ): String =
+    if coordinates.isEmpty then ""
+    else
+      val nodesXml = coordinates.map { (vertexId, bigPoint) =>
+
+        val point = bigPoint.toPoint.scaleAndTranslate(scale, offset + Point(4.0, -4.0))
+
+//        val labelX = (vertex.x * scale + offset.xx + 4).setScale(4, RoundingMode.HALF_UP)
+//        val labelY = (vertex.y * scale + offset.yy - 4).setScale(4, RoundingMode.HALF_UP)
+        s"""    <text x="${SvgDsl.fmt4(point.x)}" y="${SvgDsl.fmt4(point.y)}" >${vertexId.toString}</text>"""
+      }.mkString("\n")
+      s"""  <g id="node-labels" font-family="monospace" font-weight="bold" font-size="12" fill="#000" text-anchor="start" dominant-baseline="middle" stroke="#fff" stroke-width="0.5" paint-order="stroke fill">
+         |$nodesXml
+         |  </g>""".stripMargin
+
+  private[utils] def generateMetadataXml(tiling: TilingDCEL): String =
+    val tessellaMetadata =
+      tiling.toMetadata
+    s"""  <metadata>
+       |    $tessellaMetadata
+       |    <rdf:RDF>
+       |      <cc:Work>
+       |        <dc:source rdf:resource="https://github.com/scala-tessella/tessella">Tessella</dc:source>
+       |        <cc:license rdf:resource="https://www.apache.org/licenses/LICENSE-2.0"/>
+       |      </cc:Work>
+       |    </rdf:RDF>
+       |  </metadata>"""

@@ -1,7 +1,7 @@
 # Preserve names of the WebView JavaScript-interface methods. The WebView
 # resolves @JavascriptInterface methods by reflection on their declared name,
 # so R8 must not rename or strip them (minifyEnabled is on for all build types).
--keepclassmembers class io.github.scala_tessella.editor.android.WebAppInterface {
+-keepclassmembers class art.tessell.editor.android.WebAppInterface {
     @android.webkit.JavascriptInterface <methods>;
 }
 

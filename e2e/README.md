@@ -63,7 +63,7 @@ await expect(page.locator('.popup-overlay')).toBeVisible();
 ```
 
 The hooks are registered from
-[`TestHooks.scala`](../src/main/scala/io/github/scala_tessella/editor/TestHooks.scala)
+[`TestHooks.scala`](../src/main/scala/art/tessell/editor/TestHooks.scala)
 at `globalThis.__tessellaTestHooks__`. Keep observation-only — mutations
 should still go through user-visible paths (clicking buttons, pressing keys)
 so the e2e suite exercises the same interaction surface real users do.

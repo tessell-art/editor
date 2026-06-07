@@ -15,17 +15,17 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace 'io.github.scala_tessella.editor'
+    namespace 'art.tessell.editor'
     compileSdk 35
 
     defaultConfig {
-        applicationId "io.github.scala_tessella.editor"
+        applicationId "art.tessell.editor"
         minSdk 29
         targetSdk 35
         // Kept in sync with package.json by scripts/sync-version.mjs.
         // versionCode = major*10000 + minor*100 + patch (monotonic).
-        versionCode 600
-        versionName "0.6.0"
+        versionCode 601
+        versionName "0.6.1"
     }
 
     signingConfigs {
