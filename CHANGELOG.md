@@ -14,11 +14,19 @@ and in the git history.
 ## [0.6.1] - 2026-06-07
 
 ### Changed
-- Android `applicationId` renamed `io.github.scala_tessella.editor` →
-  `art.tessell.editor` (reverse-DNS of the owned `tessell.art` domain) before
-  F-Droid publication, so the app's permanent identity matches the project
-  domain. The Android shell's Scala package moved to match; the web frontend
-  package is unchanged. (`v0.6.0` shipped the previous id.)
+- Renamed the project's reverse-DNS namespace to **`art.tessell.editor`**
+  (reverse of the owned `tessell.art` domain), done before F-Droid publication
+  so the app's permanent identity matches the domain:
+  - Android `applicationId` and shell package `io.github.scala_tessella.editor`
+    → `art.tessell.editor` (`v0.6.0` shipped the previous id).
+  - Web frontend Scala package `io.github.scala_tessella.editor` →
+    `art.tessell.editor` (155 sources). The `scala-tessella` library
+    dependencies (`dcel`, etc.) keep their `io.github.scala_tessella.*` packages.
+
+### Fixed
+- `scripts/sync-version.mjs` is now idempotent: an already-current manifest is a
+  no-op instead of aborting the run (a genuinely missing version line still
+  errors as a stale-regex signal).
 
 ## [0.6.0] - 2026-06-07
 

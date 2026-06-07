@@ -64,10 +64,16 @@ const targets = [
 for (const { path, pattern, replace, display } of targets) {
     const file = resolve(root, path);
     const before = readFileSync(file, 'utf-8');
-    const after = before.replace(pattern, replace ?? ((_, prefix) => `${prefix}"${newVersion}"`));
-    if (before === after) {
+    // A missing version line means the regex is stale — that's a real error.
+    // A line that's already at the target is a no-op (keeps the script idempotent).
+    if (!pattern.test(before)) {
         console.error(`sync-version: no version line matched in ${path} (regex needs updating)`);
         process.exit(1);
+    }
+    const after = before.replace(pattern, replace ?? ((_, prefix) => `${prefix}"${newVersion}"`));
+    if (after === before) {
+        console.log(`sync-version: ${path} already at ${display ?? newVersion}`);
+        continue;
     }
     writeFileSync(file, after);
     console.log(`sync-version: ${path} -> ${display ?? newVersion}`);
