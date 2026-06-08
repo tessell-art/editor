@@ -1,0 +1,8 @@
+First F-Droid release.
+
+* Polygon tessellation editor wrapped as a native WebView app.
+* Create tilings from a palette or by clicking edges, with live validation.
+* Add Copy under a plane isometry (translate, rotate, reflect, glide reflect) with anchor snapping.
+* Eraser, interior insertion, selection by colour/shape, colour picker.
+* Pan, zoom, rotate; export to SVG and DOT.
+* Fully offline: no network, no accounts, no trackers.

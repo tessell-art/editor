@@ -1,0 +1,10 @@
+Tessella is an editor for polygon tessellations of the plane: interactively create, view and manipulate tilings made of simple (regular and irregular) polygons.
+
+Features:
+
+* Add polygons from a palette, or by clicking any boundary edge, with automatic validation that keeps a proper edge-to-edge finite tessellation.
+* Editing tools: eraser (vertices, edges, polygons), interior insertion, and "Add Copy" to grow a tiling by welding on a copy of itself under a plane isometry (translate, rotate, reflect, glide reflect), snapping to exact anchors.
+* Selection and styling: select by click, colour or shape; recolour with a built-in colour picker.
+* Pan, zoom and rotate the canvas; export to SVG and DOT.
+
+The app is a thin WebView wrapper around the same client-side editor that is published on the web and as a PWA. Everything runs on-device: no network access, no accounts, no trackers.
