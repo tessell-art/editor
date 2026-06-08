@@ -8,35 +8,13 @@ SourceCode: https://github.com/tessell-art/editor
 IssueTracker: https://github.com/tessell-art/editor/issues
 Changelog: https://github.com/tessell-art/editor/blob/main/CHANGELOG.md
 
-AutoName: Tessella
-Description: |-
-  Tessella is an editor for polygon tessellations of the plane: interactively
-  create, view and manipulate tilings made of simple (regular and irregular)
-  polygons.
-
-  Features:
-
-  * Add polygons from a palette, or by clicking any boundary edge, with
-    automatic validation that keeps a proper edge-to-edge finite tessellation.
-  * Editing tools: eraser (vertices, edges, polygons), interior insertion,
-    and "Add Copy" to grow a tiling by welding on a copy of itself under a
-    plane isometry (translate, rotate, reflect, glide reflect), snapping to
-    exact anchors.
-  * Selection and styling: select by click, colour or shape; recolour with a
-    built-in colour picker.
-  * Pan, zoom and rotate the canvas; export to SVG and DOT.
-
-  The app is a thin WebView wrapper around the same client-side editor that is
-  published on the web and as a PWA. Everything runs on-device: no network
-  access, no accounts, no trackers.
-
 RepoType: git
 Repo: https://github.com/tessell-art/editor.git
 
 Builds:
   - versionName: 0.6.1
     versionCode: 601
-    commit: v0.6.1
+    commit: 9b0c88d991d90d30526d813b676d2410454de500
     subdir: android
     sudo:
       - apt-get update
