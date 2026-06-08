@@ -1,59 +1,102 @@
-# F-Droid submission (ADR-005 Phase 6)
+# F-Droid packaging (ADR-005 Phase 6)
 
-`art.tessell.editor.yml` is the **draft** build-metadata recipe destined for
-[`fdroiddata`][fdroiddata]. It's kept here for in-repo review before being
-copied into a `fdroiddata` fork at `metadata/art.tessell.editor.yml`.
+`art.tessell.editor.yml` is an **in-repo mirror** of the build-metadata recipe
+that lives in [`fdroiddata`][fdroiddata] at `metadata/art.tessell.editor.yml`.
+Keep the two in sync; only the fdroiddata copy is consumed by F-Droid.
 
-## Prerequisite — a tag carrying the final applicationId
+**Status:** submitted as fdroiddata [MR !39962][mr], build green on F-Droid CI,
+in maintainer review.
 
-The app id is **`art.tessell.editor`** (reverse of the owned domain
-`tessell.art`). `v0.6.0` shipped the earlier id
-`io.github.scala_tessella.editor`, so the recipe targets **`v0.6.1`** — the
-first tag with the renamed id. Before submitting:
+## How the build works
 
-1. Merge the rename to `main` (editor **and** docs repos — see ADR-011 split).
-2. The version is already bumped to 0.6.1 in-tree (`sync-version.mjs`); commit it.
-3. Push tag `v0.6.1` (also runs `.github/workflows/android.yml`).
+The app is a Scala 3 WebView shell (`android/`) over the Vite `dist/` bundle, so
+the F-Droid build chains **three toolchains**: sbt + Node/Vite → Gradle. The
+recipe choices below are load-bearing — most were required by review:
 
-Then `commit: v0.6.1` resolves to a tree whose APK has applicationId
-`art.tessell.editor`.
+- **`subdir: android/app`, no `output:`.** The app is a *nested* Gradle module.
+  Gradle is invoked from `android/app` and walks **up** to `android/settings.gradle`,
+  so the root project is `android/` (hence `copyWebDist`'s `${rootDir}/../dist`
+  resolves to the repo-root `dist/`). The APK then lands at `<subdir>/build/outputs`,
+  which is exactly where F-Droid looks — so no `output:` override is needed.
+  (Verify locally: `cd android/app && JAVA_HOME=<jdk17> ../gradlew projects` →
+  `BUILD SUCCESSFUL`, with reports written under `android/build/`.)
+- **Node from Debian forky**, not the nodesource `curl … | bash` installer
+  (F-Droid disallows piping remote scripts to a shell):
+  ```yaml
+  - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
+  - apt-get update
+  - apt-get install -y -t forky nodejs npm
+  ```
+- **sbt from GitHub releases**, not the scalasbt apt repo — download + checksum +
+  unpack to `/usr/local`:
+  ```yaml
+  - curl -Lo sbt.tgz https://github.com/sbt/sbt/releases/download/v1.12.9/sbt-1.12.9.tgz
+  - echo "<sha256>  sbt.tgz" | sha256sum -c -
+  - tar xzf sbt.tgz --strip-components=1 -C /usr/local/
+  ```
+  The sbt version tracks `project/build.properties`; **recompute the sha256 when
+  it changes** (`curl -L … && sha256sum …`).
+- **`prebuild` is a YAML array** (items are joined with `&&`, so the working
+  directory persists). `cd ../..` because `prebuild` runs in `android/app` and the
+  npm project is at the repo root:
+  ```yaml
+  prebuild:
+    - cd ../..
+    - npm ci
+    - npm run build
+  ```
+- **`scandelete`** paths are relative to the **build root (repo root)**, not
+  `subdir` — they clean the web/sbt build intermediates so the scanner doesn't 403.
+- **`commit:` is a full 40-char SHA**, not a tag (F-Droid requirement). It must
+  point at the commit that contains the upstream Fastlane metadata (below).
+- **`AutoName: Tessella` must stay** in the recipe — `fdroid checkupdates`
+  auto-derives it from the manifest `android:label` and fails if it's missing.
 
-## Submitting
+## Localized metadata lives upstream (Fastlane)
 
-```bash
-# fork + clone https://gitlab.com/fdroid/fdroiddata
-cp art.tessell.editor.yml fdroiddata/metadata/art.tessell.editor.yml
-cd fdroiddata
-fdroid readmeta && fdroid lint art.tessell.editor
-fdroid build -v -l art.tessell.editor    # full build on a clean VM
-# then open a merge request
+Title, summary, description, icon, screenshots and changelogs are kept in **this
+repo** under `fastlane/metadata/android/en-US/`:
+
+```
+fastlane/metadata/android/en-US/
+  title.txt              short_description.txt   full_description.txt
+  images/icon.png        images/phoneScreenshots/1.png … 5.png
+  changelogs/<versionCode>.txt
 ```
 
-F-Droid signs published APKs with its **own** key; our keystore (Phase 5) only
-signs the GitHub-release APK.
+F-Droid pulls these from the source checkout **at `commit:`**, so they must be
+present in that commit. Do **not** put summary/description/screenshots in
+fdroiddata — only the recipe (`.yml`) and `AutoName` live there.
 
-## Validation checklist / known risks
+## Updating for the next release
 
-The 3-toolchain build (sbt + Node + Gradle) is unusual for F-Droid, so expect
-1–3 review rounds. Confirm each with `fdroid build -l` before the MR:
+1. `npm version X.Y.Z --no-git-tag-version` (propagates via `sync-version.mjs`),
+   commit, push tag `vX.Y.Z` (also runs `.github/workflows/android.yml`).
+2. Add `fastlane/metadata/android/en-US/changelogs/<newVersionCode>.txt`
+   (versionCode = `major*10000 + minor*100 + patch`).
+3. F-Droid auto-update is on (`AutoUpdateMode: Version`,
+   `UpdateCheckMode: Tags ^v[0-9.]+$`), so the bot opens the new build entry from
+   the tag — no manual recipe edit unless the build env changes.
+4. If sbt (`project/build.properties`) or the Node suite changes, update the
+   `sudo:` block (and the sbt sha256) in the fdroiddata recipe and this mirror.
 
-- [ ] **JDK 17.** AGP 8.13 requires it (locally the default `java` was a JRE 21
-      — see ADR-005). Verify the F-Droid build server's default JDK is 17, or
-      add a Gradle Java toolchain / select it explicitly.
-- [ ] **`sudo` tool install.** The Node.js (nodesource) + sbt (apt repo + key)
-      steps may need adjusting to the F-Droid base image; pin versions for
-      reproducibility. Node ≥ 20.19 / 22 is required by Vite 8.
-- [ ] **`subdir: android`** is the Gradle root (holds `gradlew` +
-      `settings.gradle`); `gradle: [yes]` runs `assembleRelease` there, building
-      the single `:app` module. Confirm F-Droid locates the wrapper.
-- [x] **Bundled UI5 "72" font** (`public/ui5-assets/fonts/72-*.woff2`):
-      **Apache-2.0 — not a blocker.** Verified via the REUSE report for
-      `SAP/theming-base-content` (all files Apache-2.0, no font-specific or
-      proprietary licence): <https://api.reuse.software/info/github.com/SAP/theming-base-content>.
-- [ ] **Reproducibility.** `android/app/gradle.lockfile` pins deps; the build
-      should be deterministic. Reproducible-builds opt-in (publishing the
-      dev-signed APK) is a later, optional step.
-- [ ] **No trackers / cleartext.** App has no INTERNET permission and no
-      trackers — should pass Exodus cleanly.
+## Reference recipes
+
+- `metadata/com.nospeak.app.yml` — same `subdir: android/app` nested-module +
+  Debian-suite Node pattern.
+- `metadata/ltd.evilcorp.atox.yml` — sbt-from-GitHub + array build steps.
+
+## Notes / non-blockers
+
+- **JDK:** AGP 8.13 needs JDK 17 locally (the machine default `java` is a JRE 21);
+  the F-Droid build server's JDK builds fine.
+- **Bundled UI5 "72" font** (`public/ui5-assets/fonts/72-*.woff2`): Apache-2.0,
+  verified via the REUSE report for `SAP/theming-base-content`.
+- **No trackers / no INTERNET permission** — passes Exodus cleanly.
+- F-Droid signs published APKs with **its own** key; the Phase-5 keystore signs
+  only the GitHub-release APK (see [`android/RELEASING.md`](../android/RELEASING.md)).
+- `rewritemeta` long-line folding is ruamel-version-sensitive; match CI's diff
+  byte-for-byte. `check-jsonschema` (via pipx) replicates the CI schema gate.
 
 [fdroiddata]: https://gitlab.com/fdroid/fdroiddata
+[mr]: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/39962
