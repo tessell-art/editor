@@ -8,6 +8,8 @@ SourceCode: https://github.com/tessell-art/editor
 IssueTracker: https://github.com/tessell-art/editor/issues
 Changelog: https://github.com/tessell-art/editor/blob/main/CHANGELOG.md
 
+AutoName: Tessella
+
 RepoType: git
 Repo: https://github.com/tessell-art/editor.git
 
