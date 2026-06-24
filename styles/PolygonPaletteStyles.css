@@ -291,7 +291,7 @@ body:has(.polygon-palette.is-palette-dragging) {
 
 /* --- Phone bottom-sheet variant ---
    At phone widths (≤ 600px) the palette is a fixed-position bottom sheet sitting just above the
-   bottom toolbar (~110px). Two detents:
+   bottom toolbar (~139px tall; sits flush on top of it). Two detents:
    - Peek: handle + Shapes title + first row of the queue, so the most-recently-used shapes are
      reachable for drag-and-drop without expanding the sheet.
    - Full: ~70vh of palette content, scrollable. */
@@ -301,7 +301,7 @@ body:has(.polygon-palette.is-palette-dragging) {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 110px; /* clearance for the mobile bottom toolbar */
+    bottom: 139px; /* clearance for the mobile bottom toolbar (~139px tall) */
     margin: 0;
     border-radius: 14px 14px 0 0;
     border-bottom: 0;

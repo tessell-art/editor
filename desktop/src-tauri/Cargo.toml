@@ -1,6 +1,6 @@
 [package]
 name = "tessella-editor-desktop"
-version = "0.6.1"
+version = "0.6.2"
 description = "Tessella Editor desktop shell"
 authors = ["Mario Càllisto"]
 edition = "2021"

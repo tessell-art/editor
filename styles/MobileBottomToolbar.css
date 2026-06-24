@@ -89,9 +89,9 @@
   }
 
   /* Reserve room at the bottom of the editor for the fixed bottom toolbar
-     so the canvas / status row aren't covered. The toolbar is ~96px tall
-     with both rows; round up for safe-area padding. */
+     so the canvas / status row aren't covered. The toolbar measures ~139px
+     tall with both rows on a phone; match it so content clears the toolbar. */
   .editor-layout {
-    padding-bottom: 110px;
+    padding-bottom: 139px;
   }
 }

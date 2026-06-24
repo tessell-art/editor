@@ -1,7 +1,12 @@
 <resources>
     <!-- Bare full-bleed theme for the WebView host; no support-library deps. -->
     <style name="Theme.TessellaEditor" parent="@android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#FFFFFFFF</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <!-- The app shell's top bar is dark (#1f2329) in both themes; match the
+             status bar to it. statusBarColor is ignored under the SDK 35
+             edge-to-edge enforcement (the MainActivity container paints the
+             strip instead) but is honoured on older devices; light icons keep
+             contrast against the dark bar in both cases. -->
+        <item name="android:statusBarColor">#FF1F2329</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

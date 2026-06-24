@@ -1,9 +1,13 @@
 package art.tessell.editor.android
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.webkit.WebView
+import android.widget.FrameLayout
 import androidx.webkit.WebViewAssetLoader
 
 /** Single-activity WebView shell hosting the bundled Vite `dist/` build.
@@ -42,14 +46,44 @@ class MainActivity extends Activity:
     wv.setWebChromeClient(new DialogChromeClient(this))
     wv.addJavascriptInterface(new WebAppInterface(this), WebAppInterface.Name)
     wv.setLayoutParams(
-      new ViewGroup.LayoutParams(
+      new FrameLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.MATCH_PARENT
       )
     )
 
+    // targetSdk 35 forces edge-to-edge from Android 15 on: without this the
+    // content draws under the status/navigation bars and the top toolbar (menu,
+    // language and mode switches) ends up buried beneath the system clock and
+    // notification icons. Host the WebView in a padded container and inset that
+    // container by the system-bar + display-cutout insets so the page lays out
+    // inside the safe area. Padding is applied to the container, not the WebView
+    // itself: Chromium ignores WebView padding for content layout, but a parent
+    // ViewGroup's padding repositions its child. getInsets(Type) is API 30+, so
+    // fall back to the deprecated accessors for our minSdk 29 floor.
+    val root = new FrameLayout(this)
+    // The status-bar strip exposed by the top inset sits directly above the
+    // app shell's top bar, which is --menu-bg (#1f2329) and intentionally dark
+    // in both light and dark themes. Paint the container the same colour so the
+    // strip merges into one continuous bar instead of flashing white in dark
+    // mode. Status-bar icons are set light in themes.xml to match.
+    root.setBackgroundColor(0xFF1F2329)
+    root.addView(wv)
+    root.setOnApplyWindowInsetsListener { (v: View, insets: WindowInsets) =>
+      val (l, t, r, b) =
+        if Build.VERSION.SDK_INT >= Build.VERSION_CODES.R then
+          val bars =
+            insets.getInsets(WindowInsets.Type.systemBars | WindowInsets.Type.displayCutout)
+          (bars.left, bars.top, bars.right, bars.bottom)
+        else
+          (insets.getSystemWindowInsetLeft, insets.getSystemWindowInsetTop,
+           insets.getSystemWindowInsetRight, insets.getSystemWindowInsetBottom)
+      v.setPadding(l, t, r, b)
+      insets
+    }
+
     webView = wv
-    setContentView(wv)
+    setContentView(root)
     wv.loadUrl(MainActivity.IndexUrl)
 
   // Back navigates WebView history first; only exits the app at the root.

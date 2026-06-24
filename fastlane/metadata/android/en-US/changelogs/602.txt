@@ -1,0 +1,5 @@
+Bug fixes for the first F-Droid release.
+
+* Fixed the top toolbar (menu, language and mode switches) being buried under the status bar on Android 15+, which made the menu unreachable.
+* Fixed the bottom of the Shapes palette being covered by the toolbar.
+* Fixed the app icon not showing in the F-Droid client.

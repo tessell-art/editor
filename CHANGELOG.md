@@ -11,6 +11,25 @@ and in the git history.
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-06-24
+
+### Fixed
+- **Android: top toolbar reachable under Android 15+ edge-to-edge.** Targeting
+  SDK 35 makes the system draw the WebView edge-to-edge, so the app shell's top
+  bar (menu, language and mode switches) was buried under the status bar and
+  could not be tapped. `MainActivity` now hosts the WebView in a container
+  inset by the system-bar / display-cutout insets, and the status bar is
+  painted to match the always-dark app shell (`#1f2329`, light icons) so it
+  reads as one continuous bar in both themes.
+- **Android: bottom of the Shapes palette no longer covered.** The phone
+  bottom-sheet reserved only 110px of clearance for a bottom toolbar that
+  actually measures ~139px, so the last action ("Fill all Hexagons with…") sat
+  under the toolbar. Clearance corrected to 139px.
+- **F-Droid: app icon now renders in the client.** The adaptive launcher icon
+  was in `mipmap-anydpi` instead of the API-qualified `mipmap-anydpi-v26`,
+  which prevented the F-Droid client from extracting a displayable icon (the
+  website fell back to the Fastlane icon, hiding the problem).
+
 ## [0.6.1] - 2026-06-07
 
 ### Changed
@@ -202,7 +221,8 @@ and in the git history.
   Pages deploy workflow, clearing the Node 20 deprecation warning on
   every deploy run.
 
-[Unreleased]: https://github.com/tessell-art/editor/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/tessell-art/editor/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/tessell-art/editor/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/tessell-art/editor/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/tessell-art/editor/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tessell-art/editor/compare/v0.4.2...v0.5.0
