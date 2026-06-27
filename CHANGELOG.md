@@ -11,6 +11,12 @@ and in the git history.
 
 ## [Unreleased]
 
+### Added
+- **F-Droid feature graphic.** Added `featureGraphic.png` (1024×500) to the
+  Fastlane metadata so the F-Droid app page shows a proper banner at the top of
+  the description instead of a scaled-up icon. Picked up on the next tagged
+  release.
+
 ## [0.6.2] - 2026-06-24
 
 ### Fixed
