@@ -4,8 +4,21 @@
 that lives in [`fdroiddata`][fdroiddata] at `metadata/art.tessell.editor.yml`.
 Keep the two in sync; only the fdroiddata copy is consumed by F-Droid.
 
-**Status:** submitted as fdroiddata [MR !39962][mr], build green on F-Droid CI,
-in maintainer review.
+**Status:** **published and live** at
+[`f-droid.org/packages/art.tessell.editor`][listing] — first release `v0.6.1`,
+via fdroiddata [MR !39962][mr] (**merged 2026-06-19**, reviewer: linsui). The
+recipe now lives in `fdroiddata`; subsequent releases (e.g. `v0.6.2`)
+auto-build from new tags with no further MR (see *Updating for the next
+release* below). The build server runs **once a day**, so a freshly tagged
+version takes a day or two to appear in the client. Track builds on
+[F-Droid Monitor](https://monitor.f-droid.org/).
+
+**Routine releases need no further MR.** Because the recipe sets
+`AutoUpdateMode: Version` and `UpdateCheckMode: Tags ^v[0-9.]+$`, F-Droid's bot
+auto-detects each new `vX.Y.Z` tag and opens the build entry itself — just ship
+the tag and its changelog (see *Updating for the next release* below). Only a
+change to the **build environment** (sbt/Node versions, build steps) requires a
+fresh MR against `fdroiddata`.
 
 ## How the build works
 
@@ -100,3 +113,4 @@ fdroiddata — only the recipe (`.yml`) and `AutoName` live there.
 
 [fdroiddata]: https://gitlab.com/fdroid/fdroiddata
 [mr]: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/39962
+[listing]: https://f-droid.org/packages/art.tessell.editor/
