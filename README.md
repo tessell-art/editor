@@ -1,6 +1,7 @@
 [![Scala 3](https://img.shields.io/badge/scala-3.8.4-red.svg)](https://scala-lang.org)
 [![Scala.js](https://www.scala-js.org/assets/badges/scalajs-1.16.0.svg)](https://www.scala-js.org)
 [![CI](https://github.com/tessell-art/editor/actions/workflows/build.yml/badge.svg)](https://github.com/tessell-art/editor/actions/workflows/build.yml)
+[![F-Droid](https://img.shields.io/f-droid/v/art.tessell.editor.svg)](https://f-droid.org/packages/art.tessell.editor)
 
 # Tessella Editor
 
@@ -8,7 +9,9 @@
 
 **Tessella Editor** is a simple polygon tessellation editor built with **Scala.js** and **Laminar**. It allows you to interactively create, view, and manipulate tessellations of the plane made of simple (regular and irregular) polygons.
 
-If you want to try it live, you can [open the web editor](https://tessell.art/editor).
+If you want to try it live, you can [open the web editor](https://tessell.art/editor)
+or install the Android app from
+[F-Droid](https://f-droid.org/packages/art.tessell.editor).
 
 The editor is part of the [scala-tessella](https://github.com/scala-tessella) project.
 
@@ -79,6 +82,27 @@ classes, each wrapped in its own `Var`; updates use `update(_.copy(...))` to
 keep mutations atomic. The desktop shell under `desktop/src-tauri/` and the
 Playwright smoke suite under `e2e/` are sibling projects that consume the
 same `dist/` bundle Vite produces.
+
+## Android & F-Droid
+
+The editor is also published on **[F-Droid](https://f-droid.org/packages/art.tessell.editor)**
+as a native Android app. The app is a thin WebView shell that
+serves the very same `dist/` Vite bundle the web build produces, so it stays in
+lockstep with the web editor. Three top-level folders support this:
+
+- **`android/`** — the Gradle project for the WebView-shell APK. Built with
+  Scala 3 over a single `app` module; `versionName`/`versionCode` are derived
+  from `package.json`. The `.github/workflows/android.yml` workflow builds and
+  signs the APK on each `v*.*.*` tag. See [`android/RELEASING.md`](android/RELEASING.md).
+- **`fastlane/`** — the upstream [Fastlane](https://docs.fastlane.tools/)
+  metadata F-Droid pulls into the store listing: app title, short and full
+  descriptions, icon, screenshots, and per-version changelogs under
+  `metadata/android/en-US/`.
+- **`fdroid/`** — an in-repo mirror of the F-Droid build recipe
+  (`art.tessell.editor.yml`) that lives in
+  [fdroiddata](https://gitlab.com/fdroid/fdroiddata). Once tagged, F-Droid
+  auto-detects new `vX.Y.Z` releases and rebuilds with no further merge request.
+  See [`fdroid/README.md`](fdroid/README.md).
 
 ## Getting Started
 
